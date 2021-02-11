@@ -1355,15 +1355,22 @@
 		<sigChgs writeDatabase="false" writeFile="false"/>
 		<vehInpData writeFile="false"/>
 		<vehNetPerf collectData="false" fromTime="0" interval="99999" toTime="99999"/>
-		<vehRec filterType="ALL" fromTime="0" inclParkVehs="false" resolution="1" toTime="99999" writeDatabase="false" writeFile="false">
+		<vehRec filterType="BYSECTION" fromTime="0" inclParkVehs="false" resolution="1" toTime="99999" writeDatabase="false" writeFile="true">
 			<attributes>
 				<attributeSelection attributeID="SIMSEC" decimals="2" format="DEFAULT" showUnits="false"/>
 				<attributeSelection attributeID="NO" decimals="0" format="DEFAULT" showUnits="false"/>
+				<attributeSelection attributeID="VEHTYPE" decimals="0" format="DEFAULT" showUnits="false"/>
 				<attributeSelection attributeID="LANE\LINK\NO" decimals="0" format="DEFAULT" showUnits="false"/>
 				<attributeSelection attributeID="LANE\INDEX" decimals="0" format="DEFAULT" showUnits="false"/>
 				<attributeSelection attributeID="POS" decimals="2" format="DEFAULT" showUnits="false"/>
+				<attributeSelection attributeID="SPEED" decimals="2" format="DEFAULT" showUnits="false"/>
 				<attributeSelection attributeID="POSLAT" decimals="2" format="DEFAULT" showUnits="false"/>
+				<attributeSelection attributeID="LEADTARGNO" decimals="0" format="DEFAULT" showUnits="false"/>
+				<attributeSelection attributeID="FOLLOWDIST" decimals="2" format="DEFAULT" showUnits="false"/>
 			</attributes>
+			<sectFilt>
+				<intObjectRef key="1"/>
+			</sectFilt>
 		</vehRec>
 		<vehTravTmRawData fromTime="0" toTime="99999" writeDatabase="false" writeFile="true"/>
 		<vehTravTms aggrBySect="DESTINATION" collectData="true" fromTime="0" interval="30" toTime="99999"/>
@@ -2794,6 +2801,18 @@
 			</distrDataPts>
 		</powerDistribution>
 	</powerDistributions>
+	<sections>
+		<section displayType="61" level="1" name="incident" no="1">
+			<geometry>
+				<points>
+					<point x="-110.12496986258066" y="1027.6207157598096"/>
+					<point x="-110.12496986258066" y="-2245.7737872519424"/>
+					<point x="158.7045303847608" y="-2245.7737872519424"/>
+					<point x="158.7045303847608" y="1027.6207157598096"/>
+				</points>
+			</geometry>
+		</section>
+	</sections>
 	<simulation comment="" numCores="1" numRuns="1" randSeed="3" randSeedIncr="1" retroSync="false" simMode="MICRO" simPeriod="5430" simRes="5" simSpeed="10" startTm="0" useAllCores="true" useMaxSimSpeed="true" volumeIncrDynAssign="0"/>
 	<timeDistributions>
 		<timeDistribution mean="0.5" name="0.5 s" no="1" stdDev="0" type="NORMAL"/>

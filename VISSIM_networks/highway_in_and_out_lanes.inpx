@@ -1004,7 +1004,6 @@
 				<attributeSelection attributeID="POSLAT" decimals="2" format="DEFAULT" showUnits="false"/>
 				<attributeSelection attributeID="LEADTARGNO" decimals="0" format="DEFAULT" showUnits="false"/>
 				<attributeSelection attributeID="FOLLOWDIST" decimals="2" format="DEFAULT" showUnits="false"/>
-				<attributeSelection attributeID="SPEEDDIFF" decimals="2" format="DEFAULT" showUnits="false"/>
 			</attributes>
 		</vehRec>
 		<vehTravTmRawData fromTime="0" toTime="99999" writeDatabase="false" writeFile="false"/>
