@@ -8,7 +8,8 @@
 *.rsr
 *.db
 MicroResults/
-NGSIM/
+NGSIM_original/
+post_processed_data/
 
 ### Suggested from https://github.com/github/gitignore
 
