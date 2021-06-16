@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <network version="503" vissimVersion="10.00 - 16 [79178]">
-	<anmDefaults colorDistr="1" crosswalkDisplayType="1" hgvPowerDistr="2" hgvWeightDistr="2" level="1" linkDisplayType="1" panmFilename="" panmRoutesFilename="" pedestrianVehicleType="510" zoneConnectorDisplayType="1">
+	<anmDefaults colorDistr="1" crosswalkDisplayType="1" hgvPowerDistr="2" hgvWeightDistr="2" level="1" linkDisplayType="1" panmFilename="" panmRoutesFilename="" zoneConnectorDisplayType="1">
 		<anmDefaultDrivingBehavior>
 			<anmDefaultDrivingBehavior anmDrivBehavDefType="NONE" drivBehav="1"/>
 			<anmDefaultDrivingBehavior anmDrivBehavDefType="URBAN" drivBehav="1"/>
@@ -150,6 +150,16 @@
 				<colorDistributionElement color="ff0080c0" share="1"/>
 			</colorDistrEl>
 		</colorDistribution>
+		<colorDistribution name="Autonomous" no="205">
+			<colorDistrEl>
+				<colorDistributionElement color="ffff0000" share="1"/>
+			</colorDistrEl>
+		</colorDistribution>
+		<colorDistribution name="Regular Vehicle" no="206">
+			<colorDistrEl>
+				<colorDistributionElement color="ff000000" share="1"/>
+			</colorDistrEl>
+		</colorDistribution>
 	</colorDistributions>
 	<conflictAreas>
 		<conflictArea addStopDist="0" anticipRout="0" avoidBlockMajor="true" avoidBlockMinor="1" frontGapDef="0.5" link1="3" link2="10000" mesoCritGap="3.5" minGapBlockDef="3" no="2" obsAdjLns="false" rearGapDef="0.5" safDistFactDef="1.5" status="PASSIVE" visibLink1="100" visibLink2="100"/>
@@ -157,6 +167,7 @@
 		<conflictArea addStopDist="0" anticipRout="0" avoidBlockMajor="true" avoidBlockMinor="1" frontGapDef="0.5" link1="6" link2="10002" mesoCritGap="3.5" minGapBlockDef="3" no="4" obsAdjLns="false" rearGapDef="0.5" safDistFactDef="1.5" status="PASSIVE" visibLink1="100" visibLink2="100"/>
 		<conflictArea addStopDist="0" anticipRout="0" avoidBlockMajor="true" avoidBlockMinor="1" frontGapDef="0.5" link1="3" link2="10003" mesoCritGap="3.5" minGapBlockDef="3" no="5" obsAdjLns="false" rearGapDef="0.5" safDistFactDef="1.5" status="PASSIVE" visibLink1="100" visibLink2="100"/>
 		<conflictArea addStopDist="0" anticipRout="0" avoidBlockMajor="true" avoidBlockMinor="1" frontGapDef="0.5" link1="5" link2="10003" mesoCritGap="3.5" minGapBlockDef="3" no="6" obsAdjLns="false" rearGapDef="0.5" safDistFactDef="1.5" status="PASSIVE" visibLink1="100" visibLink2="100"/>
+		<conflictArea addStopDist="0" anticipRout="0" avoidBlockMajor="true" avoidBlockMinor="1" frontGapDef="0.5" link1="3" link2="10004" mesoCritGap="3.5" minGapBlockDef="3" no="7" obsAdjLns="false" rearGapDef="0.5" safDistFactDef="1.5" status="PASSIVE" visibLink1="100" visibLink2="100"/>
 	</conflictAreas>
 	<desAccelerationFunctions>
 		<desAccelerationFunction name="Car" no="1">
@@ -985,7 +996,7 @@
 		<pedTravTms collectData="false" fromTime="0" interval="99999" toTime="99999"/>
 		<queues collectData="false" fromTime="0" interval="99999" toTime="99999"/>
 		<scDetRec writeFile="false"/>
-		<ssam writeFile="false"/>
+		<ssam writeFile="true"/>
 		<sigChgs writeDatabase="false" writeFile="false"/>
 		<vehClasses>
 			<intObjectRef key="10"/>
@@ -1004,6 +1015,10 @@
 				<attributeSelection attributeID="POSLAT" decimals="2" format="DEFAULT" showUnits="false"/>
 				<attributeSelection attributeID="LEADTARGNO" decimals="0" format="DEFAULT" showUnits="false"/>
 				<attributeSelection attributeID="FOLLOWDIST" decimals="2" format="DEFAULT" showUnits="false"/>
+				<attributeSelection attributeID="COORDFRONTX" decimals="3" format="DEFAULT" showUnits="false"/>
+				<attributeSelection attributeID="COORDFRONTY" decimals="3" format="DEFAULT" showUnits="false"/>
+				<attributeSelection attributeID="COORDREARX" decimals="3" format="DEFAULT" showUnits="false"/>
+				<attributeSelection attributeID="COORDREARY" decimals="3" format="DEFAULT" showUnits="false"/>
 			</attributes>
 		</vehRec>
 		<vehTravTmRawData fromTime="0" toTime="99999" writeDatabase="false" writeFile="false"/>
@@ -1083,12 +1098,11 @@
 			<fromLinkEndPt lane="4 1" pos="106.15839307877093"/>
 			<geometry>
 				<points3D>
-					<point3D x="504.58859155093683" y="-29.928686190983676" zOffset="0"/>
-					<point3D x="525.02035905263347" y="-30.188226046964925" zOffset="0"/>
+					<point3D x="504.58214107100412" y="-31.678674302745762" zOffset="0"/>
+					<point3D x="525.01364480634209" y="-31.938213166602306" zOffset="0"/>
 				</points3D>
 			</geometry>
 			<lanes>
-				<lane/>
 				<lane/>
 			</lanes>
 			<toLinkEndPt lane="3 2" pos="0.87434851929564505"/>
@@ -1158,6 +1172,19 @@
 				<lane/>
 			</lanes>
 			<toLinkEndPt lane="5 1" pos="2.4484620024318393"/>
+		</link>
+		<link assumSpeedOncom="60" costPerKm="0" direction="ALL" displayType="1" emergStopDist="5" gradient="0" hasOvtLn="false" isPedArea="false" linkBehavType="1" linkEvalAct="true" linkEvalSegLen="10" lnChgDist="200" lnChgDistIsPerLn="false" lnChgEvalAct="true" lookAheadDistOvt="500" mesoFollowUpGap="0" mesoSpeed="50" mesoSpeedModel="VEHICLEBASED" name="" no="10004" ovtOnlyPT="false" ovtSpeedFact="1.3" showClsfValues="true" showLinkBar="true" showVeh="true" surch1="0" surch2="0" thickness="0" vehRecAct="true">
+			<fromLinkEndPt lane="4 2" pos="105.31451974327871"/>
+			<geometry>
+				<points3D>
+					<point3D x="503.75117442804418" y="-28.175587571783687" zOffset="0"/>
+					<point3D x="524.9371489526078" y="-28.437893910954568" zOffset="0"/>
+				</points3D>
+			</geometry>
+			<lanes>
+				<lane/>
+			</lanes>
+			<toLinkEndPt lane="3 3" pos="0.78442351111178998"/>
 		</link>
 	</links>
 	<locationDistributions>
@@ -1934,7 +1961,7 @@
 			</distrDataPts>
 		</powerDistribution>
 	</powerDistributions>
-	<simulation comment="" numCores="1" numRuns="1" randSeed="1" randSeedIncr="1" retroSync="false" simMode="MICRO" simPeriod="150" simRes="10" simSpeed="10" startTm="0" useAllCores="true" useMaxSimSpeed="true" volumeIncrDynAssign="0"/>
+	<simulation comment="" numCores="1" numRuns="1" randSeed="7" randSeedIncr="1" retroSync="false" simMode="MICRO" simPeriod="300" simRes="10" simSpeed="10" startTm="0" useAllCores="false" useMaxSimSpeed="true" volumeIncrDynAssign="0"/>
 	<timeDistributions>
 		<timeDistribution mean="0.5" name="0.5 s" no="1" stdDev="0" type="NORMAL"/>
 		<timeDistribution mean="0.9" name="0.9 s" no="2" stdDev="0" type="NORMAL"/>
@@ -2005,6 +2032,7 @@
 		<vehicleClass anmid="" color="ff000000" name="Car" no="10" useVehTypeColor="true">
 			<vehTypes>
 				<intObjectRef key="100"/>
+				<intObjectRef key="110"/>
 			</vehTypes>
 		</vehicleClass>
 		<vehicleClass anmid="" color="ff000000" name="HGV" no="20" useVehTypeColor="true">
@@ -2017,46 +2045,35 @@
 				<intObjectRef key="300"/>
 			</vehTypes>
 		</vehicleClass>
-		<vehicleClass anmid="" color="ff000000" name="Tram" no="40" useVehTypeColor="true">
-			<vehTypes>
-				<intObjectRef key="400"/>
-			</vehTypes>
-		</vehicleClass>
-		<vehicleClass anmid="" color="ff000000" name="Pedestrian" no="50" useVehTypeColor="true">
-			<vehTypes>
-				<intObjectRef key="510"/>
-				<intObjectRef key="520"/>
-			</vehTypes>
-		</vehicleClass>
-		<vehicleClass anmid="" color="ff000000" name="Bike" no="60" useVehTypeColor="true">
-			<vehTypes>
-				<intObjectRef key="610"/>
-				<intObjectRef key="620"/>
-			</vehTypes>
-		</vehicleClass>
 	</vehicleClasses>
 	<vehicleCompositions>
 		<vehicleComposition name="Default" no="1">
 			<vehCompRelFlows>
-				<vehicleCompositionRelativeFlow desSpeedDistr="50" relFlow="0.98" vehType="100"/>
-				<vehicleCompositionRelativeFlow desSpeedDistr="50" relFlow="0.02" vehType="200"/>
+				<vehicleCompositionRelativeFlow desSpeedDistr="120" relFlow="0.98" vehType="100"/>
+				<vehicleCompositionRelativeFlow desSpeedDistr="100" relFlow="0.02" vehType="200"/>
+			</vehCompRelFlows>
+		</vehicleComposition>
+		<vehicleComposition name="with_autonomous" no="2">
+			<vehCompRelFlows>
+				<vehicleCompositionRelativeFlow desSpeedDistr="120" relFlow="1" vehType="100"/>
+				<vehicleCompositionRelativeFlow desSpeedDistr="120" relFlow="1" vehType="110"/>
 			</vehCompRelFlows>
 		</vehicleComposition>
 	</vehicleCompositions>
 	<vehicleInputs>
 		<vehicleInput anmFlag="false" link="2" name="in_flow" no="2">
 			<timeIntVehVols>
-				<timeIntervalVehVolume cont="false" timeInt="1 0" vehComp="1" volType="STOCHASTIC" volume="300"/>
+				<timeIntervalVehVolume cont="false" timeInt="1 0" vehComp="1" volType="STOCHASTIC" volume="500"/>
 			</timeIntVehVols>
 		</vehicleInput>
 		<vehicleInput anmFlag="false" link="4" name="main_flow" no="3">
 			<timeIntVehVols>
-				<timeIntervalVehVolume cont="false" timeInt="1 0" vehComp="1" volType="STOCHASTIC" volume="700"/>
+				<timeIntervalVehVolume cont="false" timeInt="1 0" vehComp="2" volType="STOCHASTIC" volume="2000"/>
 			</timeIntVehVols>
 		</vehicleInput>
 	</vehicleInputs>
 	<vehicleRoutingDecisionsStatic>
-		<vehicleRoutingDecisionStatic allVehTypes="true" anmFlag="false" combineStaRoutDec="false" link="2" name="" no="4" pos="0">
+		<vehicleRoutingDecisionStatic allVehTypes="true" anmFlag="false" combineStaRoutDec="false" link="2" name="in_ramp" no="4" pos="0">
 			<vehRoutSta>
 				<vehicleRouteStatic destLink="6" destPos="67.760415933514167" name="" no="1" relFlow="">
 					<linkSeq>
@@ -2067,19 +2084,36 @@
 				</vehicleRouteStatic>
 			</vehRoutSta>
 		</vehicleRoutingDecisionStatic>
-		<vehicleRoutingDecisionStatic allVehTypes="true" anmFlag="false" combineStaRoutDec="false" link="4" name="" no="6" pos="0">
+		<vehicleRoutingDecisionStatic allVehTypes="true" anmFlag="false" combineStaRoutDec="false" link="10000" name="exit_ramp" no="6" pos="2.0597348453953574">
 			<vehRoutSta>
 				<vehicleRouteStatic destLink="10003" destPos="78.099182455296983" name="" no="1" relFlow="">
 					<linkSeq>
-						<intObjectRef key="10000"/>
 						<intObjectRef key="3"/>
+					</linkSeq>
+				</vehicleRouteStatic>
+			</vehRoutSta>
+		</vehicleRoutingDecisionStatic>
+		<vehicleRoutingDecisionStatic allVehTypes="true" anmFlag="false" combineStaRoutDec="false" link="10004" name="main" no="7" pos="10.593995379497473">
+			<vehRoutSta>
+				<vehicleRouteStatic destLink="6" destPos="12.712631974962363" name="" no="1" relFlow="">
+					<linkSeq>
+						<intObjectRef key="3"/>
+						<intObjectRef key="10002"/>
 					</linkSeq>
 				</vehicleRouteStatic>
 			</vehRoutSta>
 		</vehicleRoutingDecisionStatic>
 	</vehicleRoutingDecisionsStatic>
 	<vehicleTypes>
-		<vehicleType alightTm="0" anmFlag="false" boardTm="0" capExact="false" capacity="0" category="CAR" clearTm="0" colorDistr1="1" desAccelFunc="1" desDecelFunc="1" distCoeffPerMeter="0" doorClosDur="2" dwellTmIsAdd="true" equip="" extDriver="false" extDriverDLLFile="" extDriverParFile="" extEmissionDLLFile="" linkCostCoeff="1" maxAccelFunc="1" maxDecelFunc="1" model2D3DDistr="10" name="Car" no="100" occupDistr="1" travTmCoeff="1">
+		<vehicleType alightTm="0" anmFlag="false" boardTm="0" capExact="false" capacity="0" category="CAR" clearTm="0" colorDistr1="206" desAccelFunc="1" desDecelFunc="1" distCoeffPerMeter="0" doorClosDur="2" dwellTmIsAdd="true" equip="" extDriver="false" extDriverDLLFile="" extDriverParFile="" extEmissionDLLFile="" linkCostCoeff="1" maxAccelFunc="1" maxDecelFunc="1" model2D3DDistr="10" name="Car" no="100" occupDistr="1" travTmCoeff="1">
+			<parkLotSelPars>
+				<parkingLotSelectionParameters attrac="0" avail="0" decSituation="DEPARTUREFROMPARKINGLOT" distFromDestM="0" genCost="0" parkFee="0"/>
+				<parkingLotSelectionParameters attrac="0" avail="0" decSituation="DYNAMICROUTINGDECISION" distFromDestM="0" genCost="0" parkFee="0"/>
+				<parkingLotSelectionParameters attrac="0" avail="0" decSituation="ROUTEGUIDANCETACTIC1" distFromDestM="0" genCost="0" parkFee="0"/>
+				<parkingLotSelectionParameters attrac="0" avail="0" decSituation="ROUTEGUIDANCETACTIC2" distFromDestM="0" genCost="0" parkFee="0"/>
+			</parkLotSelPars>
+		</vehicleType>
+		<vehicleType alightTm="0" anmFlag="false" boardTm="0" capExact="false" capacity="0" category="CAR" clearTm="0" colorDistr1="205" desAccelFunc="1" desDecelFunc="1" distCoeffPerMeter="0" doorClosDur="2" dwellTmIsAdd="true" equip="" extDriver="true" extDriverDLLFile="C:\Users\fvall\Documents\Research\TrafficSimulation\vehicle_controller\x64\Debug\DriverModel.dll" extDriverParFile="" extEmissionDLLFile="" linkCostCoeff="1" maxAccelFunc="1" maxDecelFunc="1" model2D3DDistr="10" name="Autonomous Vehicle" no="110" occupDistr="1" travTmCoeff="1">
 			<parkLotSelPars>
 				<parkingLotSelectionParameters attrac="0" avail="0" decSituation="DEPARTUREFROMPARKINGLOT" distFromDestM="0" genCost="0" parkFee="0"/>
 				<parkingLotSelectionParameters attrac="0" avail="0" decSituation="DYNAMICROUTINGDECISION" distFromDestM="0" genCost="0" parkFee="0"/>
@@ -2096,46 +2130,6 @@
 			</parkLotSelPars>
 		</vehicleType>
 		<vehicleType alightTm="1" anmFlag="false" boardTm="2" capExact="false" capacity="110" category="BUS" clearTm="8" colorDistr1="1" desAccelFunc="3" desDecelFunc="3" distCoeffPerMeter="0" doorClosDur="2" dwellTmIsAdd="true" equip="" extDriver="false" extDriverDLLFile="" extDriverParFile="" extEmissionDLLFile="" linkCostCoeff="1" maxAccelFunc="3" maxDecelFunc="3" model2D3DDistr="30" name="Bus" no="300" occupDistr="1" travTmCoeff="1">
-			<parkLotSelPars>
-				<parkingLotSelectionParameters attrac="0" avail="0" decSituation="DEPARTUREFROMPARKINGLOT" distFromDestM="0" genCost="0" parkFee="0"/>
-				<parkingLotSelectionParameters attrac="0" avail="0" decSituation="DYNAMICROUTINGDECISION" distFromDestM="0" genCost="0" parkFee="0"/>
-				<parkingLotSelectionParameters attrac="0" avail="0" decSituation="ROUTEGUIDANCETACTIC1" distFromDestM="0" genCost="0" parkFee="0"/>
-				<parkingLotSelectionParameters attrac="0" avail="0" decSituation="ROUTEGUIDANCETACTIC2" distFromDestM="0" genCost="0" parkFee="0"/>
-			</parkLotSelPars>
-		</vehicleType>
-		<vehicleType alightTm="0.5" anmFlag="false" boardTm="0.5" capExact="false" capacity="215" category="TRAM" clearTm="12" colorDistr1="1" desAccelFunc="4" desDecelFunc="4" distCoeffPerMeter="0" doorClosDur="2" dwellTmIsAdd="true" equip="" extDriver="false" extDriverDLLFile="" extDriverParFile="" extEmissionDLLFile="" linkCostCoeff="1" maxAccelFunc="4" maxDecelFunc="4" model2D3DDistr="40" name="Tram" no="400" occupDistr="1" travTmCoeff="1">
-			<parkLotSelPars>
-				<parkingLotSelectionParameters attrac="0" avail="0" decSituation="DEPARTUREFROMPARKINGLOT" distFromDestM="0" genCost="0" parkFee="0"/>
-				<parkingLotSelectionParameters attrac="0" avail="0" decSituation="DYNAMICROUTINGDECISION" distFromDestM="0" genCost="0" parkFee="0"/>
-				<parkingLotSelectionParameters attrac="0" avail="0" decSituation="ROUTEGUIDANCETACTIC1" distFromDestM="0" genCost="0" parkFee="0"/>
-				<parkingLotSelectionParameters attrac="0" avail="0" decSituation="ROUTEGUIDANCETACTIC2" distFromDestM="0" genCost="0" parkFee="0"/>
-			</parkLotSelPars>
-		</vehicleType>
-		<vehicleType alightTm="0" anmFlag="false" boardTm="0" capExact="false" capacity="0" category="PEDESTRIAN" clearTm="0" colorDistr1="101" colorDistr2="102" colorDistr3="103" colorDistr4="104" desAccelFunc="5" desDecelFunc="5" distCoeffPerMeter="0" doorClosDur="2" dwellTmIsAdd="true" equip="" extDriver="false" extDriverDLLFile="" extDriverParFile="" extEmissionDLLFile="" linkCostCoeff="1" maxAccelFunc="5" maxDecelFunc="5" model2D3DDistr="100" name="Man" no="510" travTmCoeff="1">
-			<parkLotSelPars>
-				<parkingLotSelectionParameters attrac="0" avail="0" decSituation="DEPARTUREFROMPARKINGLOT" distFromDestM="0" genCost="0" parkFee="0"/>
-				<parkingLotSelectionParameters attrac="0" avail="0" decSituation="DYNAMICROUTINGDECISION" distFromDestM="0" genCost="0" parkFee="0"/>
-				<parkingLotSelectionParameters attrac="0" avail="0" decSituation="ROUTEGUIDANCETACTIC1" distFromDestM="0" genCost="0" parkFee="0"/>
-				<parkingLotSelectionParameters attrac="0" avail="0" decSituation="ROUTEGUIDANCETACTIC2" distFromDestM="0" genCost="0" parkFee="0"/>
-			</parkLotSelPars>
-		</vehicleType>
-		<vehicleType alightTm="0" anmFlag="false" boardTm="0" capExact="false" capacity="0" category="PEDESTRIAN" clearTm="0" colorDistr1="201" colorDistr2="202" colorDistr3="203" colorDistr4="204" desAccelFunc="5" desDecelFunc="5" distCoeffPerMeter="0" doorClosDur="2" dwellTmIsAdd="true" equip="" extDriver="false" extDriverDLLFile="" extDriverParFile="" extEmissionDLLFile="" linkCostCoeff="1" maxAccelFunc="5" maxDecelFunc="5" model2D3DDistr="200" name="Woman" no="520" travTmCoeff="1">
-			<parkLotSelPars>
-				<parkingLotSelectionParameters attrac="0" avail="0" decSituation="DEPARTUREFROMPARKINGLOT" distFromDestM="0" genCost="0" parkFee="0"/>
-				<parkingLotSelectionParameters attrac="0" avail="0" decSituation="DYNAMICROUTINGDECISION" distFromDestM="0" genCost="0" parkFee="0"/>
-				<parkingLotSelectionParameters attrac="0" avail="0" decSituation="ROUTEGUIDANCETACTIC1" distFromDestM="0" genCost="0" parkFee="0"/>
-				<parkingLotSelectionParameters attrac="0" avail="0" decSituation="ROUTEGUIDANCETACTIC2" distFromDestM="0" genCost="0" parkFee="0"/>
-			</parkLotSelPars>
-		</vehicleType>
-		<vehicleType alightTm="0" anmFlag="false" boardTm="0" capExact="false" capacity="0" category="BIKE" clearTm="0" colorDistr1="101" colorDistr2="102" colorDistr3="103" colorDistr4="60" desAccelFunc="6" desDecelFunc="6" distCoeffPerMeter="0" doorClosDur="2" dwellTmIsAdd="true" equip="" extDriver="false" extDriverDLLFile="" extDriverParFile="" extEmissionDLLFile="" linkCostCoeff="1" maxAccelFunc="6" maxDecelFunc="6" model2D3DDistr="61" name="Bike Man" no="610" travTmCoeff="1">
-			<parkLotSelPars>
-				<parkingLotSelectionParameters attrac="0" avail="0" decSituation="DEPARTUREFROMPARKINGLOT" distFromDestM="0" genCost="0" parkFee="0"/>
-				<parkingLotSelectionParameters attrac="0" avail="0" decSituation="DYNAMICROUTINGDECISION" distFromDestM="0" genCost="0" parkFee="0"/>
-				<parkingLotSelectionParameters attrac="0" avail="0" decSituation="ROUTEGUIDANCETACTIC1" distFromDestM="0" genCost="0" parkFee="0"/>
-				<parkingLotSelectionParameters attrac="0" avail="0" decSituation="ROUTEGUIDANCETACTIC2" distFromDestM="0" genCost="0" parkFee="0"/>
-			</parkLotSelPars>
-		</vehicleType>
-		<vehicleType alightTm="0" anmFlag="false" boardTm="0" capExact="false" capacity="0" category="BIKE" clearTm="0" colorDistr1="201" colorDistr2="202" colorDistr3="203" colorDistr4="60" desAccelFunc="6" desDecelFunc="6" distCoeffPerMeter="0" doorClosDur="2" dwellTmIsAdd="true" equip="" extDriver="false" extDriverDLLFile="" extDriverParFile="" extEmissionDLLFile="" linkCostCoeff="1" maxAccelFunc="6" maxDecelFunc="6" model2D3DDistr="62" name="Bike Woman" no="620" travTmCoeff="1">
 			<parkLotSelPars>
 				<parkingLotSelectionParameters attrac="0" avail="0" decSituation="DEPARTUREFROMPARKINGLOT" distFromDestM="0" genCost="0" parkFee="0"/>
 				<parkingLotSelectionParameters attrac="0" avail="0" decSituation="DYNAMICROUTINGDECISION" distFromDestM="0" genCost="0" parkFee="0"/>
