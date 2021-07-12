@@ -240,7 +240,9 @@
     </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Controller.cpp" />
+    <ClCompile Include="ControlManager.cpp" />
+    <ClCompile Include="LateralController.cpp" />
+    <ClCompile Include="LongitudinalController.cpp" />
     <ClCompile Include="DriverModel.cpp">
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Disabled</Optimization>
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Disabled</Optimization>
@@ -256,14 +258,18 @@
     <ClCompile Include="NearbyVehicle.cpp" />
     <ClCompile Include="SimulationLogger.cpp" />
     <ClCompile Include="Vehicle.cpp" />
+    <ClCompile Include="VelocityFilter.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Controller.h" />
+    <ClInclude Include="ControlManager.h" />
+    <ClInclude Include="LateralController.h" />
+    <ClInclude Include="LongitudinalController.h" />
     <ClInclude Include="DriverModel.h" />
     <ClInclude Include="Constants.h" />
     <ClInclude Include="NearbyVehicle.h" />
     <ClInclude Include="SimulationLogger.h" />
     <ClInclude Include="Vehicle.h" />
+    <ClInclude Include="VelocityFilter.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -26,6 +26,24 @@
 
 /*==========================================================================*/
 
+/*--------------------------------------------------------------------------*/
+/* Definitions that were not in the original DLL example */
+
+enum class UDA {
+    gap_to_dest_lane_leader = 6, // value taken from VISSIM interface.
+    gap_to_dest_lane_follower,
+    safe_gap_to_dest_lane_leader,
+    safe_gap_to_dest_lane_follower,
+    gap_to_leader,
+    leader_id,
+    use_internal_lane_change_decision,
+    veh_following_collision_free_gap_to_fd,
+    transient_gap_to_fd,
+
+    first = gap_to_dest_lane_leader,
+};
+/*--------------------------------------------------------------------------*/
+
 /* General data: */
 /* (index1, index2 usually irrelevant) */
 
@@ -291,60 +309,77 @@
 /* lane data: */
 /* (index1 = lane number: rightmost = 1) */
 /* (index2 irrelevant) */
+
+/* double: lane width [m] */
 #define  DRIVER_DATA_LANE_WIDTH              501
-           /* double: lane width [m] */
+
+/* double: distance to end of lane [m]               */
+/* (can be emergency stop position before connector) */
+/* (negative = no end of lane in visibility range)   */
 #define  DRIVER_DATA_LANE_END_DISTANCE       502
-           /* double: distance to end of lane [m]               */
-           /* (can be emergency stop position before connector) */
-           /* (negative = no end of lane in visibility range)   */
 
 /* current lane data: */
 /* (index1, index2 irrelevant) */
-#define  DRIVER_DATA_CURRENT_LANE_POLY_N  551
-           /* long: number of downstream lane polygon points within         */
-           /*       visibility distance along the route/path of the vehicle */
+
+/* long: number of downstream lane polygon points within         */
+/*       visibility distance along the route/path of the vehicle */
 /* (index1 = point index, starting at 1) */
 /* (index2 irrelevant) */
+#define  DRIVER_DATA_CURRENT_LANE_POLY_N  551
+
+/* double: world coordinate X (polygon point, middle of the lane) */
 #define  DRIVER_DATA_CURRENT_LANE_POLY_X  552
-           /* double: world coordinate X (polygon point, middle of the lane) */
+
+/* double: world coordinate Y (polygon point, middle of the lane) */
 #define  DRIVER_DATA_CURRENT_LANE_POLY_Y  553
-           /* double: world coordinate Y (polygon point, middle of the lane) */
+
+/* double: world coordinate Z (polygon point, middle of the lane) */
 #define  DRIVER_DATA_CURRENT_LANE_POLY_Z  554
-           /* double: world coordinate Z (polygon point, middle of the lane) */
+
 
 /* environment data: */
 /* (index1, index2 irrelevant) */
+
+/* double: current curve radius [m] */
 #define  DRIVER_DATA_RADIUS                  601
-           /* double: current curve radius [m] */
+
+/* double: minimum curve radius [m] in visibility range */
 #define  DRIVER_DATA_MIN_RADIUS              602
-           /* double: minimum curve radius [m] in visibility range */
+
+/* double: distance [m] to spot of minimum curve radius */
 #define  DRIVER_DATA_DIST_TO_MIN_RADIUS      603
-           /* double: distance [m] to spot of minimum curve radius */
+
+/* double: current slope (negative = drop) */
+/* (e.g. -0.026 = -2.6%)                   */
 #define  DRIVER_DATA_SLOPE                   604
-           /* double: current slope (negative = drop) */
-           /* (e.g. -0.026 = -2.6%)                   */
+
+/* double: slope at end of visibility range */
+/* (negative = drop)                        */
 #define  DRIVER_DATA_SLOPE_AHEAD             605
-           /* double: slope at end of visibility range */
-           /* (negative = drop)                        */
 
 /* traffic sign data: */
 /* (index1, index2 irrelevant) */
+
+/* double: distance [m] to next signal head */
+/* (negative = no signal head visible)      */
 #define  DRIVER_DATA_SIGNAL_DISTANCE         701
-           /* double: distance [m] to next signal head */
-           /* (negative = no signal head visible)      */
+
+/* long:   red = 1, amber = 2, green = 3, red/amber = 4, */
+/*         amber flashing = 5, off = 6, green arrow = 7  */
 #define  DRIVER_DATA_SIGNAL_STATE            702
-           /* long:   red = 1, amber = 2, green = 3, red/amber = 4, */
-           /*         amber flashing = 5, off = 6, green arrow = 7  */
+
+/* double: simulation time [s] when signal changed to current state */
 #define  DRIVER_DATA_SIGNAL_STATE_START      703
-           /* double: simulation time [s] when signal changed to current state */
+
+/* double: distance [m] to 'speed limit sign' */
+/*         (reduced speed area: real distance) */
+/*         (desired speed decision: 1.0 m when just passed) */
+/*         (negative: no sign visible) */
 #define  DRIVER_DATA_SPEED_LIMIT_DISTANCE    704
-           /* double: distance [m] to 'speed limit sign' */
-           /*         (reduced speed area: real distance) */
-           /*         (desired speed decision: 1.0 m when just passed) */
-           /*         (negative: no sign visible) */
+
+/* double: speed limit [km/h] */
+/*         (0 = end of reduced speed area) */
 #define  DRIVER_DATA_SPEED_LIMIT_VALUE       705
-           /* double: speed limit [km/h] */
-           /*         (0 = end of reduced speed area) */
 
 /* driving behaviour data: */
 /* (index1, index2 irrelevant) */
@@ -381,7 +416,7 @@
 /*         (1 = yes, 0 = no)                                           */
 #define  DRIVER_DATA_SIMPLE_LANECHANGE       806
 
- /* long:   flag: does driver model just want to use the internal model */
+/* long:   flag: does driver model just want to use the internal model */
 /*         in this time step?                                          */
 /*         (1 = yes, 0 = no)                                           */
 /*         1 is only possible if DRIVER_DATA_WANTS_SUGGESTION is set!  */
