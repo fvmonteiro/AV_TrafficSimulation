@@ -11,16 +11,18 @@
 
 #include "Constants.h"
 
+enum class RelativeLane {
+	right_right = -2, // second to the right
+	right, // next to the right
+	same,
+	left, // next to the left
+	left_left, // second to the left
+};
+
 class NearbyVehicle {
 public:
-	enum class RelativeLane {
-		right_right = -2, // second to the right
-		right, // next to the right
-		same, 
-		left, // next to the left
-		left_left, // second to the left
-	};
 
+	/* Getters */
 	const std::vector<long>& get_id() const { return id; };
 	const std::vector<double>& get_length() const { return length; };
 	const std::vector<double>& get_width() const { return width; };
@@ -40,10 +42,9 @@ public:
 	const std::vector<double>& get_acceleration() const { 
 		return acceleration;
 	};
-
 	double get_max_brake() const { return max_brake; };
-	double get_lambda_0() const { return lambda_0; };
-	double get_lambda_1() const { return lambda_1; };
+
+	/* Current value getters */
 	long get_current_id() const { return id.back(); };
 	double get_current_length() const { return length.back(); };
 	double get_current_width() const { return width.back(); };
@@ -60,14 +61,12 @@ public:
 	};
 	double get_current_acceleration() const { return acceleration.back(); };
 
-	void set_id(long id); // set_id checks if the nearby vehicle has changed
+	/* Setters */
+	void set_id(long id) { this->id.push_back(id); };
 	void set_length(double length) { this->length.push_back(length); };
 	void set_width(double width) { this->width.push_back(width); };
-	void set_category(VehicleCategory category) {
-		this->category.push_back(category);
-	};
 	void set_category(long category) { 
-		this->category.push_back(VehicleCategory(category));
+		set_category(VehicleCategory(category));
 	};
 	void set_relative_lane(RelativeLane relative_lane) {
 		this->relative_lane.push_back(relative_lane);
@@ -88,6 +87,13 @@ public:
 		this->acceleration.push_back(acceleration);
 	};
 
+	/* Special getters and setters */
+	double get_lambda_0() const { return lambda_0; };
+	double get_lambda_1() const { return lambda_1; };
+	/* set_category also sets the estimated maximum braking of the
+	nearby vehicle and computes lambda_0 and lambda_1. */
+	void set_category(VehicleCategory category);
+
 	bool is_on_same_lane() const;
 	bool is_ahead() const;
 	void fill_with_dummy_values();
@@ -99,9 +105,11 @@ private:
 	/* Estimated parameter used for safe gap computations (no direct equivalent
 	in VISSIM's simulation dynamics) */
 	/* TODO : parameter below should vary based on vehicle category */
-	double max_brake{ 6.5 }; // [m/s^2]
-	double lambda_0;
-	double lambda_1;
+	double car_max_brake{ 7.5 }; // [m/s^2]
+	double truck_max_brake{ 5.5 }; // [m/s^2]
+	double max_brake{ 7.5 }; // [m/s^2]
+	double lambda_0{ -10.0 }; // dummy value, must be computed
+	double lambda_1{ -1.0 }; // dummy value, must be computed
 	
 	std::vector<long> id;
 	std::vector<double> length; // [m]

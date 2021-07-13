@@ -5,13 +5,17 @@
 #include "Constants.h"
 #include "NearbyVehicle.h"
 
-void NearbyVehicle::set_id(long new_id) {
-	/* If the nearby vehicle has changed, the ego vehicle 
-	estimates the nearby vehicle's emergency braking parameters */
-	if ((id.empty()) || (id.back() != new_id)) {
+void NearbyVehicle::set_category(VehicleCategory category) {
+	if (category == VehicleCategory::truck) {
+		max_brake = truck_max_brake;
+	}
+	else { // assume car if any other category
+		max_brake = car_max_brake;
+	}
+	if ((this->category.empty()) || (this->category.back() != category)) {
 		compute_safe_gap_parameters();
 	}
-	id.push_back(new_id);
+	this->category.push_back(category);
 }
 
 bool NearbyVehicle::is_on_same_lane() const {
@@ -52,7 +56,7 @@ void NearbyVehicle::compute_safe_gap_parameters() {
 	double jE{ 50.0 }; // [m/s^3]
 	double aE{ 0.5 }; // [m/s^2]
 	double tau_d{ 0.1 }; // [s]
-	double bE = max_brake;
+	double bE = get_max_brake();
 	double tau_j = (aE + bE) / jE;
 	lambda_0 = -(aE + bE)
 		* (std::pow(tau_d, 2) + tau_d * tau_j + std::pow(tau_j, 2) / 3);

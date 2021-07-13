@@ -107,7 +107,7 @@ double LateralController::compute_collision_free_gap(
 			+ lambda_0;
 	}
 	else {
-		collision_free_gap = 0;
+		collision_free_gap = 0.0;
 	}
 
 	return collision_free_gap;

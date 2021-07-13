@@ -8,7 +8,7 @@
 /*==========================================================================*/
 
 #include <iostream>
-#include <unordered_map>
+#include <unordered_set>
 #include "Constants.h"
 #include "DriverModel.h"
 #include "SimulationLogger.h"
@@ -17,7 +17,7 @@
 /*==========================================================================*/
 
 const size_t LOGGED_VEHICLE_NO = 3; // to "debug" code logic
-const long LOGGED_VEHICLE_ID = 108;
+const std::unordered_set<long> LOGGED_VEHICLES_IDS{ 1, 3, 7 };
 
 SimulationLogger simulation_logger;
 std::unordered_map<long, Vehicle> vehicles;
@@ -104,12 +104,11 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
     case DRIVER_DATA_VEH_ID                 :
         current_vehicle_id = long_value;
         if (vehicles.find(long_value) == vehicles.end()) {
+            
             bool verbose = false;
-            if (current_vehicle_id == LOGGED_VEHICLE_ID) verbose = true;
-            /*Vehicle new_vehicle(current_vehicle_id, simulation_time_step,
-                current_time, verbose);
-            if (verbose) new_vehicle.log_vehicle_states();
-            vehicles[current_vehicle_id] = new_vehicle;*/
+            if (LOGGED_VEHICLES_IDS.find(current_vehicle_id) 
+                != LOGGED_VEHICLES_IDS.end()) verbose = true;
+            
             vehicles[current_vehicle_id] = Vehicle(current_vehicle_id,
                 simulation_time_step, current_time, verbose);
             if (verbose) {
@@ -196,26 +195,12 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
     case DRIVER_DATA_VEH_REL_TARGET_LANE    :
         return 1;
     case DRIVER_DATA_VEH_INTAC_STATE        :
-        if (vehicles[current_vehicle_id].get_should_log()) {
-            std::clog << "\tt=" << current_time << std::endl;
-            std::clog << "\tstate=" << long_value << std::endl;
-        }
         return 1;
     case DRIVER_DATA_VEH_INTAC_TARGET_TYPE  :
-        if (vehicles[current_vehicle_id].get_should_log()) {
-            std::clog << "\ttype=" << long_value << std::endl;
-        }
         return 1;
     case DRIVER_DATA_VEH_INTAC_TARGET_ID    :
-        if (vehicles[current_vehicle_id].get_should_log()) {
-            std::clog << "\ttarget id=" << long_value
-                << std::endl;
-        }
         return 1;
     case DRIVER_DATA_VEH_INTAC_HEADWAY      :
-        if (vehicles[current_vehicle_id].get_should_log()) {
-            std::clog << "\theadway = " << long_value << std::endl;
-        }
         return 1;
     case DRIVER_DATA_VEH_UDA                :
         if (UDA(index1) == UDA::use_internal_lane_change_decision) {
@@ -286,12 +271,9 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
     case DRIVER_DATA_LANE_WIDTH             :
         return 1;
     case DRIVER_DATA_LANE_END_DISTANCE      :
-        if (vehicles[current_vehicle_id].get_should_log()) {
-            std::clog << "t=" << current_time
-                << ", id=" << current_vehicle_id
-                << ", lane=" << index1
-                << ", lane end distance = " << double_value 
-                << std::endl;
+        if (vehicles.find(current_vehicle_id) != vehicles.end()) {
+            vehicles[current_vehicle_id].set_lane_end_distance(
+                double_value, index1);
         }
         return 1;
     case DRIVER_DATA_RADIUS                 :

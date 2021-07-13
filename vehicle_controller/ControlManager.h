@@ -61,6 +61,8 @@ public:
 private:
 	bool verbose = false;
 	LongitudinalController origin_lane_controller;
+	LongitudinalController destination_lane_controller;
+	LongitudinalController end_of_lane_controller;
 	LateralController lateral_controller;
 	std::vector<State> states;
 };

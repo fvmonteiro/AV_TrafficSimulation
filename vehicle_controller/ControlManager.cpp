@@ -51,37 +51,75 @@ double ControlManager::compute_drac(double relative_velocity, double gap) {
 double ControlManager::determine_desired_acceleration(const Vehicle& ego_vehicle,
 	const NearbyVehicle& leader) {
 
-	double desired_acceleration_origin_lane;
-	LongitudinalController::State origin_lane_controller_state;
+	//LongitudinalController::State origin_lane_controller_state;
 	double desired_acceleration;
-	double drac;
-	double ego_velocity = ego_vehicle.get_current_velocity();
-	double leader_velocity = ego_velocity
-		- leader.get_current_relative_velocity();
+	double max_acceleration = ego_vehicle.get_comfortable_acceleration() * 2;
+	double desired_acceleration_origin_lane = max_acceleration;
+	double desired_acceleration_dest_lane = max_acceleration;
+	double desired_acceleration_end_of_lane = max_acceleration;
+	//double drac;
+	//double ego_velocity = ego_vehicle.get_current_velocity();
+	/*double leader_velocity = ego_velocity
+		- leader.get_current_relative_velocity();*/
 
-	/* Logic: if the vehicle wants to change lanes, we let VISSIM take care
-	of it. Otherwise, we apply the ACC. */
-	if (ego_vehicle.get_current_preferred_relative_lane() != 0) {
+	if (ego_vehicle.get_desired_lane_change_direction() 
+		!= RelativeLane::same) {
+		if (ego_vehicle.get_use_internal_lane_change_decision()) {
+			desired_acceleration_origin_lane =
+				origin_lane_controller.compute_desired_acceleration(
+					ego_vehicle, leader);
+
+			/* Longitudinal control to wait at lane's end while waiting
+			for appropriate lane change gap. Without this, vehicles might 
+			miss a desired exit. */
+			if ((ego_vehicle.get_current_active_lane_change() == 0)
+				&& (ego_vehicle.get_current_lane_end_distance() > 0)) {
+				/* For now, we simulate a stopped vehicle at the end of 
+				the lane to force the vehicle to stop before the end of
+				the lane. */
+				NearbyVehicle virtual_vehicle;
+				virtual_vehicle.set_id(1);
+				virtual_vehicle.set_relative_lane(RelativeLane::same);
+				virtual_vehicle.set_relative_position(1);
+				virtual_vehicle.set_relative_velocity(
+					ego_vehicle.get_current_velocity());
+				virtual_vehicle.set_distance(
+					ego_vehicle.get_current_lane_end_distance());
+				virtual_vehicle.set_length(0.0);
+				desired_acceleration_end_of_lane =
+					end_of_lane_controller.compute_desired_acceleration(
+						ego_vehicle, virtual_vehicle);
+			}
+
+			/* Longitudinal control to adjust to destination lane leader */
+			NearbyVehicle* dest_lane_leader =
+				ego_vehicle.find_destination_lane_leader();
+			if (dest_lane_leader != nullptr) {
+				desired_acceleration_dest_lane =
+					destination_lane_controller.compute_desired_acceleration(
+						ego_vehicle, *dest_lane_leader);
+			}
+
+			desired_acceleration = std::min(
+				std::min(desired_acceleration_origin_lane,
+				desired_acceleration_dest_lane),
+				desired_acceleration_end_of_lane);
+		}
+		else {
+			desired_acceleration = 
+				ego_vehicle.get_current_vissim_acceleration();			
+		}
+
 		states.push_back(State::intention_to_change_lane);
-		desired_acceleration = ego_vehicle.get_current_vissim_acceleration();
 	}
 	else {
 		desired_acceleration_origin_lane = origin_lane_controller.
 			compute_desired_acceleration(ego_vehicle, leader);
-		origin_lane_controller_state = origin_lane_controller.get_state();
-		drac = compute_drac(leader.get_current_relative_velocity(),
-			ego_vehicle.compute_gap(leader));
-		if ((origin_lane_controller_state 
-			 == LongitudinalController::State::vehicle_following)
-			&& (-desired_acceleration_origin_lane < drac)) {
-			desired_acceleration = drac;
-			states.push_back(State::emergency_braking);
-		}
-		else {
-			desired_acceleration = desired_acceleration_origin_lane;
-			states.push_back(longitudinal_state_to_vehicle_state(
-				origin_lane_controller_state));
-		}
+		//origin_lane_controller_state = origin_lane_controller.get_state();
+		desired_acceleration = desired_acceleration_origin_lane;
+
+		states.push_back(longitudinal_state_to_vehicle_state(
+			origin_lane_controller.get_state()));
 	}
 	
 	return desired_acceleration;

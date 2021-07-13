@@ -92,8 +92,14 @@ double Vehicle::get_current_desired_acceleration() const {
 double Vehicle::get_current_vissim_acceleration() const {
 	return vissim_acceleration.back();
 }
+long Vehicle::get_current_active_lane_change() const {
+	return active_lane_change.back();
+}
 long Vehicle::get_current_vissim_active_lane_change() const {
 	return vissim_active_lane_change.back();
+}
+double Vehicle::get_current_lane_end_distance() const {
+	return lane_end_distance.back();
 }
 /* ------------------------------------------------------------------------ */
 
@@ -108,6 +114,15 @@ void Vehicle::set_lane(long lane) {
 }
 void Vehicle::set_preferred_relative_lane(long preferred_relative_lane) {
 	this->preferred_relative_lane.push_back(preferred_relative_lane);
+	if (preferred_relative_lane > 0) {
+		desired_lane_change_direction = RelativeLane::left;
+	}
+	else if (preferred_relative_lane < 0) {
+		desired_lane_change_direction = RelativeLane::right;
+	}
+	else {
+		desired_lane_change_direction = RelativeLane::same;
+	}
 }
 void Vehicle::set_velocity(double velocity) {
 	this->velocity.push_back(velocity);
@@ -120,6 +135,12 @@ void Vehicle::set_vissim_acceleration(double vissim_acceleration) {
 }
 void Vehicle::set_vissim_active_lane_change(int active_lane_change) {
 	this->vissim_active_lane_change.push_back(active_lane_change);
+}
+void Vehicle::set_lane_end_distance(double lane_end_distance,
+	long lane_number) {
+	if (lane_number == get_current_lane()) {
+		this->lane_end_distance.push_back(lane_end_distance);
+	}
 }
 /* ------------------------------------------------------------------------ */
 
@@ -143,7 +164,7 @@ NearbyVehicle* Vehicle::peek_nearby_vehicles() const {
 bool Vehicle::update_leader() {
 	int relative_position = 1;
 	NearbyVehicle* candidate_leader = find_nearby_vehicle(
-		NearbyVehicle::RelativeLane::same, relative_position);
+		RelativeLane::same, relative_position);
 	if (candidate_leader != nullptr) {
 		leader.copy_current_states(*candidate_leader);
 		return true;
@@ -203,53 +224,70 @@ double Vehicle::compute_gap(const NearbyVehicle* nearby_vehicle) const {
 //	return compute_gap(leader);
 //}
 
-double Vehicle::compute_gap_to_destination_lane_leader() const {
-	double gap = 0.0;
+RelativeLane Vehicle::get_lane_change_direction() {
+	RelativeLane relative_lane;
 	long preferred_relative_lane = get_current_preferred_relative_lane();
 	if (preferred_relative_lane > 0) {
-		gap = compute_gap(find_left_lane_leader());
+		relative_lane = RelativeLane::left;
 	}
 	else if (preferred_relative_lane < 0) {
-		gap = compute_gap(find_right_lane_leader());
+		relative_lane = RelativeLane::right;
 	}
-	return gap;
+	else {
+		relative_lane = RelativeLane::same;
+	}
+	return relative_lane;
+}
+
+double Vehicle::compute_gap_to_destination_lane_leader() const {
+	return compute_gap(find_destination_lane_leader());;
 }
 
 double Vehicle::compute_gap_to_destination_lane_follower() const {
-	double gap = 0.0;
-	long preferred_relative_lane = get_current_preferred_relative_lane();
-	if (preferred_relative_lane > 0) {
-		gap = compute_gap(find_left_lane_follower());
-	}
-	else if (preferred_relative_lane < 0) {
-		gap = compute_gap(find_right_lane_follower());
-	}
-	return gap;
+	return compute_gap(find_destination_lane_follower());
 }
 
-NearbyVehicle* Vehicle::find_left_lane_leader() const {
+NearbyVehicle* Vehicle::find_destination_lane_leader() const {
+	/* If there is no intention to change lanes, the function returns 
+	the leader on the same lane. */
 	int relative_position = 1;
-	return find_nearby_vehicle(NearbyVehicle::RelativeLane::left,
-		relative_position);
+	NearbyVehicle* destination_lane_leader = find_nearby_vehicle(
+			desired_lane_change_direction, relative_position);
+	return destination_lane_leader;
 }
 
-NearbyVehicle* Vehicle::find_left_lane_follower() const {
+NearbyVehicle* Vehicle::find_destination_lane_follower() const {
+	/* If there is no intention to change lanes, the function returns
+	the follower on the same lane. */
 	int relative_position = -1;
-	return find_nearby_vehicle(NearbyVehicle::RelativeLane::left,
-		relative_position);
+	NearbyVehicle* destination_lane_follower = find_nearby_vehicle(
+		desired_lane_change_direction, relative_position);
+	return destination_lane_follower;
 }
 
-NearbyVehicle* Vehicle::find_right_lane_leader() const {
-	int relative_position = 1;
-	return find_nearby_vehicle(NearbyVehicle::RelativeLane::right,
-		relative_position);
-}
-
-NearbyVehicle* Vehicle::find_right_lane_follower() const {
-	int relative_position = -1;
-	return find_nearby_vehicle(NearbyVehicle::RelativeLane::right,
-		relative_position);
-}
+//NearbyVehicle* Vehicle::find_left_lane_leader() const {
+//	int relative_position = 1;
+//	return find_nearby_vehicle(RelativeLane::left,
+//		relative_position);
+//}
+//
+//NearbyVehicle* Vehicle::find_left_lane_follower() const {
+//	int relative_position = -1;
+//	return find_nearby_vehicle(RelativeLane::left,
+//		relative_position);
+//}
+//
+//NearbyVehicle* Vehicle::find_right_lane_leader() const {
+//	int relative_position = 1;
+//	return find_nearby_vehicle(RelativeLane::right,
+//		relative_position);
+//}
+//
+//NearbyVehicle* Vehicle::find_right_lane_follower() const {
+//	int relative_position = -1;
+//	return find_nearby_vehicle(RelativeLane::right,
+//		relative_position);
+//}
 
 ControlManager::State Vehicle::get_current_vehicle_state() {
 	return controller.get_current_state();
@@ -294,15 +332,9 @@ double Vehicle::consider_vehicle_dynamics(double desired_acceleration) {
 
 double Vehicle::compute_safe_gap_to_destination_lane_leader() {
 	double gap = 0.0;
-	long preferred_relative_lane = get_current_preferred_relative_lane();
-	if (preferred_relative_lane != 0) {
-		NearbyVehicle* destination_lane_leader;
-		if (preferred_relative_lane > 0) {
-			destination_lane_leader = find_left_lane_leader();
-		}
-		else {
-			destination_lane_leader = find_right_lane_leader();
-		}
+	if (desired_lane_change_direction != RelativeLane::same) {
+		NearbyVehicle* destination_lane_leader = 
+			find_destination_lane_leader();
 		if (destination_lane_leader != nullptr) {
 			gap = controller.compute_safe_lane_change_gap(*this, 
 				*destination_lane_leader);
@@ -313,15 +345,9 @@ double Vehicle::compute_safe_gap_to_destination_lane_leader() {
 
 double Vehicle::compute_safe_gap_to_destination_lane_follower() {
 	double gap = 0.0;
-	long preferred_relative_lane = get_current_preferred_relative_lane();
-	if (preferred_relative_lane != 0) {
-		NearbyVehicle* destination_lane_follower;
-		if (preferred_relative_lane > 0) {
-			destination_lane_follower = find_left_lane_follower();
-		}
-		else {
-			destination_lane_follower = find_right_lane_follower();
-		}
+	if (desired_lane_change_direction != RelativeLane::same) {
+		NearbyVehicle* destination_lane_follower =
+			find_destination_lane_follower();
 		if (destination_lane_follower != nullptr) {
 			gap = controller.compute_safe_lane_change_gap(*this,
 				*destination_lane_follower);
@@ -332,15 +358,9 @@ double Vehicle::compute_safe_gap_to_destination_lane_follower() {
 
 double Vehicle::compute_collision_free_gap_to_destination_lane_follower() {
 	double vehicle_following_gap = 0.0;
-	long preferred_relative_lane = get_current_preferred_relative_lane();
-	if (preferred_relative_lane != 0) {
-		NearbyVehicle* destination_lane_follower;
-		if (preferred_relative_lane > 0) {
-			destination_lane_follower = find_left_lane_follower();
-		}
-		else {
-			destination_lane_follower = find_right_lane_follower();
-		}
+	if (desired_lane_change_direction != RelativeLane::same) {
+		NearbyVehicle* destination_lane_follower =
+			find_destination_lane_follower();
 		if (destination_lane_follower != nullptr) {
 			vehicle_following_gap = controller.get_lateral_controller().
 				compute_collision_free_gap(*this, *destination_lane_follower);
@@ -352,15 +372,9 @@ double Vehicle::compute_collision_free_gap_to_destination_lane_follower() {
 
 double Vehicle::compute_transient_gap_to_destination_lane_follower() {
 	double transient_gap = 0.0;
-	long preferred_relative_lane = get_current_preferred_relative_lane();
-	if (preferred_relative_lane != 0) {
-		NearbyVehicle* destination_lane_follower;
-		if (preferred_relative_lane > 0) {
-			destination_lane_follower = find_left_lane_follower();
-		}
-		else {
-			destination_lane_follower = find_right_lane_follower();
-		}
+	if (desired_lane_change_direction != RelativeLane::same) {
+		NearbyVehicle* destination_lane_follower =
+			find_destination_lane_follower();
 		if (destination_lane_follower != nullptr) {
 			transient_gap = controller.get_lateral_controller().
 				compute_transient_gap(*this, *destination_lane_follower, false);
@@ -391,19 +405,19 @@ long Vehicle::decide_active_lane_change_direction() {
 	else {
 		active_lane_change_direction = get_current_vissim_active_lane_change();
 	}
-	if (verbose) {
+	/*if (verbose) {
 		std::clog << get_current_time() << ", "
 			<< id << ", "
 			<< active_lane_change_direction << ", "
 			<< get_current_vissim_active_lane_change()
 			<< std::endl;
-	}
+	}*/
 	this->active_lane_change.push_back(active_lane_change_direction);
 	return active_lane_change_direction;
 }
 
 NearbyVehicle* Vehicle::find_nearby_vehicle(
-	NearbyVehicle::RelativeLane relative_lane, int relative_position) const {
+	RelativeLane relative_lane, int relative_position) const {
 
 	for (NearbyVehicle* nearby_vehicle : nearby_vehicles) {
 		if ((nearby_vehicle->get_current_relative_lane() 
@@ -417,7 +431,7 @@ NearbyVehicle* Vehicle::find_nearby_vehicle(
 	return nullptr;
 }
 
-/* From here on, functions for printing and debugging --------------------- */
+/* Functions for printing and debugging ----------------------------------- */
 
 void Vehicle::write_vehicle_log() {
 	std::vector<Member> members{
@@ -425,10 +439,12 @@ void Vehicle::write_vehicle_log() {
 		Member::preferred_relative_lane,
 		Member::state,
 		Member::velocity,
-		Member::desired_acceleration,
-		Member::vissim_acceleration,
+		//Member::desired_acceleration,
+		//Member::vissim_acceleration,
 		Member::active_lane_change_direction,
 		Member::vissim_active_lane_change_direction,
+		Member::lane,
+		Member::lane_end_distance,
 	};
 	bool write_size = false;
 	std::ofstream vehicle_log;
@@ -517,6 +533,9 @@ std::ostringstream Vehicle::write_members(
 			case Member::vissim_active_lane_change_direction:
 				oss << vissim_active_lane_change[i];
 				break;
+			case Member::lane_end_distance:
+				oss << lane_end_distance[i];
+				break;
 			default:
 				oss << "";
 				break;
@@ -531,40 +550,42 @@ std::ostringstream Vehicle::write_members(
 int Vehicle::get_member_size(Member member) {
 	switch (member)
 	{
-	case Vehicle::Member::creation_time:
+	case Member::creation_time:
 		return 1;
-	case Vehicle::Member::id:
+	case Member::id:
 		return 1;
-	case Vehicle::Member::length:
+	case Member::length:
 		return 1;
-	case Vehicle::Member::width:
+	case Member::width:
 		return 1;
-	case Vehicle::Member::color:
+	case Member::color:
 		return 1;
-	case Vehicle::Member::category:
+	case Member::category:
 		return 1;
-	case Vehicle::Member::desired_velocity:
+	case Member::desired_velocity:
 		return 1;
-	case Vehicle::Member::lane:
+	case Member::lane:
 		return (int) lane.size();
-	case Vehicle::Member::preferred_relative_lane:
+	case Member::preferred_relative_lane:
 		return (int) preferred_relative_lane.size();
-	case Vehicle::Member::velocity:
+	case Member::velocity:
 		return (int) velocity.size();
-	case Vehicle::Member::acceleration:
+	case Member::acceleration:
 		return (int) acceleration.size();
-	case Vehicle::Member::desired_acceleration:
+	case Member::desired_acceleration:
 		return (int) desired_acceleration.size();
-	case Vehicle::Member::vissim_acceleration:
+	case Member::vissim_acceleration:
 		return (int) vissim_acceleration.size();
-	case Vehicle::Member::leader_id:
+	case Member::leader_id:
 		return (int) get_leader().get_id().size();
-	case Vehicle::Member::state:
+	case Member::state:
 		return (int) controller.get_states().size();
-	case Vehicle::Member::active_lane_change_direction:
+	case Member::active_lane_change_direction:
 		return (int) active_lane_change.size();
-	case Vehicle::Member::vissim_active_lane_change_direction:
+	case Member::vissim_active_lane_change_direction:
 		return (int) vissim_active_lane_change.size();
+	case Member::lane_end_distance:
+		return (int) lane_end_distance.size();
 	default:
 		return 0;
 	}
@@ -607,6 +628,8 @@ std::string Vehicle::member_enum_to_string(Member member) {
 		return "lc direction";
 	case Member::vissim_active_lane_change_direction:
 		return "vissim lc direction";
+	case Member::lane_end_distance:
+		return "lane end dist";
 	default:
 		return "unknown memeber";
 	}

@@ -58,11 +58,18 @@ public:
 	double get_desired_velocity() const { return desired_velocity; };
 	NearbyVehicle& get_leader() { return leader; };
 	double get_comfortable_acceleration() const { 
-		return comfortable_acceleration; };
+		return comfortable_acceleration;
+	};
 	double get_max_brake() const { return max_brake; };
 	double get_lambda_0() const { return lambda_0; };
 	double get_lambda_1() const { return lambda_1; };
-	/* The controller should never be accessed directly by external
+	bool get_use_internal_lane_change_decision() const {
+		return use_internal_lane_change_decision;
+	};
+	RelativeLane get_desired_lane_change_direction() const {
+		return desired_lane_change_direction;
+	};
+	/* The controller should not be accessed directly by external
 	functions. This getter should be used only for simpler debugging.*/
 	//ControlManager get_controller() const { return controller; };
 	
@@ -78,7 +85,7 @@ public:
 		this->category = category;
 	};
 	void set_color(long color) { this->color = color; };
-	void Vehicle::set_use_internal_lane_change_decision(long use) {
+	void set_use_internal_lane_change_decision(long use) {
 		this->use_internal_lane_change_decision = use > 0;
 	}
 
@@ -91,16 +98,21 @@ public:
 	double get_current_acceleration() const;
 	double get_current_desired_acceleration() const;
 	double get_current_vissim_acceleration() const;
+	long get_current_active_lane_change() const;
 	long get_current_vissim_active_lane_change() const;
+	double get_current_lane_end_distance() const;
 
-	/* Setters of vector type members*/
-	//void set_simulation_time(double time);
+	/* Setters of vector-type members*/
 	void set_lane(long lane);
+	/* Adds a value to the preferred relative lane vector AND 
+	sets the value of desired_lane_change_direction */
 	void set_preferred_relative_lane(long preferred_relative_lane);
 	void set_velocity(double velocity);
 	void set_acceleration(double acceleration);
 	void set_vissim_acceleration(double vissim_acceleration);
 	void set_vissim_active_lane_change(int active_lane_change);
+	void set_lane_end_distance(double lane_end_distance,
+		long lane_number);
 
 	/* Dealing with nearby vehicles*/
 	
@@ -119,10 +131,12 @@ public:
 	double compute_gap(const NearbyVehicle* nearby_vehicle) const;
 	double compute_gap_to_destination_lane_leader() const;
 	double compute_gap_to_destination_lane_follower() const;
-	NearbyVehicle* find_left_lane_leader() const;
+	NearbyVehicle* find_destination_lane_leader() const;
+	NearbyVehicle* find_destination_lane_follower() const;
+	/*NearbyVehicle* find_left_lane_leader() const;
 	NearbyVehicle* find_left_lane_follower() const;
 	NearbyVehicle* find_right_lane_leader() const;
-	NearbyVehicle* find_right_lane_follower() const;
+	NearbyVehicle* find_right_lane_follower() const;*/
 	/* Finds closest downstream nearby_vehicle which is on the same lane and
 	writes its address to parameter leader. Function returns a boolean indicating whether
 	the vehicle has a leader */
@@ -141,6 +155,7 @@ public:
 	returns the feasible acceleration given the approximated low level
 	dynamics */
 	double consider_vehicle_dynamics(double desired_acceleration);
+	RelativeLane get_lane_change_direction();
 	double compute_safe_gap_to_destination_lane_leader();
 	double compute_safe_gap_to_destination_lane_follower();
 	/* Returns the vehicle following collision free gap from the
@@ -159,7 +174,7 @@ public:
 
 	/* Methods for debugging */
 	/* TODO: find better names for the methods */
-	bool get_should_log() { return should_log; };
+	bool get_should_log() const { return should_log; };
 	void log_vehicle_states() { this->should_log = true; };
 	/* The log should be adapted depending on what we are trying to debug */
 	void write_vehicle_log();
@@ -172,7 +187,7 @@ private:
 	in VISSIM's simulation dynamics) */
 	/* TODO : parameters below should vary based on vehicle category */
 	double tau{ 0.5 }; // actuator constant [s].
-	double max_brake{ 6.5 }; // [m/s^2] TODO: vary with speed?
+	double max_brake{ 7.5 }; // [m/s^2] TODO: vary with speed?
 	double comfortable_acceleration{ 2.0 }; // [m/s^2] TODO: vary with speed?
 	double max_jerk{ 50.0 }; // [m/s^3]
 	double brake_delay{ 0.1 }; // [s]
@@ -202,6 +217,8 @@ private:
 	double desired_velocity{ 0 };
 	std::vector<long> lane;
 	std::vector<long> preferred_relative_lane;
+	/* Updated together with preferred_relative_lane */
+	RelativeLane desired_lane_change_direction{ RelativeLane::same };
 	std::vector<double> velocity;
 	std::vector<double> acceleration;
 	std::vector<double> desired_acceleration;
@@ -212,7 +229,8 @@ private:
 	/* VISSIM suggested active lane change */
 	std::vector<long> vissim_active_lane_change;
 	/* Determines if we use our lane change decision model or VISSIM's */
-	bool use_internal_lane_change_decision{ false }; 
+	bool use_internal_lane_change_decision{ false };
+	std::vector<double> lane_end_distance;
 	/* VISSIM sometimes writes some data twice in the same time step.
 	To avoid data vectors of different sizes, we only write data once per 
 	time step. This boolean determines when to write new data */
@@ -221,7 +239,7 @@ private:
 	/* Vehicle internal methods */
 	void compute_safe_gap_parameters();
 	NearbyVehicle* find_nearby_vehicle(
-		NearbyVehicle::RelativeLane relative_lane,
+		RelativeLane relative_lane,
 		int relative_position) const;
 
 	/* For printing and debugging purporses */
@@ -248,6 +266,7 @@ private:
 		state,
 		active_lane_change_direction,
 		vissim_active_lane_change_direction,
+		lane_end_distance,
 	};
 
 	std::string create_header(std::vector<Member> members,

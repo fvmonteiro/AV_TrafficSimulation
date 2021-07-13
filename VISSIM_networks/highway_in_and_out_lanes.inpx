@@ -2027,6 +2027,15 @@
 		<userDefinedAttribute comment="If the vehicle has a positive value in the user-defined attribute &quot;NextRouteNo&quot;, that value is assigned as route number (if that route exists else no route at all).  If that attribute value is zero or negative or empty, the routing decision assigns a random route as normal." dataSrcType="DATA" dataType="BOOL" decimals="2" formula="" internalDefValueNum="0" internalDefValueStr="" internalMaxValue="INF" internalMinValue="-INF" maxStrLen="100" nameLong="Use vehicle route number" nameShort="UseVehRouteNo" no="3" objType="VEHICLEROUTINGDECISIONPARTIAL" subAttrs=""/>
 		<userDefinedAttribute comment="If the vehicle has a positive value in the user-defined attribute &quot;NextRouteNo&quot;, that value is assigned as route number (if that route exists else no route at all).  If that attribute value is zero or negative or empty, the routing decision assigns a random route as normal." dataSrcType="DATA" dataType="BOOL" decimals="2" formula="" internalDefValueNum="0" internalDefValueStr="" internalMaxValue="INF" internalMinValue="-INF" maxStrLen="100" nameLong="Use vehicle route number" nameShort="UseVehRouteNo" no="4" objType="VEHICLEROUTINGDECISIONPARTIALPT" subAttrs=""/>
 		<userDefinedAttribute comment="If the vehicle has a positive value in the user-defined attribute &quot;NextRouteNo&quot;, that value is assigned as route number (if that route exists else no route at all).  If that attribute value is zero or negative or empty, the routing decision assigns a random route as normal." dataSrcType="DATA" dataType="BOOL" decimals="2" formula="" internalDefValueNum="0" internalDefValueStr="" internalMaxValue="INF" internalMinValue="-INF" maxStrLen="100" nameLong="Use vehicle route number" nameShort="UseVehRouteNo" no="5" objType="VEHICLEROUTINGDECISIONMANAGEDLANES" subAttrs=""/>
+		<userDefinedAttribute comment="" dataSrcType="DATA" dataType="SHORTLENGTH" decimals="2" formula="" internalDefValueNum="300" internalDefValueStr="" internalMaxValue="INF" internalMinValue="-INF" maxStrLen="100" nameLong="gapToLeaderAtDestinationLane" nameShort="gapToLd" no="6" objType="VEHICLE" subAttrs=""/>
+		<userDefinedAttribute comment="" dataSrcType="DATA" dataType="SHORTLENGTH" decimals="2" formula="" internalDefValueNum="300" internalDefValueStr="" internalMaxValue="INF" internalMinValue="-INF" maxStrLen="100" nameLong="gapToFollowerAtDestinationLane" nameShort="gapToFd" no="7" objType="VEHICLE" subAttrs=""/>
+		<userDefinedAttribute comment="" dataSrcType="DATA" dataType="SHORTLENGTH" decimals="2" formula="" internalDefValueNum="0" internalDefValueStr="" internalMaxValue="INF" internalMinValue="-INF" maxStrLen="100" nameLong="safeGapToLeaderAtDestinationLane" nameShort="safeGapLd" no="8" objType="VEHICLE" subAttrs=""/>
+		<userDefinedAttribute comment="" dataSrcType="DATA" dataType="SHORTLENGTH" decimals="2" formula="" internalDefValueNum="0" internalDefValueStr="" internalMaxValue="INF" internalMinValue="-INF" maxStrLen="100" nameLong="safeGapToFollowerAtDestinationLane" nameShort="safeGapFd" no="9" objType="VEHICLE" subAttrs=""/>
+		<userDefinedAttribute comment="" dataSrcType="DATA" dataType="SHORTLENGTH" decimals="2" formula="" internalDefValueNum="300" internalDefValueStr="" internalMaxValue="INF" internalMinValue="-INF" maxStrLen="100" nameLong="gapToLeader" nameShort="gapToLeader" no="10" objType="VEHICLE" subAttrs=""/>
+		<userDefinedAttribute comment="" dataSrcType="DATA" dataType="INT" decimals="2" formula="" internalDefValueNum="0" internalDefValueStr="" internalMaxValue="INF" internalMinValue="-INF" maxStrLen="100" nameLong="leaderID" nameShort="leaderID" no="11" objType="VEHICLE" subAttrs=""/>
+		<userDefinedAttribute comment="" dataSrcType="DATA" dataType="BOOL" decimals="2" formula="" internalDefValueNum="1" internalDefValueStr="" internalMaxValue="INF" internalMinValue="-INF" maxStrLen="100" nameLong="useMyLaneChangeDecisionModel" nameShort="useMyLCDecision" no="12" objType="VEHICLE" subAttrs=""/>
+		<userDefinedAttribute comment="" dataSrcType="DATA" dataType="SHORTLENGTH" decimals="2" formula="" internalDefValueNum="300" internalDefValueStr="" internalMaxValue="INF" internalMinValue="-INF" maxStrLen="100" nameLong="vehicleFollowingGapToFd" nameShort="vehFollGapFd" no="13" objType="VEHICLE" subAttrs=""/>
+		<userDefinedAttribute comment="" dataSrcType="DATA" dataType="SHORTLENGTH" decimals="2" formula="" internalDefValueNum="300" internalDefValueStr="" internalMaxValue="INF" internalMinValue="-INF" maxStrLen="100" nameLong="transientGapToFd" nameShort="transientGapFd" no="14" objType="VEHICLE" subAttrs=""/>
 	</userDefinedAttributes>
 	<vehicleClasses>
 		<vehicleClass anmid="" color="ff000000" name="Car" no="10" useVehTypeColor="true">
@@ -2059,16 +2068,21 @@
 				<vehicleCompositionRelativeFlow desSpeedDistr="120" relFlow="1" vehType="110"/>
 			</vehCompRelFlows>
 		</vehicleComposition>
+		<vehicleComposition name="all_autonomous" no="3">
+			<vehCompRelFlows>
+				<vehicleCompositionRelativeFlow desSpeedDistr="120" relFlow="1" vehType="110"/>
+			</vehCompRelFlows>
+		</vehicleComposition>
 	</vehicleCompositions>
 	<vehicleInputs>
 		<vehicleInput anmFlag="false" link="2" name="in_flow" no="2">
 			<timeIntVehVols>
-				<timeIntervalVehVolume cont="false" timeInt="1 0" vehComp="1" volType="STOCHASTIC" volume="500"/>
+				<timeIntervalVehVolume cont="false" timeInt="1 0" vehComp="1" volType="STOCHASTIC" volume="1000"/>
 			</timeIntVehVols>
 		</vehicleInput>
 		<vehicleInput anmFlag="false" link="4" name="main_flow" no="3">
 			<timeIntVehVols>
-				<timeIntervalVehVolume cont="false" timeInt="1 0" vehComp="2" volType="STOCHASTIC" volume="2000"/>
+				<timeIntervalVehVolume cont="false" timeInt="1 0" vehComp="2" volType="STOCHASTIC" volume="4000"/>
 			</timeIntVehVols>
 		</vehicleInput>
 	</vehicleInputs>

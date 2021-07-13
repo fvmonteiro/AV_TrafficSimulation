@@ -16,6 +16,7 @@ MicroResults/
 NGSIM_original/
 post_processed_data/
 VISSIM_networks/*.txt
+VISSIM_networks/autonomous_vehicle_logs
 
 ####### FOR VISUAL STUDIO C++ #######
 ### Suggested from https://github.com/github/gitignore/blob/master/VisualStudio.gitignore
