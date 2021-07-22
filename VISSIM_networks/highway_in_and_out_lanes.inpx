@@ -1961,7 +1961,7 @@
 			</distrDataPts>
 		</powerDistribution>
 	</powerDistributions>
-	<simulation comment="" numCores="1" numRuns="1" randSeed="7" randSeedIncr="1" retroSync="false" simMode="MICRO" simPeriod="300" simRes="10" simSpeed="10" startTm="0" useAllCores="false" useMaxSimSpeed="true" volumeIncrDynAssign="0"/>
+	<simulation comment="" numCores="1" numRuns="1" randSeed="7" randSeedIncr="1" retroSync="false" simMode="MICRO" simPeriod="400" simRes="10" simSpeed="10" startTm="0" useAllCores="false" useMaxSimSpeed="true" volumeIncrDynAssign="0"/>
 	<timeDistributions>
 		<timeDistribution mean="0.5" name="0.5 s" no="1" stdDev="0" type="NORMAL"/>
 		<timeDistribution mean="0.9" name="0.9 s" no="2" stdDev="0" type="NORMAL"/>
@@ -2036,6 +2036,9 @@
 		<userDefinedAttribute comment="" dataSrcType="DATA" dataType="BOOL" decimals="2" formula="" internalDefValueNum="1" internalDefValueStr="" internalMaxValue="INF" internalMinValue="-INF" maxStrLen="100" nameLong="useMyLaneChangeDecisionModel" nameShort="useMyLCDecision" no="12" objType="VEHICLE" subAttrs=""/>
 		<userDefinedAttribute comment="" dataSrcType="DATA" dataType="SHORTLENGTH" decimals="2" formula="" internalDefValueNum="300" internalDefValueStr="" internalMaxValue="INF" internalMinValue="-INF" maxStrLen="100" nameLong="vehicleFollowingGapToFd" nameShort="vehFollGapFd" no="13" objType="VEHICLE" subAttrs=""/>
 		<userDefinedAttribute comment="" dataSrcType="DATA" dataType="SHORTLENGTH" decimals="2" formula="" internalDefValueNum="300" internalDefValueStr="" internalMaxValue="INF" internalMinValue="-INF" maxStrLen="100" nameLong="transientGapToFd" nameShort="transientGapFd" no="14" objType="VEHICLE" subAttrs=""/>
+		<userDefinedAttribute comment="" dataSrcType="DATA" dataType="SHORTLENGTH" decimals="2" formula="" internalDefValueNum="300" internalDefValueStr="" internalMaxValue="INF" internalMinValue="-INF" maxStrLen="100" nameLong="vehicleFollowingGapToLd" nameShort="vehFollGapLd" no="15" objType="VEHICLE" subAttrs=""/>
+		<userDefinedAttribute comment="" dataSrcType="DATA" dataType="SHORTLENGTH" decimals="2" formula="" internalDefValueNum="300" internalDefValueStr="" internalMaxValue="INF" internalMinValue="-INF" maxStrLen="100" nameLong="transientGapToLd" nameShort="transientGapLd" no="16" objType="VEHICLE" subAttrs=""/>
+		<userDefinedAttribute comment="" dataSrcType="DATA" dataType="SHORTLENGTH" decimals="2" formula="" internalDefValueNum="0" internalDefValueStr="" internalMaxValue="INF" internalMinValue="-INF" maxStrLen="100" nameLong="referenceGap" nameShort="referenceGap" no="17" objType="VEHICLE" subAttrs=""/>
 	</userDefinedAttributes>
 	<vehicleClasses>
 		<vehicleClass anmid="" color="ff000000" name="Car" no="10" useVehTypeColor="true">
@@ -2077,12 +2080,12 @@
 	<vehicleInputs>
 		<vehicleInput anmFlag="false" link="2" name="in_flow" no="2">
 			<timeIntVehVols>
-				<timeIntervalVehVolume cont="false" timeInt="1 0" vehComp="1" volType="STOCHASTIC" volume="1000"/>
+				<timeIntervalVehVolume cont="false" timeInt="1 0" vehComp="1" volType="STOCHASTIC" volume="500"/>
 			</timeIntVehVols>
 		</vehicleInput>
 		<vehicleInput anmFlag="false" link="4" name="main_flow" no="3">
 			<timeIntVehVols>
-				<timeIntervalVehVolume cont="false" timeInt="1 0" vehComp="2" volType="STOCHASTIC" volume="4000"/>
+				<timeIntervalVehVolume cont="false" timeInt="1 0" vehComp="2" volType="STOCHASTIC" volume="3000"/>
 			</timeIntVehVols>
 		</vehicleInput>
 	</vehicleInputs>

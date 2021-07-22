@@ -5,50 +5,65 @@
 #include "Constants.h"
 #include "NearbyVehicle.h"
 
+NearbyVehicle::NearbyVehicle(long id, 
+	RelativeLane relative_lane, long relative_position) 
+	: id{ id },
+	relative_lane{ relative_lane },
+	relative_position{ relative_position } {}
+
+NearbyVehicle::NearbyVehicle(long id, long relative_lane,
+	long relative_position)
+	: NearbyVehicle(id, RelativeLane(relative_lane),
+		relative_position) {}
+
 void NearbyVehicle::set_category(VehicleCategory category) {
 	if (category == VehicleCategory::truck) {
-		max_brake = truck_max_brake;
+		max_brake = TRUCK_MAX_BRAKE;
 	}
 	else { // assume car if any other category
-		max_brake = car_max_brake;
+		max_brake = CAR_MAX_BRAKE;
 	}
-	if ((this->category.empty()) || (this->category.back() != category)) {
+	/*if ((this->category.empty()) || (this->category.back() != category)) {
 		compute_safe_gap_parameters();
-	}
-	this->category.push_back(category);
+	}*/
+	this->category = category;
+}
+
+double NearbyVehicle::compute_velocity(double ego_velocity) const {
+	return ego_velocity - relative_velocity;
 }
 
 bool NearbyVehicle::is_on_same_lane() const {
-	return get_current_relative_lane() == RelativeLane::same;
+	return get_relative_lane() == RelativeLane::same;
 }
 
 bool NearbyVehicle::is_ahead() const {
-	return get_current_relative_position() > 0;
+	return get_relative_position() > 0;
 }
 
-void NearbyVehicle::fill_with_dummy_values() {
-	set_id(0);
-	set_length(0);
-	set_width(0);
-	set_category(0);
-	set_relative_lane(0);
-	set_relative_position(0);
-	set_distance(MAX_DISTANCE);
-	set_relative_velocity(0);
-	set_acceleration(0);
-}
-
-void NearbyVehicle::copy_current_states(NearbyVehicle& nearby_vehicle) {
-	set_id(nearby_vehicle.get_current_id());
-	set_length(nearby_vehicle.get_current_length());
-	set_width(nearby_vehicle.get_current_width());
-	set_category(nearby_vehicle.get_current_category());
-	set_relative_lane(nearby_vehicle.get_current_relative_lane());
-	set_relative_position(nearby_vehicle.get_current_relative_position());
-	set_distance(nearby_vehicle.get_current_distance());
-	set_relative_velocity(nearby_vehicle.get_current_relative_velocity());
-	set_acceleration(nearby_vehicle.get_current_acceleration());
-}
+//void NearbyVehicle::fill_with_dummy_values() {
+//	set_id(0);
+//	set_length(0);
+//	set_width(0);
+//	set_category(0);
+//	set_relative_lane(0);
+//	set_relative_position(0);
+//	set_distance(MAX_DISTANCE);
+//	set_relative_velocity(0);
+//	set_acceleration(0);
+//}
+//
+//void NearbyVehicle::copy_current_states(NearbyVehicle& nearby_vehicle) {
+//	set_id(nearby_vehicle.get_id());
+//	set_length(nearby_vehicle.get_length());
+//	set_width(nearby_vehicle.get_width());
+//	set_category(nearby_vehicle.get_category());
+//	set_relative_lane(nearby_vehicle.get_relative_lane());
+//	set_relative_position(nearby_vehicle.get_relative_position());
+//	set_distance(nearby_vehicle.get_distance());
+//	set_relative_velocity(nearby_vehicle.get_relative_velocity());
+//	set_acceleration(nearby_vehicle.get_acceleration());
+//}
 
 void NearbyVehicle::compute_safe_gap_parameters() {
 	/* TODO: vary estimated parameters based on category and whether 
@@ -66,14 +81,14 @@ void NearbyVehicle::compute_safe_gap_parameters() {
 std::ostream& operator<<(std::ostream& out, const NearbyVehicle& vehicle)
 {
 	std::vector<std::pair<std::string, long>> printed_long_members{ 
-		{"id", vehicle.get_current_id()}, 
-		{"category", static_cast<int>(vehicle.get_current_category())},
-		{"rel. lane", static_cast<int>(vehicle.get_current_relative_lane())},
-		{"rel. position", vehicle.get_current_relative_position()} 
+		{"id", vehicle.get_id()}, 
+		{"category", static_cast<int>(vehicle.get_category())},
+		{"rel. lane", static_cast<int>(vehicle.get_relative_lane())},
+		{"rel. position", vehicle.get_relative_position()} 
 	};
 	std::vector<std::pair<std::string, double>> printed_double_members{
-		{"distance", vehicle.get_current_distance()}, 
-		{"rel. velocity", vehicle.get_current_relative_velocity()},
+		{"distance", vehicle.get_distance()}, 
+		{"rel. velocity", vehicle.get_relative_velocity()},
 		//{"acceleration", vehicle.acceleration},
 		//{"length", vehicle.length}, {"width", vehicle.width} 
 	};

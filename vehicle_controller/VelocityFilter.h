@@ -20,7 +20,6 @@ public:
 	double filter_velocity(double new_velocity);
 
 private:
-	bool verbose = false;
 	double time_step = 0.1;
 	double previous_value = 0;
 
@@ -29,4 +28,6 @@ private:
 	double max_variation_per_time_step; // maximum acceleration per time step
 	double min_variation_per_time_step; // minimum acceleration per time step
 	double gain{ 10.0 };
+
+	bool verbose = false;
 };

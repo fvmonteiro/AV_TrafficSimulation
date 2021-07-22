@@ -13,12 +13,12 @@
 #include "NearbyVehicle.h"
 #include "Vehicle.h"
 
-/* TODO: NOTHING HERE HAS BEEN TESTED!!!*/
-LateralController::LateralController(bool verbose) {
+LateralController::LateralController(bool verbose) 
+	: verbose{ verbose } {
+	
 	if (verbose) {
 		std::clog << "Creating lateral controller" << std::endl;
 	}
-	this->verbose = verbose;
 	estimate_lane_change_kinematics();
 }
 
@@ -39,79 +39,17 @@ LateralController::LateralController() : LateralController(false) {}
 //	return other_vehicle.get_current_distance() - length;
 //}
 
-//std::vector<double> LateralController::compute_safe_lane_change_gap_all_info(
+//double LateralController::compute_safe_lane_change_gap(
 //	const Vehicle& ego_vehicle, const NearbyVehicle& other_vehicle,
 //	bool will_accelerate) {
 //
-//	double collision_free_gap = compute_collision_free_gap(
+//	double collision_free_gap = compute_exact_collision_free_gap(
 //		ego_vehicle, other_vehicle);
 //	double transient_gap = compute_transient_gap(ego_vehicle,
 //		other_vehicle, will_accelerate);
-//	
-//	std::vector<double> gaps { 
-//		collision_free_gap + transient_gap,
-//		collision_free_gap,
-//		transient_gap };
 //
-//	return gaps;
+//	return collision_free_gap + transient_gap;
 //}
-
-double LateralController::compute_safe_lane_change_gap(
-	const Vehicle& ego_vehicle, const NearbyVehicle& other_vehicle,
-	bool will_accelerate) {
-
-	double collision_free_gap = compute_collision_free_gap(
-		ego_vehicle, other_vehicle);
-	double transient_gap = compute_transient_gap(ego_vehicle,
-		other_vehicle, will_accelerate);
-
-	return collision_free_gap + transient_gap;
-}
-
-double LateralController::compute_collision_free_gap(
-	const Vehicle& ego_vehicle,const NearbyVehicle& other_vehicle) {
-
-	double lambda_0, lambda_1;
-	double v_follower, delta_v, v_leader;
-	double brake_follower, brake_leader;
-	if (other_vehicle.is_ahead()) {
-		lambda_0 = ego_vehicle.get_lambda_0();
-		lambda_1 = ego_vehicle.get_lambda_1();
-		v_follower = ego_vehicle.get_current_velocity();
-		delta_v = other_vehicle.get_current_relative_velocity();
-		v_leader = v_follower - delta_v;
-		brake_follower = ego_vehicle.get_max_brake();
-		brake_leader = other_vehicle.get_max_brake();
-	}
-	else {
-		lambda_0 = other_vehicle.get_lambda_0();
-		lambda_1 = other_vehicle.get_lambda_1();
-		v_leader = ego_vehicle.get_current_velocity();
-		delta_v = other_vehicle.get_current_relative_velocity();
-		v_follower = v_leader - delta_v;
-		brake_follower = other_vehicle.get_max_brake();
-		brake_leader = ego_vehicle.get_max_brake();
-	}
-
-	double stop_time_follower = v_follower + lambda_1 / brake_follower;
-	double stop_time_leader = v_leader / brake_leader;
-	double collision_free_gap;
-	if (stop_time_follower >= stop_time_leader) {
-		collision_free_gap = 
-			std::pow(v_follower + lambda_1, 2) / 2 / brake_follower
-			- std::pow(v_leader, 2) / 2 / brake_leader + lambda_0;
-	}
-	else if (brake_leader < brake_follower) {
-		collision_free_gap = 
-			std::pow(delta_v - lambda_1, 2) / 2 / (brake_follower - brake_leader)
-			+ lambda_0;
-	}
-	else {
-		collision_free_gap = 0.0;
-	}
-
-	return collision_free_gap;
-}
 
 double LateralController::compute_transient_gap(const Vehicle& ego_vehicle,
 	const NearbyVehicle& other_vehicle, bool will_accelerate) {
@@ -122,7 +60,7 @@ double LateralController::compute_transient_gap(const Vehicle& ego_vehicle,
 	time, based on whether v_E(t_0) greater or lesser than v_L(t_0). */
 
 	double longitudinal_acceleration;
-	double relative_velocity = other_vehicle.get_current_relative_velocity();
+	double relative_velocity = other_vehicle.get_relative_velocity();
 	if (will_accelerate) {
 		double comfortable_acceleration = 
 			ego_vehicle.get_comfortable_acceleration();
@@ -188,7 +126,7 @@ double LateralController::compute_lateral_collision_time(
 	double longitudinal_velocity = ego_vehicle.get_current_velocity();
 	double length = ego_vehicle.get_length();
 	double width = ego_vehicle.get_width();
-	double other_width = other_vehicle.get_current_width();
+	double other_width = other_vehicle.get_width();
 	std::vector<double> y_ego (lane_change_lateral_position.size());
 
 	bool collision_time_found = false;

@@ -17,13 +17,13 @@
 /*==========================================================================*/
 
 const size_t LOGGED_VEHICLE_NO = 3; // to "debug" code logic
-const std::unordered_set<long> LOGGED_VEHICLES_IDS{ 1, 3, 7 };
+const std::unordered_set<long> LOGGED_VEHICLES_IDS{ 9 };
 
 SimulationLogger simulation_logger;
 std::unordered_map<long, Vehicle> vehicles;
 long current_vehicle_id = 0;
-double simulation_time_step = -1;
-double current_time = 0;
+double simulation_time_step = -1.0;
+double current_time = 0.0;
 //long logged_vehicle_id = -1; // used together with LOGGED_VEH_NO
 double desired_lane_angle = 0.0;
 long rel_target_lane = 0;
@@ -80,19 +80,10 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
         }
         return 1;
     case DRIVER_DATA_TIME                   :
-        // BAD PRACTICE
-        /* DRIVER_DATA_TIME is NOT called only once per vehicle,
-        so this piece of code will update current_vehicle_id too
-        often.
-        SOLUTION:
-        Save the vehicle initial time. When printing, simply sum
-        the time_step i times to the initial time. Important! Remember
-        that all variables are set twice at the moment of the vehicle
-        creation, so this must be taken into account. */
-        current_time = double_value;
-        /*if (vehicles.find(current_vehicle_id) != vehicles.end()) {
-            vehicles[current_vehicle_id].set_simulation_time(double_value);
+        /*if (double_value != current_time) {
+            std::clog << "t=" << current_time << std::endl;
         }*/
+        current_time = double_value;
         return 1;
     case DRIVER_DATA_USE_UDA                :
         if (index1 >= static_cast<int>(UDA::first)) { 
@@ -211,16 +202,8 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
     case DRIVER_DATA_NVEH_ID                :
         if (vehicles.find(current_vehicle_id) != vehicles.end() 
             && (long_value > 0)) { 
-            /* TODO: the following code doesn't match well the 
-            characteristics of the NearbyVehicle class.
-            NearbyVehicle has vectors of data (id, lane, etc), but 
-            by creating new instances at every time step, this feature
-            becomes useless. */
-            NearbyVehicle* nearby_vehicle = new NearbyVehicle;
-            nearby_vehicle->set_id(long_value);
-            nearby_vehicle->set_relative_lane(index1);
-            nearby_vehicle->set_relative_position(index2);
-            vehicles[current_vehicle_id].push_nearby_vehicle(nearby_vehicle);
+            vehicles[current_vehicle_id].emplace_nearby_vehicle(
+                long_value, index1, index2);
         }
         return 1;
     case DRIVER_DATA_NVEH_LANE_ANGLE        :
@@ -265,6 +248,10 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
         }
         return 1;
     case DRIVER_DATA_NVEH_LANE_CHANGE       :
+        if (vehicles.find(current_vehicle_id) != vehicles.end()) {
+            vehicles[current_vehicle_id].peek_nearby_vehicles()
+                ->set_lane_change_direction(long_value);
+        }
     case DRIVER_DATA_NVEH_TYPE              :
     case DRIVER_DATA_NVEH_UDA               :
     case DRIVER_DATA_NO_OF_LANES            :
@@ -288,7 +275,6 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
     case DRIVER_DATA_SPEED_LIMIT_VALUE      :
         return 1;
     case DRIVER_DATA_DESIRED_ACCELERATION   :
-        //desired_acceleration = double_value;
         if (vehicles.find(current_vehicle_id) != vehicles.end()) {
             vehicles[current_vehicle_id].set_vissim_acceleration(
                 double_value);
@@ -351,11 +337,11 @@ DRIVERMODEL_API  int  DriverModelGetValue (long   type,
         {
         case UDA::gap_to_dest_lane_leader:
             *double_value = current_vehicle->
-                compute_gap_to_destination_lane_leader();
+                compute_gap(current_vehicle->get_destination_lane_leader());
             break;
         case UDA::gap_to_dest_lane_follower:
             *double_value = current_vehicle->
-                compute_gap_to_destination_lane_follower();
+                compute_gap(current_vehicle->get_destination_lane_follower());
             break;
         case UDA::safe_gap_to_dest_lane_leader:
             *double_value = current_vehicle->
@@ -370,15 +356,30 @@ DRIVERMODEL_API  int  DriverModelGetValue (long   type,
                 compute_gap(current_vehicle->get_leader());
             break;
         case UDA::leader_id:
-            *long_value = current_vehicle->get_leader().get_current_id();
+            *long_value = current_vehicle->get_current_leader_id();
             break;
-        case UDA::veh_following_collision_free_gap_to_fd:
+        case UDA::veh_following_gap_to_fd:
             *double_value = current_vehicle->
-                compute_collision_free_gap_to_destination_lane_follower();
+                compute_time_headway_gap(
+                    current_vehicle->get_destination_lane_follower());
             break;
         case UDA::transient_gap_to_fd:
             *double_value = current_vehicle->
-                compute_transient_gap_to_destination_lane_follower();
+                compute_transient_gap(
+                    current_vehicle->get_destination_lane_follower());
+            break;
+        case UDA::veh_following_gap_to_ld:
+            *double_value = current_vehicle->
+                compute_time_headway_gap(
+                    current_vehicle->get_destination_lane_leader());
+            break;
+        case UDA::transient_gap_to_ld:
+            *double_value = current_vehicle->
+                compute_transient_gap(
+                    current_vehicle->get_destination_lane_leader());
+            break;
+        case UDA::reference_gap:
+            *double_value = current_vehicle->get_reference_gap();
             break;
         default:
             return 0; /* doesn't set any UDA values */
@@ -439,11 +440,14 @@ DRIVERMODEL_API  int  DriverModelExecuteCommand (long number)
         if (vehicles[current_vehicle_id].get_should_log()) {
             std::clog << "Vehicle " << current_vehicle_id
                 <<" end time " << current_time << std::endl;
-            vehicles[current_vehicle_id].write_vehicle_log();
+            //vehicles[current_vehicle_id].write_vehicle_log();
         }
+        vehicles.erase(current_vehicle_id);
         return 1;
     case DRIVER_COMMAND_MOVE_DRIVER :
-        has_leader = vehicles[current_vehicle_id].update_leader();
+        /* This is executed after all the set commands and before 
+        any get command. */
+        vehicles[current_vehicle_id].analyze_nearby_vehicles();
         return 1;
     default :
         return 0;

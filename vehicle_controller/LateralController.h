@@ -25,22 +25,11 @@ public:
 	LateralController(bool verbose);
 	LateralController();
 
-	//double compute_gap_to_nearby_vehicle(const NearbyVehicle& other_vehicle);
 	/* The safe lane change gap is the sum of the vehicle following 
 	collision free gap and the transient gap */
-	double compute_safe_lane_change_gap(const Vehicle& ego_vehicle,
-		const NearbyVehicle& other_vehicle, bool will_accelerate);
-	/* Same as compute_safe_lane_change_gap but returns a vector with 
-	the safe gap, the vehicle following gap and the transient gap. 
-	Temporary function for debugging. */
-	/*std::vector<double> compute_safe_lane_change_gap_all_info(
-		const Vehicle& ego_vehicle, const NearbyVehicle& other_vehicle,
-		bool will_accelerate);*/
-
-	/* The collision free gap is computed assuming a worst case braking
-	scenario */
-	double compute_collision_free_gap(const Vehicle& ego_vehicle, 
-		const NearbyVehicle& other_vehicle);
+	/*double compute_safe_lane_change_gap(const Vehicle& ego_vehicle,
+		const NearbyVehicle& other_vehicle, bool will_accelerate);*/
+	
 	/* Computes the gap variation due to non-zero relative velocities during
 	the lane change. */
 	double compute_transient_gap(const Vehicle& ego_vehicle, 
