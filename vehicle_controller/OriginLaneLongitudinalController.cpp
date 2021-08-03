@@ -38,13 +38,14 @@ void OriginLaneLongitudinalController::determine_controller_state(
 	else {
 		double leader_velocity = leader->compute_velocity(ego_velocity);
 		double gap_threshold = compute_gap_threshold(
-			ego_vehicle_desired_velocity, compute_velocity_error(
+			ego_reference_velocity, compute_velocity_error(
 				ego_velocity, leader_velocity));
+		double gap = leader->get_distance() - leader->get_length();
 		if (state == State::vehicle_following) {
 			gap_threshold += hysteresis_bias;
 		}
-		if ((leader->get_distance() < gap_threshold)
-			&& (leader_velocity < ego_vehicle_desired_velocity)) {
+		if ((gap < gap_threshold)
+			&& (leader_velocity < ego_reference_velocity)) {
 			state = State::vehicle_following;
 		}
 		else {

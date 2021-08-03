@@ -29,7 +29,8 @@
 /*--------------------------------------------------------------------------*/
 /* Definitions that were not in the original DLL example */
 
-/* Order of UDAs must follow the order in VISSM */
+/* Order of UDAs must follow the order in VISSM 
+These are used for debugging. */
 enum class UDA {
     gap_to_dest_lane_leader = 6, // value taken from VISSIM interface.
     gap_to_dest_lane_follower,
@@ -43,6 +44,12 @@ enum class UDA {
     veh_following_gap_to_ld,
     transient_gap_to_ld,
     reference_gap,
+    ttc,
+    drac,
+    collision_severity_risk,
+    write_veh_log,
+    relative_velocity_to_leader,
+    leader_category,
 
     first = gap_to_dest_lane_leader,
 };

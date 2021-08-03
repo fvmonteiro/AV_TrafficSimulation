@@ -11,14 +11,6 @@
 
 #include "Constants.h"
 
-enum class RelativeLane {
-	right_right = -2, // second to the right
-	right, // next to the right
-	same,
-	left, // next to the left
-	left_left, // second to the left
-};
-
 class NearbyVehicle {
 public:
 
@@ -36,6 +28,7 @@ public:
 	RelativeLane get_relative_lane() const { return relative_lane; };
 	long get_relative_position() const { return relative_position; };
 	double get_distance() const { return distance; };
+	/* Relative velocity is: ego speed - other speed [m/s] */
 	double get_relative_velocity() const { 
 		return relative_velocity; 
 	};
@@ -64,11 +57,15 @@ public:
 	};
 
 	/* Special getters and setters */
+
 	double get_lambda_0() const { return lambda_0; };
 	double get_lambda_1() const { return lambda_1; };
 	/* set_category also sets the estimated maximum braking of the
 	nearby vehicle and computes lambda_0 and lambda_1. */
 	void set_category(VehicleCategory category);
+	void set_type(VehicleType type);
+	void set_type(long type);
+
 
 	double compute_velocity(double ego_velocity) const;
 	bool is_on_same_lane() const;
@@ -90,6 +87,7 @@ private:
 	double length{ 0.0 }; // [m]
 	double width{ 0.0 }; // [m]
 	VehicleCategory category{ VehicleCategory::undefined };
+	VehicleType type{ VehicleType::undefined };
 	RelativeLane relative_lane{ RelativeLane::same };
 	long relative_position{ 0 }; /*
 	positive = downstream (+1 next, +2 second next)

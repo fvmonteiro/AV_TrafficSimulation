@@ -29,6 +29,28 @@ void NearbyVehicle::set_category(VehicleCategory category) {
 	this->category = category;
 }
 
+void NearbyVehicle::set_type(VehicleType type) {
+	// we only need to set the type once
+	switch (this->type) {
+	case VehicleType::undefined:
+		this->type = type;
+		break;
+	default: // no changes
+		break;
+	}
+}
+
+void NearbyVehicle::set_type(long type) {
+	// we only need to set the type once
+	switch (this->type) {
+	case VehicleType::undefined:
+		set_type(VehicleType(type));
+		break;
+	default: // no changes
+		break;
+	}
+}
+
 double NearbyVehicle::compute_velocity(double ego_velocity) const {
 	return ego_velocity - relative_velocity;
 }
@@ -40,30 +62,6 @@ bool NearbyVehicle::is_on_same_lane() const {
 bool NearbyVehicle::is_ahead() const {
 	return get_relative_position() > 0;
 }
-
-//void NearbyVehicle::fill_with_dummy_values() {
-//	set_id(0);
-//	set_length(0);
-//	set_width(0);
-//	set_category(0);
-//	set_relative_lane(0);
-//	set_relative_position(0);
-//	set_distance(MAX_DISTANCE);
-//	set_relative_velocity(0);
-//	set_acceleration(0);
-//}
-//
-//void NearbyVehicle::copy_current_states(NearbyVehicle& nearby_vehicle) {
-//	set_id(nearby_vehicle.get_id());
-//	set_length(nearby_vehicle.get_length());
-//	set_width(nearby_vehicle.get_width());
-//	set_category(nearby_vehicle.get_category());
-//	set_relative_lane(nearby_vehicle.get_relative_lane());
-//	set_relative_position(nearby_vehicle.get_relative_position());
-//	set_distance(nearby_vehicle.get_distance());
-//	set_relative_velocity(nearby_vehicle.get_relative_velocity());
-//	set_acceleration(nearby_vehicle.get_acceleration());
-//}
 
 void NearbyVehicle::compute_safe_gap_parameters() {
 	/* TODO: vary estimated parameters based on category and whether 

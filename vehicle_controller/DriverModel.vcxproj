@@ -259,6 +259,7 @@
     <ClCompile Include="NearbyVehicle.cpp" />
     <ClCompile Include="OriginLaneLongitudinalController.cpp" />
     <ClCompile Include="SimulationLogger.cpp" />
+    <ClCompile Include="SSMManager.cpp" />
     <ClCompile Include="Vehicle.cpp" />
     <ClCompile Include="VelocityFilter.cpp" />
   </ItemGroup>
@@ -272,6 +273,7 @@
     <ClInclude Include="NearbyVehicle.h" />
     <ClInclude Include="OriginLaneLongitudinalController.h" />
     <ClInclude Include="SimulationLogger.h" />
+    <ClInclude Include="SSMManager.h" />
     <ClInclude Include="Vehicle.h" />
     <ClInclude Include="VelocityFilter.h" />
   </ItemGroup>

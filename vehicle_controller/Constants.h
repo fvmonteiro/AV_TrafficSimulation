@@ -17,6 +17,15 @@ const double MAX_JERK{ 50.0 }; // [m/s^3]
 const double CONNECTED_BRAKE_DELAY{ 0.1 }; // [s]
 const double AUTONOMOUS_BRAKE_DELAY{ 0.2 }; // [s]
 
+enum class RelativeLane {
+	right_right = -2, // second to the right
+	right, // next to the right
+	same,
+	left, // next to the left
+	left_left, // second to the left
+};
+
+/* Categories set by VISSIM */
 enum class VehicleCategory {
 	undefined,
 	car = 1,
@@ -25,4 +34,17 @@ enum class VehicleCategory {
 	tram,
 	pedestrian,
 	bike,
+};
+
+/* User defined vehicle type. To be consistent with existing type,
+follow these rules when defining a new type:
+- Types should contain 3 digits
+- The first digit of the type should match the vehicle category
+of the type */
+enum class VehicleType {
+	undefined,
+	human_driven_car = 100,
+	autonomous_car = 110,
+	truck = 200,
+	bus = 300
 };

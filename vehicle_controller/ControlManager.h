@@ -21,12 +21,12 @@ public:
 
 	/* TODO: figure out if there's a way to expand from 
 	the longitudinal controller states */
-	enum class State {
+	/*enum class State {
 		velocity_control,
 		vehicle_following,
 		emergency_braking,
 		intention_to_change_lane,
-	};
+	};*/
 
 	enum class ActiveLongitudinalController {
 		origin_lane,
@@ -44,10 +44,12 @@ public:
 		return active_longitudinal_controller;
 	}
 	LongitudinalController::State get_longitudinal_controller_state();
-
+	//void create_destination_lane_controller(const Vehicle& ego_vehicle);
+	
 	/* DEBUGGING FUNCTIONS --------------------------------------------------- */
 	/* These functions are used to easily read data from internal instances and 
 	methods. */
+
 	/* Each controller should never be accessed directly by external
 	functions. */
 	DestinationLaneLongitudinalController get_destination_lane_controller() const { 
@@ -68,12 +70,12 @@ public:
 
 	/*void update_time_headway(const Vehicle& ego_vehicle, 
 		const NearbyVehicle& other_vehicle);*/
-	void update_origin_lane_time_headway(const Vehicle& ego_vehicle,
-		const NearbyVehicle& leader);
-	void update_destination_lane_time_headway(const Vehicle& ego_vehicle,
-		const NearbyVehicle& leader);
+	void update_origin_lane_time_headway(double lambda_1, 
+		double leader_max_brake);
+	void update_destination_lane_time_headway(double lambda_1,
+		double leader_max_brake);
 	void estimate_follower_time_headway(const Vehicle& ego_vehicle,
-		const NearbyVehicle& follower);
+		NearbyVehicle& follower);
 
 	/* Gets the acceleration inputs from the origin (and destination) lane
 	ACCs, from the necessary value to avoid colision and from VISSIM and decides
@@ -85,8 +87,15 @@ public:
 	/* Returns the time headway part of the safe lane change gap. */
 	double compute_time_headway_gap(const Vehicle& ego_vehicle,
 		const NearbyVehicle& other_vehicle);
-	State ControlManager::longitudinal_state_to_vehicle_state(
-		LongitudinalController::State controller_state);
+
+	/* Sets the value of the minimum accepted longitudinal adjustment speed
+	and the initial value of accepted risk, and starts the a timer. */
+	void start_longitudinal_adjustment(double time, double velocity);
+	void update_accepted_risk(const Vehicle& ego_vehicle);
+
+	/* Printing ----------------------------------------------------------- */
+	static std::string active_longitudinal_controller_to_string(
+		ActiveLongitudinalController active_longitudinal_controller);
 
 private:
 	OriginLaneLongitudinalController origin_lane_controller;
@@ -98,9 +107,5 @@ private:
 		ActiveLongitudinalController::origin_lane }; /* indicates which
 	controller is active: origin_lane, destination_lane or end_of_lane.
 	Used for debugging and visualization. */
-	/* Estimated value of the time headway used by the follower at
-	the destination lane. Used when computing lane change safe gaps. 
-	TODO: move this to the DestinationLaneLongitudinalController class*/
-	double destination_lane_follower_time_headway{ 0.0 };
 	bool verbose = false;
 };

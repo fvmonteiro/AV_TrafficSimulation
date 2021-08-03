@@ -32,7 +32,7 @@ public:
 	~SimulationLogger();
 
 private:
-	FILE* log_file;
-	const char* log_file_name = "log.txt";
-	const char* error_log_file_name = "error_log.txt";
+	FILE* log_file{ nullptr };
+	const char* log_file_name{ "log.txt" };
+	const char* error_log_file_name{ "error_log.txt" };
 };
