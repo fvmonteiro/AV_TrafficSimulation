@@ -13,7 +13,7 @@
 
 // Forward declaration
 class NearbyVehicle;
-class Vehicle;
+class EgoVehicle;
 
 /* This controller computes inputs for vehicle following and velocity 
 control. It also determine which of these inputs should be used */
@@ -27,7 +27,7 @@ public:
 	};
 
 	LongitudinalController() = default;
-	LongitudinalController(const Vehicle& ego_vehicle, double max_brake,
+	LongitudinalController(const EgoVehicle& ego_vehicle, double max_brake,
 		double reference_velocity, double filter_brake_limit, bool verbose);
 	/*LongitudinalController(const Vehicle& ego_vehicle,
 		bool is_used_for_lane_change, bool verbose);
@@ -79,7 +79,7 @@ public:
 	double compute_velocity_control_input(double velocity_error, 
 		double ego_acceleration);
 
-	double compute_desired_acceleration(const Vehicle& ego_vehicle,
+	double compute_desired_acceleration(const EgoVehicle& ego_vehicle,
 		const NearbyVehicle* leader);
 	//double compute_desired_acceleration(const Vehicle& ego_vehicle,
 	//	const NearbyVehicle& leader);
@@ -111,6 +111,8 @@ protected:
 	double timer_start{ 0.0 }; // [s]
 	double constant_risk_period{ 5.0 }; // [s] 
 
+	void set_vehicle_following_gains(double kg, double kv);
+
 	double compute_safe_time_headway(double free_flow_velocity,
 		double follower_max_brake, double leader_max_brake,
 		double lambda_1, double rho, double accepted_risk = 0);
@@ -134,7 +136,7 @@ private:
 	being defined here. To keep access to their values, we need to create
 	User Defined Variables (UDAs) in VISSIM*/
 	/* Vehicle following gains */
-	double kg{ 0.2 }; // gain relative to gap error.
+	double kg{ 0.4 }; // gain relative to gap error.
 	double kv{ 1.0 }; // gain relative to velocity error.
 	/* Velocity controller gains 
 	TODO: computed in Matlab but should be computed here */
