@@ -7,13 +7,13 @@
 /*==========================================================================*/
 
 #include "DestinationLaneLongitudinalController.h"
-#include "Vehicle.h"
+#include "EgoVehicle.h"
 
 DestinationLaneLongitudinalController::DestinationLaneLongitudinalController()
 	: LongitudinalController() {}
 
 DestinationLaneLongitudinalController::DestinationLaneLongitudinalController(
-	const Vehicle& ego_vehicle, bool verbose)
+	const EgoVehicle& ego_vehicle, bool verbose)
 	: LongitudinalController(ego_vehicle,
 		ego_vehicle.get_lane_change_max_brake(),
 		0.0, // the reference vel. is set when there is lane change intention
@@ -26,15 +26,21 @@ DestinationLaneLongitudinalController::DestinationLaneLongitudinalController(
 }
 
 DestinationLaneLongitudinalController::DestinationLaneLongitudinalController(
-	const Vehicle& ego_vehicle)
+	const EgoVehicle& ego_vehicle)
 	: DestinationLaneLongitudinalController(ego_vehicle, false) {
 }
 
 void DestinationLaneLongitudinalController::determine_controller_state(
 	double ego_velocity, const NearbyVehicle* leader) {
 
+	if (verbose) {
+		std::clog << "\tdest lane controller - deciding state"
+			<< std::endl;
+	}
+
 	if (leader == nullptr) { // no vehicle ahead
 		/*If there's no leader this controller should not be active */
+		if (verbose) std::clog << "\tno leader" << std::endl;
 		state = State::uninitialized;
 	}
 	else {
@@ -46,7 +52,15 @@ void DestinationLaneLongitudinalController::determine_controller_state(
 		if (state == State::vehicle_following) {
 			gap_threshold += hysteresis_bias;
 		}
-		if (gap > gap_threshold) {
+
+		if (verbose) {
+			std::clog << "\tgap=" << gap
+				<< ", gap thresh=" << gap_threshold
+				<< std::endl;
+		}
+
+		if ((gap > gap_threshold) 
+			|| (ego_velocity < ego_reference_velocity)) {
 			state = State::vehicle_following;
 		}
 		else {
@@ -81,7 +95,7 @@ void DestinationLaneLongitudinalController::estimate_follower_time_headway(
 }
 
 bool DestinationLaneLongitudinalController::update_accepted_risk(
-	double time, const Vehicle& ego_vehicle) {
+	double time, const EgoVehicle& ego_vehicle) {
 	if (verbose) {
 		std::clog << "\tt=" << time
 			<< ", timer_start=" << timer_start << std::endl;

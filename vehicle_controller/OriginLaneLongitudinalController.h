@@ -14,9 +14,14 @@ class OriginLaneLongitudinalController :
 
 public:
     OriginLaneLongitudinalController();
-    OriginLaneLongitudinalController(const Vehicle& ego_vehicle,
+    OriginLaneLongitudinalController(const EgoVehicle& ego_vehicle,
         bool verbose);
-    OriginLaneLongitudinalController(const Vehicle& ego_vehicle);
+    OriginLaneLongitudinalController(const EgoVehicle& ego_vehicle);
+    /* Constructor that allows changing the vehicle following
+    gains. Useful to differentiate the actual origin lane 
+    controller and the end of lane controller */
+    OriginLaneLongitudinalController(const EgoVehicle& ego_vehicle,
+        double kg, double kv, bool verbose);
 
     /* Determines and sets the current state of the longitudinal controller */
     virtual void determine_controller_state(double ego_velocity,

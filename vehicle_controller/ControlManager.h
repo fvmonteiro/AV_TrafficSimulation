@@ -14,7 +14,7 @@
 #include "OriginLaneLongitudinalController.h"
 #include "DestinationLaneLongitudinalController.h"
 
-class Vehicle;
+class EgoVehicle;
 
 class ControlManager {
 public:
@@ -36,8 +36,8 @@ public:
 	};
 
 	ControlManager() = default;
-	ControlManager(const Vehicle & ego_vehicle, bool verbose);
-	ControlManager(const Vehicle & ego_vehicle);
+	ControlManager(const EgoVehicle & ego_vehicle, bool verbose);
+	ControlManager(const EgoVehicle & ego_vehicle);
 
 	//std::vector<State> get_states() { return states; };
 	ActiveLongitudinalController get_active_longitudinal_controller() {
@@ -74,24 +74,24 @@ public:
 		double leader_max_brake);
 	void update_destination_lane_time_headway(double lambda_1,
 		double leader_max_brake);
-	void estimate_follower_time_headway(const Vehicle& ego_vehicle,
+	void estimate_follower_time_headway(const EgoVehicle& ego_vehicle,
 		NearbyVehicle& follower);
 
 	/* Gets the acceleration inputs from the origin (and destination) lane
 	ACCs, from the necessary value to avoid colision and from VISSIM and decides
 	which one should be applied to the vehicle */
-	double determine_desired_acceleration(const Vehicle& ego_vehicle);
+	double determine_desired_acceleration(const EgoVehicle& ego_vehicle);
 
-	double compute_safe_lane_change_gap(const Vehicle& ego_vehicle, 
+	double compute_safe_lane_change_gap(const EgoVehicle& ego_vehicle, 
 		const NearbyVehicle& other_vehicle, bool will_accelerate = false);
 	/* Returns the time headway part of the safe lane change gap. */
-	double compute_time_headway_gap(const Vehicle& ego_vehicle,
+	double compute_time_headway_gap(const EgoVehicle& ego_vehicle,
 		const NearbyVehicle& other_vehicle);
 
 	/* Sets the value of the minimum accepted longitudinal adjustment speed
 	and the initial value of accepted risk, and starts the a timer. */
 	void start_longitudinal_adjustment(double time, double velocity);
-	void update_accepted_risk(const Vehicle& ego_vehicle);
+	void update_accepted_risk(const EgoVehicle& ego_vehicle);
 
 	/* Printing ----------------------------------------------------------- */
 	static std::string active_longitudinal_controller_to_string(

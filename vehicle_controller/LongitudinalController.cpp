@@ -8,9 +8,9 @@
 
 #include <iostream>
 #include "LongitudinalController.h"
-#include "Vehicle.h"
+#include "EgoVehicle.h"
 
-LongitudinalController::LongitudinalController(const Vehicle& ego_vehicle,
+LongitudinalController::LongitudinalController(const EgoVehicle& ego_vehicle,
 	double max_brake, double reference_velocity, double filter_brake_limit,
 	bool verbose)
 	: simulation_time_step{ ego_vehicle.get_sampling_interval() },
@@ -198,7 +198,7 @@ double LongitudinalController::compute_velocity_control_input(double velocity_er
 }
 
 double LongitudinalController::compute_desired_acceleration(
-	const Vehicle& ego_vehicle,	const NearbyVehicle* leader) {
+	const EgoVehicle& ego_vehicle,	const NearbyVehicle* leader) {
 	
 	double gap, gap_reference, gap_error;
 	double velocity_reference, filtered_velocity_reference;
@@ -211,6 +211,11 @@ double LongitudinalController::compute_desired_acceleration(
 	determine_controller_state(ego_velocity, leader);
 	if (old_state != state) {
 		velocity_filter.reset(ego_velocity);
+	}
+
+	if (verbose) {
+		std::clog << "\tstate="<< state_to_string(state)
+			<< std::endl;
 	}
 
 	switch (state)
@@ -228,6 +233,14 @@ double LongitudinalController::compute_desired_acceleration(
 			velocity_reference);
 		velocity_error = compute_velocity_error(
 			ego_velocity, filtered_velocity_reference);
+
+		if (verbose) {
+			std::clog << "\tleader id = " << leader->get_id()
+				<< ", eg=" << gap_error
+				<< ", ev=" << velocity_error
+				<< std::endl;
+		}
+
 		desired_acceleration = compute_vehicle_following_input(
 			gap_error, velocity_error);
 		break;
@@ -240,6 +253,12 @@ double LongitudinalController::compute_desired_acceleration(
 			velocity_reference);
 		velocity_error = compute_velocity_error(
 			ego_velocity, filtered_velocity_reference);
+
+		if (verbose) {
+			std::clog << "\tev=" << velocity_error
+				<< std::endl;
+		}
+
 		desired_acceleration = compute_velocity_control_input(velocity_error, 
 			ego_vehicle.get_current_acceleration());
 		break;
@@ -248,6 +267,10 @@ double LongitudinalController::compute_desired_acceleration(
 		std::clog << ego_vehicle << std::endl;
 		desired_acceleration = ego_vehicle.get_current_vissim_acceleration();
 		break;
+	}
+
+	if (verbose) {
+		std::clog << "\tu=" << desired_acceleration << std::endl;
 	}
 
 	return desired_acceleration;
@@ -279,6 +302,12 @@ void LongitudinalController::update_time_headway_with_risk(
 }
 
 /* Protected and private methods ------------------------------------------ */
+
+void LongitudinalController::set_vehicle_following_gains(
+	double kg, double kv) {
+	this->kg = kg;
+	this->kv = kv;
+}
 
 double LongitudinalController::compute_safe_time_headway(
 	double free_flow_velocity, double follower_max_brake,

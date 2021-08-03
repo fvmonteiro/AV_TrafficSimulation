@@ -12,7 +12,7 @@
 
 // Forward declaration
 class NearbyVehicle;
-class Vehicle;
+class EgoVehicle;
 
 /* Given lane change intention existis, the lateral controller defines 
 whether the maneuver can can place. 
@@ -32,7 +32,7 @@ public:
 	
 	/* Computes the gap variation due to non-zero relative velocities during
 	the lane change. */
-	double compute_transient_gap(const Vehicle& ego_vehicle, 
+	double compute_transient_gap(const EgoVehicle& ego_vehicle, 
 		const NearbyVehicle& other_vehicle, bool will_accelerate);
 
 private:
@@ -49,6 +49,6 @@ private:
 	std::vector<double> lane_change_lateral_position;
 
 	void estimate_lane_change_kinematics();
-	double compute_lateral_collision_time(const Vehicle& ego_vehicle, 
+	double compute_lateral_collision_time(const EgoVehicle& ego_vehicle, 
 		const NearbyVehicle& other_vehicle, double longitudinal_acceleration);
 };

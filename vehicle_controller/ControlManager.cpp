@@ -11,25 +11,25 @@
 #include "ControlManager.h"
 #include "VelocityFilter.h"
 #include "NearbyVehicle.h"
-#include "Vehicle.h"
+#include "EgoVehicle.h"
 
-ControlManager::ControlManager(const Vehicle& ego_vehicle, bool verbose) 
+ControlManager::ControlManager(const EgoVehicle& ego_vehicle, bool verbose) 
 	: origin_lane_controller{ OriginLaneLongitudinalController(
-		ego_vehicle, verbose) },
+		ego_vehicle, 0.2, 1.0, verbose) },
 	destination_lane_controller{ DestinationLaneLongitudinalController(
 		ego_vehicle, verbose) },
 	end_of_lane_controller{ OriginLaneLongitudinalController(
-		ego_vehicle, verbose) },
+		ego_vehicle, 0.2, 1.0, verbose) },
 	lateral_controller{ LateralController(verbose) },
 	verbose{ verbose } {
-
+	// TODO: better organize the gain setting of the controllers above
 	if (verbose) {
 		std::clog << "Creating control manager " << std::endl;
 	}
 
 }
 
-ControlManager::ControlManager(const Vehicle& ego_vehicle) 
+ControlManager::ControlManager(const EgoVehicle& ego_vehicle) 
 	: ControlManager(ego_vehicle, false) {}
 
 LongitudinalController::State 
@@ -82,7 +82,7 @@ void ControlManager::update_destination_lane_time_headway(double lambda_1,
 }
 
 void ControlManager::estimate_follower_time_headway(
-	const Vehicle& ego_vehicle, NearbyVehicle& follower) {
+	const EgoVehicle& ego_vehicle, NearbyVehicle& follower) {
 	double ego_max_brake = ego_vehicle.get_max_brake();
 	double estimated_follower_free_flow_velocity = 
 		ego_vehicle.get_desired_velocity();
@@ -91,20 +91,25 @@ void ControlManager::estimate_follower_time_headway(
 		follower, ego_max_brake, estimated_follower_free_flow_velocity);
 }
 
-double ControlManager::determine_desired_acceleration(const Vehicle& ego_vehicle) {
+double ControlManager::determine_desired_acceleration(const EgoVehicle& ego_vehicle) {
 
 	double desired_acceleration;
 	double max_acceleration = ego_vehicle.get_comfortable_acceleration() * 2;
 	double desired_acceleration_dest_lane = max_acceleration;
 	double desired_acceleration_end_of_lane = max_acceleration;
 	//double drac;
+
+	if (verbose) {
+		std::clog << "Origin lane controller" << std::endl;
+	}
+
 	double desired_acceleration_origin_lane = 
 		origin_lane_controller.compute_desired_acceleration(
 			ego_vehicle, ego_vehicle.get_leader());
 
 	if (ego_vehicle.has_lane_change_intention()) {
 		if (ego_vehicle.get_use_internal_lane_change_decision()) {
-			
+	
 			std::unordered_map<ActiveLongitudinalController, double>
 				possible_accelerations;
 			possible_accelerations[ActiveLongitudinalController::origin_lane] =
@@ -112,6 +117,11 @@ double ControlManager::determine_desired_acceleration(const Vehicle& ego_vehicle
 
 			/* Longitudinal control to adjust to destination lane leader */
 			if (ego_vehicle.has_destination_lane_leader()) {
+				if (verbose) {
+					std::clog << "Dest. lane controller"
+						<< std::endl;
+				}
+
 				desired_acceleration_dest_lane =
 					destination_lane_controller.compute_desired_acceleration(
 						ego_vehicle, ego_vehicle.get_destination_lane_leader());
@@ -125,6 +135,12 @@ double ControlManager::determine_desired_acceleration(const Vehicle& ego_vehicle
 			miss a desired exit. */
 			if ((ego_vehicle.get_current_active_lane_change() == 0)
 				&& (ego_vehicle.get_current_lane_end_distance() > 0)) {
+				
+				if (verbose) {
+					std::clog << "End of lane controller"
+						<< std::endl;
+				}
+				
 				/* For now, we simulate a stopped vehicle at the end of 
 				the lane to force the vehicle to stop before the end of
 				the lane. */
@@ -154,6 +170,12 @@ double ControlManager::determine_desired_acceleration(const Vehicle& ego_vehicle
 					active_longitudinal_controller = it.first;
 				}
 			}
+
+			if (verbose) {
+				std::clog << "\tchosen: "
+					<< desired_acceleration
+					<< std::endl;
+			}
 		}
 		else {
 			desired_acceleration = 
@@ -176,7 +198,7 @@ double ControlManager::determine_desired_acceleration(const Vehicle& ego_vehicle
 }
 
 double ControlManager::compute_safe_lane_change_gap(
-	const Vehicle& ego_vehicle, const NearbyVehicle& other_vehicle,
+	const EgoVehicle& ego_vehicle, const NearbyVehicle& other_vehicle,
 	bool will_accelerate) {
 
 	double time_headway_gap = compute_time_headway_gap(ego_vehicle, 
@@ -187,7 +209,7 @@ double ControlManager::compute_safe_lane_change_gap(
 	return time_headway_gap + transient_gap;
 }
 
-double ControlManager::compute_time_headway_gap(const Vehicle& ego_vehicle,
+double ControlManager::compute_time_headway_gap(const EgoVehicle& ego_vehicle,
 	const NearbyVehicle& other_vehicle) {
 	double time_headway_gap = 0.0;
 	double ego_velocity = ego_vehicle.get_current_velocity();
@@ -230,7 +252,7 @@ void ControlManager::start_longitudinal_adjustment(
 	destination_lane_controller.set_reference_velocity(velocity);
 }
 
-void ControlManager::update_accepted_risk(const Vehicle& ego_vehicle) {
+void ControlManager::update_accepted_risk(const EgoVehicle& ego_vehicle) {
 
 	if (destination_lane_controller.update_accepted_risk(
 		ego_vehicle.get_current_time(), ego_vehicle)) {

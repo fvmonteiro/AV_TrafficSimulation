@@ -14,15 +14,15 @@
 #include "Constants.h"
 #include "DriverModel.h"
 #include "SimulationLogger.h"
-#include "Vehicle.h"
+#include "EgoVehicle.h"
 
 /*==========================================================================*/
 
 const size_t LOGGED_VEHICLE_NO = 3; // to "debug" code logic
-const std::unordered_set<long> LOGGED_VEHICLES_IDS{ 1 };
+const std::unordered_set<long> LOGGED_VEHICLES_IDS{ 33 };
 
 SimulationLogger simulation_logger;
-std::unordered_map<long, Vehicle> vehicles;
+std::unordered_map<long, EgoVehicle> vehicles;
 long current_vehicle_id = 0;
 double simulation_time_step = -1.0;
 double current_time = 0.0;
@@ -324,7 +324,7 @@ DRIVERMODEL_API  int  DriverModelGetValue (long   type,
     API documentation. */
     //double controller_acceleration;
 
-    Vehicle& current_vehicle = vehicles[current_vehicle_id];
+    EgoVehicle& current_vehicle = vehicles[current_vehicle_id];
 
     switch (type) {
     case DRIVER_DATA_STATUS :
@@ -351,12 +351,22 @@ DRIVERMODEL_API  int  DriverModelGetValue (long   type,
                 compute_gap(current_vehicle.get_destination_lane_follower());
             break;
         case UDA::safe_gap_to_dest_lane_leader:
-            *double_value = current_vehicle.
-                compute_safe_gap_to_destination_lane_leader();
+            if (current_vehicle.has_lane_change_intention()) {
+                *double_value = current_vehicle.compute_safe_lane_change_gap(
+                    current_vehicle.get_destination_lane_leader());
+            }
+            else {
+                *double_value = 0.0;
+            }
             break;
         case UDA::safe_gap_to_dest_lane_follower:
-            *double_value = current_vehicle.
-                compute_safe_gap_to_destination_lane_follower();
+            if (current_vehicle.has_lane_change_intention()) {
+                *double_value = current_vehicle.compute_safe_lane_change_gap(
+                    current_vehicle.get_destination_lane_follower());
+            }
+            else {
+                *double_value = 0.0;
+            }
             break;
         case UDA::gap_to_leader:
             *double_value = current_vehicle.

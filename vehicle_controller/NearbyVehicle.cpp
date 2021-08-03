@@ -7,9 +7,10 @@
 
 NearbyVehicle::NearbyVehicle(long id, 
 	RelativeLane relative_lane, long relative_position) 
-	: id{ id },
-	relative_lane{ relative_lane },
-	relative_position{ relative_position } {}
+	: relative_lane{ relative_lane },
+	relative_position{ relative_position } {
+	this->id = id;
+}
 
 NearbyVehicle::NearbyVehicle(long id, long relative_lane,
 	long relative_position)
@@ -29,28 +30,6 @@ void NearbyVehicle::set_category(VehicleCategory category) {
 	this->category = category;
 }
 
-void NearbyVehicle::set_type(VehicleType type) {
-	// we only need to set the type once
-	switch (this->type) {
-	case VehicleType::undefined:
-		this->type = type;
-		break;
-	default: // no changes
-		break;
-	}
-}
-
-void NearbyVehicle::set_type(long type) {
-	// we only need to set the type once
-	switch (this->type) {
-	case VehicleType::undefined:
-		set_type(VehicleType(type));
-		break;
-	default: // no changes
-		break;
-	}
-}
-
 double NearbyVehicle::compute_velocity(double ego_velocity) const {
 	return ego_velocity - relative_velocity;
 }
@@ -68,7 +47,7 @@ void NearbyVehicle::compute_safe_gap_parameters() {
 	communication is avaiable */
 	double jE{ 50.0 }; // [m/s^3]
 	double aE{ 0.5 }; // [m/s^2]
-	double tau_d{ 0.1 }; // [s]
+	double tau_d{ 0.3 }; // [s]
 	double bE = get_max_brake();
 	double tau_j = (aE + bE) / jE;
 	lambda_0 = -(aE + bE)

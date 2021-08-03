@@ -3,7 +3,7 @@
 #include <unordered_map>
 #include <vector>
 
-#include "Vehicle.h"
+#include "EgoVehicle.h"
 
 /* SSMManager aggregates the surrogate safety measurements made at vehicle
 level and saves them aggregated by time and link 
@@ -19,7 +19,7 @@ public:
 	SSMManager(double time_frequency);
 
 	void aggregate_ssms(double new_time, 
-		std::unordered_map<long, Vehicle>& vehicles);
+		std::unordered_map<long, EgoVehicle>& vehicles);
 
 private:
 	enum class SSMs {
@@ -44,7 +44,7 @@ private:
 	std::vector<double> drac;
 	std::vector<double> collision_severity_risk;
 
-	void accumulate_ssms(std::unordered_map<long, Vehicle>& vehicles);
+	void accumulate_ssms(std::unordered_map<long, EgoVehicle>& vehicles);
 	void average_ssms_over_time_period();
 	void reset_accumulated_ssms();
 };

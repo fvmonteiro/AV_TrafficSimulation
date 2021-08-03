@@ -11,7 +11,7 @@
 #include "LateralController.h"
 #include "LongitudinalController.h"
 #include "NearbyVehicle.h"
-#include "Vehicle.h"
+#include "EgoVehicle.h"
 
 LateralController::LateralController(bool verbose) 
 	: verbose{ verbose } {
@@ -24,34 +24,7 @@ LateralController::LateralController(bool verbose)
 
 LateralController::LateralController() : LateralController(false) {}
 
-//double LateralController::compute_gap_to_nearby_vehicle(
-//	const NearbyVehicle& other_vehicle) {
-//
-//	bool is_other_in_front =
-//		other_vehicle.get_current_relative_position() > 0;
-//	double length;
-//	if (is_other_in_front) {
-//		length = other_vehicle.get_current_length();
-//	}
-//	else {
-//		length = ego_vehicle->get_length();
-//	}
-//	return other_vehicle.get_current_distance() - length;
-//}
-
-//double LateralController::compute_safe_lane_change_gap(
-//	const Vehicle& ego_vehicle, const NearbyVehicle& other_vehicle,
-//	bool will_accelerate) {
-//
-//	double collision_free_gap = compute_exact_collision_free_gap(
-//		ego_vehicle, other_vehicle);
-//	double transient_gap = compute_transient_gap(ego_vehicle,
-//		other_vehicle, will_accelerate);
-//
-//	return collision_free_gap + transient_gap;
-//}
-
-double LateralController::compute_transient_gap(const Vehicle& ego_vehicle,
+double LateralController::compute_transient_gap(const EgoVehicle& ego_vehicle,
 	const NearbyVehicle& other_vehicle, bool will_accelerate) {
 	/* We need to solve:
 	max_{t \in T} [(v_E(t_0) - v_L(t_0))(t - t_0) + 1/2 a_E (t-t_0)^2]
@@ -110,7 +83,7 @@ double LateralController::compute_transient_gap(const Vehicle& ego_vehicle,
 }
 
 double LateralController::compute_lateral_collision_time(
-	const Vehicle& ego_vehicle, const NearbyVehicle& other_vehicle,
+	const EgoVehicle& ego_vehicle, const NearbyVehicle& other_vehicle,
 	double longitudinal_acceleration) {
 	/* lane_change_lateral_position is the estimated lateral position 
 	of the vehicle's center front. We assume all lane changes are left lane 

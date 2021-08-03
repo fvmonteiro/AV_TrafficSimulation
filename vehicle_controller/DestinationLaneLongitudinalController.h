@@ -14,9 +14,9 @@ class DestinationLaneLongitudinalController :
 public:
 
     DestinationLaneLongitudinalController();
-    DestinationLaneLongitudinalController(const Vehicle& ego_vehicle,
+    DestinationLaneLongitudinalController(const EgoVehicle& ego_vehicle,
         bool verbose);
-    DestinationLaneLongitudinalController(const Vehicle& ego_vehicle);
+    DestinationLaneLongitudinalController(const EgoVehicle& ego_vehicle);
 
     double get_follower_time_headway() {
         return destination_lane_follower_time_headway;
@@ -35,7 +35,7 @@ public:
         double ego_max_brake, double follower_free_flow_velocity);
     /* Changes the accepted risk if necessary and returns 
     true if it made any changes*/
-    bool update_accepted_risk(double time, const Vehicle& ego_vehicle);
+    bool update_accepted_risk(double time, const EgoVehicle& ego_vehicle);
 
 private:
     /* Estimated value of the time headway used by the follower at

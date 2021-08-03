@@ -7,13 +7,13 @@
 /*==========================================================================*/
 
 #include "OriginLaneLongitudinalController.h"
-#include "Vehicle.h"
+#include "EgoVehicle.h"
 
 OriginLaneLongitudinalController::OriginLaneLongitudinalController()
 	: LongitudinalController() {}
 
 OriginLaneLongitudinalController::OriginLaneLongitudinalController(
-	const Vehicle& ego_vehicle, bool verbose) 
+	const EgoVehicle& ego_vehicle, bool verbose) 
 	: LongitudinalController(ego_vehicle, ego_vehicle.get_max_brake(),
 		ego_vehicle.get_desired_velocity(), ego_vehicle.get_max_brake(),
 		verbose) {
@@ -25,9 +25,16 @@ OriginLaneLongitudinalController::OriginLaneLongitudinalController(
 }
 
 OriginLaneLongitudinalController::OriginLaneLongitudinalController(
-	const Vehicle& ego_vehicle)
+	const EgoVehicle& ego_vehicle)
 	: OriginLaneLongitudinalController(ego_vehicle, false) {
 }
+
+OriginLaneLongitudinalController::OriginLaneLongitudinalController(
+	const EgoVehicle& ego_vehicle, double kg, double kv, bool verbose)
+	: OriginLaneLongitudinalController(ego_vehicle, verbose) {
+	set_vehicle_following_gains(kg, kv);
+}
+
 
 void OriginLaneLongitudinalController::determine_controller_state(
 	double ego_velocity, const NearbyVehicle* leader) {

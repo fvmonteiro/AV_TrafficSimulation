@@ -4,7 +4,7 @@ SSMManager::SSMManager(double time_frequency)
 	: time_frequency{ time_frequency } {}
 
 void SSMManager::aggregate_ssms(double new_time, 
-	std::unordered_map<long, Vehicle>& vehicles) {
+	std::unordered_map<long, EgoVehicle>& vehicles) {
 
 	if (new_time > current_time) { // only update at new time steps
 		current_time = new_time;
@@ -23,10 +23,10 @@ void SSMManager::aggregate_ssms(double new_time,
 }
 
 void SSMManager::accumulate_ssms(
-	std::unordered_map<long, Vehicle>& vehicles) {
+	std::unordered_map<long, EgoVehicle>& vehicles) {
 
 	for (const auto& it : vehicles) {
-		const Vehicle& vehicle = it.second;
+		const EgoVehicle& vehicle = it.second;
 		accumulated_ssms[SSMs::ttc] += vehicle.get_current_ttc();
 		accumulated_ssms[SSMs::drac] += vehicle.get_current_drac();
 		accumulated_ssms[SSMs::collision_severity_risk] += 
