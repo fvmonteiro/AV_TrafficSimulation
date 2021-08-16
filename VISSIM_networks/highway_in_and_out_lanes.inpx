@@ -978,17 +978,17 @@
 		<routGuid1 interval="999999" offset="0" strategy="NEWROUTETODESTINATIONPARKINGLOT"/>
 		<routGuid2 interval="999999" offset="0" strategy="NEWROUTETODESTINATIONPARKINGLOT"/>
 	</dynamicAssignment>
-	<evaluation autoCreateResultColumns="true" databaseConnection="" evalOutDir="#data#" keepPrevResults="KEEPCURRENT" listAutoExportType="FILE" nodesDelaySegmentStart="100" queueBeginSpeed="5" queueConsiderAdjacentLanes="true" queueEndSpeed="10" queueMaxHeadway="20" queueMaxLength="500">
+	<evaluation autoCreateResultColumns="true" databaseConnection="" evalOutDir="#data#highway_in_and_out_lanes\test" keepPrevResults="KEEPCURRENT" listAutoExportType="FILE" nodesDelaySegmentStart="100" queueBeginSpeed="5" queueConsiderAdjacentLanes="true" queueEndSpeed="10" queueMaxHeadway="20" queueMaxLength="500">
 		<areaMeasRawData fromTime="0" toTime="99999" writeFile="false"/>
 		<areaMeasResults collectData="false" fromTime="0" interval="99999" toTime="99999"/>
 		<areaResults collectData="false" fromTime="0" interval="99999" toTime="99999"/>
 		<convergence writeFile="false"/>
-		<dataColl collectData="true" fromTime="0" interval="30" toTime="99999"/>
+		<dataColl collectData="true" fromTime="60" interval="60" toTime="99999"/>
 		<dataCollRawData fromTime="0" toTime="99999" writeFile="false"/>
 		<delays collectData="false" fromTime="0" interval="99999" toTime="99999"/>
 		<dischRec fromTime="0" toTime="99999" writeFile="false"/>
 		<greenTimeDistribution fromTime="0" toTime="99999" writeFile="false"/>
-		<linkResults collectData="true" fromTime="0" interval="30" perLane="false" toTime="99999"/>
+		<linkResults collectData="true" fromTime="60" interval="60" perLane="false" toTime="99999"/>
 		<lnChgs filterType="ALL" fromTime="0" toTime="99999" writeFile="false"/>
 		<managedLanes writeFile="false"/>
 		<nodeRawData fromTime="0" toTime="99999" writeDatabase="false" writeFile="false"/>
@@ -1019,7 +1019,7 @@
 		</vehClasses>
 		<vehInpData writeFile="false"/>
 		<vehNetPerf collectData="false" fromTime="0" interval="99999" toTime="99999"/>
-		<vehRec filterType="ALL" fromTime="0" inclParkVehs="false" resolution="1" toTime="99999" writeDatabase="false" writeFile="false">
+		<vehRec filterType="ALL" fromTime="0" inclParkVehs="false" resolution="1" toTime="99999" writeDatabase="false" writeFile="true">
 			<attributes>
 				<attributeSelection attributeID="SIMSEC" decimals="2" format="DEFAULT" showUnits="false"/>
 				<attributeSelection attributeID="NO" decimals="0" format="DEFAULT" showUnits="false"/>
@@ -1030,14 +1030,12 @@
 				<attributeSelection attributeID="SPEED" decimals="2" format="DEFAULT" showUnits="false"/>
 				<attributeSelection attributeID="POSLAT" decimals="2" format="DEFAULT" showUnits="false"/>
 				<attributeSelection attributeID="LEADTARGNO" decimals="0" format="DEFAULT" showUnits="false"/>
-				<attributeSelection attributeID="LEADERCATEGORY" decimals="0" format="DEFAULT" showUnits="false"/>
-				<attributeSelection attributeID="FOLLOWDIST" decimals="2" format="DEFAULT" showUnits="false"/>
-				<attributeSelection attributeID="GAPTOLEADER" decimals="2" format="DEFAULT" showUnits="false"/>
+				<attributeSelection attributeID="SPEEDDIFF" decimals="2" format="DEFAULT" showUnits="false"/>
+				<attributeSelection attributeID="SIMRUN" decimals="0" format="DEFAULT" showUnits="false"/>
 				<attributeSelection attributeID="COORDFRONTX" decimals="3" format="DEFAULT" showUnits="false"/>
 				<attributeSelection attributeID="COORDFRONTY" decimals="3" format="DEFAULT" showUnits="false"/>
 				<attributeSelection attributeID="COORDREARX" decimals="3" format="DEFAULT" showUnits="false"/>
 				<attributeSelection attributeID="COORDREARY" decimals="3" format="DEFAULT" showUnits="false"/>
-				<attributeSelection attributeID="SPEEDDIFF" decimals="2" format="DEFAULT" showUnits="false"/>
 			</attributes>
 		</vehRec>
 		<vehTravTmRawData fromTime="0" toTime="99999" writeDatabase="false" writeFile="false"/>
@@ -1054,7 +1052,7 @@
 		<linkBehaviorType anmFlag="false" drivBehavDef="5" name="Cycle-Track (free overtaking)" no="5"/>
 	</linkBehaviorTypes>
 	<links>
-		<link assumSpeedOncom="60" costPerKm="0" direction="ALL" displayType="1" emergStopDist="5" gradient="0" hasOvtLn="false" isPedArea="false" level="1" linkBehavType="1" linkEvalAct="true" linkEvalSegLen="800" lnChgDist="200" lnChgDistIsPerLn="false" lnChgEvalAct="true" lookAheadDistOvt="500" mesoFollowUpGap="0" mesoSpeed="50" mesoSpeedModel="VEHICLEBASED" name="in" no="2" ovtOnlyPT="false" ovtSpeedFact="1.3" showClsfValues="true" showLinkBar="true" showVeh="true" surch1="0" surch2="0" thickness="0" vehRecAct="true">
+		<link assumSpeedOncom="60" costPerKm="0" direction="ALL" displayType="1" emergStopDist="5" gradient="0" hasOvtLn="false" isPedArea="false" level="1" linkBehavType="1" linkEvalAct="false" linkEvalSegLen="800" lnChgDist="200" lnChgDistIsPerLn="false" lnChgEvalAct="false" lookAheadDistOvt="500" mesoFollowUpGap="0" mesoSpeed="50" mesoSpeedModel="VEHICLEBASED" name="in" no="2" ovtOnlyPT="false" ovtSpeedFact="1.3" showClsfValues="true" showLinkBar="true" showVeh="true" surch1="0" surch2="0" thickness="0" vehRecAct="false">
 			<geometry>
 				<points3D>
 					<point3D x="401.36758318673412" y="-43.22071006979121" zOffset="0"/>
@@ -1078,7 +1076,7 @@
 				<lane width="3.5"/>
 			</lanes>
 		</link>
-		<link assumSpeedOncom="60" costPerKm="0" direction="ALL" displayType="1" emergStopDist="5" gradient="0" hasOvtLn="false" isPedArea="false" level="1" linkBehavType="1" linkEvalAct="true" linkEvalSegLen="800" lnChgDist="200" lnChgDistIsPerLn="false" lnChgEvalAct="true" lookAheadDistOvt="500" mesoFollowUpGap="0" mesoSpeed="50" mesoSpeedModel="VEHICLEBASED" name="main_start" no="4" ovtOnlyPT="false" ovtSpeedFact="1.3" showClsfValues="true" showLinkBar="true" showVeh="true" surch1="0" surch2="0" thickness="0" vehRecAct="true">
+		<link assumSpeedOncom="60" costPerKm="0" direction="ALL" displayType="1" emergStopDist="5" gradient="0" hasOvtLn="false" isPedArea="false" level="1" linkBehavType="1" linkEvalAct="false" linkEvalSegLen="800" lnChgDist="200" lnChgDistIsPerLn="false" lnChgEvalAct="false" lookAheadDistOvt="500" mesoFollowUpGap="0" mesoSpeed="50" mesoSpeedModel="VEHICLEBASED" name="main_start" no="4" ovtOnlyPT="false" ovtSpeedFact="1.3" showClsfValues="true" showLinkBar="true" showVeh="true" surch1="0" surch2="0" thickness="0" vehRecAct="false">
 			<geometry>
 				<points3D>
 					<point3D x="398.43091963572778" y="-29.537387571416957" zOffset="0"/>
@@ -1090,7 +1088,7 @@
 				<lane width="3.5"/>
 			</lanes>
 		</link>
-		<link assumSpeedOncom="60" costPerKm="0" direction="ALL" displayType="1" emergStopDist="5" gradient="0" hasOvtLn="false" isPedArea="false" level="1" linkBehavType="1" linkEvalAct="false" linkEvalSegLen="10" lnChgDist="200" lnChgDistIsPerLn="false" lnChgEvalAct="true" lookAheadDistOvt="500" mesoFollowUpGap="0" mesoSpeed="50" mesoSpeedModel="VEHICLEBASED" name="out" no="5" ovtOnlyPT="false" ovtSpeedFact="1.3" showClsfValues="true" showLinkBar="true" showVeh="true" surch1="0" surch2="0" thickness="0" vehRecAct="true">
+		<link assumSpeedOncom="60" costPerKm="0" direction="ALL" displayType="1" emergStopDist="5" gradient="0" hasOvtLn="false" isPedArea="false" level="1" linkBehavType="1" linkEvalAct="false" linkEvalSegLen="10" lnChgDist="200" lnChgDistIsPerLn="false" lnChgEvalAct="false" lookAheadDistOvt="500" mesoFollowUpGap="0" mesoSpeed="50" mesoSpeedModel="VEHICLEBASED" name="out" no="5" ovtOnlyPT="false" ovtSpeedFact="1.3" showClsfValues="true" showLinkBar="true" showVeh="true" surch1="0" surch2="0" thickness="0" vehRecAct="true">
 			<geometry>
 				<points3D>
 					<point3D x="1135.6180504281006" y="-49.53394330115345" zOffset="0"/>
@@ -1101,7 +1099,7 @@
 				<lane width="3.5"/>
 			</lanes>
 		</link>
-		<link assumSpeedOncom="60" costPerKm="0" direction="ALL" displayType="1" emergStopDist="5" gradient="0" hasOvtLn="false" isPedArea="false" level="1" linkBehavType="1" linkEvalAct="true" linkEvalSegLen="800" lnChgDist="200" lnChgDistIsPerLn="false" lnChgEvalAct="true" lookAheadDistOvt="500" mesoFollowUpGap="0" mesoSpeed="50" mesoSpeedModel="VEHICLEBASED" name="main_end" no="6" ovtOnlyPT="false" ovtSpeedFact="1.3" showClsfValues="true" showLinkBar="true" showVeh="true" surch1="0" surch2="0" thickness="0" vehRecAct="true">
+		<link assumSpeedOncom="60" costPerKm="0" direction="ALL" displayType="1" emergStopDist="5" gradient="0" hasOvtLn="false" isPedArea="false" level="1" linkBehavType="1" linkEvalAct="false" linkEvalSegLen="800" lnChgDist="200" lnChgDistIsPerLn="false" lnChgEvalAct="false" lookAheadDistOvt="500" mesoFollowUpGap="0" mesoSpeed="50" mesoSpeedModel="VEHICLEBASED" name="main_end" no="6" ovtOnlyPT="false" ovtSpeedFact="1.3" showClsfValues="true" showLinkBar="true" showVeh="true" surch1="0" surch2="0" thickness="0" vehRecAct="true">
 			<geometry>
 				<points3D>
 					<point3D x="1042.934720204157" y="-32.143182135269583" zOffset="0"/>
@@ -1126,7 +1124,7 @@
 			</lanes>
 			<toLinkEndPt lane="3 2" pos="0.87434851929564505"/>
 		</link>
-		<link assumSpeedOncom="60" costPerKm="0" direction="ALL" displayType="1" emergStopDist="5" gradient="0" hasOvtLn="false" isPedArea="false" linkBehavType="1" linkEvalAct="false" linkEvalSegLen="10" lnChgDist="200" lnChgDistIsPerLn="false" lnChgEvalAct="true" lookAheadDistOvt="500" mesoFollowUpGap="0" mesoSpeed="50" mesoSpeedModel="VEHICLEBASED" name="" no="10001" ovtOnlyPT="false" ovtSpeedFact="1.3" showClsfValues="true" showLinkBar="true" showVeh="true" surch1="0" surch2="0" thickness="0" vehRecAct="true">
+		<link assumSpeedOncom="60" costPerKm="0" direction="ALL" displayType="1" emergStopDist="5" gradient="0" hasOvtLn="false" isPedArea="false" linkBehavType="1" linkEvalAct="false" linkEvalSegLen="10" lnChgDist="200" lnChgDistIsPerLn="false" lnChgEvalAct="false" lookAheadDistOvt="500" mesoFollowUpGap="0" mesoSpeed="50" mesoSpeedModel="VEHICLEBASED" name="" no="10001" ovtOnlyPT="false" ovtSpeedFact="1.3" showClsfValues="true" showLinkBar="true" showVeh="true" surch1="0" surch2="0" thickness="0" vehRecAct="false">
 			<fromLinkEndPt lane="2 1" pos="86.708748668428001"/>
 			<geometry>
 				<points3D>
@@ -1166,7 +1164,7 @@
 			</lanes>
 			<toLinkEndPt lane="6 1" pos="1.4505732948799066"/>
 		</link>
-		<link assumSpeedOncom="60" costPerKm="0" direction="ALL" displayType="1" emergStopDist="5" gradient="0" hasOvtLn="false" isPedArea="false" linkBehavType="1" linkEvalAct="true" linkEvalSegLen="800" lnChgDist="200" lnChgDistIsPerLn="false" lnChgEvalAct="true" lookAheadDistOvt="500" mesoFollowUpGap="0" mesoSpeed="50" mesoSpeedModel="VEHICLEBASED" name="" no="10003" ovtOnlyPT="false" ovtSpeedFact="1.3" showClsfValues="true" showLinkBar="true" showVeh="true" surch1="0" surch2="0" thickness="0" vehRecAct="true">
+		<link assumSpeedOncom="60" costPerKm="0" direction="ALL" displayType="1" emergStopDist="5" gradient="0" hasOvtLn="false" isPedArea="false" linkBehavType="1" linkEvalAct="false" linkEvalSegLen="800" lnChgDist="200" lnChgDistIsPerLn="false" lnChgEvalAct="false" lookAheadDistOvt="500" mesoFollowUpGap="0" mesoSpeed="50" mesoSpeedModel="VEHICLEBASED" name="" no="10003" ovtOnlyPT="false" ovtSpeedFact="1.3" showClsfValues="true" showLinkBar="true" showVeh="true" surch1="0" surch2="0" thickness="0" vehRecAct="true">
 			<fromLinkEndPt lane="3 1" pos="515.44782647052375"/>
 			<geometry>
 				<points3D>
@@ -1980,7 +1978,7 @@
 			</distrDataPts>
 		</powerDistribution>
 	</powerDistributions>
-	<simulation comment="" numCores="1" numRuns="1" randSeed="7" randSeedIncr="1" retroSync="false" simMode="MICRO" simPeriod="1800" simRes="10" simSpeed="10" startTm="0" useAllCores="false" useMaxSimSpeed="true" volumeIncrDynAssign="0"/>
+	<simulation comment="" numCores="1" numRuns="1" randSeed="7" randSeedIncr="1" retroSync="false" simMode="MICRO" simPeriod="360" simRes="10" simSpeed="10" startTm="0" useAllCores="false" useMaxSimSpeed="true" volumeIncrDynAssign="0"/>
 	<timeDistributions>
 		<timeDistribution mean="0.5" name="0.5 s" no="1" stdDev="0" type="NORMAL"/>
 		<timeDistribution mean="0.9" name="0.9 s" no="2" stdDev="0" type="NORMAL"/>
@@ -1992,6 +1990,8 @@
 		<timeIntervalSet no="VEHICLEINPUT">
 			<timeInts>
 				<timeInterval start="0"/>
+				<timeInterval start="60"/>
+				<timeInterval start="120"/>
 			</timeInts>
 		</timeIntervalSet>
 		<timeIntervalSet no="VEHICLEROUTESTATIC">
@@ -2063,7 +2063,7 @@
 		<userDefinedAttribute comment="Relative velocity of a collision that would happen under the worst case scenario" dataSrcType="DATA" dataType="SMALLSPEED" decimals="2" formula="" internalDefValueNum="0" internalDefValueStr="" internalMaxValue="INF" internalMinValue="-INF" maxStrLen="100" nameLong="Collision Severity Risk" nameShort="CSR" no="20" objType="VEHICLE" subAttrs=""/>
 		<userDefinedAttribute comment="" dataSrcType="DATA" dataType="BOOL" decimals="2" formula="" internalDefValueNum="0" internalDefValueStr="" internalMaxValue="INF" internalMinValue="-INF" maxStrLen="100" nameLong="Write Vehicle Log" nameShort="writeVehicleLog" no="21" objType="VEHICLE" subAttrs=""/>
 		<userDefinedAttribute comment="Ego velocity minus leader velocity" dataSrcType="DATA" dataType="DOUBLE" decimals="2" formula="" internalDefValueNum="0" internalDefValueStr="" internalMaxValue="INF" internalMinValue="-INF" maxStrLen="100" nameLong="Relative velocity to leader" nameShort="relVelToLeader" no="22" objType="VEHICLE" subAttrs=""/>
-		<userDefinedAttribute comment="Car=1, Truck=2, Bus=3" dataSrcType="DATA" dataType="INT" decimals="2" formula="" internalDefValueNum="0" internalDefValueStr="" internalMaxValue="INF" internalMinValue="-INF" maxStrLen="100" nameLong="Leader category" nameShort="leaderCategory" no="23" objType="VEHICLE" subAttrs=""/>
+		<userDefinedAttribute comment="Human driven car=100, Autonomous car = 110, Truck=200, Bus=300" dataSrcType="DATA" dataType="INT" decimals="2" formula="" internalDefValueNum="0" internalDefValueStr="" internalMaxValue="INF" internalMinValue="-INF" maxStrLen="100" nameLong="Leader type" nameShort="leaderType" no="23" objType="VEHICLE" subAttrs=""/>
 	</userDefinedAttributes>
 	<vehicleClasses>
 		<vehicleClass anmid="" color="ff000000" name="Car" no="10" useVehTypeColor="true">
@@ -2092,8 +2092,8 @@
 		</vehicleComposition>
 		<vehicleComposition name="with_autonomous" no="2">
 			<vehCompRelFlows>
-				<vehicleCompositionRelativeFlow desSpeedDistr="120" relFlow="1" vehType="100"/>
-				<vehicleCompositionRelativeFlow desSpeedDistr="120" relFlow="1" vehType="110"/>
+				<vehicleCompositionRelativeFlow desSpeedDistr="120" relFlow="60" vehType="100"/>
+				<vehicleCompositionRelativeFlow desSpeedDistr="120" relFlow="40" vehType="110"/>
 			</vehCompRelFlows>
 		</vehicleComposition>
 		<vehicleComposition name="all_autonomous" no="3">
@@ -2101,16 +2101,25 @@
 				<vehicleCompositionRelativeFlow desSpeedDistr="120" relFlow="1" vehType="110"/>
 			</vehCompRelFlows>
 		</vehicleComposition>
+		<vehicleComposition name="all_human" no="4">
+			<vehCompRelFlows>
+				<vehicleCompositionRelativeFlow desSpeedDistr="120" relFlow="1" vehType="100"/>
+			</vehCompRelFlows>
+		</vehicleComposition>
 	</vehicleCompositions>
 	<vehicleInputs>
 		<vehicleInput anmFlag="false" link="2" name="in_flow" no="2">
 			<timeIntVehVols>
-				<timeIntervalVehVolume cont="false" timeInt="1 0" vehComp="1" volType="STOCHASTIC" volume="750"/>
+				<timeIntervalVehVolume cont="false" timeInt="1 0" vehComp="2" volType="STOCHASTIC" volume="1000"/>
+				<timeIntervalVehVolume cont="true" timeInt="1 60000" vehComp="2" volType="STOCHASTIC" volume="1000"/>
+				<timeIntervalVehVolume cont="true" timeInt="1 120000" vehComp="2" volType="STOCHASTIC" volume="1000"/>
 			</timeIntVehVols>
 		</vehicleInput>
 		<vehicleInput anmFlag="false" link="4" name="main_flow" no="3">
 			<timeIntVehVols>
-				<timeIntervalVehVolume cont="false" timeInt="1 0" vehComp="2" volType="STOCHASTIC" volume="3000"/>
+				<timeIntervalVehVolume cont="false" timeInt="1 0" vehComp="2" volType="STOCHASTIC" volume="2000"/>
+				<timeIntervalVehVolume cont="true" timeInt="1 60000" vehComp="2" volType="STOCHASTIC" volume="2000"/>
+				<timeIntervalVehVolume cont="true" timeInt="1 120000" vehComp="2" volType="STOCHASTIC" volume="2000"/>
 			</timeIntVehVols>
 		</vehicleInput>
 	</vehicleInputs>
