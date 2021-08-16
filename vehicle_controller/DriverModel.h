@@ -49,7 +49,7 @@ enum class UDA {
     collision_severity_risk,
     write_veh_log,
     relative_velocity_to_leader,
-    leader_category,
+    leader_type,
 
     first = gap_to_dest_lane_leader,
 };

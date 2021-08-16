@@ -21,16 +21,20 @@ public:
     double get_follower_time_headway() {
         return destination_lane_follower_time_headway;
     }
-    void set_reference_velocity(double desired_velocity) {
-        this->ego_reference_velocity = desired_velocity;
-    }
+    
     void set_timer_start(double time) {
         this->timer_start = time;
     }
 
+    void set_reference_velocity(double ego_velocity, double adjustment_speed_factor);
+
     virtual void determine_controller_state(double ego_velocity,
-        const NearbyVehicle* leader) override;
-    bool is_active();
+        const std::shared_ptr<NearbyVehicle> leader) override;
+    bool is_active() const;
+    /* Checks whether the filtered reference velocity is greater than
+    the ego velocity. Method should only be called when the 
+    destination lane controller is NOT the active one. */
+    bool is_outdated(double ego_velocity) const;
     void estimate_follower_time_headway(const NearbyVehicle& follower,
         double ego_max_brake, double follower_free_flow_velocity);
     /* Changes the accepted risk if necessary and returns 

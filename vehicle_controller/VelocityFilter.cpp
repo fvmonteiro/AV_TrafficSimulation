@@ -32,12 +32,6 @@ VelocityFilter::VelocityFilter(double max_acceleration,
 			<< std::endl;
 	}
 
-	/*this->verbose = verbose;
-	this->time_step = time_step;
-	this->max_acceleration = max_acceleration;
-	this->min_acceleration = -std::abs(min_acceleration); */ /* minimum
-	acceleration (maximum braking) is sometimes given in absolute value,
-	so we have to make sure to get a negative value here*/
 	this->max_variation_per_time_step = this->max_acceleration 
 		* this->time_step;
 	this->min_variation_per_time_step = this->min_acceleration 
@@ -54,7 +48,7 @@ void VelocityFilter::reset(double initial_value) {
 		std::clog << "------- Filter reset. Init value = "
 			<< initial_value << " -------" << std::endl;
 	}*/
-	this->previous_value = initial_value;
+	this->current_value = initial_value;
 }
 
 double VelocityFilter::filter_velocity(double new_velocity) {
@@ -76,7 +70,7 @@ double VelocityFilter::filter_velocity(double new_velocity) {
 
 	double filtered_variation;
 	double alpha = std::exp(-gain * time_step);
-	double variation = new_velocity - previous_value;
+	double variation = new_velocity - current_value;
 	if ((1 - alpha) * variation > max_variation_per_time_step) {
 		filtered_variation = max_variation_per_time_step;
 	}
@@ -86,7 +80,7 @@ double VelocityFilter::filter_velocity(double new_velocity) {
 	else {
 		filtered_variation = (1 - alpha) * variation;
 	}
-	double reference_velocity = previous_value + filtered_variation;
+	double reference_velocity = current_value + filtered_variation;
 
 	/*if (verbose) {
 		std::clog << "[f] previous value = " << previous_value
@@ -96,6 +90,6 @@ double VelocityFilter::filter_velocity(double new_velocity) {
 			<< "; new_value = " << reference_velocity << std::endl;
 	}*/
 
-	previous_value = reference_velocity;
+	current_value = reference_velocity;
 	return reference_velocity;
 }

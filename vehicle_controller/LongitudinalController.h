@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include <memory>
 #include <string>
 #include "VelocityFilter.h"
 
@@ -42,14 +43,10 @@ public:
 		double leader_max_brake);
 	void update_time_headway_with_risk(double lambda_1,
 		double leader_max_brake);
-
-	///* The collision free gap is computed assuming a worst case braking
-	//scenario */
-	//double compute_exact_collision_free_gap(double ego_velocity,
-	//	const NearbyVehicle& other_vehicle);
-	///* Relative velocity at collision time under the worst case scenario*/
-	//double compute_collision_severity_risk(const Vehicle& ego_vehicle,
-	//	const NearbyVehicle& leader);
+	void reset_leader_velocity_filter(double ego_velocity);
+	void reset_desired_velocity_filter(double ego_velocity);
+	/* Sets integral error to zero*/
+	void reset_velocity_error_integrator();
 
 	/* Computes constant time headway following distance */
 	double compute_desired_gap(double ego_velocity);
@@ -62,7 +59,7 @@ public:
 	/* Determines and sets the current state of the longitudinal controller 
 	TODO: should this class provide a default implementation?*/
 	virtual void determine_controller_state(double ego_velocity,
-		const NearbyVehicle* leader) = 0;
+		const std::shared_ptr<NearbyVehicle> leader) = 0;
 	/* Determines and sets the current state of the longitudinal controller */
 	/*void determine_controller_state(const Vehicle& ego_vehicle,
 		const NearbyVehicle& leader);*/
@@ -76,11 +73,11 @@ public:
 		double velocity_error);
 
 	/* PID velocity controller */
-	double compute_velocity_control_input(double velocity_error, 
-		double ego_acceleration);
+	double compute_velocity_control_input(double velocity_error,
+		double ego_acceleration, double comfortable_acceleration);
 
 	double compute_desired_acceleration(const EgoVehicle& ego_vehicle,
-		const NearbyVehicle* leader);
+		const std::shared_ptr<NearbyVehicle> leader);
 	//double compute_desired_acceleration(const Vehicle& ego_vehicle,
 	//	const NearbyVehicle& leader);
 
@@ -95,6 +92,8 @@ protected:
 	double free_flow_velocity{ 0.0 }; // to compute time headway [m/s]
 	double rho{ 0.15 }; /* proportional maximum expected relative speed */
 	bool verbose{ false };
+	VelocityFilter leader_velocity_filter;
+	VelocityFilter desired_velocity_filter;
 
 	/* Accpeting risks:
 	The risk is an estimation of the relative velocity at collision
@@ -109,7 +108,7 @@ protected:
 	double delta_risk{ 5.0 }; // [m/s]
 	double max_risk{ 0.0 }; // [m/s]
 	double timer_start{ 0.0 }; // [s]
-	double constant_risk_period{ 5.0 }; // [s] 
+	double constant_risk_period{ 5.0 }; // [s]
 
 	void set_vehicle_following_gains(double kg, double kv);
 
@@ -139,19 +138,15 @@ private:
 	double kg{ 0.4 }; // gain relative to gap error.
 	double kv{ 1.0 }; // gain relative to velocity error.
 	/* Velocity controller gains 
-	TODO: computed in Matlab but should be computed here */
-	double ki{ 0.07 };
+	(computed in Matlab. Should be computed here?) */
+	double ki{ 0.03 }; //0.07
 	double kp{ 0.5 };
-	double kd{ 0.1 };
+	double kd{ 0.1 }; // 0.1
 	/* Other controller parameters */
 	double max_gap_error{ 3.0 }; // maximum positive gap error in meters
 	double velocity_error_integral{ 0.0 };
-	VelocityFilter velocity_filter;
 	
 
 	/* Internal methods */
-	
-	/* Sets integral error to zero*/
-	void reset_velocity_error_integrator();
 
 };

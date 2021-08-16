@@ -6,6 +6,7 @@
 /*==========================================================================*/
 
 #pragma once
+#include <memory>
 #include <vector>
 
 #include "ControlManager.h"
@@ -84,6 +85,7 @@ public:
 	double get_current_time() const;
 	long get_current_lane() const;
 	long get_current_link() const;
+	double get_current_lateral_position() const;
 	long get_current_preferred_relative_lane() const;
 	double get_current_velocity() const;
 	double get_current_acceleration() const;
@@ -103,6 +105,7 @@ public:
 
 	void set_lane(long lane);
 	void set_link(long link);
+	void set_lateral_position(double lateral_position);
 	void set_velocity(double velocity);
 	void set_acceleration(double acceleration);
 	void set_vissim_acceleration(double vissim_acceleration);
@@ -126,33 +129,36 @@ public:
 	void emplace_nearby_vehicle(long id, long relative_lane,
 		long relative_position);
 	/* Returns the most recently added nearby vehicle */
-	NearbyVehicle* peek_nearby_vehicles() const;
+	std::shared_ptr<NearbyVehicle> peek_nearby_vehicles() const;
 	/* Searches the nearby_vehicles array. NO LONGER IN USE */
-	NearbyVehicle* find_nearby_vehicle(RelativeLane relative_lane,
-		int relative_position) const;
+	//std::shared_ptr<NearbyVehicle> find_nearby_vehicle(RelativeLane relative_lane,
+	//	int relative_position) const;
 	/* Looks at all nearby vehicles, defines pointers to the leader 
 	(if it exits), and destination lane leader and follower (if there 
 	is lane change intention and if they exist). Also performs time 
 	computations */
 	void analyze_nearby_vehicles();
+	void analyze_nearby_vehicles_(); /* ATTEMPT AT NEW IMPLEMENTATION */
+	bool is_cutting_in(const NearbyVehicle& nearby_vehicle) const;
 	bool has_leader() const;
 	bool has_follower() const;
 	bool has_destination_lane_leader() const;
 	bool has_destination_lane_follower() const;
 	/* Returns a nullptr if there is no leader */
-	NearbyVehicle* get_leader() const;
+	std::shared_ptr<NearbyVehicle> get_leader() const;
 	/* Returns a nullptr if there is no follower */
-	NearbyVehicle* get_follower() const;
+	std::shared_ptr<NearbyVehicle> get_follower() const;
 	/* Returns a nullptr if there is no leader at the destination lane */
-	NearbyVehicle* get_destination_lane_leader() const;
+	std::shared_ptr<NearbyVehicle> get_destination_lane_leader() const;
 	/* Returns a nullptr if there is no follower at the destination lane */
-	NearbyVehicle* get_destination_lane_follower() const;
+	std::shared_ptr<NearbyVehicle> get_destination_lane_follower() const;
 	/* Computes the bumper-to-bumper distance between vehicles.
 	Returns MAX_DISTANCE if nearby_vehicle is empty. */
 	double compute_gap(const NearbyVehicle& nearby_vehicle) const;
 	/* Computes the bumper-to-bumper distance between vehicles.
 	Returns MAX_DISTANCE if nearby_vehicle is a nullptr. */
-	double compute_gap(const NearbyVehicle* nearby_vehicle) const;
+	double compute_gap(
+		const std::shared_ptr<NearbyVehicle> nearby_vehicle) const;
 	bool find_lane_change_conflicts();
 	
 	/* The following two methods are useful to avoid postprocessing
@@ -164,7 +170,7 @@ public:
 	is no leader */
 	double get_relative_velocity_to_leader();
 	/* Returns 0 if no leader. */
-	long get_leader_category();
+	long get_leader_type();
 
 	/* Computation of surrogate safety measurements */
 
@@ -197,7 +203,8 @@ public:
 	dynamics */
 	double consider_vehicle_dynamics(double desired_acceleration);
 	//RelativeLane get_lane_change_direction();
-	double compute_safe_lane_change_gap(NearbyVehicle* other_vehicle);
+	double compute_safe_lane_change_gap(
+		std::shared_ptr<NearbyVehicle> other_vehicle);
 	/*double compute_safe_gap_to_destination_lane_leader();
 	double compute_safe_gap_to_destination_lane_follower();*/
 	/* Calls the controller to decide whether the vehicle can start a 
@@ -215,10 +222,12 @@ public:
 	/* Returns the time headway gap from the ego to the other vehicle
 	if the ego vehicle is behind and from the other to the ego vehicle
 	if the other vehicle is behind. */
-	double compute_time_headway_gap(NearbyVehicle* other_vehicle);
+	double compute_time_headway_gap(
+		std::shared_ptr<NearbyVehicle> other_vehicle);
 	/* Returns the transient lane changing gap between ego vehicle 
 	and other. */
-	double compute_transient_gap(NearbyVehicle* other_vehicle);
+	double compute_transient_gap(
+		std::shared_ptr<NearbyVehicle> other_vehicle);
 	/* Returns the vehicle following gap from the
 	destination lane follower to the ego vehicle. */
 	//double compute_time_headway_gap_to_destination_lane_follower();
@@ -230,15 +239,15 @@ public:
 	/* Methods for logging */
 
 	/* TODO: find better names for the methods */
+
+	bool is_verbose() const { return verbose; };
 	bool get_should_log() const { return should_log; };
 	void set_should_log(long should_log) {
 		set_should_log(should_log > 0);
 	}
-	void set_should_log(bool should_log) {	
+	void set_should_log(bool should_log) {
 		this->should_log = should_log; 
 	};
-	/* The log should be adapted depending on what we are trying to debug */
-	void write_simulation_log();
 
 	/* Print function */
 	friend std::ostream& operator<< (std::ostream& out, const EgoVehicle& vehicle);
@@ -249,7 +258,7 @@ private:
 	
 	double tau{ ACTUATOR_CONSTANT }; // actuator constant [s].
 	double lane_change_max_brake{ CAR_MAX_BRAKE / 2 }; // [m/s^2]
-	double comfortable_brake{ -COMFORTABLE_ACCELERATION }; // [m/s^2] TODO: vary with speed?
+	double comfortable_brake{ COMFORTABLE_ACCELERATION }; // [m/s^2] TODO: vary with speed?
 	double comfortable_acceleration{ COMFORTABLE_ACCELERATION }; // [m/s^2] TODO: vary with speed?
 	double max_jerk{ MAX_JERK }; // [m/s^3]
 	double brake_delay{ AUTONOMOUS_BRAKE_DELAY }; // [s]
@@ -268,7 +277,7 @@ private:
 	/* TODO: I'm no longer sure a vector of pointer is the way to go.
 	Maybe we should use a simple vector of objects. Or maybe some smart
 	pointer stuff */
-	std::vector<NearbyVehicle*> nearby_vehicles;
+	std::vector<std::shared_ptr<NearbyVehicle>> nearby_vehicles;
 	std::vector<long> leader_id;
 	long dest_lane_leader_id = 0;
 	long dest_lane_follower_id = 0;
@@ -277,10 +286,10 @@ private:
 	int dest_lane_leader_idx = -1;
 	int dest_lane_follower_idx = -1;*/
 
-	NearbyVehicle* leader{ nullptr };
-	NearbyVehicle* follower{ nullptr };
-	NearbyVehicle* destination_lane_leader{ nullptr };
-	NearbyVehicle* destination_lane_follower{ nullptr };
+	std::shared_ptr<NearbyVehicle> leader{ nullptr };
+	std::shared_ptr<NearbyVehicle> follower{ nullptr };
+	std::shared_ptr<NearbyVehicle> destination_lane_leader{ nullptr };
+	std::shared_ptr<NearbyVehicle> destination_lane_follower{ nullptr };
 	//RelevantNearbyVehicles relevant_nearby_vehicles;
 
 	/* Colors for easy visualization in VISSIM */
@@ -300,8 +309,9 @@ private:
 	std::vector<long> lane;
 	std::vector<long> link;
 	std::vector<long> preferred_relative_lane;
-	/* Updated together with preferred_relative_lane */
-	//RelativeLane desired_lane_change_direction{ RelativeLane::same };
+	/* distance of the front end from the middle of the lane [m]
+	(positive = left of the middle, negative = right) */
+	std::vector<double> lateral_position;
 	std::vector<double> velocity;
 	std::vector<double> acceleration;
 	std::vector<double> desired_acceleration;
@@ -333,6 +343,14 @@ private:
 	can become a single member. They are redundant. */
 	void set_state(long preferred_relative_lane);
 	void set_desired_lane_change_direction(long preferred_relative_lane);
+	/* Returns the opposite of relative_lane:
+	- left->right
+	- right->left
+	- same->same
+	This method should be moved into some RelativeLane struct 
+	or class (to be created) */
+	RelativeLane get_opposite_relative_lane(
+		const RelativeLane& relative_lane) const;
 
 	/* For printing and debugging purporses */
 	bool verbose = false; /* when true, will print results to 
@@ -363,12 +381,13 @@ private:
 		ttc,
 		drac,
 		collision_severity_risk,
+		type,
 	};
 
-	std::string create_header(std::vector<Member> members,
+	void write_simulation_log(std::vector<Member> members);
+	std::string write_header(std::vector<Member> members,
 		bool write_size = false);
-	std::ostringstream write_members(std::vector<Member> members,
-		bool write_size = false);
+	std::string write_members(std::vector<Member> members);
 	int get_member_size(Member member);
 	std::string member_enum_to_string(Member member);
 };

@@ -30,8 +30,19 @@ DestinationLaneLongitudinalController::DestinationLaneLongitudinalController(
 	: DestinationLaneLongitudinalController(ego_vehicle, false) {
 }
 
+void DestinationLaneLongitudinalController::set_reference_velocity(
+	double ego_velocity, double adjustment_speed_factor) {
+	double minimum_adjustment_velocity =
+		ego_velocity * adjustment_speed_factor;
+	if (verbose) {
+		std::clog << "new min vel=" << minimum_adjustment_velocity << std::endl;
+	}
+	reset_desired_velocity_filter(ego_velocity);
+	this->ego_reference_velocity = minimum_adjustment_velocity;
+}
+
 void DestinationLaneLongitudinalController::determine_controller_state(
-	double ego_velocity, const NearbyVehicle* leader) {
+	double ego_velocity, const std::shared_ptr<NearbyVehicle> leader) {
 
 	if (verbose) {
 		std::clog << "\tdest lane controller - deciding state"
@@ -69,8 +80,13 @@ void DestinationLaneLongitudinalController::determine_controller_state(
 	}
 }
 
-bool DestinationLaneLongitudinalController::is_active() {
+bool DestinationLaneLongitudinalController::is_active() const {
 	return state != State::uninitialized;
+}
+
+bool DestinationLaneLongitudinalController::is_outdated(
+	double ego_velocity) const {
+	return ego_velocity < desired_velocity_filter.get_current_value();
 }
 
 void DestinationLaneLongitudinalController::estimate_follower_time_headway(
@@ -96,10 +112,11 @@ void DestinationLaneLongitudinalController::estimate_follower_time_headway(
 
 bool DestinationLaneLongitudinalController::update_accepted_risk(
 	double time, const EgoVehicle& ego_vehicle) {
-	if (verbose) {
+	/*if (verbose) {
 		std::clog << "\tt=" << time
 			<< ", timer_start=" << timer_start << std::endl;
-	}
+	}*/
+
 	if (((time - timer_start) >= constant_risk_period)
 		&& (accepted_risk < max_risk)) {
 		timer_start = time;

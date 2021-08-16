@@ -68,14 +68,17 @@ public:
 	/* Computes the deceleration rate to avoid collision */
 	double compute_drac(double relative_velocity, double gap);
 
-	/*void update_time_headway(const Vehicle& ego_vehicle, 
-		const NearbyVehicle& other_vehicle);*/
-	void update_origin_lane_time_headway(double lambda_1, 
-		double leader_max_brake);
-	void update_destination_lane_time_headway(double lambda_1,
-		double leader_max_brake);
+	/* Updates the time headway based on the new leader and 
+	resets the leader velocity filter */
+	void update_origin_lane_controller(double lambda_1, 
+		double leader_max_brake, double ego_velocity);
+	/* Updates the (risky) time headway based on the new leader and
+	resets the leader velocity filter */
+	void update_destination_lane_controller(double lambda_1,
+		double leader_max_brake, double ego_velocity);
 	void estimate_follower_time_headway(const EgoVehicle& ego_vehicle,
 		NearbyVehicle& follower);
+	void reset_origin_lane_velocity_controller(double ego_velocity);
 
 	/* Gets the acceleration inputs from the origin (and destination) lane
 	ACCs, from the necessary value to avoid colision and from VISSIM and decides
@@ -90,7 +93,8 @@ public:
 
 	/* Sets the value of the minimum accepted longitudinal adjustment speed
 	and the initial value of accepted risk, and starts the a timer. */
-	void start_longitudinal_adjustment(double time, double velocity);
+	void start_longitudinal_adjustment(double time, double ego_velocity,
+		double adjustment_speed_factor);
 	void update_accepted_risk(const EgoVehicle& ego_vehicle);
 
 	/* Printing ----------------------------------------------------------- */

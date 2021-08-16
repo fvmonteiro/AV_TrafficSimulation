@@ -37,7 +37,7 @@ OriginLaneLongitudinalController::OriginLaneLongitudinalController(
 
 
 void OriginLaneLongitudinalController::determine_controller_state(
-	double ego_velocity, const NearbyVehicle* leader) {
+	double ego_velocity, const std::shared_ptr<NearbyVehicle> leader) {
 
 	if (leader == nullptr) { // no vehicle ahead
 		state = State::velocity_control;

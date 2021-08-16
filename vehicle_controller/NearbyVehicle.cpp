@@ -1,6 +1,7 @@
 #include <iomanip>
 #include <iostream>
 #include <vector>
+#include <sstream>
 
 #include "Constants.h"
 #include "NearbyVehicle.h"
@@ -53,6 +54,65 @@ void NearbyVehicle::compute_safe_gap_parameters() {
 	lambda_0 = -(aE + bE)
 		* (std::pow(tau_d, 2) + tau_d * tau_j + std::pow(tau_j, 2) / 3);
 	lambda_1 = (aE + bE) * (tau_d + tau_j / 2);
+}
+
+std::string NearbyVehicle::print_members() const {
+	std::ostringstream oss;
+
+	std::vector<Member> printed_members = {
+		Member::id, Member::relative_lane, Member::relative_position,
+		Member::lateral_position, Member::distance, Member::relative_velocity,
+		Member::lane_change_direction
+	};
+
+	for (Member m : printed_members) {
+		oss << member_to_string.at(m) << "=";
+		switch (m) {
+		case Member::id:
+			oss << id;
+			break;
+		case Member::length:
+			oss << length;
+			break;
+		case Member::width:
+			oss << width;
+			break;
+		case Member::category:
+			oss << static_cast<int>(category);
+			break;
+		case Member::type:
+			oss << static_cast<int>(type);
+			break;
+		case Member::relative_lane:
+			oss << static_cast<int>(relative_lane);
+			break;
+		case Member::relative_position:
+			oss << relative_position;
+			break;
+		case Member::lateral_position:
+			oss << lateral_position;
+			break;
+		case Member::distance:
+			oss << distance;
+			break;
+		case Member::relative_velocity:
+			oss << distance;
+			break;
+		case Member::acceleration:
+			oss << acceleration;
+			break;
+		case Member::lane_change_direction:
+			oss << static_cast<int>(lane_change_direction);
+			break;
+		default:
+			oss << "unknown class member";
+			break;
+		}
+		oss << ", ";
+	}
+
+	return oss.str();
+
 }
 
 std::ostream& operator<<(std::ostream& out, const NearbyVehicle& vehicle)

@@ -26,7 +26,9 @@ LongitudinalController::LongitudinalController(const EgoVehicle& ego_vehicle,
 		ego_vehicle_max_brake, brake_delay);*/
 	double comfortable_acceleration =
 		ego_vehicle.get_comfortable_acceleration();
-	this->velocity_filter = VelocityFilter(comfortable_acceleration,
+	this->leader_velocity_filter = VelocityFilter(comfortable_acceleration,
+		filter_brake_limit, simulation_time_step);
+	this->desired_velocity_filter = VelocityFilter(comfortable_acceleration,
 		filter_brake_limit, simulation_time_step);
 
 	if (verbose) {
@@ -37,120 +39,6 @@ LongitudinalController::LongitudinalController(const EgoVehicle& ego_vehicle,
 			<< std::endl;
 	}
 }
-
-//double LongitudinalController::compute_exact_collision_free_gap(
-//	double ego_velocity, const NearbyVehicle& other_vehicle) {
-//
-//	double follower_lambda_0, follower_lambda_1;
-//	double v_follower, v_leader;
-//	double brake_follower, brake_leader;
-//	double delta_v = other_vehicle.get_relative_velocity();
-//	if (other_vehicle.is_ahead()) {
-//		follower_lambda_0 = ego_vehicle_lambda_0;
-//		follower_lambda_1 = ego_vehicle_lambda_1;
-//		v_follower = ego_velocity;
-//		v_leader = v_follower - delta_v;
-//		brake_follower = ego_vehicle_max_brake;
-//		brake_leader = other_vehicle.get_max_brake();
-//	}
-//	else {
-//		follower_lambda_0 = other_vehicle.get_lambda_0();
-//		follower_lambda_1 = other_vehicle.get_lambda_1();
-//		v_leader = ego_velocity;
-//		v_follower = v_leader - delta_v;
-//		brake_follower = other_vehicle.get_max_brake();
-//		brake_leader = ego_vehicle_max_brake;
-//	}
-//
-//	double stop_time_follower = (v_follower + follower_lambda_1) / brake_follower;
-//	double stop_time_leader = v_leader / brake_leader;
-//	double collision_free_gap;
-//
-//	if (stop_time_follower >= stop_time_leader) {
-//		collision_free_gap =
-//			std::pow(v_follower + follower_lambda_1, 2) / 2 / brake_follower
-//			- std::pow(v_leader, 2) / 2 / brake_leader + follower_lambda_0;
-//	}
-//	else if (brake_leader < brake_follower) {
-//		collision_free_gap =
-//			std::pow(delta_v - follower_lambda_1, 2) / 2 / (brake_follower - brake_leader)
-//			+ follower_lambda_0;
-//	}
-//	else {
-//		collision_free_gap = 0.0;
-//	}
-//	return collision_free_gap;
-//}
-
-//double LongitudinalController::compute_collision_severity_risk(
-//	const Vehicle& ego_vehicle, const NearbyVehicle& leader) {
-//
-//	double brake_delay = ego_vehicle.get_brake_delay();
-//	double comfortable_acceleration = 
-//		ego_vehicle.get_comfortable_acceleration();
-//	double jerk_delay = (comfortable_acceleration + ego_vehicle_max_brake)
-//		/ ego_vehicle.get_max_jerk();
-//	double ego_vel = ego_vehicle.get_current_velocity();
-//
-//	double leader_max_brake = leader.get_max_brake();
-//	double relative_vel = leader.get_relative_velocity();
-//	double leader_vel = leader.compute_velocity(ego_vel);
-//
-//	double gamma = leader_max_brake / ego_vehicle_max_brake;
-//	double gamma_threshold = leader_vel / (ego_vel + ego_vehicle_lambda_1);
-//	
-//	std::vector<double> gap_thresholds(4);
-//	gap_thresholds[0] = brake_delay
-//		* (brake_delay * (comfortable_acceleration + leader_max_brake) / 2
-//			+ relative_vel);
-//	gap_thresholds[1] = (brake_delay + jerk_delay)
-//		* (ego_vehicle_lambda_1 + relative_vel
-//			- (brake_delay + jerk_delay) 
-//			* (ego_vehicle_max_brake - leader_max_brake) / 2)
-//		+ ego_vehicle_lambda_0;
-//	gap_thresholds[2] = leader_vel / leader_max_brake
-//		* (ego_vehicle_lambda_1 + relative_vel
-//			- leader_vel / leader_max_brake
-//			* (ego_vehicle_max_brake - leader_max_brake) / 2)
-//		+ ego_vehicle_lambda_0;
-//	gap_thresholds[3] = compute_exact_collision_free_gap(ego_vel, leader);
-//
-//	double gap{ ego_vehicle.compute_gap(leader) };
-//	double collision_severity = 0;
-//	if (gap < gap_thresholds[0]) {
-//		collision_severity = std::pow(relative_vel, 2) 
-//			+ 2 * (comfortable_acceleration + leader_max_brake) * gap;
-//	}
-//	else if (gap < gap_thresholds[1]) {
-//		/* The solution for this case requires solving a 3rd degree equation.
-//		To avoid that, we will approximate it as the mean of the previous
-//		and following case. We will also record how often this case 
-//		happens to see if it's important to properly code the solution. */
-//		collision_severity = std::pow(relative_vel, 2)
-//			+ 2 * (comfortable_acceleration + leader_max_brake) * gap;
-//		collision_severity += std::pow(relative_vel + ego_vehicle_lambda_1, 2)
-//			+ 2 * (leader_max_brake - ego_vehicle_max_brake)
-//			* (gap - ego_vehicle_lambda_0);
-//		collision_severity /= 2;
-//		std::clog << "t=" << ego_vehicle.get_current_time()
-//			<< ", id=" << ego_vehicle.get_id()
-//			<< ", collision severity complicated case" 
-//			<< std::endl;
-//	}
-//	else if (((gamma >= gamma_threshold) && (gap < gap_thresholds[2]))
-//		|| (gamma < gamma_threshold) && (gap < gap_thresholds[3])) {
-//		collision_severity = std::pow(relative_vel + ego_vehicle_lambda_1, 2)
-//			+ 2 * (leader_max_brake - ego_vehicle_max_brake) 
-//			* (gap - ego_vehicle_lambda_0);
-//	}
-//	else if ((gamma >= gamma_threshold) && (gap < gap_thresholds[3])) {
-//		collision_severity = std::pow(ego_vel + ego_vehicle_lambda_1, 2)
-//			- 2 * ego_vehicle_max_brake
-//			* (std::pow(leader_vel, 2) / 2 / leader_max_brake 
-//				+ gap - ego_vehicle_lambda_0);
-//	}
-//	return collision_severity;
-//}
 
 double LongitudinalController::compute_time_headway_gap(double time_headway,
 	double velocity) {
@@ -189,16 +77,24 @@ double LongitudinalController::compute_vehicle_following_input(double gap_error,
 
 /* PID velocity controller. The derivative of the velocity error equals the 
 ego vehicle acceleration since the desired speed is constant. */
-double LongitudinalController::compute_velocity_control_input(double velocity_error, 
-	double ego_acceleration) {
+double LongitudinalController::compute_velocity_control_input(double velocity_error,
+	double ego_acceleration, double comfortable_acceleration) {
+	/* We do avoid integral windup by only deactivating the integral gain when the
+	input is 'large' */
 	velocity_error_integral += velocity_error * simulation_time_step;
-	return ki * velocity_error_integral 
-		+ kp * velocity_error 
-		- kd * ego_acceleration;
+	double u = kp * velocity_error - kd * ego_acceleration 
+		+ ki * velocity_error_integral;
+	if (u > comfortable_acceleration / 2) {
+		u -= ki * velocity_error_integral;
+		reset_velocity_error_integrator();
+	}
+	
+	return u;
 }
 
 double LongitudinalController::compute_desired_acceleration(
-	const EgoVehicle& ego_vehicle,	const NearbyVehicle* leader) {
+	const EgoVehicle& ego_vehicle,
+	const std::shared_ptr<NearbyVehicle> leader) {
 	
 	double gap, gap_reference, gap_error;
 	double velocity_reference, filtered_velocity_reference;
@@ -209,9 +105,6 @@ double LongitudinalController::compute_desired_acceleration(
 	State old_state = state;
 
 	determine_controller_state(ego_velocity, leader);
-	if (old_state != state) {
-		velocity_filter.reset(ego_velocity);
-	}
 
 	if (verbose) {
 		std::clog << "\tstate="<< state_to_string(state)
@@ -229,8 +122,8 @@ double LongitudinalController::compute_desired_acceleration(
 		gap_error = compute_gap_error(gap, gap_reference);
 		leader_velocity =  leader->compute_velocity(ego_velocity);
 		velocity_reference = leader_velocity; 
-		filtered_velocity_reference = velocity_filter.filter_velocity(
-			velocity_reference);
+		filtered_velocity_reference = 
+			leader_velocity_filter.filter_velocity(velocity_reference);
 		velocity_error = compute_velocity_error(
 			ego_velocity, filtered_velocity_reference);
 
@@ -246,21 +139,26 @@ double LongitudinalController::compute_desired_acceleration(
 		break;
 	case State::velocity_control:
 		if (old_state != State::velocity_control) {
+			desired_velocity_filter.reset(ego_velocity);
 			reset_velocity_error_integrator();
 		}
 		velocity_reference = ego_reference_velocity; 
-		filtered_velocity_reference = velocity_filter.filter_velocity(
-			velocity_reference);
+		filtered_velocity_reference = 
+			desired_velocity_filter.filter_velocity(velocity_reference);
 		velocity_error = compute_velocity_error(
 			ego_velocity, filtered_velocity_reference);
 
 		if (verbose) {
-			std::clog << "\tev=" << velocity_error
+			std::clog << "\tref=" << velocity_reference 
+				<< ", filtered=" << filtered_velocity_reference
+				<< ", vel=" << ego_velocity
+				<< ", ev=" << velocity_error
 				<< std::endl;
 		}
 
-		desired_acceleration = compute_velocity_control_input(velocity_error, 
-			ego_vehicle.get_current_acceleration());
+		desired_acceleration = compute_velocity_control_input(velocity_error,
+			ego_vehicle.get_current_acceleration(),
+			ego_vehicle.get_comfortable_acceleration());
 		break;
 	default:
 		std::clog << "Unknown controller state!" << std::endl;
@@ -299,6 +197,16 @@ void LongitudinalController::update_time_headway_with_risk(
 		ego_max_brake, leader_max_brake,
 		lambda_1, rho, accepted_risk);
 	if (verbose) std::clog << " to " << h << std::endl;
+}
+
+void LongitudinalController::reset_leader_velocity_filter(
+	double ego_velocity) {
+	leader_velocity_filter.reset(ego_velocity);
+}
+
+void LongitudinalController::reset_desired_velocity_filter(
+	double ego_velocity) {
+	desired_velocity_filter.reset(ego_velocity);
 }
 
 /* Protected and private methods ------------------------------------------ */

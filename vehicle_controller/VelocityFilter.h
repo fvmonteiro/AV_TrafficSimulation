@@ -15,13 +15,15 @@ public:
 		double time_step, bool verbose);
 	VelocityFilter(double max_acceleration, double min_acceleration, 
 		double time_step);
+
+	double get_current_value() const { return current_value; };
 	
 	void reset(double initial_value);
 	double filter_velocity(double new_velocity);
 
 private:
 	double time_step = 0.1;
-	double previous_value = 0;
+	double current_value = 0;
 
 	double max_acceleration{ 3.0 }; // maximum acceleration in m/s^2
 	double min_acceleration{ -8.0 }; // minimum acceleration in m/s^2
