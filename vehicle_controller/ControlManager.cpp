@@ -70,10 +70,12 @@ double ControlManager::compute_drac(double relative_velocity, double gap) {
 }
 
 void ControlManager::update_origin_lane_controller(double lambda_1,
-	double leader_max_brake, double ego_velocity) {
+	double leader_max_brake, double ego_velocity, bool had_leader) {
 	origin_lane_controller.update_safe_time_headway(lambda_1,
 		leader_max_brake);
-	origin_lane_controller.reset_leader_velocity_filter(ego_velocity);
+	if (!had_leader) {
+		origin_lane_controller.reset_leader_velocity_filter(ego_velocity);
+	}
 }
 
 void ControlManager::update_destination_lane_controller(double lambda_1,
@@ -152,9 +154,9 @@ double ControlManager::determine_desired_acceleration(const EgoVehicle& ego_vehi
 				/* For now, we simulate a stopped vehicle at the end of 
 				the lane to force the vehicle to stop before the end of
 				the lane. */
-				std::shared_ptr<NearbyVehicle> virtual_vehicle = 
-					std::shared_ptr<NearbyVehicle>(new 
-						NearbyVehicle (1, RelativeLane::same, 1));
+				std::shared_ptr<NearbyVehicle> virtual_vehicle =
+					std::shared_ptr<NearbyVehicle>(new
+						NearbyVehicle(1, RelativeLane::same, 1));
 				virtual_vehicle->set_relative_velocity(
 					ego_vehicle.get_current_velocity());
 				virtual_vehicle->set_distance(
@@ -284,8 +286,8 @@ void ControlManager::update_accepted_risk(const EgoVehicle& ego_vehicle) {
 		if (ego_vehicle.has_destination_lane_follower()) {
 			std::shared_ptr<NearbyVehicle> dest_lane_follower =
 				ego_vehicle.get_destination_lane_follower();
-			estimate_follower_time_headway(
-				ego_vehicle, *dest_lane_follower);
+			estimate_follower_time_headway(ego_vehicle,
+				*ego_vehicle.get_destination_lane_follower());
 		}
 	}
 }

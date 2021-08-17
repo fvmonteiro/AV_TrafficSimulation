@@ -71,7 +71,7 @@ public:
 	/* Updates the time headway based on the new leader and 
 	resets the leader velocity filter */
 	void update_origin_lane_controller(double lambda_1, 
-		double leader_max_brake, double ego_velocity);
+		double leader_max_brake, double ego_velocity, bool had_leader);
 	/* Updates the (risky) time headway based on the new leader and
 	resets the leader velocity filter */
 	void update_destination_lane_controller(double lambda_1,

@@ -413,9 +413,11 @@ void EgoVehicle::analyze_nearby_vehicles() {
 	vehicle was not found in this time step. */
 	if (leader_found) {
 		long current_leader_id = leader->get_id();
+		bool had_leader_before = old_leader_id != 0;
 		if (current_leader_id != old_leader_id) {
 			controller.update_origin_lane_controller(
-				lambda_1, leader->get_max_brake(), get_current_velocity());
+				lambda_1, leader->get_max_brake(), get_current_velocity(),
+				had_leader_before);
 		}
 		leader_id.push_back(current_leader_id);
 	}
