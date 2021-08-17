@@ -25,10 +25,6 @@ std::unordered_map<long, EgoVehicle> vehicles;
 long current_vehicle_id = 0;
 double simulation_time_step = -1.0;
 double current_time = 0.0;
-//long logged_vehicle_id = -1; // used together with LOGGED_VEH_NO
-double desired_lane_angle = 0.0;
-long rel_target_lane = 0;
-long turning_indicator = 0;
 
 /*==========================================================================*/
 
@@ -76,9 +72,6 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
 
     /* Note that we can check the order in which each case is accessed at the 
     API documentation. */
-    
-    /* TODO: should we take some action if something weird happens and data 
-    is passed to the DLL before we create the Vehicle object?*/
 
     switch (type) {
     case DRIVER_DATA_PATH                   :
@@ -189,7 +182,7 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
     case DRIVER_DATA_VEH_MAX_ACCELERATION   :
         return 1;
     case DRIVER_DATA_VEH_TURNING_INDICATOR  :
-        turning_indicator = long_value;
+        vehicles[current_vehicle_id].set_turning_indicator(long_value);
         return 1;
     case DRIVER_DATA_VEH_CATEGORY           :
         vehicles[current_vehicle_id].set_category(long_value);
@@ -321,7 +314,7 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
             double_value);
         return 1;
     case DRIVER_DATA_DESIRED_LANE_ANGLE     :
-        desired_lane_angle = double_value;
+        vehicles[current_vehicle_id].set_desired_lane_angle(double_value);
         return 1;
     case DRIVER_DATA_ACTIVE_LANE_CHANGE     :
         /* We save this value to compare it to our own algorithm.
@@ -331,7 +324,7 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
             long_value);
         return 1;
     case DRIVER_DATA_REL_TARGET_LANE        :
-        rel_target_lane = long_value;
+        vehicles[current_vehicle_id].set_rel_target_lane(long_value);
         return 1;
     default :
         return 0;
@@ -364,7 +357,7 @@ DRIVERMODEL_API  int  DriverModelGetValue (long   type,
         *long_value = 0;
         return 1;
     case DRIVER_DATA_VEH_TURNING_INDICATOR :
-        *long_value = turning_indicator;
+        *long_value = ego_vehicle.get_turning_indicator();
         return 1;
     case DRIVER_DATA_VEH_DESIRED_VELOCITY   :
         *double_value = ego_vehicle.get_desired_velocity();
@@ -461,7 +454,7 @@ DRIVERMODEL_API  int  DriverModelGetValue (long   type,
         *double_value = ego_vehicle.compute_desired_acceleration();
         return 1;
     case DRIVER_DATA_DESIRED_LANE_ANGLE :
-        *double_value = desired_lane_angle;
+        *double_value = ego_vehicle.get_desired_lane_angle();
         return 1;
     case DRIVER_DATA_ACTIVE_LANE_CHANGE :
         *long_value = ego_vehicle.decide_active_lane_change_direction();
@@ -478,7 +471,7 @@ DRIVERMODEL_API  int  DriverModelGetValue (long   type,
         }
         return 1;
     case DRIVER_DATA_REL_TARGET_LANE :
-        *long_value = rel_target_lane;
+        *long_value = ego_vehicle.get_rel_target_lane();
         return 1;
     case DRIVER_DATA_SIMPLE_LANECHANGE :
         *long_value = 1;

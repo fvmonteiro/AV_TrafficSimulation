@@ -62,15 +62,12 @@ public:
 	bool get_use_internal_lane_change_decision() const {
 		return use_internal_lane_change_decision;
 	};
-	/*RelativeLane get_desired_lane_change_direction() const {
-		return desired_lane_change_direction;
-	};*/
 	double get_adjustment_speed_factor() const {
 		return adjustment_speed_factor;
 	}
-	/* The controller should not be accessed directly by external
-	functions. This getter should be used only for simpler debugging.*/
-	//ControlManager get_controller() const { return controller; };
+	double get_desired_lane_angle() const { return desired_lane_angle; };
+	long get_rel_target_lane() const { return rel_target_lane; };
+	long get_turning_indicator() const { return turning_indicator; };
 	
 	void EgoVehicle::set_desired_velocity(double desired_velocity) {
 		this->desired_velocity = desired_velocity;
@@ -78,7 +75,16 @@ public:
 	void set_color(long color) { this->color = color; };
 	void set_use_internal_lane_change_decision(long use) {
 		this->use_internal_lane_change_decision = use > 0;
-	}
+	};
+	void set_desired_lane_angle(double desired_lane_angle) {
+		this->desired_lane_angle = desired_lane_angle;
+	};
+	void set_rel_target_lane(long rel_target_lane) {
+		this->rel_target_lane = rel_target_lane;
+	};
+	void set_turning_indicator(long turning_indicator) {
+		this->turning_indicator = turning_indicator;
+	};
 
 	/* Getters of most recent values */
 	
@@ -328,6 +334,9 @@ private:
 	std::vector<double> lane_end_distance;
 	std::vector<State> state;
 	RelativeLane desired_lane_change_direction{ RelativeLane::same };
+	double desired_lane_angle{ 0.0 };
+	long rel_target_lane{ 0 };
+	long turning_indicator{ 0 };
 
 	/*Surrogate Safety Measurements (SSMs)*/
 
