@@ -1,0 +1,7 @@
+Debug->DriverModel Debug Properties->Linker->Debugging:
+Generate Program Database File:
+$(SolutionDir)Temp\$(Configuration)\$(ProjectName)\$(ProjectName).pdb
+
+Debug->DriverModel Debug Properties->Configuration Properties->Debugging:
+Command:
+$(TargetPath)

@@ -2,9 +2,8 @@
 /*  DriverModel.cpp                                  DLL Module for VISSIM  */
 /*                                                                          */
 /*  Interface module for external driver models.                            */
-/*  Dummy version that does nothing (uses Vissim's internal model).         */
 /*                                                                          */
-/*  Version of 2017-09-15                                   Lukas Kautzsch  */
+/* Based on example from Version of 2017-09-15 by Lukas Kautzsch            */
 /*==========================================================================*/
 
 #include <iostream>
@@ -15,6 +14,7 @@
 #include "DriverModel.h"
 #include "SimulationLogger.h"
 #include "EgoVehicle.h"
+#include "LoggedVehicle.h"
 
 /*==========================================================================*/
 
@@ -141,7 +141,7 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
         if (vehicles.find(long_value) == vehicles.end()) {
             
             bool verbose = false;
-            if (LOGGED_VEHICLES_IDS.find(current_vehicle_id) 
+            if (LOGGED_VEHICLES_IDS.find(current_vehicle_id)
                 != LOGGED_VEHICLES_IDS.end()) verbose = true;
             
             /* This cumbersome use of emplace guarantees a single 
@@ -150,9 +150,6 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
                 std::forward_as_tuple(current_vehicle_id),
                 std::forward_as_tuple(current_vehicle_id, 
                     simulation_time_step, current_time, verbose));
-            if (verbose) {
-                vehicles[current_vehicle_id].set_should_log(true);
-            }
         }
         else {
             vehicles[current_vehicle_id].clear_nearby_vehicles();
@@ -163,6 +160,7 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
         return 1;
     case DRIVER_DATA_VEH_ODOMETER           :
     case DRIVER_DATA_VEH_LANE_ANGLE         :
+        return 1;
     case DRIVER_DATA_VEH_LATERAL_POSITION   :
         vehicles[current_vehicle_id].set_lateral_position(double_value);
         return 1;
@@ -202,6 +200,7 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
     case DRIVER_DATA_VEH_REAR_X_COORDINATE  :
     case DRIVER_DATA_VEH_REAR_Y_COORDINATE  :
     case DRIVER_DATA_VEH_REAR_Z_COORDINATE  :
+        return 1;
     case DRIVER_DATA_VEH_TYPE               :
         vehicles[current_vehicle_id].set_type(long_value);
         return 1;
@@ -233,7 +232,7 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
                 set_use_internal_lane_change_decision(long_value);
             break;
         case UDA::write_veh_log:
-            vehicles[current_vehicle_id].set_should_log(long_value);
+            vehicles[current_vehicle_id].set_verbose(long_value);
             break;
         default: // do nothing
             break;
@@ -278,15 +277,13 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
             ->set_category(long_value);
         return 1;
     case DRIVER_DATA_NVEH_LANE_CHANGE       :
-        /* ISSUE SEEMS TO BE HERE WITH EGO VEH. 121 AND NEARBY VEH. 122
-        IT LOOKS LIKE 122'S LANE CHANGE DIRECTION IS FIXED AT -1 EVEN 
-        AFTER COMPLETION OF THE LANE CHANGE 
-        MAYBE VISSIM IS NOT CALLING ALL CASES FOR EACH NEARBY VEHICLE IN ORDER ? */
         vehicles[current_vehicle_id].peek_nearby_vehicles()
             ->set_lane_change_direction(long_value);
+        return 1;
     case DRIVER_DATA_NVEH_TYPE              :
         vehicles[current_vehicle_id].peek_nearby_vehicles()
             ->set_type(long_value);
+        return 1;
     case DRIVER_DATA_NVEH_UDA               :
     case DRIVER_DATA_NO_OF_LANES            :
     case DRIVER_DATA_LANE_WIDTH             :
@@ -348,9 +345,12 @@ DRIVERMODEL_API  int  DriverModelGetValue (long   type,
 
     /* Note that we can check the order in which each case is accessed at the
     API documentation. */
-    //double controller_acceleration;
 
     EgoVehicle& ego_vehicle = vehicles[current_vehicle_id];
+    /*if (LOGGED_VEHICLES_IDS.find(current_vehicle_id) !=
+        LOGGED_VEHICLES_IDS.end()) {
+        LoggedVehicle& ego_vehicle = (LoggedVehicle)vehicles[current_vehicle_id];;
+    }*/
 
     switch (type) {
     case DRIVER_DATA_STATUS :
@@ -399,7 +399,7 @@ DRIVERMODEL_API  int  DriverModelGetValue (long   type,
                 compute_gap(ego_vehicle.get_leader());
             break;
         case UDA::leader_id:
-            *long_value = ego_vehicle.get_current_leader_id();
+            *long_value = ego_vehicle.get_leader_id();
             break;
         case UDA::veh_following_gap_to_fd:
             *double_value = ego_vehicle.
@@ -425,16 +425,16 @@ DRIVERMODEL_API  int  DriverModelGetValue (long   type,
             *double_value = ego_vehicle.get_reference_gap();
             break;
         case UDA::ttc:
-            *double_value = ego_vehicle.get_current_ttc();
+            *double_value = ego_vehicle.get_ttc();
             break;
         case UDA::drac:
-            *double_value = ego_vehicle.get_current_drac();
+            *double_value = ego_vehicle.get_drac();
             break;
         case UDA::collision_severity_risk:
-            *double_value = ego_vehicle.get_current_collision_risk();
+            *double_value = ego_vehicle.get_collision_risk();
             break;
         case UDA::write_veh_log:
-            *long_value = ego_vehicle.get_should_log();
+            *long_value = ego_vehicle.is_verbose();
             break;
         case UDA::relative_velocity_to_leader:
             *double_value = 
@@ -459,14 +459,14 @@ DRIVERMODEL_API  int  DriverModelGetValue (long   type,
     case DRIVER_DATA_ACTIVE_LANE_CHANGE :
         *long_value = ego_vehicle.decide_active_lane_change_direction();
         if (ego_vehicle.is_verbose()) {
-            std::clog << "t=" << ego_vehicle.get_current_time()
+            std::clog << "t=" << ego_vehicle.get_time()
                 << ", id=" << ego_vehicle.get_id()
-                << ", lane=" << ego_vehicle.get_current_lane()
-                << ", pref. lane=" << ego_vehicle.get_current_preferred_relative_lane()
-                << ", active lc.=" << ego_vehicle.get_current_active_lane_change()
-                << ", vissim active lc=" << ego_vehicle.get_current_vissim_active_lane_change()
-                << ", lat pos.=" << ego_vehicle.get_current_lateral_position()
-                << ", vel=" << ego_vehicle.get_current_velocity()
+                << ", lane=" << ego_vehicle.get_lane()
+                << ", pref. lane=" << ego_vehicle.get_preferred_relative_lane()
+                << ", active lc.=" << ego_vehicle.get_active_lane_change()
+                << ", vissim active lc=" << ego_vehicle.get_vissim_active_lane_change()
+                << ", lat pos.=" << ego_vehicle.get_lateral_position()
+                << ", vel=" << ego_vehicle.get_velocity()
                 << std::endl;
         }
         return 1;

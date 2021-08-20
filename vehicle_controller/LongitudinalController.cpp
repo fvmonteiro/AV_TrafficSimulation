@@ -101,7 +101,7 @@ double LongitudinalController::compute_desired_acceleration(
 	double velocity_error;
 	double desired_acceleration;
 	double leader_velocity;
-	double ego_velocity = ego_vehicle.get_current_velocity();
+	double ego_velocity = ego_vehicle.get_velocity();
 	State old_state = state;
 
 	determine_controller_state(ego_velocity, leader);
@@ -157,13 +157,13 @@ double LongitudinalController::compute_desired_acceleration(
 		}
 
 		desired_acceleration = compute_velocity_control_input(velocity_error,
-			ego_vehicle.get_current_acceleration(),
+			ego_vehicle.get_acceleration(),
 			ego_vehicle.get_comfortable_acceleration());
 		break;
 	default:
 		std::clog << "Unknown controller state!" << std::endl;
 		std::clog << ego_vehicle << std::endl;
-		desired_acceleration = ego_vehicle.get_current_vissim_acceleration();
+		desired_acceleration = ego_vehicle.get_vissim_acceleration();
 		break;
 	}
 

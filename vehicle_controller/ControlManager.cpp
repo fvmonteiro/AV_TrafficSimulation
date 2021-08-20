@@ -143,8 +143,8 @@ double ControlManager::determine_desired_acceleration(const EgoVehicle& ego_vehi
 			/* Longitudinal control to wait at lane's end while waiting
 			for appropriate lane change gap. Without this, vehicles might 
 			miss a desired exit. */
-			if ((ego_vehicle.get_current_active_lane_change() == 0)
-				&& (ego_vehicle.get_current_lane_end_distance() > 0)) {
+			if ((ego_vehicle.get_active_lane_change() == 0)
+				&& (ego_vehicle.get_lane_end_distance() > 0)) {
 				
 				if (verbose) {
 					std::clog << "End of lane controller"
@@ -158,9 +158,9 @@ double ControlManager::determine_desired_acceleration(const EgoVehicle& ego_vehi
 					std::shared_ptr<NearbyVehicle>(new
 						NearbyVehicle(1, RelativeLane::same, 1));
 				virtual_vehicle->set_relative_velocity(
-					ego_vehicle.get_current_velocity());
+					ego_vehicle.get_velocity());
 				virtual_vehicle->set_distance(
-					ego_vehicle.get_current_lane_end_distance());
+					ego_vehicle.get_lane_end_distance());
 				virtual_vehicle->set_length(0.0);
 				desired_acceleration_end_of_lane =
 					end_of_lane_controller.compute_desired_acceleration(
@@ -184,7 +184,7 @@ double ControlManager::determine_desired_acceleration(const EgoVehicle& ego_vehi
 			uses comfortable constraints, must be updated. */
 			if (active_longitudinal_controller
 				!= ActiveLongitudinalController::destination_lane) {
-				double ego_velocity = ego_vehicle.get_current_velocity();
+				double ego_velocity = ego_vehicle.get_velocity();
 				if (destination_lane_controller.is_outdated(ego_velocity)) {
 					destination_lane_controller.set_reference_velocity(
 						ego_velocity,
@@ -201,7 +201,7 @@ double ControlManager::determine_desired_acceleration(const EgoVehicle& ego_vehi
 		}
 		else {
 			desired_acceleration = 
-				ego_vehicle.get_current_vissim_acceleration();
+				ego_vehicle.get_vissim_acceleration();
 			active_longitudinal_controller = 
 				ActiveLongitudinalController::vissim;
 		}
@@ -234,7 +234,7 @@ double ControlManager::compute_safe_lane_change_gap(
 double ControlManager::compute_time_headway_gap(const EgoVehicle& ego_vehicle,
 	const NearbyVehicle& other_vehicle) {
 	double time_headway_gap = 0.0;
-	double ego_velocity = ego_vehicle.get_current_velocity();
+	double ego_velocity = ego_vehicle.get_velocity();
 
 	if (other_vehicle.is_ahead()) {
 		if (other_vehicle.get_relative_lane() == RelativeLane::same) {
@@ -275,7 +275,7 @@ void ControlManager::start_longitudinal_adjustment(double time,
 void ControlManager::update_accepted_risk(const EgoVehicle& ego_vehicle) {
 
 	if (destination_lane_controller.update_accepted_risk(
-		ego_vehicle.get_current_time(), ego_vehicle)) {
+		ego_vehicle.get_time(), ego_vehicle)) {
 		if (ego_vehicle.has_destination_lane_leader()) {
 			std::shared_ptr<NearbyVehicle> dest_lane_leader =
 				ego_vehicle.get_destination_lane_leader();

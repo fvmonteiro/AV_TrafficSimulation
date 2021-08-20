@@ -85,27 +85,30 @@ public:
 	void set_turning_indicator(long turning_indicator) {
 		this->turning_indicator = turning_indicator;
 	};
+	void set_verbose(long value) {
+		this->verbose = value > 0;
+	};
 
 	/* Getters of most recent values */
 	
-	double get_current_time() const;
-	long get_current_lane() const;
-	long get_current_link() const;
-	double get_current_lateral_position() const;
-	long get_current_preferred_relative_lane() const;
-	double get_current_velocity() const;
-	double get_current_acceleration() const;
-	double get_current_desired_acceleration() const;
-	double get_current_vissim_acceleration() const;
-	long get_current_active_lane_change() const;
-	long get_current_vissim_active_lane_change() const;
-	double get_current_lane_end_distance() const;
-	long get_current_leader_id() const;
-	State get_current_state() const;
-	double get_current_ttc() const;
-	double get_current_drac() const;
+	double get_time() const;
+	long get_lane() const;
+	long get_link() const;
+	double get_lateral_position() const;
+	long get_preferred_relative_lane() const;
+	double get_velocity() const;
+	double get_acceleration() const;
+	double get_desired_acceleration() const;
+	double get_vissim_acceleration() const;
+	long get_active_lane_change() const;
+	long get_vissim_active_lane_change() const;
+	double get_lane_end_distance() const;
+	long get_leader_id() const;
+	State get_state() const;
+	double get_ttc() const;
+	double get_drac() const;
 	/* delta vel. at collision under the worst case scenario*/
-	double get_current_collision_risk() const;
+	double get_collision_risk() const;
 
 	/* Other setters */
 
@@ -144,7 +147,6 @@ public:
 	is lane change intention and if they exist). Also performs time 
 	computations */
 	void analyze_nearby_vehicles();
-	void analyze_nearby_vehicles_(); /* ATTEMPT AT NEW IMPLEMENTATION */
 	bool is_cutting_in(const NearbyVehicle& nearby_vehicle) const;
 	bool has_leader() const;
 	bool has_follower() const;
@@ -247,13 +249,6 @@ public:
 	/* TODO: find better names for the methods */
 
 	bool is_verbose() const { return verbose; };
-	bool get_should_log() const { return should_log; };
-	void set_should_log(long should_log) {
-		set_should_log(should_log > 0);
-	}
-	void set_should_log(bool should_log) {
-		this->should_log = should_log; 
-	};
 
 	/* Print function */
 	friend std::ostream& operator<< (std::ostream& out, const EgoVehicle& vehicle);
@@ -363,9 +358,9 @@ private:
 
 	/* For printing and debugging purporses */
 	bool verbose = false; /* when true, will print results to 
-						  the default log file */
-	bool should_log = false; /* when true, will create a specific 
-							 log file for this vehicle */
+						  the default log file and
+						  create a specific log file for this
+						  vehicle */
 	std::string log_path = "autonomous_vehicle_logs";
 	enum class Member {
 		creation_time,

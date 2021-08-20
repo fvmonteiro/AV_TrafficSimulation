@@ -27,10 +27,10 @@ void SSMManager::accumulate_ssms(
 
 	for (const auto& it : vehicles) {
 		const EgoVehicle& vehicle = it.second;
-		accumulated_ssms[SSMs::ttc] += vehicle.get_current_ttc();
-		accumulated_ssms[SSMs::drac] += vehicle.get_current_drac();
+		accumulated_ssms[SSMs::ttc] += vehicle.get_ttc();
+		accumulated_ssms[SSMs::drac] += vehicle.get_drac();
 		accumulated_ssms[SSMs::collision_severity_risk] += 
-			vehicle.get_current_collision_risk();
+			vehicle.get_collision_risk();
 	}
 
 	int n_vehicles = (int)vehicles.size();

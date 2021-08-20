@@ -96,7 +96,7 @@ double LateralController::compute_lateral_collision_time(
 	Derivation of the formula and further explanation is in Jula H. et al, 
 	Collision avoidance analysis for lane changing and merging, 2000. */
 
-	double longitudinal_velocity = ego_vehicle.get_current_velocity();
+	double longitudinal_velocity = ego_vehicle.get_velocity();
 	double length = ego_vehicle.get_length();
 	double width = ego_vehicle.get_width();
 	double other_width = other_vehicle.get_width();
