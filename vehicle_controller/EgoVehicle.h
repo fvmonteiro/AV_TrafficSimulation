@@ -66,7 +66,9 @@ public:
 		return adjustment_speed_factor;
 	}
 	double get_desired_lane_angle() const { return desired_lane_angle; };
-	long get_rel_target_lane() const { return rel_target_lane; };
+	long get_rel_target_lane() const { 
+		return static_cast<long>(rel_target_lane);
+	};
 	long get_turning_indicator() const { return turning_indicator; };
 	
 	void EgoVehicle::set_desired_velocity(double desired_velocity) {
@@ -78,9 +80,6 @@ public:
 	};
 	void set_desired_lane_angle(double desired_lane_angle) {
 		this->desired_lane_angle = desired_lane_angle;
-	};
-	void set_rel_target_lane(long rel_target_lane) {
-		this->rel_target_lane = rel_target_lane;
 	};
 	void set_turning_indicator(long turning_indicator) {
 		this->turning_indicator = turning_indicator;
@@ -124,13 +123,13 @@ public:
 	void set_category(VehicleCategory category) override;
 	void set_type(VehicleType type);
 	void set_type(long type);
-	/* Also updates the state and desired_lane_change_direction*/
 	void set_preferred_relative_lane(long preferred_relative_lane);
+	void set_rel_target_lane(long target_relative_lane);
 	void set_lane_end_distance(double lane_end_distance,
 		long lane_number);
 
 
-	/* Dealing with nearby vehicles*/
+	/* Dealing with nearby vehicles */
 	
 	void clear_nearby_vehicles();
 	/* Creates an instance of nearby vehicle and populates it with 
@@ -197,10 +196,11 @@ public:
 	/* State-machine related methods */
 
 	bool has_lane_change_intention() const;
-	State get_previous_state() const;
+	//State get_previous_state() const;
 	/* Returns the color equivalent to the current state as a long */
 	long get_color_by_controller_state();
 	std::string print_detailed_state();
+	void update_state();
 
 	/* Control related methods */
 
@@ -345,8 +345,8 @@ private:
 	void compute_safe_gap_parameters() override;
 	/* TODO: state and desired_lane_change_direction members
 	can become a single member. They are redundant. */
-	void set_state(long preferred_relative_lane);
-	void set_desired_lane_change_direction(long preferred_relative_lane);
+	
+	void set_desired_lane_change_direction(/*long preferred_relative_lane*/);
 	/* Returns the opposite of relative_lane:
 	- left->right
 	- right->left
