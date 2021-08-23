@@ -94,7 +94,7 @@ double EgoVehicle::get_vissim_acceleration() const {
 	return vissim_acceleration.back();
 }
 long EgoVehicle::get_active_lane_change() const {
-	return active_lane_change.back();
+	return active_lane_change.empty() ? 0 : active_lane_change.back();
 }
 long EgoVehicle::get_vissim_active_lane_change() const {
 	return vissim_active_lane_change.back();
@@ -106,7 +106,7 @@ long EgoVehicle::get_leader_id() const {
 	return leader_id.back();
 }
 EgoVehicle::State EgoVehicle::get_state() const {
-	return state.back();
+	return state.empty() ? State::lane_keeping : state.back();
 }
 double EgoVehicle::get_ttc() const {
 	return ttc.back();
@@ -183,33 +183,12 @@ void EgoVehicle::set_type(long type) {
 
 void EgoVehicle::set_preferred_relative_lane(long preferred_relative_lane) {
 	this->preferred_relative_lane.push_back(preferred_relative_lane);
-	set_desired_lane_change_direction(preferred_relative_lane);
-	
-	/* TODO: move this to a different function: update_state() and
-	call it... when? At the MOVE_DRIVER command probably, together 
-	with analyze_nearby_vehicles*/
-	set_state(preferred_relative_lane);
-	
-	/* State change:
-	- Create the destination lane controller when the
-	vehicle first shows its intention to change lanes. 
-	- Reset the desired velocity filter when the vehicle 
-	finished a lane change */
-	if (get_previous_state() != get_state()) {
-		switch (get_state()) {
-		case State::intention_to_change_lanes:
-			controller.start_longitudinal_adjustment(
-				get_time(), get_velocity(),
-				adjustment_speed_factor);
-			break;
-		case State::lane_keeping:
-			controller.reset_origin_lane_velocity_controller(
-				get_velocity());
-			break;
-		default:
-			break;
-		}
-	}
+	//set_desired_lane_change_direction(preferred_relative_lane);	
+}
+
+void EgoVehicle::set_rel_target_lane(long target_relative_lane) {
+	this->rel_target_lane = target_relative_lane;
+	//set_desired_lane_change_direction(target_relative_lane);
 }
 
 void EgoVehicle::set_lane_end_distance(double lane_end_distance,
@@ -528,13 +507,13 @@ std::shared_ptr<NearbyVehicle> EgoVehicle::get_destination_lane_follower() const
 }
 
 bool EgoVehicle::has_lane_change_intention() const {
-	return get_preferred_relative_lane() != 0;
+	return desired_lane_change_direction != RelativeLane::same;
 }
 
-EgoVehicle::State EgoVehicle::get_previous_state() const {
-	if (state.size() > 2) return state[state.size() - 2];
-	else return State::lane_keeping;
-}
+//EgoVehicle::State EgoVehicle::get_previous_state() const {
+//	if (state.size() > 2) return state[state.size() - 2];
+//	else return State::lane_keeping;
+//}
 
 long EgoVehicle::get_color_by_controller_state() {
 
@@ -898,22 +877,58 @@ double EgoVehicle::compute_collision_severity_risk(
 
 /* Private methods -------------------------------------------------------- */
 
-void EgoVehicle::set_state(long preferred_relative_lane) {
-	if (preferred_relative_lane == 0) {
+void EgoVehicle::update_state(/*long preferred_relative_lane*/) {
+	
+	set_desired_lane_change_direction();
+
+	State old_state = state.empty() ? State::lane_keeping : state.back();
+	if (desired_lane_change_direction == RelativeLane::same) {
 		state.push_back(State::lane_keeping);
 	}
 	else {
 		state.push_back(State::intention_to_change_lanes);
 	}
+
+	/* State change:
+	- Create the destination lane controller when the
+	vehicle first shows its intention to change lanes.
+	- Reset the desired velocity filter when the vehicle
+	finished a lane change */
+	if (old_state != get_state()) {
+		switch (get_state()) {
+		case State::intention_to_change_lanes:
+			controller.start_longitudinal_adjustment(
+				get_time(), get_velocity(),
+				adjustment_speed_factor);
+			break;
+		case State::lane_keeping:
+			controller.reset_origin_lane_velocity_controller(
+				get_velocity());
+			break;
+		default:
+			break;
+		}
+	}
 }
 
 void EgoVehicle::set_desired_lane_change_direction(
-	long preferred_relative_lane) {
+	/*long preferred_relative_lane*/) {
+	/* Both preferred_relative_lane and rel_target_lane indicate
+	desire to change lanes. The former indicates preference due to 
+	routing, so it takes precedence over the latter. */
+	long pref_rel_lane = get_preferred_relative_lane();
+	long target_rel_lane = get_rel_target_lane();
 
-	if (preferred_relative_lane > 0) {
+	if (pref_rel_lane > 0) {
 		desired_lane_change_direction = RelativeLane::left;
 	}
-	else if (preferred_relative_lane < 0) {
+	else if (pref_rel_lane < 0) {
+		desired_lane_change_direction = RelativeLane::right;
+	}
+	else if (target_rel_lane > 0) {
+		desired_lane_change_direction = RelativeLane::left;
+	}
+	else if (target_rel_lane < 0) {
 		desired_lane_change_direction = RelativeLane::right;
 	}
 	else {

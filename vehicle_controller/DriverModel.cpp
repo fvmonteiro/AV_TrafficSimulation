@@ -18,7 +18,8 @@
 
 /*==========================================================================*/
 
-const std::unordered_set<long> LOGGED_VEHICLES_IDS{ 1 };
+const std::unordered_set<long> LOGGED_VEHICLES_IDS{ 0 };
+const bool CLUELESS_DEBUGGING{ false };
 
 SimulationLogger simulation_logger;
 std::unordered_map<long, EgoVehicle> vehicles;
@@ -85,9 +86,9 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
         }
         return 1;
     case DRIVER_DATA_TIME                   :
-        /*if (double_value != current_time) {
+        if (CLUELESS_DEBUGGING && (double_value != current_time)) {
             std::clog << "t=" << current_time << std::endl;
-        }*/
+        }
         // Only for the first time step
         /*if ((double_value != current_time)
             && (std::abs(double_value - simulation_time_step)
@@ -115,6 +116,7 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
             case UDA::leader_id:
                 return 1;
             case UDA::use_internal_lane_change_decision:
+                return 1;
             case UDA::veh_following_gap_to_fd:
             case UDA::transient_gap_to_fd:
             case UDA::veh_following_gap_to_ld:
@@ -125,7 +127,7 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
             case UDA::collision_severity_risk:
                 return 0;
             case UDA::write_veh_log:
-                return 1;
+                return 0;
             case UDA::relative_velocity_to_leader:
             case UDA::leader_type:
                 return 0;
@@ -137,6 +139,10 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
             return 0;
         }
     case DRIVER_DATA_VEH_ID                 :
+        if (CLUELESS_DEBUGGING) {
+            std::clog << "getting data for veh. " << long_value << std::endl;
+        }
+
         current_vehicle_id = long_value;
         if (vehicles.find(long_value) == vehicles.end()) {
             
@@ -434,7 +440,7 @@ DRIVERMODEL_API  int  DriverModelGetValue (long   type,
             *double_value = ego_vehicle.get_collision_risk();
             break;
         case UDA::write_veh_log:
-            *long_value = ego_vehicle.is_verbose();
+            //*long_value = ego_vehicle.is_verbose();
             break;
         case UDA::relative_velocity_to_leader:
             *double_value = 
@@ -451,18 +457,27 @@ DRIVERMODEL_API  int  DriverModelGetValue (long   type,
         *long_value = 1;
         return 1;
     case DRIVER_DATA_DESIRED_ACCELERATION :
+        if (CLUELESS_DEBUGGING) {
+            std::clog << "deciding acceleration for veh. "
+                << ego_vehicle.get_id() << std::endl;
+        }
         *double_value = ego_vehicle.compute_desired_acceleration();
         return 1;
     case DRIVER_DATA_DESIRED_LANE_ANGLE :
         *double_value = ego_vehicle.get_desired_lane_angle();
         return 1;
     case DRIVER_DATA_ACTIVE_LANE_CHANGE :
+        if (CLUELESS_DEBUGGING) {
+            std::clog << "deciding lane change for veh. "
+                << ego_vehicle.get_id() << std::endl;
+        }
         *long_value = ego_vehicle.decide_active_lane_change_direction();
         if (ego_vehicle.is_verbose()) {
             std::clog << "t=" << ego_vehicle.get_time()
                 << ", id=" << ego_vehicle.get_id()
                 << ", lane=" << ego_vehicle.get_lane()
                 << ", pref. lane=" << ego_vehicle.get_preferred_relative_lane()
+                << ", target lane=" << ego_vehicle.get_rel_target_lane()
                 << ", active lc.=" << ego_vehicle.get_active_lane_change()
                 << ", vissim active lc=" << ego_vehicle.get_vissim_active_lane_change()
                 << ", lat pos.=" << ego_vehicle.get_lateral_position()
@@ -517,6 +532,7 @@ DRIVERMODEL_API  int  DriverModelExecuteCommand (long number)
     case DRIVER_COMMAND_MOVE_DRIVER :
         /* This is executed after all the set commands and before 
         any get command. */
+        ego_vehicle.update_state();
         ego_vehicle.analyze_nearby_vehicles();
         //vehicles[current_vehicle_id].compute_all_ssms();
         return 1;
