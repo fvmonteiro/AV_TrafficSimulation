@@ -238,7 +238,7 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
                 set_use_internal_lane_change_decision(long_value);
             break;
         case UDA::write_veh_log:
-            vehicles[current_vehicle_id].set_verbose(long_value);
+            //vehicles[current_vehicle_id].set_verbose(long_value);
             break;
         default: // do nothing
             break;

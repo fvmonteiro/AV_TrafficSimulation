@@ -235,58 +235,6 @@ long EgoVehicle::get_leader_type() {
 	else return 0;*/
 }
 
-/* ATTEMPT AT NEW CODE - NOT BEING USED */
-//void EgoVehicle::analyze_nearby_vehicles_() {
-//	/* Leader: could be the vehicle ahead or a vehicle in a 
-//	neighboring lane that's cutting in front */
-//	NearbyVehicle* vehicle_ahead = find_nearby_vehicle(
-//		RelativeLane::same, 1);
-//	leader = vehicle_ahead; // most common case
-//
-//	NearbyVehicle* right_lane_leader = find_nearby_vehicle(
-//		RelativeLane::right, 1);
-//	if ((right_lane_leader != nullptr)
-//		&& (right_lane_leader->get_lane_change_direction() 
-//			== RelativeLane::left)
-//		&& ((!has_leader())
-//			|| right_lane_leader->get_distance() < leader->get_distance())) {
-//		leader = right_lane_leader;
-//	}
-//	NearbyVehicle* left_lane_leader = find_nearby_vehicle(
-//		RelativeLane::left, 1);
-//
-//	// Follower
-//	follower = find_nearby_vehicle(RelativeLane::same, -1);
-//
-//	// Destination lane leader and follower
-//	if (has_lane_change_intention()) {
-//		NearbyVehicle* old_dest_lane_leader =
-//			get_destination_lane_leader();
-//		destination_lane_leader = find_nearby_vehicle(
-//			desired_lane_change_direction, 1);
-//		if ((old_dest_lane_leader == nullptr)
-//			|| (destination_lane_leader->get_id()
-//				!= old_dest_lane_leader->get_id())) {
-//			controller.update_destination_lane_controller(
-//				lane_change_lambda_1, 
-//				destination_lane_leader->get_max_brake(),
-//				get_current_velocity());
-//		}
-//
-//		NearbyVehicle* old_dest_lane_follower =
-//			get_destination_lane_follower();
-//		destination_lane_follower = find_nearby_vehicle(
-//			desired_lane_change_direction, -1);
-//		if ((old_dest_lane_follower == nullptr)
-//			|| (destination_lane_follower->get_id()
-//				!= old_dest_lane_follower->get_id())) {
-//			controller.estimate_follower_time_headway(*this,
-//				*destination_lane_leader);
-//		}
-//	}
-//}
-
-
 void EgoVehicle::analyze_nearby_vehicles() {
 	bool leader_found = false;
 	bool follower_found = false;
@@ -491,9 +439,9 @@ std::shared_ptr<NearbyVehicle> EgoVehicle::get_follower() const {
 	return follower;
 }
 
-std::shared_ptr<NearbyVehicle> EgoVehicle::get_destination_lane_leader() const {
+std::shared_ptr<NearbyVehicle> EgoVehicle::get_destination_lane_leader() 
+	const {
 	return destination_lane_leader;
-
 	/* [OLDEST IMPLEMENTATION] If there is no intention to change lanes, the
 	function returns the leader on the same lane. */
 	/*int relative_position = 1;
@@ -502,8 +450,45 @@ std::shared_ptr<NearbyVehicle> EgoVehicle::get_destination_lane_leader() const {
 	return destination_lane_leader;*/
 }
 
-std::shared_ptr<NearbyVehicle> EgoVehicle::get_destination_lane_follower() const {
+std::shared_ptr<NearbyVehicle> EgoVehicle::get_destination_lane_follower() 
+	const {
 	return destination_lane_follower;
+}
+
+/* State-machine related methods ------------------------------------------ */
+
+void EgoVehicle::update_state(/*long preferred_relative_lane*/) {
+
+	set_desired_lane_change_direction();
+
+	State old_state = state.empty() ? State::lane_keeping : state.back();
+	if (desired_lane_change_direction == RelativeLane::same) {
+		state.push_back(State::lane_keeping);
+	}
+	else {
+		state.push_back(State::intention_to_change_lanes);
+	}
+
+	/* State change:
+	- Create the destination lane controller when the
+	vehicle first shows its intention to change lanes.
+	- Reset the desired velocity filter when the vehicle
+	finished a lane change */
+	if (old_state != get_state()) {
+		switch (get_state()) {
+		case State::intention_to_change_lanes:
+			controller.start_longitudinal_adjustment(
+				get_time(), get_velocity(),
+				adjustment_speed_factor);
+			break;
+		case State::lane_keeping:
+			controller.reset_origin_lane_velocity_controller(
+				get_velocity());
+			break;
+		default:
+			break;
+		}
+	}
 }
 
 bool EgoVehicle::has_lane_change_intention() const {
@@ -559,6 +544,8 @@ std::string EgoVehicle::print_detailed_state() {
 			controller.get_longitudinal_controller_state());
 	return state_str;
 }
+
+/* Control related methods ------------------------------------------------ */
 
 double EgoVehicle::compute_desired_acceleration() {
 	double desired_acceleration = 
@@ -876,40 +863,6 @@ double EgoVehicle::compute_collision_severity_risk(
 }
 
 /* Private methods -------------------------------------------------------- */
-
-void EgoVehicle::update_state(/*long preferred_relative_lane*/) {
-	
-	set_desired_lane_change_direction();
-
-	State old_state = state.empty() ? State::lane_keeping : state.back();
-	if (desired_lane_change_direction == RelativeLane::same) {
-		state.push_back(State::lane_keeping);
-	}
-	else {
-		state.push_back(State::intention_to_change_lanes);
-	}
-
-	/* State change:
-	- Create the destination lane controller when the
-	vehicle first shows its intention to change lanes.
-	- Reset the desired velocity filter when the vehicle
-	finished a lane change */
-	if (old_state != get_state()) {
-		switch (get_state()) {
-		case State::intention_to_change_lanes:
-			controller.start_longitudinal_adjustment(
-				get_time(), get_velocity(),
-				adjustment_speed_factor);
-			break;
-		case State::lane_keeping:
-			controller.reset_origin_lane_velocity_controller(
-				get_velocity());
-			break;
-		default:
-			break;
-		}
-	}
-}
 
 void EgoVehicle::set_desired_lane_change_direction(
 	/*long preferred_relative_lane*/) {

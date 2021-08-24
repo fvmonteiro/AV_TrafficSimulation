@@ -191,13 +191,6 @@ double ControlManager::determine_desired_acceleration(const EgoVehicle& ego_vehi
 						ego_vehicle.get_adjustment_speed_factor());
 				}
 			}
-
-			if (verbose) {
-				std::clog << "\t->Chosen: "
-					<< active_longitudinal_controller_to_string(active_longitudinal_controller)
-					<< ": " << desired_acceleration
-					<< std::endl;
-			}
 		}
 		else {
 			desired_acceleration = 
@@ -206,14 +199,18 @@ double ControlManager::determine_desired_acceleration(const EgoVehicle& ego_vehi
 				ActiveLongitudinalController::vissim;
 		}
 
-		//states.push_back(State::intention_to_change_lane);
+		if (verbose) {
+			std::clog << "\t->Chosen: "
+				<< active_longitudinal_controller_to_string(active_longitudinal_controller)
+				<< ": " << desired_acceleration
+				<< std::endl;
+		}
+
 	}
 	else { // ACC
 		desired_acceleration = desired_acceleration_origin_lane;
 		active_longitudinal_controller = 
 			ActiveLongitudinalController::origin_lane;
-		/*states.push_back(longitudinal_state_to_vehicle_state(
-			origin_lane_controller.get_state()));*/
 	}
 	
 	return desired_acceleration;
