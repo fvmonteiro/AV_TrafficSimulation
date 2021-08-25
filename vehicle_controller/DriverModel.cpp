@@ -114,7 +114,7 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
             case UDA::gap_to_leader:
                 return 0;
             case UDA::leader_id:
-                return 1;
+                return 0;
             case UDA::use_internal_lane_change_decision:
                 return 1;
             case UDA::veh_following_gap_to_fd:
@@ -221,6 +221,9 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
                 VISSIM! */
     case DRIVER_DATA_VEH_NEXT_LINKS         :
     case DRIVER_DATA_VEH_ACTIVE_LANE_CHANGE :
+        vehicles[current_vehicle_id].set_active_lane_change_direction(
+            long_value);
+        return 1;
     case DRIVER_DATA_VEH_REL_TARGET_LANE    :
         return 1;
     case DRIVER_DATA_VEH_INTAC_STATE        :
@@ -471,15 +474,18 @@ DRIVERMODEL_API  int  DriverModelGetValue (long   type,
             std::clog << "deciding lane change for veh. "
                 << ego_vehicle.get_id() << std::endl;
         }
-        *long_value = ego_vehicle.decide_active_lane_change_direction();
+        *long_value = ego_vehicle.decide_lane_change_direction();
         if (ego_vehicle.is_verbose()) {
             std::clog << "t=" << ego_vehicle.get_time()
                 << ", id=" << ego_vehicle.get_id()
                 << ", lane=" << ego_vehicle.get_lane()
                 << ", pref. lane=" << ego_vehicle.get_preferred_relative_lane()
                 << ", target lane=" << ego_vehicle.get_rel_target_lane()
-                << ", active lc.=" << ego_vehicle.get_active_lane_change()
-                << ", vissim active lc=" << ego_vehicle.get_vissim_active_lane_change()
+                << ", lc decision" << *long_value
+                << ", active lc.=" 
+                << ego_vehicle.get_active_lane_change_direction()
+                << ", vissim active lc=" 
+                << ego_vehicle.get_vissim_active_lane_change()
                 << ", lat pos.=" << ego_vehicle.get_lateral_position()
                 << ", vel=" << ego_vehicle.get_velocity()
                 << std::endl;

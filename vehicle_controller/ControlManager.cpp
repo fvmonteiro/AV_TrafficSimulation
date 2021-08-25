@@ -140,10 +140,14 @@ double ControlManager::determine_desired_acceleration(const EgoVehicle& ego_vehi
 					desired_acceleration_dest_lane;
 			}
 			
-			/* Longitudinal control to wait at lane's end while waiting
-			for appropriate lane change gap. Without this, vehicles might 
-			miss a desired exit. */
-			if ((ego_vehicle.get_active_lane_change() == 0)
+			/* Longitudinal control to wait at the end of the lane while 
+			looking for an appropriate lane change gap. Without this, 
+			vehicles might miss a desired exit. 
+			When the lane change direction equals the preferred relative
+			lane, it means the vehicle is moving into the destination lane.
+			At this point, we don't want to use this controller anymore. */
+			if ((ego_vehicle.get_preferred_relative_lane() 
+				!= ego_vehicle.get_active_lane_change_direction())
 				&& (ego_vehicle.get_lane_end_distance() > 0)) {
 				
 				if (verbose) {

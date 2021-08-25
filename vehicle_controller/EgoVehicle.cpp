@@ -93,8 +93,8 @@ double EgoVehicle::get_desired_acceleration() const {
 double EgoVehicle::get_vissim_acceleration() const {
 	return vissim_acceleration.back();
 }
-long EgoVehicle::get_active_lane_change() const {
-	return active_lane_change.empty() ? 0 : active_lane_change.back();
+long EgoVehicle::get_active_lane_change_direction() const {
+	return active_lane_change_direction.back();
 }
 long EgoVehicle::get_vissim_active_lane_change() const {
 	return vissim_active_lane_change.back();
@@ -137,6 +137,9 @@ void EgoVehicle::set_acceleration(double acceleration) {
 }
 void EgoVehicle::set_vissim_acceleration(double vissim_acceleration) {
 	this->vissim_acceleration.push_back(vissim_acceleration);
+}
+void EgoVehicle::set_active_lane_change_direction(long direction) {
+	this->active_lane_change_direction.push_back(direction);
 }
 void EgoVehicle::set_vissim_active_lane_change(int active_lane_change) {
 	this->vissim_active_lane_change.push_back(active_lane_change);
@@ -242,11 +245,14 @@ void EgoVehicle::analyze_nearby_vehicles() {
 	bool dest_lane_follower_found = false;
 
 	const long old_leader_id = has_leader() ? get_leader()->get_id() : 0;
+	/*const long old_dest_lane_leader_id = has_destination_lane_leader() ? 
+		get_destination_lane_leader()->get_id() : 0;*/
+	bool dest_lane_leader_has_leader = false;
 	
 	for (int i = 0; i < nearby_vehicles.size(); i++) {
 		std::shared_ptr<NearbyVehicle> nearby_vehicle = nearby_vehicles[i];
 		long current_id = nearby_vehicle->get_id();
-		RelativeLane relative_lane = 
+		RelativeLane nv_relative_lane = 
 			nearby_vehicle->get_relative_lane();
 		long relative_position =
 			nearby_vehicle->get_relative_position();
@@ -254,7 +260,8 @@ void EgoVehicle::analyze_nearby_vehicles() {
 		// "Real" leader and follower
 		/* We look both at the leading vehicle on the same lane
 		and at possible cutting-in vehicles */
-		if (((relative_position == 1) && (relative_lane == RelativeLane::same))
+		if (((relative_position == 1) 
+			&& (nv_relative_lane == RelativeLane::same))
 			|| is_cutting_in(*nearby_vehicle)) {
 			if (!leader_found 
 				|| (nearby_vehicle->get_distance() < leader->get_distance())) {
@@ -263,15 +270,16 @@ void EgoVehicle::analyze_nearby_vehicles() {
 			leader_found = true;
 		}
 		else if ((relative_position == -1) 
-			&& (relative_lane == RelativeLane::same)) {
+			&& (nv_relative_lane == RelativeLane::same)) {
 			follower_found = true;
 			follower = nearby_vehicle;
 		}
 
 		// Virtual leader and follower
 		if (has_lane_change_intention()
-			&& relative_lane == desired_lane_change_direction) {
+			&& nv_relative_lane == desired_lane_change_direction) {
 			if (relative_position == 1) {
+				// Update controller if new leader
 				if ((!has_destination_lane_leader())
 					|| (destination_lane_leader->get_id()
 						!= current_id)) {
@@ -292,53 +300,20 @@ void EgoVehicle::analyze_nearby_vehicles() {
 				dest_lane_follower_found = true;
 				destination_lane_follower = nearby_vehicle;
 			}
+			else if (relative_position == 2) {
+				dest_lane_leader_has_leader = true;
+			}
 		}
-
-		/* Old implementation; doesn't consider cut in behavior */
-		//if (relative_lane == RelativeLane::same) {
-		//	if (relative_position == 1) {				
-		//		leader_found = true;
-		//		/*if new leader, recompute time headway*/
-		//		if ((!has_leader()) || (leader->get_id() != current_id)) {
-		//			controller.update_origin_lane_time_headway(
-		//				lambda_1, nearby_vehicle->get_max_brake());
-		//		}
-		//		leader_id.push_back(nearby_vehicle->get_id());
-		//		leader = nearby_vehicle;
-		//	}
-		//	else if (relative_position == -1) {				
-		//		follower_found = true;
-		//		follower = nearby_vehicle;
-		//	}
-		//}
-		//else if (relative_lane == desired_lane_change_direction) {
-		//	if (relative_position == 1) {
-		//		dest_lane_leader_found = true;
-		//		if ((!has_destination_lane_leader())
-		//			|| (destination_lane_leader->get_id()
-		//				!= current_id)) {
-		//			controller.update_destination_lane_time_headway(
-		//				lane_change_lambda_1, nearby_vehicle->get_max_brake());
-		//		}
-		//		destination_lane_leader = nearby_vehicle;
-		//	}
-		//	else if (relative_position == -1) {
-		//		dest_lane_follower_found = true;
-
-		//		if ((!has_destination_lane_follower())
-		//			|| (destination_lane_follower->get_id()
-		//				!= current_id)) {
-		//			controller.estimate_follower_time_headway(*this,
-		//				*nearby_vehicle);
-		//		}
-		//		destination_lane_follower = nearby_vehicle;
-		//	}
-		//}
 	}
 
+	/* Dealing  */
 
 	/* We must ensure to clear the pointers in case the nearby
 	vehicle was not found in this time step. */
+
+	/* We can only figure out if the leader changed or not after the
+	loop explores all nearby vehicles. Thus, we can only decide whether
+	to update the origin lane controller here. */
 	if (leader_found) {
 		long current_leader_id = leader->get_id();
 		bool had_leader_before = old_leader_id != 0;
@@ -354,13 +329,37 @@ void EgoVehicle::analyze_nearby_vehicles() {
 		leader_id.push_back(0);
 	}
 	if (!follower_found) follower = nullptr;
-	if (!dest_lane_leader_found) destination_lane_leader = nullptr;
 	if (!dest_lane_follower_found) destination_lane_follower = nullptr;
+	/* To avoid deadlocks, we ignore the destination lane leader in case
+	it is stopped and has no leader. This situation means that the dest
+	lane leader is not moving because we are too close to it.*/
+	if (!dest_lane_leader_found) destination_lane_leader = nullptr;
+	else if ((destination_lane_leader->compute_velocity(get_velocity()) < 0.1
+			  && !dest_lane_leader_has_leader)) {
+		destination_lane_follower = destination_lane_leader;
+		destination_lane_leader = nullptr;
+	}
+	//if (dest_lane_leader_found) {
+	//	long current_dest_leader_id = destination_lane_leader->get_id();
+	//	if (current_dest_leader_id != old_dest_lane_leader_id) {
+	//		controller.update_destination_lane_controller(
+	//			lane_change_lambda_1, 
+	//			destination_lane_leader->get_max_brake(),
+	//			get_velocity());
+	//	}
+	//}
+	//else {
+	//	destination_lane_leader = nullptr; 
+	//}
+	
 }
 
 bool EgoVehicle::is_cutting_in(const NearbyVehicle& nearby_vehicle) const {
-	RelativeLane lane_change_direction = nearby_vehicle.get_lane_change_direction();
-	if (nearby_vehicle.is_ahead()) {
+	RelativeLane nv_relative_lane = nearby_vehicle.get_relative_lane();
+	RelativeLane nv_lane_change_direction = 
+		nearby_vehicle.get_lane_change_direction();
+	if (nearby_vehicle.is_ahead() 
+		&& (nv_lane_change_direction != RelativeLane::same)) {
 		/* The nearby vehicle must be changing lanes towards the ego vehicle
 		(that's the first part of the condition below)
 		The first condition alone could misidentify the case where a vehicle
@@ -368,10 +367,10 @@ bool EgoVehicle::is_cutting_in(const NearbyVehicle& nearby_vehicle) const {
 		we must check whether the lateral position (with respect to the 
 		lane center) and the lane change direction have the same sign. */
 		bool moving_into_my_lane = 
-			(nearby_vehicle.get_relative_lane() 
-				== get_opposite_relative_lane(lane_change_direction)) 
+			(nv_relative_lane 
+				== get_opposite_relative_lane(nv_lane_change_direction)) 
 			&& ((nearby_vehicle.get_lateral_position()
-				* static_cast<int>(lane_change_direction)) > 0);
+				* static_cast<int>(nv_lane_change_direction)) > 0);
 		if (moving_into_my_lane) return true;
 	}
 	return false;
@@ -495,6 +494,10 @@ bool EgoVehicle::has_lane_change_intention() const {
 	return desired_lane_change_direction != RelativeLane::same;
 }
 
+bool EgoVehicle::is_lane_changing() const {
+	return get_active_lane_change_direction() != 0;
+}
+
 //EgoVehicle::State EgoVehicle::get_previous_state() const {
 //	if (state.size() > 2) return state[state.size() - 2];
 //	else return State::lane_keeping;
@@ -603,11 +606,11 @@ double EgoVehicle::compute_transient_gap(
 	return transient_gap;
 }
 
-long EgoVehicle::decide_active_lane_change_direction() {
+long EgoVehicle::decide_lane_change_direction() {
 	
 	//if (verbose) std::clog << "deciding lane change" << std::endl;
 	
-	long active_lane_change_direction = 0;
+	long lane_change_direction = 0;
 	if (use_internal_lane_change_decision) {
 		if (has_lane_change_intention()) {
 			bool gap_ahead_is_safe = (!has_destination_lane_leader()) 
@@ -629,10 +632,9 @@ long EgoVehicle::decide_active_lane_change_direction() {
 			//if (verbose) std::clog << "gap behind checked" << std::endl;
 
 			if (gap_ahead_is_safe && gap_behind_is_safe
-				&& !find_lane_change_conflicts()) {
+				&& !has_lane_change_conflict()) {
 				// will start lane change
-				active_lane_change_direction = static_cast<int>(
-					desired_lane_change_direction);
+				lane_change_direction = static_cast<int>(desired_lane_change_direction);
 			}
 			else {
 				controller.update_accepted_risk(*this);
@@ -643,15 +645,14 @@ long EgoVehicle::decide_active_lane_change_direction() {
 
 	}
 	else {
-		active_lane_change_direction = get_vissim_active_lane_change();
+		lane_change_direction = get_vissim_active_lane_change();
 	}
 
-
-	this->active_lane_change.push_back(active_lane_change_direction);
-	return active_lane_change_direction;
+	//this->active_lane_change_direction.push_back(temp_result);
+	return static_cast<int>(lane_change_direction);
 }
 
-bool EgoVehicle::find_lane_change_conflicts() {
+bool EgoVehicle::has_lane_change_conflict() {
 
 	//if (verbose) std::clog << "checking conflicts" << std::endl;
 
@@ -662,25 +663,64 @@ bool EgoVehicle::find_lane_change_conflicts() {
 
 	RelativeLane opposite_direction =
 		get_opposite_relative_lane(desired_lane_change_direction);
-	/*if (desired_lane_change_direction == RelativeLane::right) {
-		opposite_direction = RelativeLane::left;
+
+	//if ((has_leader()) && (leader->get_lane_change_direction()
+	//	== desired_lane_change_direction)) return true;
+	//if ((has_follower()) && (follower->get_lane_change_direction()
+	//	== desired_lane_change_direction)) return true;
+	//if ((has_destination_lane_leader()) 
+	//	&& (destination_lane_leader->get_lane_change_direction() 
+	//		== opposite_direction)) return true;
+	//if ((has_destination_lane_follower())
+	//	&& (destination_lane_follower->get_lane_change_direction()
+	//		== opposite_direction)) return true;
+
+	if (verbose) {
+		std::clog << "id=" << id << ", des. lc direction="
+			<< static_cast<int>(desired_lane_change_direction)
+			<< std::endl;
 	}
-	else {
-		opposite_direction = RelativeLane::right;
-	}*/
 
-	if ((has_leader()) && (leader->get_lane_change_direction()
-		== desired_lane_change_direction)) return true;
-	if ((has_follower()) && (follower->get_lane_change_direction()
-		== desired_lane_change_direction)) return true;
-	if ((has_destination_lane_leader()) 
-		&& (destination_lane_leader->get_lane_change_direction() 
-			== opposite_direction)) return true;
-	if ((has_destination_lane_follower())
-		&& (destination_lane_follower->get_lane_change_direction()
-			== opposite_direction)) return true;
+	for (int i = 0; i < nearby_vehicles.size();  i++) {
+		NearbyVehicle& nv = *nearby_vehicles[i];
 
-	//if (verbose) std::clog << "conflicts checked" << std::endl;
+		if (verbose) std::clog << nv.get_id() << ", ";
+
+		if (nv.is_lane_changing()) {
+			RelativeLane nv_lane = nv.get_relative_lane();
+			RelativeLane nv_lc_direction = nv.get_lane_change_direction();
+
+			if (verbose) {
+				std::clog << "\n\tnv_lane=" << static_cast<int>(nv_lane)
+					<< ", nv_lc_direction=" << static_cast<int>(nv_lc_direction)
+					<< std::endl;
+			}
+
+			// Vehicles on the same lane
+			if (nv_lane == RelativeLane::same) {
+				if (nv_lc_direction
+					== desired_lane_change_direction) return true;
+			}
+			// Vehicles on other lanes
+			else {
+				bool nv_moving_towards_ego = (static_cast<int>(nv_lane) 
+					* static_cast<int>(nv_lc_direction)) < 0;
+				bool ego_moving_towards_nv = (static_cast<int>(nv_lane)
+					* static_cast<int>(desired_lane_change_direction)) > 0;
+
+				if (verbose) {
+					std::clog << "\tnv_moving_to_ego? " << nv_moving_towards_ego
+						<< ", ego_moving_to_nv? " << ego_moving_towards_nv
+						<< std::endl;
+				}
+
+				if (nv_moving_towards_ego && ego_moving_towards_nv) 
+					return true;
+			}
+		}
+	}
+
+	if (verbose) std::clog << "no conflicts" << std::endl;
 
 	return false;
 }
@@ -1041,7 +1081,7 @@ std::string EgoVehicle::write_members(
 				oss << state_to_string(state[i]);
 				break;
 			case Member::active_lane_change_direction:
-				oss << active_lane_change[i];
+				oss << static_cast<int>(active_lane_change_direction[i]);
 				break;
 			case Member::vissim_active_lane_change_direction:
 				oss << vissim_active_lane_change[i];
@@ -1103,7 +1143,7 @@ int EgoVehicle::get_member_size(Member member) {
 	case Member::state:
 		return (int)state.size();
 	case Member::active_lane_change_direction:
-		return (int)active_lane_change.size();
+		return (int)active_lane_change_direction.size();
 	case Member::vissim_active_lane_change_direction:
 		return (int)vissim_active_lane_change.size();
 	case Member::lane_end_distance:

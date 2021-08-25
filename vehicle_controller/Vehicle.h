@@ -33,6 +33,8 @@ public:
 	initialization of all the values that depend on the category. */
 	virtual void set_category(VehicleCategory category) = 0;
 	virtual void compute_safe_gap_parameters() = 0;
+	/*TODO: Maybe this method could belong to the parent class*/
+	virtual bool is_lane_changing() const = 0;
 
 protected:
 	/* Max brake is an abstraction since VISSIM has varying max brake

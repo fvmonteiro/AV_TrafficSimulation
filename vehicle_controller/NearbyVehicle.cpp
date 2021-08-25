@@ -43,6 +43,10 @@ bool NearbyVehicle::is_ahead() const {
 	return get_relative_position() > 0;
 }
 
+bool NearbyVehicle::is_lane_changing() const {
+	return lane_change_direction != RelativeLane::same;
+}
+
 void NearbyVehicle::compute_safe_gap_parameters() {
 	/* TODO: vary estimated parameters based on category and whether 
 	communication is avaiable */

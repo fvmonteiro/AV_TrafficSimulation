@@ -67,6 +67,7 @@ public:
 	double compute_velocity(double ego_velocity) const;
 	bool is_on_same_lane() const;
 	bool is_ahead() const;
+	bool is_lane_changing() const override;
 	/*void fill_with_dummy_values();
 	void copy_current_states(NearbyVehicle& nearby_vehicle);*/
 	void compute_safe_gap_parameters();
