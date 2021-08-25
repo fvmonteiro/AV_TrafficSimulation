@@ -195,12 +195,12 @@ public:
 
 	/* State-machine related methods */
 
+	void update_state();
 	bool has_lane_change_intention() const;
 	//State get_previous_state() const;
 	/* Returns the color equivalent to the current state as a long */
 	long get_color_by_controller_state();
 	std::string print_detailed_state();
-	void update_state();
 
 	/* Control related methods */
 
