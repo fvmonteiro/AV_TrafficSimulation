@@ -44,11 +44,6 @@ void DestinationLaneLongitudinalController::set_reference_velocity(
 void DestinationLaneLongitudinalController::determine_controller_state(
 	double ego_velocity, const std::shared_ptr<NearbyVehicle> leader) {
 
-	if (verbose) {
-		std::clog << "\tdest lane controller - deciding state"
-			<< std::endl;
-	}
-
 	if (leader == nullptr) { // no vehicle ahead
 		/*If there's no leader this controller should not be active */
 		if (verbose) std::clog << "\tno leader" << std::endl;
@@ -62,12 +57,6 @@ void DestinationLaneLongitudinalController::determine_controller_state(
 		double gap = leader->get_distance() - leader->get_length();
 		if (state == State::vehicle_following) {
 			gap_threshold += hysteresis_bias;
-		}
-
-		if (verbose) {
-			std::clog << "\tgap=" << gap
-				<< ", gap thresh=" << gap_threshold
-				<< std::endl;
 		}
 
 		if ((gap > gap_threshold) 
@@ -94,14 +83,19 @@ void DestinationLaneLongitudinalController::estimate_follower_time_headway(
 	double follower_free_flow_velocity) {
 
 	if (verbose) {
-		std::clog << "Updating follower headway from "
+		std::clog << /*"follower_risk=" << accepted_risk_to_follower
+			<< ", follower_free_flow_velocity=" << follower_free_flow_velocity
+			<< ", follower max brake=" << follower.get_max_brake()
+			<< ", follower lambda1 =" << follower.get_lambda_1()
+			<< ", ego_max_brake=" << ego_max_brake << ". "
+			<<*/ "Updating follower headway from "
 			<< destination_lane_follower_time_headway;
 	}
 
 	destination_lane_follower_time_headway = compute_time_headway_with_risk(
 		follower_free_flow_velocity,
 		follower.get_max_brake(), ego_max_brake,
-		follower.get_lambda_1(), rho, accepted_risk);
+		follower.get_lambda_1(), rho, accepted_risk_to_follower);
 
 	if (verbose) {
 		std::clog << " to "
@@ -112,20 +106,72 @@ void DestinationLaneLongitudinalController::estimate_follower_time_headway(
 
 bool DestinationLaneLongitudinalController::update_accepted_risk(
 	double time, const EgoVehicle& ego_vehicle) {
-	/*if (verbose) {
+	if (verbose) {
 		std::clog << "\tt=" << time
 			<< ", timer_start=" << timer_start << std::endl;
-	}*/
-
-	if (((time - timer_start) >= constant_risk_period)
-		&& (accepted_risk < max_risk)) {
-		timer_start = time;
-		accepted_risk += delta_risk;
-		if (verbose) {
-			std::clog << "\trisk updated to " << accepted_risk
-				<< std::endl;
-		}
-		return true;
 	}
-	return false;
+
+	bool has_increased = false;
+
+	if (((time - timer_start) >= constant_risk_period)) {
+		if ((accepted_risk_to_leader + delta_risk) 
+			< max_risk_to_leader) {
+			timer_start = time;
+			accepted_risk_to_leader += delta_risk;
+			has_increased = true;
+
+			if (verbose) {
+				std::clog << "\tleader risk updated to " 
+					<< accepted_risk_to_leader
+					<< std::endl;
+			}
+		}
+		if (accepted_risk_to_leader > intermediate_risk_to_leader
+			&& (accepted_risk_to_follower + delta_risk)
+			   < max_risk_to_follower) {
+			timer_start = time;
+			accepted_risk_to_follower += delta_risk;
+			has_increased = true; 
+			
+			if (verbose) {
+				std::clog << "\tfollower risk updated to "
+					<< accepted_risk_to_follower
+					<< std::endl;
+			}
+		}
+	}
+	return has_increased;
+}
+
+void DestinationLaneLongitudinalController::
+compute_intermediate_risk_to_leader(double lambda_1, 
+	double lane_change_lambda_1, double max_brake_no_lane_change, 
+	double leader_max_brake) {
+
+	double safe_h_no_lane_change = compute_time_headway_with_risk(
+		free_flow_velocity, max_brake_no_lane_change, leader_max_brake,
+		lambda_1, rho, 0);
+	intermediate_risk_to_leader = std::sqrt(2 * (h - safe_h_no_lane_change)
+		* ego_max_brake * free_flow_velocity);
+
+	if (verbose) {
+		std::clog << "safe no lc h=" << safe_h_no_lane_change
+			<< ", h_lc=" << h
+			<< ", mid risk to leader="
+			<< intermediate_risk_to_leader << std::endl;
+	}
+}
+
+void DestinationLaneLongitudinalController::reset_accepted_risks() {
+	accepted_risk_to_leader = initial_risk;
+	accepted_risk_to_follower = initial_risk;
+}
+
+void DestinationLaneLongitudinalController::compute_max_risk_to_follower(
+	double follower_max_brake) {
+	max_risk_to_follower = std::sqrt(
+		2 * destination_lane_follower_time_headway 
+		* follower_max_brake * free_flow_velocity);
+	if (verbose) std::clog << "max risk to follower=" 
+		<< max_risk_to_follower << std::endl;
 }

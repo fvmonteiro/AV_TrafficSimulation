@@ -19,16 +19,21 @@ NearbyVehicle::NearbyVehicle(long id, long relative_lane,
 		relative_position) {}
 
 void NearbyVehicle::set_category(VehicleCategory category) {
+	this->category = category;
+
 	if (category == VehicleCategory::truck) {
-		max_brake = TRUCK_MAX_BRAKE;
+		this->max_brake = TRUCK_MAX_BRAKE;
+		this->max_jerk = TRUCK_MAX_JERK;
 	}
 	else { // assume car if any other category
-		max_brake = CAR_MAX_BRAKE;
+		this->max_brake = CAR_MAX_BRAKE;
+		this->max_jerk = CAR_MAX_JERK;
 	}
-	/*if ((this->category.empty()) || (this->category.back() != category)) {
-		compute_safe_gap_parameters();
-	}*/
-	this->category = category;
+	/* TODO: the variable below are only relevant when we want to
+	estimate the follower's headway. Their assignment can and should be
+	moved somewhere else. */
+	// autonomous vehicles always assume other vehicles are human driven
+	this->brake_delay = HUMAN_BRAKE_DELAY;
 }
 
 double NearbyVehicle::compute_velocity(double ego_velocity) const {
@@ -52,7 +57,7 @@ void NearbyVehicle::compute_safe_gap_parameters() {
 	communication is avaiable */
 	double jE{ 50.0 }; // [m/s^3]
 	double aE{ 0.5 }; // [m/s^2]
-	double tau_d{ 0.3 }; // [s]
+	double tau_d{ HUMAN_BRAKE_DELAY }; // [s]
 	double bE = get_max_brake();
 	double tau_j = (aE + bE) / jE;
 	lambda_0 = -(aE + bE)

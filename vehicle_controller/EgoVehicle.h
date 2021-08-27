@@ -263,8 +263,6 @@ private:
 	double lane_change_max_brake{ CAR_MAX_BRAKE / 2 }; // [m/s^2]
 	double comfortable_brake{ COMFORTABLE_ACCELERATION }; // [m/s^2] TODO: vary with speed?
 	double comfortable_acceleration{ COMFORTABLE_ACCELERATION }; // [m/s^2] TODO: vary with speed?
-	double max_jerk{ MAX_JERK }; // [m/s^3]
-	double brake_delay{ AUTONOMOUS_BRAKE_DELAY }; // [s]
 
 	/* Parameter related to emergency braking during lane change [m/s] */
 	double lane_change_lambda_1{ 0.0 };

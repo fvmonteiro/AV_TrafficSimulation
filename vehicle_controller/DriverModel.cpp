@@ -122,6 +122,7 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
             case UDA::veh_following_gap_to_ld:
             case UDA::transient_gap_to_ld:
             case UDA::reference_gap:
+                return 0;
             case UDA::ttc:
             case UDA::drac:
             case UDA::collision_severity_risk:
@@ -481,12 +482,12 @@ DRIVERMODEL_API  int  DriverModelGetValue (long   type,
                 << ", lane=" << ego_vehicle.get_lane()
                 << ", pref. lane=" << ego_vehicle.get_preferred_relative_lane()
                 << ", target lane=" << ego_vehicle.get_rel_target_lane()
-                << ", lc decision" << *long_value
-                << ", active lc.=" 
+                << ", lc decision=" << *long_value
+                /*<< ", active lc.=" 
                 << ego_vehicle.get_active_lane_change_direction()
                 << ", vissim active lc=" 
                 << ego_vehicle.get_vissim_active_lane_change()
-                << ", lat pos.=" << ego_vehicle.get_lateral_position()
+                << ", lat pos.=" << ego_vehicle.get_lateral_position()*/
                 << ", vel=" << ego_vehicle.get_velocity()
                 << std::endl;
         }

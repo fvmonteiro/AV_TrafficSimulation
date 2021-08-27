@@ -149,33 +149,53 @@ void EgoVehicle::set_category(VehicleCategory category) {
 	/* We only need to set the category once, but VISSIM passes the
 	category every time step. */
 	if (this->category == VehicleCategory::undefined) {
-		if (category == VehicleCategory::truck) {
-			max_brake = TRUCK_MAX_BRAKE;
-		}
-		else { // assume car if any other category
-			max_brake = CAR_MAX_BRAKE;
-		}
 		this->category = category;
+		switch (category) {
+		case VehicleCategory::truck:
+			this->max_brake = TRUCK_MAX_BRAKE;
+			this->max_jerk = TRUCK_MAX_JERK;
+			break;
+		default: // assume car if any other category
+			this->max_brake = CAR_MAX_BRAKE;
+			this->max_jerk = CAR_MAX_JERK;
+			break;
+		}
 		lane_change_max_brake = max_brake / 2;
+		/* TODO: the brake delay has to be moved to set_type when we want 
+		to differentiate autonomous and connected vehicles*/
+		this->brake_delay = AUTONOMOUS_BRAKE_DELAY;
 		compute_safe_gap_parameters();
-		this->controller = ControlManager(*this/*, verbose*/);
+		this->controller = ControlManager(*this, verbose);
 	}
 }
 
 void EgoVehicle::set_type(VehicleType type) {
 	// we only need to set the type once
-	switch (this->type) {
-	case VehicleType::undefined:
+	if (this->type == VehicleType::undefined) {
 		this->type = type;
-		break;
-	default: // no changes
-		break;
+		switch (type)
+		{
+		case VehicleType::undefined:
+			break;
+		case VehicleType::human_driven_car:
+		case VehicleType::truck:
+		case VehicleType::bus:
+			this->brake_delay = HUMAN_BRAKE_DELAY;
+			break;
+		case VehicleType::autonomous_car:
+			this->brake_delay = AUTONOMOUS_BRAKE_DELAY;
+			break;
+		default:
+			this->brake_delay = AUTONOMOUS_BRAKE_DELAY;
+			break;
+		}
 	}
 }
 
 void EgoVehicle::set_type(long type) { 
 	// we only need to set the type once
-	switch (this->type) {
+	switch (this->type) 
+	{
 	case VehicleType::undefined:
 		set_type(VehicleType(type));
 		break;
@@ -283,9 +303,8 @@ void EgoVehicle::analyze_nearby_vehicles() {
 				if ((!has_destination_lane_leader())
 					|| (destination_lane_leader->get_id()
 						!= current_id)) {
-					controller.update_destination_lane_controller(
-						lane_change_lambda_1, nearby_vehicle->get_max_brake(),
-						get_velocity());
+					controller.update_destination_lane_leader(
+						*this, nearby_vehicle->get_max_brake());
 				}
 				dest_lane_leader_found = true;
 				destination_lane_leader = nearby_vehicle;
@@ -306,10 +325,12 @@ void EgoVehicle::analyze_nearby_vehicles() {
 		}
 	}
 
-	/* Dealing  */
-
 	/* We must ensure to clear the pointers in case the nearby
 	vehicle was not found in this time step. */
+
+	/* Simple cases first */
+	if (!follower_found) follower = nullptr;
+	if (!dest_lane_follower_found) destination_lane_follower = nullptr;
 
 	/* We can only figure out if the leader changed or not after the
 	loop explores all nearby vehicles. Thus, we can only decide whether
@@ -318,7 +339,7 @@ void EgoVehicle::analyze_nearby_vehicles() {
 		long current_leader_id = leader->get_id();
 		bool had_leader_before = old_leader_id != 0;
 		if (current_leader_id != old_leader_id) {
-			controller.update_origin_lane_controller(
+			controller.update_origin_lane_leader(
 				lambda_1, leader->get_max_brake(), get_velocity(),
 				had_leader_before);
 		}
@@ -328,9 +349,7 @@ void EgoVehicle::analyze_nearby_vehicles() {
 		leader = nullptr;
 		leader_id.push_back(0);
 	}
-	if (!follower_found) follower = nullptr;
-	if (!dest_lane_follower_found) destination_lane_follower = nullptr;
-	/* To avoid deadlocks, we ignore the destination lane leader in case
+	/* To avoid deadlocks, we overtake the destination lane leader in case
 	it is stopped and has no leader. This situation means that the dest
 	lane leader is not moving because we are too close to it.*/
 	if (!dest_lane_leader_found) destination_lane_leader = nullptr;
@@ -338,20 +357,7 @@ void EgoVehicle::analyze_nearby_vehicles() {
 			  && !dest_lane_leader_has_leader)) {
 		destination_lane_follower = destination_lane_leader;
 		destination_lane_leader = nullptr;
-	}
-	//if (dest_lane_leader_found) {
-	//	long current_dest_leader_id = destination_lane_leader->get_id();
-	//	if (current_dest_leader_id != old_dest_lane_leader_id) {
-	//		controller.update_destination_lane_controller(
-	//			lane_change_lambda_1, 
-	//			destination_lane_leader->get_max_brake(),
-	//			get_velocity());
-	//	}
-	//}
-	//else {
-	//	destination_lane_leader = nullptr; 
-	//}
-	
+	}	
 }
 
 bool EgoVehicle::is_cutting_in(const NearbyVehicle& nearby_vehicle) const {
@@ -637,7 +643,7 @@ long EgoVehicle::decide_lane_change_direction() {
 				lane_change_direction = static_cast<int>(desired_lane_change_direction);
 			}
 			else {
-				controller.update_accepted_risk(*this);
+				controller.update_headways_with_risk(*this);
 			}
 		}
 
@@ -675,26 +681,12 @@ bool EgoVehicle::has_lane_change_conflict() {
 	//	&& (destination_lane_follower->get_lane_change_direction()
 	//		== opposite_direction)) return true;
 
-	if (verbose) {
-		std::clog << "id=" << id << ", des. lc direction="
-			<< static_cast<int>(desired_lane_change_direction)
-			<< std::endl;
-	}
-
 	for (int i = 0; i < nearby_vehicles.size();  i++) {
 		NearbyVehicle& nv = *nearby_vehicles[i];
-
-		if (verbose) std::clog << nv.get_id() << ", ";
 
 		if (nv.is_lane_changing()) {
 			RelativeLane nv_lane = nv.get_relative_lane();
 			RelativeLane nv_lc_direction = nv.get_lane_change_direction();
-
-			if (verbose) {
-				std::clog << "\n\tnv_lane=" << static_cast<int>(nv_lane)
-					<< ", nv_lc_direction=" << static_cast<int>(nv_lc_direction)
-					<< std::endl;
-			}
 
 			// Vehicles on the same lane
 			if (nv_lane == RelativeLane::same) {
@@ -708,19 +700,11 @@ bool EgoVehicle::has_lane_change_conflict() {
 				bool ego_moving_towards_nv = (static_cast<int>(nv_lane)
 					* static_cast<int>(desired_lane_change_direction)) > 0;
 
-				if (verbose) {
-					std::clog << "\tnv_moving_to_ego? " << nv_moving_towards_ego
-						<< ", ego_moving_to_nv? " << ego_moving_towards_nv
-						<< std::endl;
-				}
-
 				if (nv_moving_towards_ego && ego_moving_towards_nv) 
 					return true;
 			}
 		}
 	}
-
-	if (verbose) std::clog << "no conflicts" << std::endl;
 
 	return false;
 }

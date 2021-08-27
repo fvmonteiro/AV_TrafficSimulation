@@ -37,10 +37,13 @@ public:
 	virtual bool is_lane_changing() const = 0;
 
 protected:
-	/* Max brake is an abstraction since VISSIM has varying max brake
-	based on speed. We estimate this parameter for safe gap
-	computations [m/s^2] */
-	double max_brake{ CAR_MAX_BRAKE };
+	/* The variables below are a way of describing the emergency braking, 
+	but they do not correspond to how VISSIM works. VISSIM has varying 
+	max brake based on speed (and no jerk). We estimate these parameters
+	for safe gap computations */
+	double max_brake{ 0.0 };
+	double max_jerk{ 0.0 }; // [m/s^3]
+	double brake_delay{ 0.0 }; // [s]
 
 	/* Parameters read from VISSIM which are constant for each vehicle */
 	long id{ 0 };

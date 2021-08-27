@@ -39,18 +39,27 @@ public:
 	double get_h() const { return h; };
 	
 	double compute_time_headway_gap(double time_headway, double velocity);
+	/* Computes the time headway value with zero accepted risk and assigns
+	this value to member h. */
 	void update_safe_time_headway(double lambda_1,
-		double leader_max_brake);
-	void update_time_headway_with_risk(double lambda_1,
-		double leader_max_brake);
+		double new_leader_max_brake);
+	/* Computes the time headway value using the currently accepted risk 
+	and assigns this value to member h. */
+	void update_time_headway(double lambda_1,
+		double new_leader_max_brake);
+	//void update_time_headway_with_new_risk(double lambda_1);
 	void reset_leader_velocity_filter(double ego_velocity);
 	void reset_desired_velocity_filter(double ego_velocity);
 	/* Sets integral error to zero*/
 	void reset_velocity_error_integrator();
+	virtual void reset_accepted_risks();
+	void compute_max_risk_to_leader();
 
 	/* Computes constant time headway following distance */
 	double compute_desired_gap(double ego_velocity);
 	
+	/* Computes gap minus reference gap and upper bounds it 
+	with max_gap_error. */
 	double compute_gap_error(double gap, double reference_gap);
 	
 	/* Computes velocity error "typically": vLeader - vEgo*/
@@ -88,12 +97,20 @@ public:
 protected:
 	State state{ State::uninitialized }; // event driven logic variable
 	double hysteresis_bias{ 5.0 }; // used to avoid state chattering [m]
-	double ego_reference_velocity{ 0.0 }; // for the controller [m/s]
+	double ego_reference_velocity{ 0.0 }; // for the velocity controller [m/s]
+	/* Parameters related to the emergency braking scenario */
+	double ego_max_brake{ 0.0 }; // absolute value [m/s^2]
+	//double leader_max_brake{ 0.0 }; // absolute value [m/s^2]
 	double free_flow_velocity{ 0.0 }; // to compute time headway [m/s]
-	double rho{ 0.15 }; /* proportional maximum expected relative speed */
-	bool verbose{ false };
+	double rho{ 0.15 }; // proportional maximum expected relative speed
+	/* Desired gap parameters */
+	double h{ 0.0 }; /* time headway [s] */
+	double d{ 1.0 }; /* standstill distance [m] */
+
 	VelocityFilter leader_velocity_filter;
 	VelocityFilter desired_velocity_filter;
+
+	bool verbose{ false };
 
 	/* Accpeting risks:
 	The risk is an estimation of the relative velocity at collision
@@ -104,17 +121,18 @@ protected:
 	by some value delta. This happens until a maximum accepted risk.
 	*/
 	double initial_risk{ 0.0 }; // [m/s]
-	double accepted_risk{ initial_risk }; // [m/s]
-	double delta_risk{ 5.0 }; // [m/s]
-	double max_risk{ 0.0 }; // [m/s]
+	double constant_risk_period{ 1.0 }; // [s]
+	double delta_risk{ 3.0 }; // [m/s]
+	double accepted_risk_to_leader{ initial_risk }; // [m/s]
+	double max_risk_to_leader{ 0.0 }; // [m/s]
 	double timer_start{ 0.0 }; // [s]
-	double constant_risk_period{ 5.0 }; // [s]
+	
 
 	void set_vehicle_following_gains(double kg, double kv);
 
-	double compute_safe_time_headway(double free_flow_velocity,
+	/*double compute_safe_time_headway(double free_flow_velocity,
 		double follower_max_brake, double leader_max_brake,
-		double lambda_1, double rho, double accepted_risk = 0);
+		double lambda_1, double rho);*/
 	double compute_time_headway_with_risk(double free_flow_velocity,
 		double follower_max_brake, double leader_max_brake,
 		double lambda_1, double rho, double accepted_risk);
@@ -123,13 +141,6 @@ private:
 	reduced braking capability. */
 	//bool is_used_for_lane_change{ false };
 	double simulation_time_step{ 0.01 };
-	/* Vehicle parameters related to the emergency braking scenario */
-	double ego_max_brake{ 0.0 }; // absolute value [m/s^2]
-	//double ego_vehicle_lambda_0{ 0.0 }; // [m]
-	//double ego_vehicle_lambda_1{ 0.0 }; // [m/s]
-	/* Desired gap parameters */
-	double h{ 0.0 }; /* time headway [s] */
-	double d{ 1.0 }; /* standstill distance [m] */
 
 	/*All gains should be set at the begining o the simulation instead of
 	being defined here. To keep access to their values, we need to create

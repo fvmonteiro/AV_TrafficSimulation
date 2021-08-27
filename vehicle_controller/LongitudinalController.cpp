@@ -106,10 +106,10 @@ double LongitudinalController::compute_desired_acceleration(
 
 	determine_controller_state(ego_velocity, leader);
 
-	if (verbose) {
-		std::clog << "\tstate="<< state_to_string(state)
-			<< std::endl;
-	}
+	//if (verbose) {
+	//	std::clog << "\tstate="<< state_to_string(state)
+	//		<< std::endl;
+	//}
 
 	switch (state)
 	{
@@ -127,12 +127,12 @@ double LongitudinalController::compute_desired_acceleration(
 		velocity_error = compute_velocity_error(
 			ego_velocity, filtered_velocity_reference);
 
-		if (verbose) {
+		/*if (verbose) {
 			std::clog << "\tleader id = " << leader->get_id()
 				<< ", eg=" << gap_error
 				<< ", ev=" << velocity_error
 				<< std::endl;
-		}
+		}*/
 
 		desired_acceleration = compute_vehicle_following_input(
 			gap_error, velocity_error);
@@ -148,13 +148,13 @@ double LongitudinalController::compute_desired_acceleration(
 		velocity_error = compute_velocity_error(
 			ego_velocity, filtered_velocity_reference);
 
-		if (verbose) {
+		/*if (verbose) {
 			std::clog << "\tref=" << velocity_reference 
 				<< ", filtered=" << filtered_velocity_reference
 				<< ", vel=" << ego_velocity
 				<< ", ev=" << velocity_error
 				<< std::endl;
-		}
+		}*/
 
 		desired_acceleration = compute_velocity_control_input(velocity_error,
 			ego_vehicle.get_acceleration(),
@@ -167,9 +167,9 @@ double LongitudinalController::compute_desired_acceleration(
 		break;
 	}
 
-	if (verbose) {
-		std::clog << "\tu=" << desired_acceleration << std::endl;
-	}
+	//if (verbose) {
+	//	std::clog << "\tu=" << desired_acceleration << std::endl;
+	//}
 
 	return desired_acceleration;
 }
@@ -183,21 +183,46 @@ void LongitudinalController::reset_velocity_error_integrator() {
 	velocity_error_integral = 0;
 }
 
-void LongitudinalController::update_safe_time_headway(
-	double lambda_1, double leader_max_brake) {
-	h = compute_safe_time_headway(free_flow_velocity,
-		ego_max_brake, leader_max_brake,
-		lambda_1, rho);
+void LongitudinalController::reset_accepted_risks() {
+	accepted_risk_to_leader = initial_risk;
 }
 
-void LongitudinalController::update_time_headway_with_risk(
-	double lambda_1, double leader_max_brake) {
-	if (verbose) std::clog << "Updating time headway from " << h;
+void LongitudinalController::compute_max_risk_to_leader() {
+	max_risk_to_leader = std::sqrt(
+		2 * h * ego_max_brake * free_flow_velocity);
+	if (verbose) std::clog << "max risk to leader=" 
+		<< max_risk_to_leader << std::endl;
+}
+
+void LongitudinalController::update_safe_time_headway(
+	double lambda_1, double new_leader_max_brake) {
 	h = compute_time_headway_with_risk(free_flow_velocity,
-		ego_max_brake, leader_max_brake,
-		lambda_1, rho, accepted_risk);
+		ego_max_brake, new_leader_max_brake,
+		lambda_1, rho, 0);
+}
+
+void LongitudinalController::update_time_headway(
+	double lambda_1, double new_leader_max_brake) {
+	
+	if (verbose) std::clog << "Updating time headway from " << h;
+	
+	h = compute_time_headway_with_risk(free_flow_velocity,
+		ego_max_brake, new_leader_max_brake,
+		lambda_1, rho, accepted_risk_to_leader);
+	
 	if (verbose) std::clog << " to " << h << std::endl;
 }
+
+//void LongitudinalController::update_time_headway_with_new_risk(
+//	double lambda_1) {
+//	if (verbose) std::clog << "New risk. Updating time headway from " << h;
+//
+//	h = compute_time_headway_with_risk(free_flow_velocity,
+//		ego_max_brake, leader_max_brake,
+//		lambda_1, rho, accepted_risk_to_leader);
+//	
+//	if (verbose) std::clog << " to " << h << std::endl;
+//}
 
 void LongitudinalController::reset_leader_velocity_filter(
 	double ego_velocity) {
@@ -217,17 +242,17 @@ void LongitudinalController::set_vehicle_following_gains(
 	this->kv = kv;
 }
 
-double LongitudinalController::compute_safe_time_headway(
-	double free_flow_velocity, double follower_max_brake,
-	double leader_max_brake, double lambda_1, double rho,
-	double accepted_risk) {
+//double LongitudinalController::compute_safe_time_headway(
+//	double free_flow_velocity, double follower_max_brake,
+//	double leader_max_brake, double lambda_1, double rho) {
+//
+//	return compute_time_headway_with_risk(free_flow_velocity,
+//		follower_max_brake, leader_max_brake, lambda_1,
+//		rho, 0.0);
+//}
 
-	return compute_time_headway_with_risk(free_flow_velocity,
-		follower_max_brake, leader_max_brake, lambda_1,
-		rho, 0.0);
-}
-
-double LongitudinalController::compute_time_headway_with_risk(double free_flow_velocity,
+double LongitudinalController::compute_time_headway_with_risk(
+	double free_flow_velocity,
 	double follower_max_brake, double leader_max_brake,
 	double lambda_1, double rho, double accepted_risk) {
 

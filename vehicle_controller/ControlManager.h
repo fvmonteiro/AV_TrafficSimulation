@@ -69,13 +69,13 @@ public:
 	double compute_drac(double relative_velocity, double gap);
 
 	/* Updates the time headway based on the new leader and 
-	resets the leader velocity filter */
-	void update_origin_lane_controller(double lambda_1, 
+	resets the leader velocity filter if there was no leader before */
+	void update_origin_lane_leader(double lambda_1, 
 		double leader_max_brake, double ego_velocity, bool had_leader);
 	/* Updates the (risky) time headway based on the new leader and
 	resets the leader velocity filter */
-	void update_destination_lane_controller(double lambda_1,
-		double leader_max_brake, double ego_velocity);
+	void update_destination_lane_leader(const EgoVehicle& ego_vehicle, 
+		double leader_max_brake);
 	void estimate_follower_time_headway(const EgoVehicle& ego_vehicle,
 		NearbyVehicle& follower);
 	void reset_origin_lane_velocity_controller(double ego_velocity);
@@ -95,7 +95,7 @@ public:
 	and the initial value of accepted risk, and starts the a timer. */
 	void start_longitudinal_adjustment(double time, double ego_velocity,
 		double adjustment_speed_factor);
-	void update_accepted_risk(const EgoVehicle& ego_vehicle);
+	void update_headways_with_risk(const EgoVehicle& ego_vehicle);
 
 	/* Printing ----------------------------------------------------------- */
 	static std::string active_longitudinal_controller_to_string(
@@ -106,10 +106,12 @@ private:
 	DestinationLaneLongitudinalController destination_lane_controller;
 	OriginLaneLongitudinalController end_of_lane_controller;
 	LateralController lateral_controller;
-	//std::vector<State> states; // TODO: will be deleted
 	ActiveLongitudinalController active_longitudinal_controller{ 
 		ActiveLongitudinalController::origin_lane }; /* indicates which
-	controller is active: origin_lane, destination_lane or end_of_lane.
-	Used for debugging and visualization. */
+	controller is active. Used for debugging and visualization. */
+	double origin_lane_leader_max_brake{ 0.0 };
+	double destination_lane_leader_max_brake{ 0.0 };
+	double destination_lane_follower_max_brake{ 0.0 };
+
 	bool verbose = false;
 };

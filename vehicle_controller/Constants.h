@@ -27,9 +27,11 @@ const double CAR_MAX_BRAKE{ 7.5 }; // [m/s^2]
 const double TRUCK_MAX_BRAKE{ 5.5 }; // [m/s^2]
 const double ACTUATOR_CONSTANT{ 0.5 }; // [s].
 const double COMFORTABLE_ACCELERATION{ 2.0 }; // [m/s^2] TODO: vary with speed?
-const double MAX_JERK{ 50.0 }; // [m/s^3]
+const double CAR_MAX_JERK{ 50.0 }; // [m/s^3]
+const double TRUCK_MAX_JERK{ 30.0 }; // [m/s^3]
 const double CONNECTED_BRAKE_DELAY{ 0.1 }; // [s]
 const double AUTONOMOUS_BRAKE_DELAY{ 0.2 }; // [s]
+const double HUMAN_BRAKE_DELAY{ 0.75 }; // [s]
 
 enum class RelativeLane {
 	right_right = -2, // second to the right
