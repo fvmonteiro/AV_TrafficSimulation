@@ -266,6 +266,8 @@
     <ClCompile Include="SSMManager.cpp" />
     <ClCompile Include="EgoVehicle.cpp" />
     <ClCompile Include="Vehicle.cpp" />
+    <ClCompile Include="VehicleFollowingController.cpp" />
+    <ClCompile Include="VelocityController.cpp" />
     <ClCompile Include="VelocityFilter.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -282,6 +284,8 @@
     <ClInclude Include="SSMManager.h" />
     <ClInclude Include="EgoVehicle.h" />
     <ClInclude Include="Vehicle.h" />
+    <ClInclude Include="VehicleFollowingController.h" />
+    <ClInclude Include="VelocityController.h" />
     <ClInclude Include="VelocityFilter.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

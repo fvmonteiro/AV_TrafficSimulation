@@ -14,7 +14,7 @@
 
 class NearbyVehicle : public Vehicle{
 public:
-	using Vehicle::set_category;
+	//using Vehicle::set_category;
 
 	NearbyVehicle() = default;
 	NearbyVehicle(long id, RelativeLane relative_lane, long relative_position);
@@ -38,6 +38,9 @@ public:
 	RelativeLane get_lane_change_direction() const { 
 		return lane_change_direction; 
 	};
+	RelativeLane get_desired_lane_change_direction() const {
+		return desired_lane_change_direction;
+	};
 
 	void set_lateral_position(double lateral_position) {
 		this->lateral_position = lateral_position;
@@ -54,20 +57,24 @@ public:
 	void set_lane_change_direction(long lane_change_direction) {
 		this->lane_change_direction = RelativeLane(lane_change_direction);
 	};
+	void set_desired_lane_change_direction(long lane_change_direction) {
+		this->desired_lane_change_direction = 
+			RelativeLane(lane_change_direction);
+	};
+
+	void set_type(VehicleType type) /*override*/;
 
 	/* Special getters and setters */
 
 	double get_lambda_0() const { return lambda_0; };
 	double get_lambda_1() const { return lambda_1; };
-	/* set_category also sets the estimated maximum braking of the
-	nearby vehicle and computes lambda_0 and lambda_1. */
-	void set_category(VehicleCategory category) override;
-
 
 	double compute_velocity(double ego_velocity) const;
 	bool is_on_same_lane() const;
 	bool is_ahead() const;
 	bool is_lane_changing() const override;
+	bool is_cutting_in() const;
+	bool requesting_to_move_in() const;
 	/*void fill_with_dummy_values();
 	void copy_current_states(NearbyVehicle& nearby_vehicle);*/
 	void compute_safe_gap_parameters();
@@ -90,7 +97,7 @@ private:
 	double relative_velocity{ 0.0 }; // ego speed - other speed [m/s]
 	double acceleration{ 0.0 }; // [m/s^2]
 	RelativeLane lane_change_direction{ RelativeLane::same };
-
+	
 	enum class Member {
 		id,
 		length,

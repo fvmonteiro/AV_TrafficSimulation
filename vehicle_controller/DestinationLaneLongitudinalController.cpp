@@ -42,7 +42,8 @@ void DestinationLaneLongitudinalController::set_reference_velocity(
 }
 
 void DestinationLaneLongitudinalController::determine_controller_state(
-	double ego_velocity, const std::shared_ptr<NearbyVehicle> leader) {
+	const EgoVehicle& ego_vehicle, 
+	const std::shared_ptr<NearbyVehicle> leader) {
 
 	if (leader == nullptr) { // no vehicle ahead
 		/*If there's no leader this controller should not be active */
@@ -50,10 +51,27 @@ void DestinationLaneLongitudinalController::determine_controller_state(
 		state = State::uninitialized;
 	}
 	else {
+		double ego_velocity = ego_vehicle.get_velocity();
 		double leader_velocity = leader->compute_velocity(ego_velocity);
-		double gap_threshold = compute_gap_threshold(
-			ego_reference_velocity, compute_velocity_error(
-				ego_velocity, leader_velocity));
+		double velocity_error = compute_velocity_error(
+			ego_velocity, leader_velocity);
+		double gap_threshold;
+		if (is_connected) {
+			double ego_acceleration = ego_vehicle.get_acceleration();
+			gap_threshold = compute_gap_threshold(
+				ego_reference_velocity,
+				velocity_error, 
+				estimate_gap_error_derivative(velocity_error, 
+					ego_acceleration),
+				compute_acceleration_error(ego_acceleration,
+					leader->get_acceleration())
+			);
+		}
+		else {
+			gap_threshold = compute_gap_threshold(
+				ego_reference_velocity, velocity_error);
+		}
+
 		double gap = leader->get_distance() - leader->get_length();
 		if (state == State::vehicle_following) {
 			gap_threshold += hysteresis_bias;
@@ -83,12 +101,9 @@ void DestinationLaneLongitudinalController::estimate_follower_time_headway(
 	double follower_free_flow_velocity) {
 
 	if (verbose) {
-		std::clog << /*"follower_risk=" << accepted_risk_to_follower
-			<< ", follower_free_flow_velocity=" << follower_free_flow_velocity
-			<< ", follower max brake=" << follower.get_max_brake()
-			<< ", follower lambda1 =" << follower.get_lambda_1()
-			<< ", ego_max_brake=" << ego_max_brake << ". "
-			<<*/ "Updating follower headway from "
+		std::clog << "Follower type: "
+			<< static_cast<int>(follower.get_type()) << std::endl;
+		std::clog << "Updating follower headway from "
 			<< destination_lane_follower_time_headway;
 	}
 

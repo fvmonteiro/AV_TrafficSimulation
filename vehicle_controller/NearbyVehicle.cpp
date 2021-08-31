@@ -18,22 +18,28 @@ NearbyVehicle::NearbyVehicle(long id, long relative_lane,
 	: NearbyVehicle(id, RelativeLane(relative_lane),
 		relative_position) {}
 
-void NearbyVehicle::set_category(VehicleCategory category) {
-	this->category = category;
+void NearbyVehicle::set_type(VehicleType type) {
+	/* The nearby vehicle is either identified as connected by
+	a connected ego vehicle, or it is seen as undefined.
+	Note: if we change the way of dealing with nearby vehicles and they are
+	no longer erased every time step, this function needs a little twitch 
+	to avoid re-setting the type at every time step. */
+	this->type = type;
 
-	if (category == VehicleCategory::truck) {
-		this->max_brake = TRUCK_MAX_BRAKE;
-		this->max_jerk = TRUCK_MAX_JERK;
+	switch (this->type)
+	{
+	case VehicleType::undefined:
+		this->brake_delay = HUMAN_BRAKE_DELAY;
+		break;
+	case VehicleType::connected_car:
+		this->brake_delay = CONNECTED_BRAKE_DELAY;
+		break;
+	default:
+		std::clog << "nearby vehicle " << id <<" being set with unknown " 
+			<< "type value " << static_cast<int>(type) << std::endl;
+		this->brake_delay = HUMAN_BRAKE_DELAY;
+		break;
 	}
-	else { // assume car if any other category
-		this->max_brake = CAR_MAX_BRAKE;
-		this->max_jerk = CAR_MAX_JERK;
-	}
-	/* TODO: the variable below are only relevant when we want to
-	estimate the follower's headway. Their assignment can and should be
-	moved somewhere else. */
-	// autonomous vehicles always assume other vehicles are human driven
-	this->brake_delay = HUMAN_BRAKE_DELAY;
 }
 
 double NearbyVehicle::compute_velocity(double ego_velocity) const {
@@ -52,17 +58,48 @@ bool NearbyVehicle::is_lane_changing() const {
 	return lane_change_direction != RelativeLane::same;
 }
 
+bool NearbyVehicle::is_cutting_in() const {
+	if (is_ahead()
+		&& (is_lane_changing())) {
+		/* The nearby vehicle must be changing lanes towards the ego vehicle
+		(that's the first part of the condition below)
+		The first condition alone could misidentify the case where a vehicle
+		two lanes away moves to an adjacent lane as a cut in. Therefore
+		we must check whether the lateral position (with respect to the
+		lane center) and the lane change direction have the same sign. */
+		bool moving_into_my_lane =
+			(relative_lane
+				== get_opposite_relative_lane(lane_change_direction))
+			&& ((get_lateral_position()
+				* static_cast<int>(lane_change_direction)) > 0);
+		if (moving_into_my_lane) return true;
+	}
+	return false;
+}
+
+bool NearbyVehicle::requesting_to_move_in() const{
+	if (is_connected() && is_ahead() 
+		&& (has_lane_change_intention())
+		&& (relative_lane 
+			== get_opposite_relative_lane(lane_change_direction))) {
+		return true;
+	}
+	return false;
+}
+
 void NearbyVehicle::compute_safe_gap_parameters() {
-	/* TODO: vary estimated parameters based on category and whether 
-	communication is avaiable */
-	double jE{ 50.0 }; // [m/s^3]
-	double aE{ 0.5 }; // [m/s^2]
-	double tau_d{ HUMAN_BRAKE_DELAY }; // [s]
-	double bE = get_max_brake();
-	double tau_j = (aE + bE) / jE;
-	lambda_0 = -(aE + bE)
-		* (std::pow(tau_d, 2) + tau_d * tau_j + std::pow(tau_j, 2) / 3);
-	lambda_1 = (aE + bE) * (tau_d + tau_j / 2);
+	//double aE{ 0.5 }; // [m/s^2]
+	//double jE = max_jerk;
+	//double tau_d = brake_delay; // [s]
+	//double bE = get_max_brake();
+	//double tau_j = (aE + bE) / jE;
+	//lambda_0 = -(aE + bE)
+	//	* (std::pow(tau_d, 2) + tau_d * tau_j + std::pow(tau_j, 2) / 3);
+	//lambda_1 = (aE + bE) * (tau_d + tau_j / 2);
+	lambda_0 = compute_lambda_0(max_jerk, comfortable_acceleration, 
+		max_brake, brake_delay);
+	lambda_1 = compute_lambda_1(max_jerk, comfortable_acceleration,
+		max_brake, brake_delay);
 }
 
 std::string NearbyVehicle::print_members() const {

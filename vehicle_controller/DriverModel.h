@@ -50,6 +50,7 @@ enum class UDA {
     write_veh_log,
     relative_velocity_to_leader,
     leader_type,
+    lane_change_intention,
 
     first = gap_to_dest_lane_leader,
 };
@@ -74,7 +75,7 @@ enum class UDA {
 /* 0=OK,                                                             */
 /* 1=Info (there's some further information available),              */
 /* 2=Warning (there are warnings available),                         */
-/* 3=Error (an recoverable error occured but simulation can go on),  */
+/* 3=Error (a recoverable error occured but simulation can go on),  */
 /* 4=Heavy (an unrecoverable error occured and simulation must stop) */
 /* (used by DriverModelGetValue()!)                                  */
 #define  DRIVER_DATA_STATUS                  105

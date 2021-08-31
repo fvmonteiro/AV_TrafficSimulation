@@ -14,9 +14,10 @@ OriginLaneLongitudinalController::OriginLaneLongitudinalController()
 
 OriginLaneLongitudinalController::OriginLaneLongitudinalController(
 	const EgoVehicle& ego_vehicle, bool verbose) 
-	: LongitudinalController(ego_vehicle, ego_vehicle.get_max_brake(),
-		ego_vehicle.get_desired_velocity(), ego_vehicle.get_max_brake(),
-		verbose) {
+	: LongitudinalController(ego_vehicle, 
+		ego_vehicle.get_max_brake(),
+		ego_vehicle.get_desired_velocity(), 
+		ego_vehicle.get_max_brake(), verbose) {
 	
 	if (verbose) {
 		std::clog << "Created origin lane longitudinal controller"
@@ -29,24 +30,41 @@ OriginLaneLongitudinalController::OriginLaneLongitudinalController(
 	: OriginLaneLongitudinalController(ego_vehicle, false) {
 }
 
-OriginLaneLongitudinalController::OriginLaneLongitudinalController(
-	const EgoVehicle& ego_vehicle, double kg, double kv, bool verbose)
-	: OriginLaneLongitudinalController(ego_vehicle, verbose) {
-	set_vehicle_following_gains(kg, kv);
-}
+//OriginLaneLongitudinalController::OriginLaneLongitudinalController(
+//	const EgoVehicle& ego_vehicle, double kg, double kv, bool verbose)
+//	: OriginLaneLongitudinalController(ego_vehicle, verbose) {
+//	set_vehicle_following_gains(kg, kv);
+//}
 
 
 void OriginLaneLongitudinalController::determine_controller_state(
-	double ego_velocity, const std::shared_ptr<NearbyVehicle> leader) {
+	const EgoVehicle& ego_vehicle,
+	const std::shared_ptr<NearbyVehicle> leader) {
 
 	if (leader == nullptr) { // no vehicle ahead
 		state = State::velocity_control;
 	}
 	else {
+		double ego_velocity = ego_vehicle.get_velocity();
 		double leader_velocity = leader->compute_velocity(ego_velocity);
-		double gap_threshold = compute_gap_threshold(
-			ego_reference_velocity, compute_velocity_error(
-				ego_velocity, leader_velocity));
+		double velocity_error = compute_velocity_error(
+			ego_velocity, leader_velocity);
+		double gap_threshold;
+		if (is_connected) {
+			double ego_acceleration = ego_vehicle.get_acceleration();
+			gap_threshold = compute_gap_threshold(
+				ego_reference_velocity,
+				velocity_error, 
+				estimate_gap_error_derivative(velocity_error, 
+					ego_acceleration),
+				compute_acceleration_error(ego_acceleration,
+					leader->get_acceleration())
+			);
+		}
+		else {
+			gap_threshold = compute_gap_threshold(
+				ego_reference_velocity, velocity_error);
+		}
 		double gap = leader->get_distance() - leader->get_length();
 		if (state == State::vehicle_following) {
 			gap_threshold += hysteresis_bias;

@@ -40,6 +40,20 @@ LongitudinalController::LongitudinalController(const EgoVehicle& ego_vehicle,
 	}
 }
 
+void LongitudinalController::set_vehicle_following_gains(
+	double kg, double kv) {
+	this->kg = kg;
+	this->kv = kv;
+}
+
+void LongitudinalController::set_vehicle_following_gains(
+	double kg, double kv, double kd, double ka) {
+	this->kg = kg;
+	this->kv = kv;
+	this->kd = kd;
+	this->ka = ka;
+}
+
 double LongitudinalController::compute_time_headway_gap(double time_headway,
 	double velocity) {
 	/* TODO: for now we assumed the standstill distance (d) is the same for 
@@ -51,14 +65,25 @@ double LongitudinalController::compute_desired_gap(double velocity_ego) {
 	return compute_time_headway_gap(h, velocity_ego);
 }
 
-double LongitudinalController::compute_gap_error(double gap, double reference_gap) {
+double LongitudinalController::compute_gap_error(
+	double gap, double reference_gap) {
 	return std::min(max_gap_error, gap - reference_gap);
 };
 
 double LongitudinalController::compute_velocity_error(double velocity_ego, 
 	double velocity_reference) {
 	return velocity_reference - velocity_ego;
-};
+}
+
+double LongitudinalController::estimate_gap_error_derivative(
+	double velocity_error, double acceleration) {
+	return velocity_error - h * acceleration;
+}
+
+double LongitudinalController::compute_acceleration_error(
+	double acceleration_ego, double acceleration_reference) {
+	return acceleration_reference - acceleration_ego;
+}
 
 double LongitudinalController::compute_gap_threshold(double free_flow_velocity, 
 	double velocity_error) {
@@ -70,19 +95,39 @@ double LongitudinalController::compute_gap_threshold(double free_flow_velocity,
 	- Worst-case: h*vf + d + (kv*vf)/kg = (h + kv/kg)*vf + d*/
 }
 
-double LongitudinalController::compute_vehicle_following_input(double gap_error,
-	double velocity_error) {
+double LongitudinalController::compute_gap_threshold(double free_flow_velocity,
+	double velocity_error, double gap_error_derivative, 
+	double acceleration_error) {
+	/* Threshold is computed such that, at the switch, the vehicle following
+	input is greater or equal to kg*h*(Vf - v) > 0. */
+	return h * free_flow_velocity + d - 1 / kg * (kv * velocity_error 
+		+ kgd * gap_error_derivative + ka * acceleration_error);
+	/* Other threshold options:
+	- VISSIM's maximum gap: 250
+	- Worst-case: */
+}
+
+double LongitudinalController::compute_vehicle_following_input(
+	double gap_error, double velocity_error) {
 	return kg * gap_error + kv * velocity_error;
+}
+
+double LongitudinalController::compute_vehicle_following_input(
+	double gap_error, double velocity_error, double gap_error_derivative,
+	double acceleration_error) {
+	return kg * gap_error + kv * velocity_error 
+		+ kgd * gap_error_derivative + ka * acceleration_error;
 }
 
 /* PID velocity controller. The derivative of the velocity error equals the 
 ego vehicle acceleration since the desired speed is constant. */
-double LongitudinalController::compute_velocity_control_input(double velocity_error,
-	double ego_acceleration, double comfortable_acceleration) {
-	/* We do avoid integral windup by only deactivating the integral gain when the
+double LongitudinalController::compute_velocity_control_input(
+	double velocity_error, double acceleration_error, 
+	double comfortable_acceleration) {
+	/* We avoid integral windup by only deactivating the integral gain when the
 	input is 'large' */
 	velocity_error_integral += velocity_error * simulation_time_step;
-	double u = kp * velocity_error - kd * ego_acceleration 
+	double u = kp * velocity_error + kd * acceleration_error 
 		+ ki * velocity_error_integral;
 	if (u > comfortable_acceleration / 2) {
 		u -= ki * velocity_error_integral;
@@ -96,15 +141,14 @@ double LongitudinalController::compute_desired_acceleration(
 	const EgoVehicle& ego_vehicle,
 	const std::shared_ptr<NearbyVehicle> leader) {
 	
-	double gap, gap_reference, gap_error;
 	double velocity_reference, filtered_velocity_reference;
-	double velocity_error;
+	double velocity_error, acceleration_error;
 	double desired_acceleration;
-	double leader_velocity;
 	double ego_velocity = ego_vehicle.get_velocity();
+	double ego_acceleration = ego_vehicle.get_comfortable_acceleration();
 	State old_state = state;
 
-	determine_controller_state(ego_velocity, leader);
+	determine_controller_state(ego_vehicle, leader);
 
 	//if (verbose) {
 	//	std::clog << "\tstate="<< state_to_string(state)
@@ -117,39 +161,55 @@ double LongitudinalController::compute_desired_acceleration(
 		desired_acceleration = 0;
 		break;
 	case State::vehicle_following:
-		gap = ego_vehicle.compute_gap(leader);
-		gap_reference = compute_desired_gap(ego_velocity);
-		gap_error = compute_gap_error(gap, gap_reference);
-		leader_velocity =  leader->compute_velocity(ego_velocity);
-		velocity_reference = leader_velocity; 
-		filtered_velocity_reference = 
+	{
+		double gap = ego_vehicle.compute_gap(leader);
+		double gap_reference = compute_desired_gap(ego_velocity);
+		double gap_error = compute_gap_error(gap, gap_reference);
+		double leader_velocity = leader->compute_velocity(ego_velocity);
+		velocity_reference = leader_velocity;
+		filtered_velocity_reference =
 			leader_velocity_filter.filter_velocity(velocity_reference);
 		velocity_error = compute_velocity_error(
 			ego_velocity, filtered_velocity_reference);
+		double gap_error_derivative = estimate_gap_error_derivative(
+			velocity_error, ego_acceleration);
 
+		acceleration_error = compute_acceleration_error(ego_acceleration,
+			leader->get_acceleration());
 		/*if (verbose) {
 			std::clog << "\tleader id = " << leader->get_id()
 				<< ", eg=" << gap_error
 				<< ", ev=" << velocity_error
 				<< std::endl;
 		}*/
-
-		desired_acceleration = compute_vehicle_following_input(
-			gap_error, velocity_error);
+		
+		if (is_connected) {
+			desired_acceleration = compute_vehicle_following_input(
+				gap_error, velocity_error, gap_error_derivative,
+				acceleration_error);
+		}
+		else {
+			desired_acceleration = compute_vehicle_following_input(
+				gap_error, velocity_error);
+		}
+		
 		break;
+	}
 	case State::velocity_control:
+	{
 		if (old_state != State::velocity_control) {
 			desired_velocity_filter.reset(ego_velocity);
 			reset_velocity_error_integrator();
 		}
-		velocity_reference = ego_reference_velocity; 
-		filtered_velocity_reference = 
+		velocity_reference = ego_reference_velocity;
+		filtered_velocity_reference =
 			desired_velocity_filter.filter_velocity(velocity_reference);
 		velocity_error = compute_velocity_error(
 			ego_velocity, filtered_velocity_reference);
+		acceleration_error = compute_acceleration_error(ego_acceleration, 0);
 
 		/*if (verbose) {
-			std::clog << "\tref=" << velocity_reference 
+			std::clog << "\tref=" << velocity_reference
 				<< ", filtered=" << filtered_velocity_reference
 				<< ", vel=" << ego_velocity
 				<< ", ev=" << velocity_error
@@ -157,9 +217,10 @@ double LongitudinalController::compute_desired_acceleration(
 		}*/
 
 		desired_acceleration = compute_velocity_control_input(velocity_error,
-			ego_vehicle.get_acceleration(),
+			acceleration_error,
 			ego_vehicle.get_comfortable_acceleration());
 		break;
+	}
 	default:
 		std::clog << "Unknown controller state!" << std::endl;
 		std::clog << ego_vehicle << std::endl;
@@ -173,11 +234,6 @@ double LongitudinalController::compute_desired_acceleration(
 
 	return desired_acceleration;
 }
-
-//double LongitudinalController::compute_desired_acceleration(
-//	const Vehicle& ego_vehicle, const NearbyVehicle& leader) {
-//	return compute_desired_acceleration(ego_vehicle, &leader);
-//}
 
 void LongitudinalController::reset_velocity_error_integrator() {
 	velocity_error_integral = 0;
@@ -235,12 +291,6 @@ void LongitudinalController::reset_desired_velocity_filter(
 }
 
 /* Protected and private methods ------------------------------------------ */
-
-void LongitudinalController::set_vehicle_following_gains(
-	double kg, double kv) {
-	this->kg = kg;
-	this->kv = kv;
-}
 
 //double LongitudinalController::compute_safe_time_headway(
 //	double free_flow_velocity, double follower_max_brake,

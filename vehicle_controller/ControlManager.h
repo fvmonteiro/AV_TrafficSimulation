@@ -36,8 +36,8 @@ public:
 	};
 
 	ControlManager() = default;
-	ControlManager(const EgoVehicle & ego_vehicle, bool verbose);
-	ControlManager(const EgoVehicle & ego_vehicle);
+	ControlManager(const EgoVehicle & ego_vehicle, bool is_connected, bool verbose);
+	ControlManager(const EgoVehicle & ego_vehicle, bool is_connected);
 
 	//std::vector<State> get_states() { return states; };
 	ActiveLongitudinalController get_active_longitudinal_controller() {
@@ -112,6 +112,7 @@ private:
 	double origin_lane_leader_max_brake{ 0.0 };
 	double destination_lane_leader_max_brake{ 0.0 };
 	double destination_lane_follower_max_brake{ 0.0 };
+	bool is_connected{ false };
 
-	bool verbose = false;
+	bool verbose{ false };
 };

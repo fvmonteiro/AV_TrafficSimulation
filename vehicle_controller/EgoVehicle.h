@@ -13,19 +13,9 @@
 #include "NearbyVehicle.h"
 #include "Vehicle.h"
 
-//struct RelevantNearbyVehicles {
-//	NearbyVehicle* leader{ nullptr };
-//	NearbyVehicle* follower{ nullptr };
-//	NearbyVehicle* destination_lane_leader{ nullptr };
-//	NearbyVehicle* destination_lane_follower{ nullptr };
-//};
-
-/* Class helps to organize all vehicle parameters in one place */
-/* TODO: is it better to have an abstract Vehicle class and then two derived
-	classes EgoVehicle and NearbyVehicle? */
 class EgoVehicle : public Vehicle {
 public:
-	using Vehicle::set_category;
+	//using Vehicle::set_category;
 
 	enum class State {
 		lane_keeping,
@@ -51,7 +41,7 @@ public:
 		return comfortable_acceleration;
 	};
 	double get_lane_change_max_brake() const { 
-		return lane_change_max_brake;
+		return max_brake / 2;
 	};
 	double get_comfortable_brake() const { return comfortable_brake; };
 	double get_max_jerk() const { return max_jerk; };
@@ -70,7 +60,10 @@ public:
 		return static_cast<long>(rel_target_lane);
 	};
 	long get_turning_indicator() const { return turning_indicator; };
-	
+	long get_desired_lane_change_direction() const {
+		return static_cast<int>(desired_lane_change_direction);
+	};
+
 	void EgoVehicle::set_desired_velocity(double desired_velocity) {
 		this->desired_velocity = desired_velocity;
 	};
@@ -120,10 +113,9 @@ public:
 	void set_active_lane_change_direction(long direction);
 	void set_vissim_active_lane_change(int active_lane_change);
 	/* Also sets the estimated maximum braking of the
-	vehicle and creates the controller. */
-	void set_category(VehicleCategory category) override;
-	void set_type(VehicleType type);
-	void set_type(long type);
+	vehicle. */
+	//void set_category(VehicleCategory category) override;
+	void set_type(long type) /*override*/;
 	void set_preferred_relative_lane(long preferred_relative_lane);
 	void set_rel_target_lane(long target_relative_lane);
 	void set_lane_end_distance(double lane_end_distance,
@@ -139,6 +131,10 @@ public:
 		long relative_position);
 	/* Returns the most recently added nearby vehicle */
 	std::shared_ptr<NearbyVehicle> peek_nearby_vehicles() const;
+	/* Sets the nearby vehicle if both the ego and nearby vehicles are connected.
+	Otherwise, set the type as unknown. */
+	void set_nearby_vehicle_type(long type);
+	//void set_nearby_vehicle_lc_intention(long relative_lane);
 	/* Searches the nearby_vehicles array. NO LONGER IN USE */
 	//std::shared_ptr<NearbyVehicle> find_nearby_vehicle(RelativeLane relative_lane,
 	//	int relative_position) const;
@@ -147,7 +143,7 @@ public:
 	is lane change intention and if they exist). Also performs time 
 	computations */
 	void analyze_nearby_vehicles();
-	bool is_cutting_in(const NearbyVehicle& nearby_vehicle) const;
+	//bool is_cutting_in(const NearbyVehicle& nearby_vehicle) const;
 	bool has_leader() const;
 	bool has_follower() const;
 	bool has_destination_lane_leader() const;
@@ -178,7 +174,7 @@ public:
 	is no leader */
 	double get_relative_velocity_to_leader();
 	/* Returns 0 if no leader. */
-	long get_leader_type();
+	//long get_leader_type();
 
 	/* Computation of surrogate safety measurements */
 
@@ -197,7 +193,7 @@ public:
 	/* State-machine related methods */
 
 	void update_state();
-	bool has_lane_change_intention() const;
+	//bool has_lane_change_intention() const;
 	bool is_lane_changing() const override;
 	//State get_previous_state() const;
 	/* Returns the color equivalent to the current state as a long */
@@ -223,7 +219,6 @@ public:
 	TODO: return member of enum class relative_lane*/
 	long decide_lane_change_direction();
 	std::string state_to_string(State vehicle_state);
-
 
 	/* Methods to access internal values. Used for quicker debugging */
 
@@ -260,9 +255,8 @@ private:
 	in VISSIM's simulation dynamics) */
 	
 	double tau{ ACTUATOR_CONSTANT }; // actuator constant [s].
-	double lane_change_max_brake{ CAR_MAX_BRAKE / 2 }; // [m/s^2]
+	//double lane_change_max_brake{ CAR_MAX_BRAKE / 2 }; // [m/s^2]
 	double comfortable_brake{ COMFORTABLE_ACCELERATION }; // [m/s^2] TODO: vary with speed?
-	double comfortable_acceleration{ COMFORTABLE_ACCELERATION }; // [m/s^2] TODO: vary with speed?
 
 	/* Parameter related to emergency braking during lane change [m/s] */
 	double lane_change_lambda_1{ 0.0 };
@@ -328,7 +322,6 @@ private:
 	vehicle couldn't lane change earlier. */
 	std::vector<double> lane_end_distance;
 	std::vector<State> state;
-	RelativeLane desired_lane_change_direction{ RelativeLane::same };
 	double desired_lane_angle{ 0.0 };
 	long rel_target_lane{ 0 };
 	long turning_indicator{ 0 };
@@ -347,14 +340,6 @@ private:
 	can become a single member. They are redundant. */
 	
 	void set_desired_lane_change_direction(/*long preferred_relative_lane*/);
-	/* Returns the opposite of relative_lane:
-	- left->right
-	- right->left
-	- same->same
-	This method should be moved into some RelativeLane struct 
-	or class (to be created) */
-	RelativeLane get_opposite_relative_lane(
-		const RelativeLane& relative_lane) const;
 
 	/* For printing and debugging purporses */
 	bool verbose = false; /* when true, will print results to 

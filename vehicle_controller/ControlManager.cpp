@@ -13,24 +13,40 @@
 #include "NearbyVehicle.h"
 #include "EgoVehicle.h"
 
-ControlManager::ControlManager(const EgoVehicle& ego_vehicle, bool verbose) 
+ControlManager::ControlManager(const EgoVehicle& ego_vehicle, 
+	bool is_connected, bool verbose)
 	: origin_lane_controller{ OriginLaneLongitudinalController(
-		ego_vehicle, 0.2, 1.0, verbose) },
+		ego_vehicle, verbose) },
 	destination_lane_controller{ DestinationLaneLongitudinalController(
 		ego_vehicle, verbose) },
 	end_of_lane_controller{ OriginLaneLongitudinalController(
-		ego_vehicle, 0.2, 1.0, verbose) },
+		ego_vehicle, verbose) },
 	lateral_controller{ LateralController(verbose) },
+	is_connected{ is_connected },
 	verbose{ verbose } {
-	// TODO: better organize the gain setting of the controllers above
+
 	if (verbose) {
 		std::clog << "Creating control manager " << std::endl;
 	}
 
+	if (is_connected) {
+		origin_lane_controller.set_vehicle_following_gains(0.2, 1.0);
+		destination_lane_controller.set_vehicle_following_gains(0.4, 1.0);
+		end_of_lane_controller.set_vehicle_following_gains(0.2, 1.0);
+	}
+	else {
+		origin_lane_controller.set_vehicle_following_gains(
+			0.2, 2.3, 0.13, 1.3);
+		destination_lane_controller.set_vehicle_following_gains(
+			0.2, 2.3, 0.13, 1.3);
+		end_of_lane_controller.set_vehicle_following_gains(
+			0.2, 2.3, 0.13, 1.3);
+	}
 }
 
-ControlManager::ControlManager(const EgoVehicle& ego_vehicle) 
-	: ControlManager(ego_vehicle, false) {}
+ControlManager::ControlManager(const EgoVehicle& ego_vehicle, 
+	bool is_connected)
+	: ControlManager(ego_vehicle, is_connected, false) {}
 
 LongitudinalController::State 
 	ControlManager::get_longitudinal_controller_state() {
@@ -109,10 +125,12 @@ void ControlManager::estimate_follower_time_headway(
 	if (std::abs(follower.get_max_brake()
 		- destination_lane_follower_max_brake) > 0.5) {
 
-		double ego_max_brake = ego_vehicle.get_max_brake();
-		double estimated_follower_free_flow_velocity =
+		double estimated_follower_free_flow_velocity = 
 			ego_vehicle.get_desired_velocity();
+
+		double ego_max_brake = ego_vehicle.get_max_brake();
 		follower.compute_safe_gap_parameters();
+
 		destination_lane_controller.estimate_follower_time_headway(
 			follower, ego_max_brake, estimated_follower_free_flow_velocity);
 		destination_lane_controller.compute_max_risk_to_follower(

@@ -38,6 +38,11 @@ public:
 	State get_state() const { return state; };
 	double get_h() const { return h; };
 	
+	void set_vehicle_following_gains(double kg, double kv);
+
+	void set_vehicle_following_gains(double kg, double kv, 
+		double kd, double ka);
+
 	double compute_time_headway_gap(double time_headway, double velocity);
 	/* Computes the time headway value with zero accepted risk and assigns
 	this value to member h. */
@@ -65,9 +70,15 @@ public:
 	/* Computes velocity error "typically": vLeader - vEgo*/
 	double compute_velocity_error(double velocity_ego, double velocity_leader);
 
+	double estimate_gap_error_derivative(
+		double velocity_error, double acceleration);
+
+	double compute_acceleration_error(
+		double acceleration_ego, double acceleration_reference);
+
 	/* Determines and sets the current state of the longitudinal controller 
 	TODO: should this class provide a default implementation?*/
-	virtual void determine_controller_state(double ego_velocity,
+	virtual void determine_controller_state(const EgoVehicle& ego_vehicle,
 		const std::shared_ptr<NearbyVehicle> leader) = 0;
 	/* Determines and sets the current state of the longitudinal controller */
 	/*void determine_controller_state(const Vehicle& ego_vehicle,
@@ -77,13 +88,22 @@ public:
 	following control */
 	double compute_gap_threshold(double free_flow_velocity, double velocity_error);
 
+	/* Computes the gap threshold to decide whether velocity or vehicle
+	following control */
+	double compute_gap_threshold(double free_flow_velocity, double velocity_error,
+		double gap_error_derivative, double acceleration_error);
+
 	/* Constant time headway based controller */
 	double compute_vehicle_following_input(double gap_error,
 		double velocity_error);
 
+	double compute_vehicle_following_input(double gap_error, 
+		double velocity_error, double gap_error_derivative, 
+		double acceleration_error);
+
 	/* PID velocity controller */
 	double compute_velocity_control_input(double velocity_error,
-		double ego_acceleration, double comfortable_acceleration);
+		double acceleration_error, double comfortable_acceleration);
 
 	double compute_desired_acceleration(const EgoVehicle& ego_vehicle,
 		const std::shared_ptr<NearbyVehicle> leader);
@@ -126,9 +146,8 @@ protected:
 	double accepted_risk_to_leader{ initial_risk }; // [m/s]
 	double max_risk_to_leader{ 0.0 }; // [m/s]
 	double timer_start{ 0.0 }; // [s]
-	
 
-	void set_vehicle_following_gains(double kg, double kv);
+	bool is_connected{ false };
 
 	/*double compute_safe_time_headway(double free_flow_velocity,
 		double follower_max_brake, double leader_max_brake,
@@ -142,21 +161,23 @@ private:
 	//bool is_used_for_lane_change{ false };
 	double simulation_time_step{ 0.01 };
 
-	/*All gains should be set at the begining o the simulation instead of
-	being defined here. To keep access to their values, we need to create
-	User Defined Variables (UDAs) in VISSIM*/
-	/* Vehicle following gains */
-	double kg{ 0.4 }; // gain relative to gap error.
-	double kv{ 1.0 }; // gain relative to velocity error.
+	
+	/* Vehicle following gains 
+	(computed in Matlab. Should be computed here?) */
+	double kg{ 0.4 }; // relative to gap error.
+	double kv{ 1.0 }; // relative to velocity error.
+	double kgd{ 0.0 }; // relative to gap error derivative
+	double ka{ 0.0 }; // relative to acceleration error
+
 	/* Velocity controller gains 
 	(computed in Matlab. Should be computed here?) */
 	double ki{ 0.03 }; //0.07
 	double kp{ 0.5 };
 	double kd{ 0.1 }; // 0.1
+	
 	/* Other controller parameters */
 	double max_gap_error{ 3.0 }; // maximum positive gap error in meters
 	double velocity_error_integral{ 0.0 };
-	
 
 	/* Internal methods */
 

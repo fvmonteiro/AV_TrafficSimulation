@@ -29,7 +29,7 @@ EgoVehicle::EgoVehicle(long id, double simulation_time_step,
 			<< std::endl;
 	}
 	/* Note: the controller is only created once the category is set
-	because vehicle parameters depend on the category. */
+	because vehicle parameters depend on the category and type. */
 }
 
 EgoVehicle::EgoVehicle(long id, double simulation_time_step, double creation_time)
@@ -145,38 +145,38 @@ void EgoVehicle::set_vissim_active_lane_change(int active_lane_change) {
 	this->vissim_active_lane_change.push_back(active_lane_change);
 }
 
-void EgoVehicle::set_category(VehicleCategory category) {
-	/* We only need to set the category once, but VISSIM passes the
-	category every time step. */
-	if (this->category == VehicleCategory::undefined) {
-		this->category = category;
-		switch (category) {
-		case VehicleCategory::truck:
-			this->max_brake = TRUCK_MAX_BRAKE;
-			this->max_jerk = TRUCK_MAX_JERK;
-			break;
-		default: // assume car if any other category
-			this->max_brake = CAR_MAX_BRAKE;
-			this->max_jerk = CAR_MAX_JERK;
-			break;
-		}
-		lane_change_max_brake = max_brake / 2;
-		/* TODO: the brake delay has to be moved to set_type when we want 
-		to differentiate autonomous and connected vehicles*/
-		this->brake_delay = AUTONOMOUS_BRAKE_DELAY;
-		compute_safe_gap_parameters();
-		this->controller = ControlManager(*this, verbose);
-	}
-}
+//void EgoVehicle::set_category(VehicleCategory category) {
+//	/* We only need to set the category once, but VISSIM passes the
+//	category every time step. */
+//
+//	if (this->category == VehicleCategory::undefined) {
+//		this->category = category;
+//		switch (category) {
+//		case VehicleCategory::truck:
+//			this->max_brake = TRUCK_MAX_BRAKE;
+//			this->max_jerk = TRUCK_MAX_JERK;
+//			break;
+//		case VehicleCategory::car:
+//			this->max_brake = CAR_MAX_BRAKE;
+//			this->max_jerk = CAR_MAX_JERK;
+//			break;
+//		default: // shouldn't happen but assume car if any other category
+//			this->max_brake = CAR_MAX_BRAKE;
+//			this->max_jerk = CAR_MAX_JERK;
+//			break;
+//		}
+//	}
+//}
 
-void EgoVehicle::set_type(VehicleType type) {
+void EgoVehicle::set_type(long type) {
+
 	// we only need to set the type once
 	if (this->type == VehicleType::undefined) {
-		this->type = type;
-		switch (type)
+
+		this->type = VehicleType(type);
+		switch (this->type)
 		{
 		case VehicleType::undefined:
-			break;
 		case VehicleType::human_driven_car:
 		case VehicleType::truck:
 		case VehicleType::bus:
@@ -185,22 +185,32 @@ void EgoVehicle::set_type(VehicleType type) {
 		case VehicleType::autonomous_car:
 			this->brake_delay = AUTONOMOUS_BRAKE_DELAY;
 			break;
+		case VehicleType::connected_car:
+			this->brake_delay = CONNECTED_BRAKE_DELAY;
 		default:
 			this->brake_delay = AUTONOMOUS_BRAKE_DELAY;
 			break;
 		}
-	}
-}
 
-void EgoVehicle::set_type(long type) { 
-	// we only need to set the type once
-	switch (this->type) 
-	{
-	case VehicleType::undefined:
-		set_type(VehicleType(type));
-		break;
-	default: // no changes
-		break;
+		/* Category should have been set before type, but 
+		it doens't hurt to double check*/
+		if (this->category != VehicleCategory::undefined) {
+			compute_safe_gap_parameters();
+			this->controller = ControlManager(*this, is_connected(), verbose);
+		}
+		else {
+			std::clog << "[set_type] t=" << get_time()
+				<< ", id=" << id
+				<< ": trying to create controller before category is set. "
+				<< "Category will be set based on the type to avoid "
+				<< "crashing the simulation." << std::endl;
+			set_category(type / 100);
+			compute_safe_gap_parameters();
+			this->controller = ControlManager(*this, is_connected(), verbose);
+		}
+
+		if (verbose) std::clog << "connected? " << is_connected()
+			<< std::endl;
 	}
 }
 
@@ -229,8 +239,6 @@ void EgoVehicle::clear_nearby_vehicles() {
 
 void EgoVehicle::emplace_nearby_vehicle(long id, long relative_lane,
 	long relative_position) {
-	/* TODO: this function might be creating memory leaks.
-	Should we delete the nearby_vehicles at some point? */
 	std::shared_ptr<NearbyVehicle> nearby_vehicle = 
 		std::shared_ptr<NearbyVehicle>(new NearbyVehicle(id, relative_lane,
 		relative_position));
@@ -241,10 +249,29 @@ std::shared_ptr<NearbyVehicle> EgoVehicle::peek_nearby_vehicles() const {
 	if (!nearby_vehicles.empty()) {
 		return nearby_vehicles.back();
 	}
-	std::clog << "Empty nearby_vehicles container in vehicle  " << this->id <<
+	std::clog << "Empty nearby_vehicles container in vehicle  " << id <<
 		std::endl;
 	return nullptr;
 }
+
+void EgoVehicle::set_nearby_vehicle_type(long type) {
+	/* If both vehicle are connected, the ego can know the other's type.
+	Otherwise, it is set as undefined. */
+
+	if (is_connected() && VehicleType(type) == VehicleType::connected_car) {
+		peek_nearby_vehicles()->set_type(VehicleType::connected_car);
+	}
+	else {
+		peek_nearby_vehicles()->set_type(VehicleType::undefined);
+	}
+}
+
+//void EgoVehicle::set_nearby_vehicle_lc_intention(long relative_lane) {
+//	std::shared_ptr<NearbyVehicle> nearby_vehicle = peek_nearby_vehicles();
+//	if (is_connected() && nearby_vehicle->is_connected()) {
+//
+//	}
+//}
 
 double EgoVehicle::get_relative_velocity_to_leader() {
 	return has_leader() ? leader->get_relative_velocity() : 0.0;
@@ -252,11 +279,11 @@ double EgoVehicle::get_relative_velocity_to_leader() {
 	else return 0.0;*/
 }
 
-long EgoVehicle::get_leader_type() {
-	return has_leader() ? static_cast<long>(leader->get_type()) : 0;
-	/*if (has_leader()) return static_cast<long>(leader->get_type());
-	else return 0;*/
-}
+//long EgoVehicle::get_leader_type() {
+//	return has_leader() ? static_cast<long>(leader->get_type()) : 0;
+//	/*if (has_leader()) return static_cast<long>(leader->get_type());
+//	else return 0;*/
+//}
 
 void EgoVehicle::analyze_nearby_vehicles() {
 	bool leader_found = false;
@@ -280,9 +307,9 @@ void EgoVehicle::analyze_nearby_vehicles() {
 		// "Real" leader and follower
 		/* We look both at the leading vehicle on the same lane
 		and at possible cutting-in vehicles */
-		if (((relative_position == 1) 
-			&& (nv_relative_lane == RelativeLane::same))
-			|| is_cutting_in(*nearby_vehicle)) {
+		if ((relative_position == 1) 
+			&& ((nv_relative_lane == RelativeLane::same)
+			|| nearby_vehicle->is_cutting_in())) {
 			if (!leader_found 
 				|| (nearby_vehicle->get_distance() < leader->get_distance())) {
 				leader = nearby_vehicle;
@@ -323,6 +350,8 @@ void EgoVehicle::analyze_nearby_vehicles() {
 				dest_lane_leader_has_leader = true;
 			}
 		}
+
+
 	}
 
 	/* We must ensure to clear the pointers in case the nearby
@@ -360,27 +389,27 @@ void EgoVehicle::analyze_nearby_vehicles() {
 	}	
 }
 
-bool EgoVehicle::is_cutting_in(const NearbyVehicle& nearby_vehicle) const {
-	RelativeLane nv_relative_lane = nearby_vehicle.get_relative_lane();
-	RelativeLane nv_lane_change_direction = 
-		nearby_vehicle.get_lane_change_direction();
-	if (nearby_vehicle.is_ahead() 
-		&& (nv_lane_change_direction != RelativeLane::same)) {
-		/* The nearby vehicle must be changing lanes towards the ego vehicle
-		(that's the first part of the condition below)
-		The first condition alone could misidentify the case where a vehicle
-		two lanes away moves to an adjacent lane as a cut in. Therefore 
-		we must check whether the lateral position (with respect to the 
-		lane center) and the lane change direction have the same sign. */
-		bool moving_into_my_lane = 
-			(nv_relative_lane 
-				== get_opposite_relative_lane(nv_lane_change_direction)) 
-			&& ((nearby_vehicle.get_lateral_position()
-				* static_cast<int>(nv_lane_change_direction)) > 0);
-		if (moving_into_my_lane) return true;
-	}
-	return false;
-}
+//bool EgoVehicle::is_cutting_in(const NearbyVehicle& nearby_vehicle) const {
+//	RelativeLane nv_relative_lane = nearby_vehicle.get_relative_lane();
+//	RelativeLane nv_lane_change_direction = 
+//		nearby_vehicle.get_lane_change_direction();
+//	if (nearby_vehicle.is_ahead() 
+//		&& (nv_lane_change_direction != RelativeLane::same)) {
+//		/* The nearby vehicle must be changing lanes towards the ego vehicle
+//		(that's the first part of the condition below)
+//		The first condition alone could misidentify the case where a vehicle
+//		two lanes away moves to an adjacent lane as a cut in. Therefore 
+//		we must check whether the lateral position (with respect to the 
+//		lane center) and the lane change direction have the same sign. */
+//		bool moving_into_my_lane = 
+//			(nv_relative_lane 
+//				== get_opposite_relative_lane(nv_lane_change_direction)) 
+//			&& ((nearby_vehicle.get_lateral_position()
+//				* static_cast<int>(nv_lane_change_direction)) > 0);
+//		if (moving_into_my_lane) return true;
+//	}
+//	return false;
+//}
 
 bool EgoVehicle::has_leader() const {
 	return leader != nullptr;
@@ -494,10 +523,6 @@ void EgoVehicle::update_state(/*long preferred_relative_lane*/) {
 			break;
 		}
 	}
-}
-
-bool EgoVehicle::has_lane_change_intention() const {
-	return desired_lane_change_direction != RelativeLane::same;
 }
 
 bool EgoVehicle::is_lane_changing() const {
@@ -643,7 +668,7 @@ long EgoVehicle::decide_lane_change_direction() {
 				lane_change_direction = static_cast<int>(desired_lane_change_direction);
 			}
 			else {
-				controller.update_headways_with_risk(*this);
+				//controller.update_headways_with_risk(*this);
 			}
 		}
 
@@ -911,31 +936,14 @@ void EgoVehicle::set_desired_lane_change_direction(
 	else {
 		desired_lane_change_direction = RelativeLane::same;
 	}
-}
 
-RelativeLane EgoVehicle::get_opposite_relative_lane(
-	const RelativeLane& relative_lane) const {
-	switch (relative_lane)
-	{
-	case RelativeLane::right_right:
-		return RelativeLane::left_left;
-	case RelativeLane::right:
-		return RelativeLane::left;
-	case RelativeLane::same:
-		return RelativeLane::same;
-	case RelativeLane::left:
-		return RelativeLane::right;
-	case RelativeLane::left_left:
-		return RelativeLane::right_right;
-	default:
-		break;
+	if (static_cast<int>(desired_lane_change_direction) != turning_indicator) {
+		std::clog << "t=" << get_time() << ", id=" << id
+			<< ", pref lane=" << pref_rel_lane
+			<< ", target lane=" << target_rel_lane
+			<< ", turning indicator" << turning_indicator
+			<< std::endl;
 	}
-	std::clog << "ERROR at"
-		<< "t=" << get_time()
-		<< ", id=" << id
-		<< ": requested the opposite of unknown relative_lane."
-		<< std::endl;
-	return RelativeLane::same;
 }
 
 void EgoVehicle::compute_safe_gap_parameters() {
@@ -944,7 +952,7 @@ void EgoVehicle::compute_safe_gap_parameters() {
 	lambda_1 = compute_lambda_1(max_jerk, comfortable_acceleration,
 		max_brake, brake_delay);
 	lane_change_lambda_1 = compute_lambda_1(max_jerk, 
-		comfortable_acceleration, lane_change_max_brake, brake_delay);
+		comfortable_acceleration, get_lane_change_max_brake(), brake_delay);
 }
 
 /* Methods for printing and debugging ------------------------------------- */

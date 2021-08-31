@@ -61,6 +61,7 @@ enum class VehicleType {
 	undefined,
 	human_driven_car = 100,
 	autonomous_car = 110,
+	connected_car = 120,
 	truck = 200,
 	bus = 300
 };

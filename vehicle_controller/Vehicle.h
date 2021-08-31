@@ -19,22 +19,27 @@ public:
 
 	void set_length(double length) { this->length = length; };
 	void set_width(double width) { this->width = width; };
-	/* Setting the category also starts the computation and
-	initialization of all the values that depend on the category. */
-	void set_category(long category) {
-		set_category(VehicleCategory(category));
-	};
-	void set_type(VehicleType type);
-	void set_type(long type);
+	/* Also sets the estimated maximum braking of the
+	vehicle. */
+	void set_category(long category);
 	
-	/* Virtual methods */
+	bool is_connected() const;
+	bool has_lane_change_intention() const;
 
-	/* Setting the category also starts the computation and
-	initialization of all the values that depend on the category. */
-	virtual void set_category(VehicleCategory category) = 0;
+	/* Virtual methods */
+	//virtual void set_type(long type) = 0;
 	virtual void compute_safe_gap_parameters() = 0;
 	/*TODO: Maybe this method could belong to the parent class*/
 	virtual bool is_lane_changing() const = 0;
+
+	/* Returns the opposite of relative_lane:
+	- left->right
+	- right->left
+	- same->same
+	TODO: This method should be moved into some RelativeLane struct
+	or class (to be created) */
+	RelativeLane get_opposite_relative_lane(
+		const RelativeLane& relative_lane) const;
 
 protected:
 	/* The variables below are a way of describing the emergency braking, 
@@ -44,6 +49,7 @@ protected:
 	double max_brake{ 0.0 };
 	double max_jerk{ 0.0 }; // [m/s^3]
 	double brake_delay{ 0.0 }; // [s]
+	double comfortable_acceleration{ COMFORTABLE_ACCELERATION }; // [m/s^2]
 
 	/* Parameters read from VISSIM which are constant for each vehicle */
 	long id{ 0 };
@@ -56,6 +62,8 @@ protected:
 	double lambda_0{ 0.0 };
 	/* Parameter related to the emergency braking scenario [m/s] */
 	double lambda_1{ 0.0 };
+
+	RelativeLane desired_lane_change_direction{ RelativeLane::same };
 
 	double compute_lambda_0(double max_jerk,
 		double comfortable_acceleration, double max_brake,
