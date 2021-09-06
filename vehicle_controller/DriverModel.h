@@ -29,8 +29,11 @@
 /*--------------------------------------------------------------------------*/
 /* Definitions that were not in the original DLL example */
 
-/* Order of UDAs must follow the order in VISSM 
-These are used for debugging. */
+/* The order of UDAs here must follow the order in VISSM 
+Most of these are used for debugging. To gain time when running
+simulations to generate data, these should not be updated.
+Essential ones:
+- lane_change_intention*/
 enum class UDA {
     gap_to_dest_lane_leader = 6, // value taken from VISSIM interface.
     gap_to_dest_lane_follower,
@@ -51,6 +54,8 @@ enum class UDA {
     relative_velocity_to_leader,
     leader_type,
     lane_change_intention,
+    dest_leader_id,
+    dest_follower_id,
 
     first = gap_to_dest_lane_leader,
 };

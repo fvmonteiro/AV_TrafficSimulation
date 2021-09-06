@@ -18,7 +18,7 @@
 
 /*==========================================================================*/
 
-const std::unordered_set<long> LOGGED_VEHICLES_IDS{ 0 };
+const std::unordered_set<long> LOGGED_VEHICLES_IDS{ 14 };
 const bool CLUELESS_DEBUGGING{ false };
 
 SimulationLogger simulation_logger;
@@ -94,38 +94,39 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
         current_time = double_value;
         return 1;
     case DRIVER_DATA_USE_UDA                :
-        /* NOTE: TO AVOID UDA ISSUES BETWEEN DIFFERENT NETWORKS
-        WE ARE IGNORING ALL UDAs */
-
         /* must return 1 for desired values of index1 if UDA values
         are to be sent from/to Vissim */
         if (index1 >= static_cast<int>(UDA::first)) { 
             UDA uda = UDA(index1);
             switch (uda) {
+            case UDA::gap_to_leader:
             case UDA::gap_to_dest_lane_leader:
             case UDA::gap_to_dest_lane_follower:
+            case UDA::reference_gap:
             case UDA::safe_gap_to_dest_lane_leader:
             case UDA::safe_gap_to_dest_lane_follower:
-            case UDA::gap_to_leader:
-                return 0;
-            case UDA::leader_id:
-                return 1;
-            case UDA::use_internal_lane_change_decision:
-                return 1;
             case UDA::veh_following_gap_to_fd:
             case UDA::transient_gap_to_fd:
             case UDA::veh_following_gap_to_ld:
             case UDA::transient_gap_to_ld:
-            case UDA::reference_gap:
                 return 1;
+            case UDA::leader_id:
+            case UDA::dest_leader_id:
+            case UDA::dest_follower_id:
+                return 1;
+            case UDA::leader_type:
+                return 1;
+            case UDA::relative_velocity_to_leader:
+                return 0;
             case UDA::ttc:
             case UDA::drac:
             case UDA::collision_severity_risk:
                 return 0;
             case UDA::write_veh_log:
                 return 0;
-            case UDA::relative_velocity_to_leader:
-            case UDA::leader_type:
+            case UDA::use_internal_lane_change_decision:
+                return 1;
+            case UDA::lane_change_intention:
                 return 1;
             default:
                 return 0;
@@ -482,6 +483,18 @@ DRIVERMODEL_API  int  DriverModelGetValue (long   type,
         case UDA::lane_change_intention:
             *long_value = vehicles[current_vehicle_id].
                 get_desired_lane_change_direction();
+            break;
+        case UDA::dest_leader_id:
+            if (vehicles[current_vehicle_id].has_destination_lane_leader()) {
+                *long_value = vehicles[current_vehicle_id].
+                    get_destination_lane_leader()->get_id();
+            }
+            break;
+        case UDA::dest_follower_id:
+            if (vehicles[current_vehicle_id].has_destination_lane_follower()) {
+                *long_value = vehicles[current_vehicle_id].
+                    get_destination_lane_follower()->get_id();
+            }
             break;
         default:
             return 0; /* doesn't set any UDA values */

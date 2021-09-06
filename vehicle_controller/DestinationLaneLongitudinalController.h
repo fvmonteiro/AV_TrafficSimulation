@@ -14,9 +14,10 @@ class DestinationLaneLongitudinalController :
 public:
 
     DestinationLaneLongitudinalController();
-    DestinationLaneLongitudinalController(const EgoVehicle& ego_vehicle,
-        bool verbose);
-    DestinationLaneLongitudinalController(const EgoVehicle& ego_vehicle);
+    DestinationLaneLongitudinalController(
+        const VehicleParameters& ego_parameters, bool verbose);
+    DestinationLaneLongitudinalController(
+        const VehicleParameters& ego_parameters);
 
     double get_follower_time_headway() {
         return destination_lane_follower_time_headway;
@@ -26,10 +27,12 @@ public:
         this->timer_start = time;
     }
 
-    void set_reference_velocity(double ego_velocity, double adjustment_speed_factor);
+    void set_reference_velocity(double reference_velocity, double ego_velocity);
+    //void set_reference_velocity(double ego_velocity, double adjustment_speed_factor);
 
     virtual void determine_controller_state(const EgoVehicle& ego_vehicle,
-        const std::shared_ptr<NearbyVehicle> leader) override;
+        const std::shared_ptr<NearbyVehicle> leader,
+        double reference_velocity) override;
     bool is_active() const;
     /* Checks whether the filtered reference velocity is greater than
     the ego velocity. Method should only be called when the 

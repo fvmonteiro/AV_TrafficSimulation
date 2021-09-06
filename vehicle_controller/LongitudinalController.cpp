@@ -10,22 +10,16 @@
 #include "LongitudinalController.h"
 #include "EgoVehicle.h"
 
-LongitudinalController::LongitudinalController(const EgoVehicle& ego_vehicle,
-	double max_brake, double reference_velocity, double filter_brake_limit,
-	bool verbose)
-	: simulation_time_step{ ego_vehicle.get_sampling_interval() },
+LongitudinalController::LongitudinalController(
+	const VehicleParameters& ego_parameters, double max_brake, 
+	double filter_brake_limit, bool verbose)
+	: simulation_time_step{ ego_parameters.sampling_interval },
 	ego_max_brake{ max_brake },
-	ego_reference_velocity{ reference_velocity },
-	free_flow_velocity{ ego_vehicle.get_desired_velocity() },
+	free_flow_velocity{ ego_parameters.desired_velocity },
 	verbose{ verbose } {
 
-	//double max_jerk = ego_vehicle.get_max_jerk();
-	//double brake_delay = ego_vehicle.get_brake_delay();*/
-
-	/*compute_safe_gap_parameters(max_jerk, comfortable_acceleration,
-		ego_vehicle_max_brake, brake_delay);*/
 	double comfortable_acceleration =
-		ego_vehicle.get_comfortable_acceleration();
+		ego_parameters.comfortable_acceleration;
 	this->leader_velocity_filter = VelocityFilter(comfortable_acceleration,
 		filter_brake_limit, simulation_time_step);
 	this->desired_velocity_filter = VelocityFilter(comfortable_acceleration,
@@ -35,23 +29,23 @@ LongitudinalController::LongitudinalController(const EgoVehicle& ego_vehicle,
 		std::clog << "Created base longitudinal controller with "
 			<< "max brake=" << ego_max_brake
 			<< ", free flow velocity=" << free_flow_velocity
-			<< ", reference velocity=" << ego_reference_velocity
 			<< std::endl;
 	}
 }
 
 void LongitudinalController::set_vehicle_following_gains(
-	double kg, double kv) {
-	this->kg = kg;
-	this->kv = kv;
+	AutonomousGains gains) {
+	this->autonomous_gains = gains;
 }
 
 void LongitudinalController::set_vehicle_following_gains(
-	double kg, double kv, double kd, double ka) {
-	this->kg = kg;
-	this->kv = kv;
-	this->kd = kd;
-	this->ka = ka;
+	ConnectedGains gains) {
+	this->connected_gains = gains;
+}
+
+void LongitudinalController::set_velocity_controller_gains(
+	VelocityControllerGains gains) {
+	this->velocity_controller_gains = gains;
 }
 
 double LongitudinalController::compute_time_headway_gap(double time_headway,
@@ -67,7 +61,13 @@ double LongitudinalController::compute_desired_gap(double velocity_ego) {
 
 double LongitudinalController::compute_gap_error(
 	double gap, double reference_gap) {
-	return std::min(max_gap_error, gap - reference_gap);
+	if (is_connected) {
+		return std::min(max_gap_error_connected, gap - reference_gap);
+	}
+	else {
+		return std::min(max_gap_error, gap - reference_gap);
+	}
+	//return gap - reference_gap;
 };
 
 double LongitudinalController::compute_velocity_error(double velocity_ego, 
@@ -89,6 +89,8 @@ double LongitudinalController::compute_gap_threshold(double free_flow_velocity,
 	double velocity_error) {
 	/* Threshold is computed such that, at the switch, the vehicle following 
 	input is greater or equal to kg*h*(Vf - v) > 0. */
+	double kg = autonomous_gains.kg;
+	double kv = autonomous_gains.kv;
 	return h * free_flow_velocity + d - 1 / kg * (kv * velocity_error);
 	/* Other threshold options: 
 	- VISSIM's maximum gap: 250 
@@ -100,6 +102,10 @@ double LongitudinalController::compute_gap_threshold(double free_flow_velocity,
 	double acceleration_error) {
 	/* Threshold is computed such that, at the switch, the vehicle following
 	input is greater or equal to kg*h*(Vf - v) > 0. */
+	double kg = connected_gains.kg;
+	double kv = connected_gains.kv;
+	double kgd = connected_gains.kgd;
+	double ka = connected_gains.ka;
 	return h * free_flow_velocity + d - 1 / kg * (kv * velocity_error 
 		+ kgd * gap_error_derivative + ka * acceleration_error);
 	/* Other threshold options:
@@ -108,52 +114,137 @@ double LongitudinalController::compute_gap_threshold(double free_flow_velocity,
 }
 
 double LongitudinalController::compute_vehicle_following_input(
+	const EgoVehicle& ego_vehicle, const NearbyVehicle& leader) {
+
+	double ego_velocity = ego_vehicle.get_velocity();
+	double gap = ego_vehicle.compute_gap(leader);
+	double gap_reference = compute_desired_gap(ego_velocity);
+	double gap_error = compute_gap_error(gap, gap_reference);
+	double velocity_reference = leader.compute_velocity(ego_velocity);
+	double filtered_velocity_reference =
+		leader_velocity_filter.filter_velocity(velocity_reference);
+	double velocity_error = compute_velocity_error(
+		ego_velocity, filtered_velocity_reference);
+
+	if (verbose) {
+		std::clog << "\tleader id = " << leader.get_id()
+			<< ", eg=" << gap - gap_reference
+			<< ", sat(eg)=" << gap_error
+			<< ", ev=" << velocity_error;
+	}
+
+	double desired_acceleration;
+	if (is_connected) {
+		double ego_acceleration = ego_vehicle.get_acceleration();
+		double gap_error_derivative = estimate_gap_error_derivative(
+			velocity_error, ego_acceleration);
+		double acceleration_error = compute_acceleration_error(
+			ego_acceleration, leader.get_acceleration());
+		desired_acceleration = connected_gains.kg * gap_error
+			+ connected_gains.kv * velocity_error
+			+ connected_gains.kgd * gap_error_derivative
+			+ connected_gains.ka * acceleration_error;
+
+		if (verbose) {
+			std::clog << ", eg_dot=" << gap_error_derivative
+				<< ", ea=" << acceleration_error
+				<< std::endl;
+		}
+
+	}
+	else {
+		desired_acceleration = autonomous_gains.kg * gap_error
+			+ autonomous_gains.kv * velocity_error;
+
+		if (verbose) {
+			std::clog << std::endl;
+		}
+
+	}
+
+	return desired_acceleration;
+}
+
+double LongitudinalController::compute_vehicle_following_input(
 	double gap_error, double velocity_error) {
-	return kg * gap_error + kv * velocity_error;
+	return autonomous_gains.kg * gap_error 
+		+ autonomous_gains.kv * velocity_error;
 }
 
 double LongitudinalController::compute_vehicle_following_input(
 	double gap_error, double velocity_error, double gap_error_derivative,
 	double acceleration_error) {
-	return kg * gap_error + kv * velocity_error 
-		+ kgd * gap_error_derivative + ka * acceleration_error;
+	return connected_gains.kg * gap_error 
+		+ connected_gains.kv * velocity_error 
+		+ connected_gains.kgd * gap_error_derivative 
+		+ connected_gains.ka * acceleration_error;
 }
 
 /* PID velocity controller. The derivative of the velocity error equals the 
 ego vehicle acceleration since the desired speed is constant. */
 double LongitudinalController::compute_velocity_control_input(
-	double velocity_error, double acceleration_error, 
-	double comfortable_acceleration) {
+	const EgoVehicle& ego_vehicle, double velocity_reference) {
+	
+	double ego_velocity = ego_vehicle.get_velocity();
+	double ego_acceleration = ego_vehicle.get_acceleration();
+	//double velocity_reference = ego_reference_velocity;
+	double filtered_velocity_reference =
+		desired_velocity_filter.filter_velocity(velocity_reference);
+	double velocity_error = compute_velocity_error(
+		ego_velocity, filtered_velocity_reference);
+	double acceleration_error = compute_acceleration_error(
+		ego_acceleration, 0);
+
 	/* We avoid integral windup by only deactivating the integral gain when the
 	input is 'large' */
+	double comfortable_acceleration = 
+		ego_vehicle.get_comfortable_acceleration();
 	velocity_error_integral += velocity_error * simulation_time_step;
-	double u = kp * velocity_error + kd * acceleration_error 
-		+ ki * velocity_error_integral;
-	if (u > comfortable_acceleration / 2) {
-		u -= ki * velocity_error_integral;
+	double desired_acceleration = 
+		velocity_controller_gains.kp * velocity_error 
+		+ velocity_controller_gains.kd * acceleration_error
+		+ velocity_controller_gains.ki * velocity_error_integral;
+	if (desired_acceleration > comfortable_acceleration / 2) {
+		desired_acceleration -= 
+			velocity_controller_gains.ki * velocity_error_integral;
 		reset_velocity_error_integrator();
 	}
-	
-	return u;
+
+	if (verbose) {
+		std::clog << "\tref=" << velocity_reference
+			<< ", filtered=" << filtered_velocity_reference
+			<< ", vel=" << ego_velocity
+			<< ", ev=" << velocity_error
+			<< std::endl;
+	}
+
+	return desired_acceleration;
 }
+//double LongitudinalController::compute_velocity_control_input(
+//	double velocity_error, double acceleration_error, 
+//	double comfortable_acceleration) {
+//	/* We avoid integral windup by only deactivating the integral gain when the
+//	input is 'large' */
+//	velocity_error_integral += velocity_error * simulation_time_step;
+//	double u = kp * velocity_error + kd * acceleration_error 
+//		+ ki * velocity_error_integral;
+//	if (u > comfortable_acceleration / 2) {
+//		u -= ki * velocity_error_integral;
+//		reset_velocity_error_integrator();
+//	}
+//	
+//	return u;
+//}
 
 double LongitudinalController::compute_desired_acceleration(
 	const EgoVehicle& ego_vehicle,
-	const std::shared_ptr<NearbyVehicle> leader) {
+	const std::shared_ptr<NearbyVehicle> leader,
+	double velocity_reference) {
 	
-	double velocity_reference, filtered_velocity_reference;
-	double velocity_error, acceleration_error;
 	double desired_acceleration;
-	double ego_velocity = ego_vehicle.get_velocity();
-	double ego_acceleration = ego_vehicle.get_comfortable_acceleration();
 	State old_state = state;
 
-	determine_controller_state(ego_vehicle, leader);
-
-	//if (verbose) {
-	//	std::clog << "\tstate="<< state_to_string(state)
-	//		<< std::endl;
-	//}
+	determine_controller_state(ego_vehicle, leader, velocity_reference);
 
 	switch (state)
 	{
@@ -162,63 +253,18 @@ double LongitudinalController::compute_desired_acceleration(
 		break;
 	case State::vehicle_following:
 	{
-		double gap = ego_vehicle.compute_gap(leader);
-		double gap_reference = compute_desired_gap(ego_velocity);
-		double gap_error = compute_gap_error(gap, gap_reference);
-		double leader_velocity = leader->compute_velocity(ego_velocity);
-		velocity_reference = leader_velocity;
-		filtered_velocity_reference =
-			leader_velocity_filter.filter_velocity(velocity_reference);
-		velocity_error = compute_velocity_error(
-			ego_velocity, filtered_velocity_reference);
-		double gap_error_derivative = estimate_gap_error_derivative(
-			velocity_error, ego_acceleration);
-
-		acceleration_error = compute_acceleration_error(ego_acceleration,
-			leader->get_acceleration());
-		/*if (verbose) {
-			std::clog << "\tleader id = " << leader->get_id()
-				<< ", eg=" << gap_error
-				<< ", ev=" << velocity_error
-				<< std::endl;
-		}*/
-		
-		if (is_connected) {
-			desired_acceleration = compute_vehicle_following_input(
-				gap_error, velocity_error, gap_error_derivative,
-				acceleration_error);
-		}
-		else {
-			desired_acceleration = compute_vehicle_following_input(
-				gap_error, velocity_error);
-		}
-		
+		desired_acceleration = compute_vehicle_following_input(
+			ego_vehicle, *leader);
 		break;
 	}
 	case State::velocity_control:
 	{
 		if (old_state != State::velocity_control) {
-			desired_velocity_filter.reset(ego_velocity);
+			desired_velocity_filter.reset(ego_vehicle.get_velocity());
 			reset_velocity_error_integrator();
 		}
-		velocity_reference = ego_reference_velocity;
-		filtered_velocity_reference =
-			desired_velocity_filter.filter_velocity(velocity_reference);
-		velocity_error = compute_velocity_error(
-			ego_velocity, filtered_velocity_reference);
-		acceleration_error = compute_acceleration_error(ego_acceleration, 0);
-
-		/*if (verbose) {
-			std::clog << "\tref=" << velocity_reference
-				<< ", filtered=" << filtered_velocity_reference
-				<< ", vel=" << ego_velocity
-				<< ", ev=" << velocity_error
-				<< std::endl;
-		}*/
-
-		desired_acceleration = compute_velocity_control_input(velocity_error,
-			acceleration_error,
-			ego_vehicle.get_comfortable_acceleration());
+		desired_acceleration = compute_velocity_control_input(ego_vehicle,
+			velocity_reference);
 		break;
 	}
 	default:
@@ -228,9 +274,9 @@ double LongitudinalController::compute_desired_acceleration(
 		break;
 	}
 
-	//if (verbose) {
-	//	std::clog << "\tu=" << desired_acceleration << std::endl;
-	//}
+	if (verbose) {
+		std::clog << "\tu=" << desired_acceleration << std::endl;
+	}
 
 	return desired_acceleration;
 }
@@ -260,7 +306,9 @@ void LongitudinalController::update_safe_time_headway(
 void LongitudinalController::update_time_headway(
 	double lambda_1, double new_leader_max_brake) {
 	
-	if (verbose) std::clog << "Updating time headway from " << h;
+	if (verbose) {
+		std::clog << "Updating time headway from " << h;
+	}
 	
 	h = compute_time_headway_with_risk(free_flow_velocity,
 		ego_max_brake, new_leader_max_brake,

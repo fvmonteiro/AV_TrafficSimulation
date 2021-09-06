@@ -6,6 +6,7 @@
 /* Version of 2021-xx-xx                             Fernando V. Monteiro   */
 /*==========================================================================*/
 
+//#include <algorithm>
 #include "DestinationLaneLongitudinalController.h"
 #include "EgoVehicle.h"
 
@@ -13,11 +14,10 @@ DestinationLaneLongitudinalController::DestinationLaneLongitudinalController()
 	: LongitudinalController() {}
 
 DestinationLaneLongitudinalController::DestinationLaneLongitudinalController(
-	const EgoVehicle& ego_vehicle, bool verbose)
-	: LongitudinalController(ego_vehicle,
-		ego_vehicle.get_lane_change_max_brake(),
-		0.0, // the reference vel. is set when there is lane change intention
-		ego_vehicle.get_comfortable_brake(), verbose) {
+	const VehicleParameters& ego_parameters, bool verbose)
+	: LongitudinalController(ego_parameters,
+		ego_parameters.lane_change_max_brake,
+		ego_parameters.comfortable_brake, verbose) {
 
 	if (verbose) {
 		std::clog << "Created destination lane longitudinal controller"
@@ -26,24 +26,34 @@ DestinationLaneLongitudinalController::DestinationLaneLongitudinalController(
 }
 
 DestinationLaneLongitudinalController::DestinationLaneLongitudinalController(
-	const EgoVehicle& ego_vehicle)
-	: DestinationLaneLongitudinalController(ego_vehicle, false) {
+	const VehicleParameters& ego_parameters)
+	: DestinationLaneLongitudinalController(ego_parameters, false) {
 }
 
-void DestinationLaneLongitudinalController::set_reference_velocity(
-	double ego_velocity, double adjustment_speed_factor) {
-	double minimum_adjustment_velocity =
-		ego_velocity * adjustment_speed_factor;
-	if (verbose) {
-		std::clog << "new min vel=" << minimum_adjustment_velocity << std::endl;
-	}
-	reset_desired_velocity_filter(ego_velocity);
-	this->ego_reference_velocity = minimum_adjustment_velocity;
-}
+//void DestinationLaneLongitudinalController::set_reference_velocity(
+//	double reference_velocity, double ego_velocity) {
+//	if (verbose) {
+//		std::clog << "new min vel=" << reference_velocity << std::endl;
+//	}
+//	reset_desired_velocity_filter(ego_velocity);
+//	this->ego_reference_velocity = reference_velocity;
+//}
+
+//void DestinationLaneLongitudinalController::set_reference_velocity(
+//	double ego_velocity, double adjustment_speed_factor) {
+//	double minimum_adjustment_velocity =
+//		ego_velocity * adjustment_speed_factor;
+//	if (verbose) {
+//		std::clog << "new min vel=" << minimum_adjustment_velocity << std::endl;
+//	}
+//	reset_desired_velocity_filter(ego_velocity);
+//	this->ego_reference_velocity = minimum_adjustment_velocity;
+//}
 
 void DestinationLaneLongitudinalController::determine_controller_state(
 	const EgoVehicle& ego_vehicle, 
-	const std::shared_ptr<NearbyVehicle> leader) {
+	const std::shared_ptr<NearbyVehicle> leader,
+	double reference_velocity) {
 
 	if (leader == nullptr) { // no vehicle ahead
 		/*If there's no leader this controller should not be active */
@@ -59,7 +69,7 @@ void DestinationLaneLongitudinalController::determine_controller_state(
 		if (is_connected) {
 			double ego_acceleration = ego_vehicle.get_acceleration();
 			gap_threshold = compute_gap_threshold(
-				ego_reference_velocity,
+				reference_velocity,
 				velocity_error, 
 				estimate_gap_error_derivative(velocity_error, 
 					ego_acceleration),
@@ -69,16 +79,16 @@ void DestinationLaneLongitudinalController::determine_controller_state(
 		}
 		else {
 			gap_threshold = compute_gap_threshold(
-				ego_reference_velocity, velocity_error);
+				reference_velocity, velocity_error);
 		}
 
-		double gap = leader->get_distance() - leader->get_length();
+		double gap = ego_vehicle.compute_gap(leader);
 		if (state == State::vehicle_following) {
 			gap_threshold += hysteresis_bias;
 		}
 
 		if ((gap > gap_threshold) 
-			|| (ego_velocity < ego_reference_velocity)) {
+			|| (ego_velocity < std::min(reference_velocity, 5.0))) {
 			state = State::vehicle_following;
 		}
 		else {

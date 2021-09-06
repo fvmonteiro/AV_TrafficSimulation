@@ -1,6 +1,6 @@
 /*==========================================================================*/
-/*  EgoVehicle.h	    													    */
-/*  TODO                                     */
+/*  EgoVehicle.h	    													*/
+/*  TODO																    */
 /*                                                                          */
 /*  Version of 2021-xx-xx                             Fernando V. Monteiro  */
 /*==========================================================================*/
@@ -13,6 +13,8 @@
 #include "NearbyVehicle.h"
 #include "Vehicle.h"
 
+
+
 class EgoVehicle : public Vehicle {
 public:
 	//using Vehicle::set_category;
@@ -22,9 +24,7 @@ public:
 		intention_to_change_lanes,
 	};
 
-	/* Constructors 
-	TODO: have a single non default constructor with a 
-	default parameter? */
+	/* Constructors */
 	EgoVehicle() = default;
 	EgoVehicle(long id, double simulation_time_step, double creation_time,
 		bool verbose);
@@ -48,13 +48,13 @@ public:
 	double get_brake_delay() const { return brake_delay; };
 	// double get_lambda_0() const { return lambda_0; };
 	double get_lambda_1() const { return lambda_1; };
-	double get_lane_change_lambda_1() const { return lane_change_lambda_1; };
+	double get_lambda_1_lane_change() const { return lambda_1_lane_change; };
 	bool get_use_internal_lane_change_decision() const {
 		return use_internal_lane_change_decision;
 	};
-	double get_adjustment_speed_factor() const {
+	/*double get_adjustment_speed_factor() const {
 		return adjustment_speed_factor;
-	}
+	};*/
 	double get_desired_lane_angle() const { return desired_lane_angle; };
 	long get_rel_target_lane() const { 
 		return static_cast<long>(rel_target_lane);
@@ -62,6 +62,10 @@ public:
 	long get_turning_indicator() const { return turning_indicator; };
 	long get_desired_lane_change_direction() const {
 		return static_cast<int>(desired_lane_change_direction);
+	};
+	/* If the ego vehicle is not connected, returns lambda_1 */
+	double get_lambda_1_connected() const {
+		return is_connected() ? lambda_1_connected : lambda_1;
 	};
 
 	void EgoVehicle::set_desired_velocity(double desired_velocity) {
@@ -102,7 +106,8 @@ public:
 	/* delta vel. at collision under the worst case scenario*/
 	double get_collision_risk() const;
 
-	/* Other setters */
+	/* Other getters and setters */
+	VehicleParameters get_static_parameters();
 
 	void set_lane(long lane);
 	void set_link(long link);
@@ -116,7 +121,9 @@ public:
 	vehicle. */
 	//void set_category(VehicleCategory category) override;
 	void set_type(long type) /*override*/;
+	/* Mandatory/route related lane changes */
 	void set_preferred_relative_lane(long preferred_relative_lane);
+	/* Discretionary lane changes */
 	void set_rel_target_lane(long target_relative_lane);
 	void set_lane_end_distance(double lane_end_distance,
 		long lane_number);
@@ -255,16 +262,25 @@ private:
 	in VISSIM's simulation dynamics) */
 	
 	double tau{ ACTUATOR_CONSTANT }; // actuator constant [s].
+	double tau_d{ 0.0 }; /* constant used in the discrete approximation of
+						 the vehicle first order actuator dynamics */
 	//double lane_change_max_brake{ CAR_MAX_BRAKE / 2 }; // [m/s^2]
-	double comfortable_brake{ COMFORTABLE_ACCELERATION }; // [m/s^2] TODO: vary with speed?
+	double comfortable_brake{ COMFORTABLE_BRAKE }; // [m/s^2]
 
 	/* Parameter related to emergency braking during lane change [m/s] */
-	double lane_change_lambda_1{ 0.0 };
+	double lambda_1_lane_change{ 0.0 };
+	
+	/* Connected vehicles following non-connected vehicles must use
+	non-connected parameters. */
+	double lambda_1_connected{ 0.0 };
+	/* Connected vehicles following non-connected vehicles must use
+	non-connected parameters. */
+	double lambda_0_connected{ 0.0 };
 
 	/* Control related members */
 
 	ControlManager controller;
-	double adjustment_speed_factor{ 0.6 }; /* when adjusting for 
+	/*double adjustment_speed_factor{ 0.6 }; /* when adjusting for 
 	lane changes, the vehicle has a minimum accepted speed based on its
 	speed at the start of the adjustment. */
 	

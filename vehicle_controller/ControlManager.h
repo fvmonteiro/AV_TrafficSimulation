@@ -13,6 +13,7 @@
 #include "LongitudinalController.h"
 #include "OriginLaneLongitudinalController.h"
 #include "DestinationLaneLongitudinalController.h"
+#include "Vehicle.h"
 
 class EgoVehicle;
 
@@ -36,8 +37,8 @@ public:
 	};
 
 	ControlManager() = default;
-	ControlManager(const EgoVehicle & ego_vehicle, bool is_connected, bool verbose);
-	ControlManager(const EgoVehicle & ego_vehicle, bool is_connected);
+	ControlManager(const VehicleParameters& parameters, bool verbose);
+	ControlManager(const VehicleParameters& parameters);
 
 	//std::vector<State> get_states() { return states; };
 	ActiveLongitudinalController get_active_longitudinal_controller() {
@@ -70,14 +71,13 @@ public:
 
 	/* Updates the time headway based on the new leader and 
 	resets the leader velocity filter if there was no leader before */
-	void update_origin_lane_leader(double lambda_1, 
-		double leader_max_brake, double ego_velocity, bool had_leader);
+	void update_origin_lane_leader(double ego_velocity, bool had_leader,
+		const NearbyVehicle& leader);
 	/* Updates the (risky) time headway based on the new leader and
 	resets the leader velocity filter */
-	void update_destination_lane_leader(const EgoVehicle& ego_vehicle, 
-		double leader_max_brake);
-	void estimate_follower_time_headway(const EgoVehicle& ego_vehicle,
-		NearbyVehicle& follower);
+	void update_destination_lane_leader(double ego_velocity, 
+		const NearbyVehicle& leader);
+	void estimate_follower_time_headway(NearbyVehicle& follower);
 	void reset_origin_lane_velocity_controller(double ego_velocity);
 
 	/* Gets the acceleration inputs from the origin (and destination) lane
@@ -88,13 +88,15 @@ public:
 	double compute_safe_lane_change_gap(const EgoVehicle& ego_vehicle, 
 		const NearbyVehicle& other_vehicle, bool will_accelerate = false);
 	/* Returns the time headway part of the safe lane change gap. */
-	double compute_time_headway_gap(const EgoVehicle& ego_vehicle,
+	double compute_time_headway_gap(double ego_velocity,
 		const NearbyVehicle& other_vehicle);
 
+	/* Resets accepted risk and risk timer */
+	void start_longitudinal_adjustment(double time);
 	/* Sets the value of the minimum accepted longitudinal adjustment speed
 	and the initial value of accepted risk, and starts the a timer. */
-	void start_longitudinal_adjustment(double time, double ego_velocity,
-		double adjustment_speed_factor);
+	/*void start_longitudinal_adjustment(double time, double ego_velocity,
+		double adjustment_speed_factor);*/
 	void update_headways_with_risk(const EgoVehicle& ego_vehicle);
 
 	/* Printing ----------------------------------------------------------- */
@@ -102,6 +104,8 @@ public:
 		ActiveLongitudinalController active_longitudinal_controller);
 
 private:
+	VehicleParameters ego_parameters;
+
 	OriginLaneLongitudinalController origin_lane_controller;
 	DestinationLaneLongitudinalController destination_lane_controller;
 	OriginLaneLongitudinalController end_of_lane_controller;
@@ -109,10 +113,21 @@ private:
 	ActiveLongitudinalController active_longitudinal_controller{ 
 		ActiveLongitudinalController::origin_lane }; /* indicates which
 	controller is active. Used for debugging and visualization. */
+
+	AutonomousGains autonomous_real_following_gains{ 0.2, 1.0 };
+	AutonomousGains autonomous_virtual_following_gains{ 0.4, 1.0 };
+	ConnectedGains connected_real_following_gains{ 0.2, 2.3, 0.13, 1.3 };
+	ConnectedGains connected_virtual_following_gains{ 0.4, 2.3, 0.13, 1.3 };
+	VelocityControllerGains desired_velocity_controller_gains{ 0.5, 0.1, 0.03 };
+	VelocityControllerGains adjustment_velocity_controller_gains{ 
+		1, 0.1, 0.03 };
+
 	double origin_lane_leader_max_brake{ 0.0 };
+	VehicleType origin_lane_leader_type{ VehicleType::undefined };
 	double destination_lane_leader_max_brake{ 0.0 };
+	VehicleType destination_lane_leader_type{ VehicleType::undefined };
 	double destination_lane_follower_max_brake{ 0.0 };
-	bool is_connected{ false };
+	VehicleType destination_lane_follower_type{ VehicleType::undefined };
 
 	bool verbose{ false };
 };

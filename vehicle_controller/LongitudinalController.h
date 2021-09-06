@@ -16,6 +16,38 @@
 class NearbyVehicle;
 class EgoVehicle;
 
+/* Vehicle parameters that do not vary with time */
+struct VehicleParameters {
+	double sampling_interval{ 0.0 };
+	double max_brake{ 0.0 };
+	double comfortable_brake{ 0.0 };
+	double lane_change_max_brake{ 0.0 };
+	double comfortable_acceleration{ 0.0 };
+	double desired_velocity{ 0.0 };
+	double lambda_1{ 0.0 };
+	double lambda_1_lane_change{ 0.0 };
+	double lambda_1_connected{ 0.0 };
+	bool is_connected{ false };
+};
+
+struct AutonomousGains {
+	double kg{ 0.0 };
+	double kv{ 0.0 };
+};
+
+struct ConnectedGains {
+	double kg{ 0.0 };
+	double kv{ 0.0 };
+	double kgd{ 0.0 };
+	double ka{ 0.0 };
+};
+
+struct VelocityControllerGains {
+	double kp{ 0.0 };
+	double kd{ 0.0 };
+	double ki{ 0.0 };
+};
+
 /* This controller computes inputs for vehicle following and velocity 
 control. It also determine which of these inputs should be used */
 class LongitudinalController {
@@ -28,8 +60,8 @@ public:
 	};
 
 	LongitudinalController() = default;
-	LongitudinalController(const EgoVehicle& ego_vehicle, double max_brake,
-		double reference_velocity, double filter_brake_limit, bool verbose);
+	LongitudinalController(const VehicleParameters& ego_parameters,
+		double max_brake, double filter_brake_limit, bool verbose);
 	/*LongitudinalController(const Vehicle& ego_vehicle,
 		bool is_used_for_lane_change, bool verbose);
 	LongitudinalController(const Vehicle& ego_vehicle,
@@ -38,10 +70,12 @@ public:
 	State get_state() const { return state; };
 	double get_h() const { return h; };
 	
-	void set_vehicle_following_gains(double kg, double kv);
-
-	void set_vehicle_following_gains(double kg, double kv, 
-		double kd, double ka);
+	void set_connexion(bool is_conneced) {
+		this->is_connected = is_conneced;
+	}
+	void set_vehicle_following_gains(AutonomousGains gains);
+	void set_vehicle_following_gains(ConnectedGains gains);
+	void set_velocity_controller_gains(VelocityControllerGains gains);
 
 	double compute_time_headway_gap(double time_headway, double velocity);
 	/* Computes the time headway value with zero accepted risk and assigns
@@ -79,7 +113,8 @@ public:
 	/* Determines and sets the current state of the longitudinal controller 
 	TODO: should this class provide a default implementation?*/
 	virtual void determine_controller_state(const EgoVehicle& ego_vehicle,
-		const std::shared_ptr<NearbyVehicle> leader) = 0;
+		const std::shared_ptr<NearbyVehicle> leader,
+		double reference_velocity) = 0;
 	/* Determines and sets the current state of the longitudinal controller */
 	/*void determine_controller_state(const Vehicle& ego_vehicle,
 		const NearbyVehicle& leader);*/
@@ -94,19 +129,23 @@ public:
 		double gap_error_derivative, double acceleration_error);
 
 	/* Constant time headway based controller */
+	double compute_vehicle_following_input(const EgoVehicle& ego_vehicle,
+		const NearbyVehicle& leader);
 	double compute_vehicle_following_input(double gap_error,
 		double velocity_error);
-
 	double compute_vehicle_following_input(double gap_error, 
 		double velocity_error, double gap_error_derivative, 
 		double acceleration_error);
 
 	/* PID velocity controller */
-	double compute_velocity_control_input(double velocity_error,
-		double acceleration_error, double comfortable_acceleration);
+	double compute_velocity_control_input(const EgoVehicle& ego_vehicle,
+		double velocity_reference);
+	/*double compute_velocity_control_input(double velocity_error,
+		double acceleration_error, double comfortable_acceleration);*/
 
 	double compute_desired_acceleration(const EgoVehicle& ego_vehicle,
-		const std::shared_ptr<NearbyVehicle> leader);
+		const std::shared_ptr<NearbyVehicle> leader,
+		double velocity_reference);
 	//double compute_desired_acceleration(const Vehicle& ego_vehicle,
 	//	const NearbyVehicle& leader);
 
@@ -116,8 +155,8 @@ public:
 
 protected:
 	State state{ State::uninitialized }; // event driven logic variable
-	double hysteresis_bias{ 5.0 }; // used to avoid state chattering [m]
-	double ego_reference_velocity{ 0.0 }; // for the velocity controller [m/s]
+	double hysteresis_bias{ 10.0 }; // used to avoid state chattering [m]
+	//double ego_reference_velocity{ 0.0 }; // for the velocity controller [m/s]
 	/* Parameters related to the emergency braking scenario */
 	double ego_max_brake{ 0.0 }; // absolute value [m/s^2]
 	//double leader_max_brake{ 0.0 }; // absolute value [m/s^2]
@@ -161,22 +200,15 @@ private:
 	//bool is_used_for_lane_change{ false };
 	double simulation_time_step{ 0.01 };
 
-	
-	/* Vehicle following gains 
+	/* Vehicle following and velocity control gains 
 	(computed in Matlab. Should be computed here?) */
-	double kg{ 0.4 }; // relative to gap error.
-	double kv{ 1.0 }; // relative to velocity error.
-	double kgd{ 0.0 }; // relative to gap error derivative
-	double ka{ 0.0 }; // relative to acceleration error
-
-	/* Velocity controller gains 
-	(computed in Matlab. Should be computed here?) */
-	double ki{ 0.03 }; //0.07
-	double kp{ 0.5 };
-	double kd{ 0.1 }; // 0.1
+	AutonomousGains autonomous_gains;
+	ConnectedGains connected_gains;
+	VelocityControllerGains velocity_controller_gains;
 	
 	/* Other controller parameters */
-	double max_gap_error{ 3.0 }; // maximum positive gap error in meters
+	double max_gap_error{ 10.0 }; // maximum positive gap error in meters
+	double max_gap_error_connected{ 10.0 }; // maximum positive gap error in meters
 	double velocity_error_integral{ 0.0 };
 
 	/* Internal methods */
