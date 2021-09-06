@@ -32,6 +32,7 @@ VelocityFilter::VelocityFilter(double max_acceleration,
 			<< std::endl;
 	}
 
+	this->alpha = std::exp(-gain * time_step);
 	this->max_variation_per_time_step = this->max_acceleration 
 		* this->time_step;
 	this->min_variation_per_time_step = this->min_acceleration 
@@ -69,7 +70,6 @@ double VelocityFilter::filter_velocity(double new_velocity) {
 	*/
 
 	double filtered_variation;
-	double alpha = std::exp(-gain * time_step);
 	double variation = new_velocity - current_value;
 	if ((1 - alpha) * variation > max_variation_per_time_step) {
 		filtered_variation = max_variation_per_time_step;

@@ -22,14 +22,16 @@ public:
 	double filter_velocity(double new_velocity);
 
 private:
-	double time_step = 0.1;
-	double current_value = 0;
+	double time_step{ 0.1 };
+	double current_value{ -1 }; /* negative value can be used as a flag for 
+								uninitialized filter */
 
-	double max_acceleration{ 3.0 }; // maximum acceleration in m/s^2
-	double min_acceleration{ -8.0 }; // minimum acceleration in m/s^2
+	double max_acceleration{ 3.0 }; // [m/s^2]
+	double min_acceleration{ -8.0 }; // [m/s^2]
 	double max_variation_per_time_step; // maximum acceleration per time step
 	double min_variation_per_time_step; // minimum acceleration per time step
 	double gain{ 10.0 };
-
+	double alpha{ 0.0 }; /* constant used in the discrete approximation of
+						 the first order actuator dynamics */
 	bool verbose = false;
 };
