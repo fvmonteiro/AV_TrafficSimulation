@@ -10,17 +10,23 @@ typedef unsigned long color_t;
 //#define ARGB(a,r,g,b)   ((COLORREF)((((BYTE)(b) | ((WORD)((BYTE)(g)) << 8)) | (((DWORD)(BYTE)(r)) << 16))|((BYTE)(a) << 24)))
 #define ARGB(a, r, g, b) ((color_t)((long)(b) + (long)(g)*256 + (long)(r)*256*256 + (unsigned long)(a)*256*256*256))
 
+const color_t BLACK = ARGB(255, 0, 0, 0);
+const color_t WHITE = ARGB(255, 255, 255, 255);
 const color_t RED = ARGB(255, 255, 0, 0);
 const color_t GREEN = ARGB(255, 0, 255, 0);
 const color_t BLUE = ARGB(255, 0, 0, 255);
-const color_t CYAN = ARGB(255, 0, 255, 255);
-const color_t MAGENTA = ARGB(255, 255, 0, 255);
 const color_t YELLOW = ARGB(255, 255, 255, 0);
-const color_t BLACK = ARGB(255, 0, 0, 0);
-const color_t WHITE = ARGB(255, 255, 255, 255);
-const color_t DARK_YELLOW = ARGB(255, 128, 128, 0);
-const color_t PURPLE = ARGB(255, 128, 0, 128);
-const color_t DARK_GREEN = ARGB(255, 0, 192, 0);
+const color_t MAGENTA = ARGB(255, 255, 0, 255);
+const color_t CYAN = ARGB(255, 0, 255, 255);
+
+const color_t DARK_RED = ARGB(255, 128, 0, 0);
+const color_t DARK_GREEN = ARGB(255, 0, 128, 0);
+const color_t DARK_BLUE = ARGB(255, 0, 0, 128);
+const color_t DARK_YELLOW = ARGB(255, 196, 196, 0);
+const color_t DARK_MAGENTA = ARGB(255, 128, 0, 128); // PURPLE
+const color_t DARK_CYAN = ARGB(255, 0, 128, 128);
+
+const color_t LIGHT_BLUE = ARGB(255, 0, 196, 255);
 
 const double MAX_DISTANCE = 300.0; // [m]
 const double CAR_MAX_BRAKE{ 7.5 }; // [m/s^2]
