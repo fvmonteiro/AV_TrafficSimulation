@@ -56,6 +56,7 @@ enum class UDA {
     lane_change_intention,
     dest_leader_id,
     dest_follower_id,
+    assisted_veh_id,
 
     first = gap_to_dest_lane_leader,
 };

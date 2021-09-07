@@ -18,7 +18,7 @@
 
 /*==========================================================================*/
 
-const std::unordered_set<long> LOGGED_VEHICLES_IDS{ 14 };
+const std::unordered_set<long> LOGGED_VEHICLES_IDS{ 23, 28 };
 const bool CLUELESS_DEBUGGING{ false };
 
 SimulationLogger simulation_logger;
@@ -26,8 +26,6 @@ std::unordered_map<long, EgoVehicle> vehicles;
 long current_vehicle_id = 0;
 double simulation_time_step = -1.0;
 double current_time = 0.0;
-long vehicle_type = 0; /* defines whether this is an autonomous or a connected
-                       vehicle */
 
 /*==========================================================================*/
 
@@ -113,6 +111,8 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
             case UDA::leader_id:
             case UDA::dest_leader_id:
             case UDA::dest_follower_id:
+                return 1;
+            case UDA::assisted_veh_id:
                 return 1;
             case UDA::leader_type:
                 return 1;
@@ -479,6 +479,9 @@ DRIVERMODEL_API  int  DriverModelGetValue (long   type,
                 *long_value = static_cast<int>(
                     vehicles[current_vehicle_id].get_leader()->get_type());
             }
+            else {
+                *long_value = 0;
+            }
             break;
         case UDA::lane_change_intention:
             *long_value = vehicles[current_vehicle_id].
@@ -489,11 +492,26 @@ DRIVERMODEL_API  int  DriverModelGetValue (long   type,
                 *long_value = vehicles[current_vehicle_id].
                     get_destination_lane_leader()->get_id();
             }
+            else {
+                *long_value = 0;
+            }
             break;
         case UDA::dest_follower_id:
             if (vehicles[current_vehicle_id].has_destination_lane_follower()) {
                 *long_value = vehicles[current_vehicle_id].
                     get_destination_lane_follower()->get_id();
+            }
+            else {
+                *long_value = 0;
+            }
+            break;
+        case UDA::assisted_veh_id:
+            if (vehicles[current_vehicle_id].is_cooperating_to_generate_gap()) {
+                *long_value = vehicles[current_vehicle_id].
+                    get_assisted_vehicle()->get_id();
+            }
+            else {
+                *long_value = 0;
             }
             break;
         default:
@@ -529,7 +547,6 @@ DRIVERMODEL_API  int  DriverModelGetValue (long   type,
                 << ", lane=" << ego_vehicle.get_lane()
                 << ", pref. lane=" << ego_vehicle.get_preferred_relative_lane()
                 << ", target lane=" << ego_vehicle.get_rel_target_lane()
-                << ", turning indicator=" << ego_vehicle.get_turning_indicator()
                 << ", lc decision=" << *long_value
                 /*<< ", active lc.=" 
                 << ego_vehicle.get_active_lane_change_direction()
@@ -537,6 +554,7 @@ DRIVERMODEL_API  int  DriverModelGetValue (long   type,
                 << ego_vehicle.get_vissim_active_lane_change()
                 << ", lat pos.=" << ego_vehicle.get_lateral_position()*/
                 << ", vel=" << ego_vehicle.get_velocity()
+                << ", accel=" << ego_vehicle.get_acceleration()
                 << std::endl;
         }
         return 1;

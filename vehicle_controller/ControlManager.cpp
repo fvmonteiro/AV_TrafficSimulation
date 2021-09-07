@@ -13,54 +13,54 @@
 #include "NearbyVehicle.h"
 #include "EgoVehicle.h"
 
-ControlManager::ControlManager(const VehicleParameters& parameters,
+ControlManager::ControlManager(const VehicleParameters& vehicle_parameters,
 	bool verbose)
-	: origin_lane_controller{ OriginLaneLongitudinalController(
-		parameters, verbose) },
-	destination_lane_controller{ DestinationLaneLongitudinalController(
-		parameters, verbose) },
-	end_of_lane_controller{ OriginLaneLongitudinalController(
-		parameters, verbose) },
-	lateral_controller{ LateralController(verbose) },
+	: lateral_controller{ LateralController(verbose) },
 	verbose{ verbose } {
 
 	if (verbose) {
 		std::clog << "Creating control manager " << std::endl;
 	}
 
-	this->ego_parameters = parameters;
+	this->ego_parameters = vehicle_parameters;
 
-	origin_lane_controller.set_vehicle_following_gains(
-		autonomous_real_following_gains);
-	origin_lane_controller.set_velocity_controller_gains(
-		desired_velocity_controller_gains);
-	destination_lane_controller.set_vehicle_following_gains(
-		autonomous_virtual_following_gains);
-	destination_lane_controller.set_velocity_controller_gains(
-		adjustment_velocity_controller_gains);
-	end_of_lane_controller.set_vehicle_following_gains(
-		autonomous_real_following_gains);
-	/* Note: the end of lane controller could have vel control gains
-	all zero, but we want to use it to see how the ego vehicle responds
-	to a stopped vehicle. */
-	end_of_lane_controller.set_velocity_controller_gains(
-		desired_velocity_controller_gains);
-	/* The end of the lane is seen as a stopped vehicle. We pretend
+	this->origin_lane_controller = RealLongitudinalController(
+		vehicle_parameters, desired_velocity_controller_gains,
+		autonomous_real_following_gains, connected_real_following_gains,
+		verbose);
+	/* Note: the end of lane controller could have special vel control gains
+	but we want to see how the ego vehicle responds to a stopped vehicle. */
+	this->end_of_lane_controller = RealLongitudinalController(
+		vehicle_parameters, desired_velocity_controller_gains,
+		autonomous_real_following_gains, connected_real_following_gains,
+		verbose);
+	this->destination_lane_controller = VirtualLongitudinalController(
+		vehicle_parameters, vehicle_parameters.lane_change_max_brake,
+		adjustment_velocity_controller_gains, 
+		autonomous_virtual_following_gains, 
+		connected_virtual_following_gains,
+		verbose);
+	if (vehicle_parameters.is_connected) {
+		this->gap_generating_controller = VirtualLongitudinalController(
+			vehicle_parameters, vehicle_parameters.max_brake,
+			adjustment_velocity_controller_gains,
+			autonomous_virtual_following_gains, 
+			connected_virtual_following_gains,
+			verbose);
+		/* the gap generating controller is only activated when there are
+		two connected vehicle, so we can set its connection here*/
+		gap_generating_controller.set_connexion(true);
+	}
+
+	/* The end of the lane is seen as a stopped vehicle. We can pretend
 	this stopped vehicle has a lower max brake so that the time headway
 	will be small. */
 	end_of_lane_controller.update_time_headway(
 		ego_parameters.lambda_1, ego_parameters.max_brake / 2);
-
-	if (ego_parameters.is_connected) {
-		origin_lane_controller.set_vehicle_following_gains(
-			connected_real_following_gains);
-		destination_lane_controller.set_vehicle_following_gains(
-			connected_virtual_following_gains);
-	}
 }
 
-ControlManager::ControlManager(const VehicleParameters& parameters)
-	: ControlManager(parameters, false) {}
+ControlManager::ControlManager(const VehicleParameters& vehicle_parameters)
+	: ControlManager(vehicle_parameters, false) {}
 
 LongitudinalController::State 
 	ControlManager::get_longitudinal_controller_state() {
@@ -69,6 +69,8 @@ LongitudinalController::State
 		return origin_lane_controller.get_state();
 	case ActiveLongitudinalController::destination_lane:
 		return destination_lane_controller.get_state();
+	case ActiveLongitudinalController::cooperative_gap_generation:
+		return gap_generating_controller.get_state();
 	case ActiveLongitudinalController::end_of_lane:
 		return end_of_lane_controller.get_state();
 	case ActiveLongitudinalController::vissim:
@@ -169,6 +171,39 @@ void ControlManager::update_destination_lane_leader(
 		ego_velocity);
 }
 
+void ControlManager::update_assisted_vehicle(
+	double ego_velocity, const NearbyVehicle& assisted_vehicle) {
+
+	// Sanity check
+	if (!(assisted_vehicle.is_connected() && ego_parameters.is_connected)) {
+		std::clog << "CODING ERROR: updated_assisted_vehicle called when:"
+			<< std::endl;
+		if (!assisted_vehicle.is_connected()) {
+			std::clog << "nearby veh is not connected" << std::endl;
+		}
+		if (!ego_parameters.is_connected) {
+			std::clog << "ego veh is not connected" << std::endl;
+		}
+	}
+
+	double new_max_brake = assisted_vehicle.get_max_brake();
+
+	/* To avoid repeated computations, we only recompute time headway if
+	the new leader is different from the previous one. */
+	if ((std::abs(new_max_brake - assisted_vehicle_max_brake) > 0.5)) {
+
+		assisted_vehicle_max_brake = new_max_brake;
+
+		gap_generating_controller.update_time_headway(
+			ego_parameters.lambda_1_connected, new_max_brake);
+
+		// gap_generating_controller.compute_max_risk_to_leader();
+	}
+	//if (!had_leader) {} /*try using this condition*/
+	gap_generating_controller.reset_leader_velocity_filter(
+		ego_velocity);
+}
+
 void ControlManager::estimate_follower_time_headway(
 	NearbyVehicle& follower) {
 
@@ -196,124 +231,143 @@ void ControlManager::reset_origin_lane_velocity_controller(
 double ControlManager::determine_desired_acceleration(const EgoVehicle& ego_vehicle) {
 
 	double desired_acceleration;
-	//double max_acceleration = ego_vehicle.get_comfortable_acceleration() * 2;
-	//double desired_acceleration_dest_lane = max_acceleration;
-	//double desired_acceleration_end_of_lane = max_acceleration;
-	
-	if (verbose) {
-		std::clog << "Origin lane controller" << std::endl;
+
+	if (ego_vehicle.has_lane_change_intention() &&
+		!ego_vehicle.get_use_internal_lane_change_decision()) {
+		desired_acceleration =
+			ego_vehicle.get_vissim_acceleration();
+		active_longitudinal_controller =
+			ActiveLongitudinalController::vissim;
 	}
-
-	double desired_acceleration_origin_lane = 
-		origin_lane_controller.compute_desired_acceleration(
-			ego_vehicle, ego_vehicle.get_leader(), 
-			ego_parameters.desired_velocity);
-
-	if (ego_vehicle.has_lane_change_intention()) {
-		if (ego_vehicle.get_use_internal_lane_change_decision()) {
-	
-			std::unordered_map<ActiveLongitudinalController, double>
-				possible_accelerations;
-			possible_accelerations[ActiveLongitudinalController::origin_lane] =
-				desired_acceleration_origin_lane;
-
-			/* Longitudinal control to adjust to destination lane leader */
-			if (ego_vehicle.has_destination_lane_leader()) {
-				if (verbose) {
-					std::clog << "Dest. lane controller"
-						<< std::endl;
-				}
-				std::shared_ptr<NearbyVehicle> dest_lane_leader =
-					ego_vehicle.get_destination_lane_leader();
-				double ego_velocity = ego_vehicle.get_velocity();
-				double reference_velocity =
-					dest_lane_leader->compute_velocity(ego_velocity) * 0.8;
-
-				/* If the ego vehicle is braking hard due to conditions on
-				the current lane, the destination lane controller, which
-				uses comfortable constraints, must be updated. */
-				if ((active_longitudinal_controller
-					!= ActiveLongitudinalController::destination_lane)
-					&& destination_lane_controller.is_outdated(ego_velocity)) {
-					destination_lane_controller.reset_desired_velocity_filter(
-						ego_velocity);
-						/*set_reference_velocity(
-						reference_velocity,
-						ego_velocity);*/
-				}
-
-				double desired_acceleration_dest_lane =
-					destination_lane_controller.compute_desired_acceleration(
-						ego_vehicle, dest_lane_leader, reference_velocity);
-				possible_accelerations[
-					ActiveLongitudinalController::destination_lane] =
-					desired_acceleration_dest_lane;
-			}
-			
-			/* Longitudinal control to wait at the end of the lane while 
-			looking for an appropriate lane change gap. Without this, 
-			vehicles might miss a desired exit. 
-			When the lane change direction equals the preferred relative
-			lane, it means the vehicle is moving into the destination lane.
-			At this point, we don't want to use this controller anymore. */
-			if ((ego_vehicle.get_preferred_relative_lane() 
-				!= ego_vehicle.get_active_lane_change_direction())
-				&& (ego_vehicle.get_lane_end_distance() > 0)) {
-				
-				if (verbose) {
-					std::clog << "End of lane controller"
-						<< std::endl;
-				}
-				
-				/* For now, we simulate a stopped vehicle at the end of 
-				the lane to force the vehicle to stop before the end of
-				the lane. */
-				std::shared_ptr<NearbyVehicle> virtual_vehicle =
-					std::shared_ptr<NearbyVehicle>(new
-						NearbyVehicle(1, RelativeLane::same, 1));
-				virtual_vehicle->set_relative_velocity(
-					ego_vehicle.get_velocity());
-				virtual_vehicle->set_distance(
-					ego_vehicle.get_lane_end_distance());
-				virtual_vehicle->set_length(0.0);
-				double desired_acceleration_end_of_lane =
-					end_of_lane_controller.compute_desired_acceleration(
-						ego_vehicle, virtual_vehicle,
-						ego_parameters.desired_velocity);
-				possible_accelerations[
-					ActiveLongitudinalController::end_of_lane] =
-					desired_acceleration_end_of_lane;
-			}
-
-			/* Define the actual input */
-			desired_acceleration = 1000; // any high value
-			for (const auto& it : possible_accelerations) {
-				if (it.second < desired_acceleration) {
-					desired_acceleration = it.second;
-					active_longitudinal_controller = it.first;
-				}
-			}
-		}
-		else {
-			desired_acceleration = 
-				ego_vehicle.get_vissim_acceleration();
-			active_longitudinal_controller = 
-				ActiveLongitudinalController::vissim;
-		}
+	else {
+		std::unordered_map<ActiveLongitudinalController, double>
+			possible_accelerations;
 
 		if (verbose) {
-			std::clog << "\t->Chosen: "
-				<< active_longitudinal_controller_to_string(
-					active_longitudinal_controller)
-				<< ": " << desired_acceleration
-				<< std::endl;
+			std::clog << "Origin lane controller" << std::endl;
 		}
 
+		/* Control relative to the current lane */
+		double desired_acceleration_origin_lane =
+			origin_lane_controller.compute_desired_acceleration(
+				ego_vehicle, ego_vehicle.get_leader(),
+				ego_parameters.desired_velocity);
+		possible_accelerations[ActiveLongitudinalController::origin_lane] =
+			desired_acceleration_origin_lane;
+
+		/* Control to adjust to destination lane leader */
+		if (ego_vehicle.has_destination_lane_leader()) {
+			if (verbose) {
+				std::clog << "Dest. lane controller"
+					<< std::endl;
+			}
+			std::shared_ptr<NearbyVehicle> dest_lane_leader =
+				ego_vehicle.get_destination_lane_leader();
+			double ego_velocity = ego_vehicle.get_velocity();
+			double reference_velocity =
+				dest_lane_leader->compute_velocity(ego_velocity) * 0.8;
+
+			/* If the ego vehicle is braking hard due to conditions on
+			the current lane, the destination lane controller, which
+			uses comfortable constraints, must be updated. */
+			if ((active_longitudinal_controller
+				!= ActiveLongitudinalController::destination_lane)
+				&& destination_lane_controller.is_outdated(ego_velocity)) {
+				destination_lane_controller.reset_desired_velocity_filter(
+					ego_velocity);
+			}
+
+			double desired_acceleration_dest_lane =
+				destination_lane_controller.compute_desired_acceleration(
+					ego_vehicle, dest_lane_leader, reference_velocity);
+			possible_accelerations[
+				ActiveLongitudinalController::destination_lane] =
+				desired_acceleration_dest_lane;
+		}
+
+		/* Control to wait at the end of the lane while
+		looking for an appropriate lane change gap. Without this,
+		vehicles might miss a desired exit. */
+		/* When the lane change direction equals the preferred relative
+		lane, it means the vehicle is moving into the destination lane.
+		At this point, we don't want to use this controller anymore. */
+		if ((ego_vehicle.get_preferred_relative_lane()
+			!= ego_vehicle.get_active_lane_change_direction())
+			&& (ego_vehicle.get_lane_end_distance() > 0)) {
+
+			if (verbose) {
+				std::clog << "End of lane controller"
+					<< std::endl;
+			}
+
+			/* For now, we simulate a stopped vehicle at the end of
+			the lane to force the vehicle to stop before the end of
+			the lane. */
+			std::shared_ptr<NearbyVehicle> virtual_vehicle =
+				std::shared_ptr<NearbyVehicle>(new
+					NearbyVehicle(1, RelativeLane::same, 1));
+			virtual_vehicle->set_relative_velocity(
+				ego_vehicle.get_velocity());
+			virtual_vehicle->set_distance(
+				ego_vehicle.get_lane_end_distance());
+			virtual_vehicle->set_length(0.0);
+			double desired_acceleration_end_of_lane =
+				end_of_lane_controller.compute_desired_acceleration(
+					ego_vehicle, virtual_vehicle,
+					ego_parameters.desired_velocity);
+			possible_accelerations[
+				ActiveLongitudinalController::end_of_lane] =
+				desired_acceleration_end_of_lane;
+		}
+
+
+		/* Control to generate a gap for a vehicle that wants to
+		move into the ego vehicle lane (cooperative control) */
+		if (ego_vehicle.is_cooperating_to_generate_gap()) {
+			if (verbose) {
+				std::clog << "Gap generating controller"
+					<< std::endl;
+			}
+			std::shared_ptr<NearbyVehicle> assited_vehicle =
+				ego_vehicle.get_assisted_vehicle();
+			double ego_velocity = ego_vehicle.get_velocity();
+			double reference_velocity =
+				assited_vehicle->compute_velocity(ego_velocity) * 0.8;
+
+			/* If the ego vehicle is braking hard due to conditions on
+			the current lane, the gap generating controller, which
+			uses comfortable constraints, must be updated. */
+			if ((active_longitudinal_controller
+				!= ActiveLongitudinalController::cooperative_gap_generation)
+				&& gap_generating_controller.is_outdated(ego_velocity)) {
+				gap_generating_controller.reset_desired_velocity_filter(
+					ego_velocity);
+			}
+
+			double desired_acceleration_gap_generation =
+				gap_generating_controller.compute_desired_acceleration(
+					ego_vehicle, assited_vehicle, reference_velocity);
+			possible_accelerations[
+				ActiveLongitudinalController::cooperative_gap_generation] =
+				desired_acceleration_gap_generation;
+		}
+
+		/* Define the actual input */
+		desired_acceleration = 1000; // any high value
+		for (const auto& it : possible_accelerations) {
+			if (it.second < desired_acceleration) {
+				desired_acceleration = it.second;
+				active_longitudinal_controller = it.first;
+			}
+		}
 	}
-	else { // ACC
-		desired_acceleration = desired_acceleration_origin_lane;
-		active_longitudinal_controller = 
-			ActiveLongitudinalController::origin_lane;
+
+	if (verbose) {
+		std::clog << "\t->Chosen: "
+			<< active_longitudinal_controller_to_string(
+				active_longitudinal_controller)
+			<< ": " << desired_acceleration
+			<< std::endl;
 	}
 	
 	return desired_acceleration;
@@ -422,6 +476,8 @@ std::string ControlManager::active_longitudinal_controller_to_string(
 		return "origin lane controller";
 	case ActiveLongitudinalController::destination_lane:
 		return "destination lane controller";
+	case ActiveLongitudinalController::cooperative_gap_generation:
+		return "gap generation controller";
 	case ActiveLongitudinalController::end_of_lane:
 		return "end-of-lane controller";
 	case ActiveLongitudinalController::vissim:

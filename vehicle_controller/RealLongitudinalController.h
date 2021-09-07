@@ -8,15 +8,22 @@
 
 #pragma once
 #include "LongitudinalController.h"
-class OriginLaneLongitudinalController :
+
+/* Longitudinal controller to follow "real" leaders, that is, vehicles
+on the same lane as the ego vehicle. */
+class RealLongitudinalController :
     public LongitudinalController
 {
 
 public:
-    OriginLaneLongitudinalController();
-    OriginLaneLongitudinalController(const VehicleParameters& ego_parameters,
+    RealLongitudinalController();
+    RealLongitudinalController(const VehicleParameters& ego_parameters,
+        VelocityControllerGains velocity_controller_gains,
+        AutonomousGains autonomous_gains, ConnectedGains connected_gains,
         bool verbose);
-    OriginLaneLongitudinalController(const VehicleParameters& ego_parameters);
+    RealLongitudinalController(const VehicleParameters& ego_parameters,
+        VelocityControllerGains velocity_controller_gains,
+        AutonomousGains autonomous_gains, ConnectedGains connected_gains);
     /* Constructor that allows changing the vehicle following
     gains. Useful to differentiate the actual origin lane 
     controller and the end of lane controller */

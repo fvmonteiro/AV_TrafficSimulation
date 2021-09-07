@@ -77,32 +77,24 @@ bool NearbyVehicle::is_cutting_in() const {
 	return false;
 }
 
-bool NearbyVehicle::requesting_to_move_in() const{
-	if (is_connected() && is_ahead() 
+bool NearbyVehicle::requesting_to_move_in() const {
+	if (is_connected() && (relative_position == 1)
 		&& (has_lane_change_intention())
 		&& (relative_lane 
-			== get_opposite_relative_lane(lane_change_direction))) {
+			== get_opposite_relative_lane(desired_lane_change_direction))) {
 		return true;
 	}
 	return false;
 }
 
 void NearbyVehicle::compute_safe_gap_parameters() {
-	//double aE{ 0.5 }; // [m/s^2]
-	//double jE = max_jerk;
-	//double tau_d = brake_delay; // [s]
-	//double bE = get_max_brake();
-	//double tau_j = (aE + bE) / jE;
-	//lambda_0 = -(aE + bE)
-	//	* (std::pow(tau_d, 2) + tau_d * tau_j + std::pow(tau_j, 2) / 3);
-	//lambda_1 = (aE + bE) * (tau_d + tau_j / 2);
 	lambda_0 = compute_lambda_0(max_jerk, comfortable_acceleration, 
 		max_brake, brake_delay);
 	lambda_1 = compute_lambda_1(max_jerk, comfortable_acceleration,
 		max_brake, brake_delay);
 }
 
-std::string NearbyVehicle::print_members() const {
+std::string NearbyVehicle::to_string() const {
 	std::ostringstream oss;
 
 	std::vector<Member> printed_members = {

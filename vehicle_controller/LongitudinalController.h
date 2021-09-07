@@ -61,6 +61,8 @@ public:
 
 	LongitudinalController() = default;
 	LongitudinalController(const VehicleParameters& ego_parameters,
+		VelocityControllerGains velocity_controller_gains,
+		AutonomousGains autonomous_gains, ConnectedGains connected_gains,
 		double max_brake, double filter_brake_limit, bool verbose);
 	/*LongitudinalController(const Vehicle& ego_vehicle,
 		bool is_used_for_lane_change, bool verbose);
@@ -73,9 +75,9 @@ public:
 	void set_connexion(bool is_conneced) {
 		this->is_connected = is_conneced;
 	}
-	void set_vehicle_following_gains(AutonomousGains gains);
+	/*void set_vehicle_following_gains(AutonomousGains gains);
 	void set_vehicle_following_gains(ConnectedGains gains);
-	void set_velocity_controller_gains(VelocityControllerGains gains);
+	void set_velocity_controller_gains(VelocityControllerGains gains);*/
 
 	double compute_time_headway_gap(double time_headway, double velocity);
 	/* Computes the time headway value with zero accepted risk and assigns
@@ -159,7 +161,6 @@ protected:
 	//double ego_reference_velocity{ 0.0 }; // for the velocity controller [m/s]
 	/* Parameters related to the emergency braking scenario */
 	double ego_max_brake{ 0.0 }; // absolute value [m/s^2]
-	//double leader_max_brake{ 0.0 }; // absolute value [m/s^2]
 	double free_flow_velocity{ 0.0 }; // to compute time headway [m/s]
 	double rho{ 0.15 }; // proportional maximum expected relative speed
 	/* Desired gap parameters */

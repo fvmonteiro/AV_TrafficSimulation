@@ -8,16 +8,26 @@
 
 #pragma once
 #include "LongitudinalController.h"
-class DestinationLaneLongitudinalController :
+
+/* Longitudinal controller to follow a virtual leader, that is,
+a vehicle on a different lane. This controller is not as aggressive as the
+RealLongitudinalController, since it is not safety critical, and it
+is deactivated if there is no virtual leader. */
+class VirtualLongitudinalController :
     public LongitudinalController
 {
 public:
 
-    DestinationLaneLongitudinalController();
-    DestinationLaneLongitudinalController(
-        const VehicleParameters& ego_parameters, bool verbose);
-    DestinationLaneLongitudinalController(
-        const VehicleParameters& ego_parameters);
+    VirtualLongitudinalController();
+    VirtualLongitudinalController(
+        const VehicleParameters& ego_parameters, double max_brake,
+        VelocityControllerGains velocity_controller_gains,
+        AutonomousGains autonomous_gains, ConnectedGains connected_gains, 
+        bool verbose);
+    VirtualLongitudinalController(
+        const VehicleParameters& ego_parameters, double max_brake,
+        VelocityControllerGains velocity_controller_gains,
+        AutonomousGains autonomous_gains, ConnectedGains connected_gains);
 
     double get_follower_time_headway() {
         return destination_lane_follower_time_headway;

@@ -6,27 +6,32 @@
 /* Version of 2021-xx-xx                             Fernando V. Monteiro   */
 /*==========================================================================*/
 
-#include "OriginLaneLongitudinalController.h"
+#include "RealLongitudinalController.h"
 #include "EgoVehicle.h"
 
-OriginLaneLongitudinalController::OriginLaneLongitudinalController()
+RealLongitudinalController::RealLongitudinalController()
 	: LongitudinalController() {}
 
-OriginLaneLongitudinalController::OriginLaneLongitudinalController(
-	const VehicleParameters& ego_parameters, bool verbose)
-	: LongitudinalController(ego_parameters, 
-		ego_parameters.max_brake,
-		ego_parameters.max_brake, verbose) {
+RealLongitudinalController::RealLongitudinalController(
+	const VehicleParameters& ego_parameters,
+	VelocityControllerGains velocity_controller_gains,
+	AutonomousGains autonomous_gains, ConnectedGains connected_gains, 
+	bool verbose)
+	: LongitudinalController(ego_parameters, velocity_controller_gains,
+		autonomous_gains, connected_gains,
+		ego_parameters.max_brake, ego_parameters.max_brake, verbose) {
 	
 	if (verbose) {
-		std::clog << "Created origin lane longitudinal controller"
-			<< std::endl;
+		std::clog << "Created real longitudinal controller" << std::endl;
 	}
 }
 
-OriginLaneLongitudinalController::OriginLaneLongitudinalController(
-	const VehicleParameters& ego_parameters)
-	: OriginLaneLongitudinalController(ego_parameters, false) {
+RealLongitudinalController::RealLongitudinalController(
+	const VehicleParameters& ego_parameters,
+	VelocityControllerGains velocity_controller_gains,
+	AutonomousGains autonomous_gains, ConnectedGains connected_gains)
+	: RealLongitudinalController(ego_parameters, velocity_controller_gains,
+		autonomous_gains, connected_gains, false) {
 }
 
 //OriginLaneLongitudinalController::OriginLaneLongitudinalController(
@@ -36,7 +41,7 @@ OriginLaneLongitudinalController::OriginLaneLongitudinalController(
 //}
 
 
-void OriginLaneLongitudinalController::determine_controller_state(
+void RealLongitudinalController::determine_controller_state(
 	const EgoVehicle& ego_vehicle,
 	const std::shared_ptr<NearbyVehicle> leader,
 	double reference_velocity) {

@@ -11,9 +11,14 @@
 #include "EgoVehicle.h"
 
 LongitudinalController::LongitudinalController(
-	const VehicleParameters& ego_parameters, double max_brake, 
-	double filter_brake_limit, bool verbose)
+	const VehicleParameters& ego_parameters,
+	VelocityControllerGains velocity_controller_gains,
+	AutonomousGains autonomous_gains, ConnectedGains connected_gains,
+	double max_brake, double filter_brake_limit, bool verbose)
 	: simulation_time_step{ ego_parameters.sampling_interval },
+	velocity_controller_gains{ velocity_controller_gains },
+	autonomous_gains{ autonomous_gains },
+	connected_gains{ connected_gains },
 	ego_max_brake{ max_brake },
 	free_flow_velocity{ ego_parameters.desired_velocity },
 	verbose{ verbose } {
@@ -29,24 +34,26 @@ LongitudinalController::LongitudinalController(
 		std::clog << "Created base longitudinal controller with "
 			<< "max brake=" << ego_max_brake
 			<< ", free flow velocity=" << free_flow_velocity
+			<< ", autonomous kg=" << this->autonomous_gains.kg
+			<< ", connected kg=" << this->connected_gains.kg
 			<< std::endl;
 	}
 }
 
-void LongitudinalController::set_vehicle_following_gains(
-	AutonomousGains gains) {
-	this->autonomous_gains = gains;
-}
-
-void LongitudinalController::set_vehicle_following_gains(
-	ConnectedGains gains) {
-	this->connected_gains = gains;
-}
-
-void LongitudinalController::set_velocity_controller_gains(
-	VelocityControllerGains gains) {
-	this->velocity_controller_gains = gains;
-}
+//void LongitudinalController::set_vehicle_following_gains(
+//	AutonomousGains gains) {
+//	this->autonomous_gains = gains;
+//}
+//
+//void LongitudinalController::set_vehicle_following_gains(
+//	ConnectedGains gains) {
+//	this->connected_gains = gains;
+//}
+//
+//void LongitudinalController::set_velocity_controller_gains(
+//	VelocityControllerGains gains) {
+//	this->velocity_controller_gains = gains;
+//}
 
 double LongitudinalController::compute_time_headway_gap(double time_headway,
 	double velocity) {
@@ -215,6 +222,7 @@ double LongitudinalController::compute_velocity_control_input(
 			<< ", filtered=" << filtered_velocity_reference
 			<< ", vel=" << ego_velocity
 			<< ", ev=" << velocity_error
+			<< ", ea=" << acceleration_error
 			<< std::endl;
 	}
 
@@ -260,9 +268,29 @@ double LongitudinalController::compute_desired_acceleration(
 	case State::velocity_control:
 	{
 		if (old_state != State::velocity_control) {
-			desired_velocity_filter.reset(ego_vehicle.get_velocity());
+			double ego_velocity = ego_vehicle.get_velocity();
+			/* The smooth velocity leads the vel. controller to output a 
+			desired acceleration close to the previous step desired
+			acceleration. */
+			double smooth_velocity = (ego_vehicle.get_desired_acceleration()
+				- velocity_controller_gains.kd * ego_vehicle.get_acceleration())
+				/ velocity_controller_gains.kp + ego_velocity;
+			/* We use the smooth velocity only when that helps the vehicle
+			achieve the velocity reference faster. This happens either when
+			the ego vel is lesser than both reference and smooth vel or when
+			the ego vel is greater than both reference and smooth vel. */
+			double reset_velocity;
+			if ((ego_velocity < velocity_reference) 
+				 == (ego_velocity < smooth_velocity)) {
+				reset_velocity = smooth_velocity;
+			}
+			else {
+				reset_velocity = ego_velocity;
+			}
+			desired_velocity_filter.reset(reset_velocity);
 			reset_velocity_error_integrator();
 		}
+
 		desired_acceleration = compute_velocity_control_input(ego_vehicle,
 			velocity_reference);
 		break;

@@ -79,7 +79,7 @@ public:
 	void copy_current_states(NearbyVehicle& nearby_vehicle);*/
 	void compute_safe_gap_parameters();
 
-	std::string print_members() const;
+	std::string to_string() const;
 	friend std::ostream& operator<< (std::ostream& out, const NearbyVehicle& vehicle);
 
 private:

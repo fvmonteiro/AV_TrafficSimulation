@@ -244,7 +244,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="ControlManager.cpp" />
-    <ClCompile Include="DestinationLaneLongitudinalController.cpp" />
+    <ClCompile Include="VirtualLongitudinalController.cpp" />
     <ClCompile Include="LateralController.cpp" />
     <ClCompile Include="LoggedVehicle.cpp" />
     <ClCompile Include="LongitudinalController.cpp" />
@@ -261,7 +261,7 @@
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;DRIVERMODEL_EXPORTS</PreprocessorDefinitions>
     </ClCompile>
     <ClCompile Include="NearbyVehicle.cpp" />
-    <ClCompile Include="OriginLaneLongitudinalController.cpp" />
+    <ClCompile Include="RealLongitudinalController.cpp" />
     <ClCompile Include="SimulationLogger.cpp" />
     <ClCompile Include="SSMManager.cpp" />
     <ClCompile Include="EgoVehicle.cpp" />
@@ -272,14 +272,14 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ControlManager.h" />
-    <ClInclude Include="DestinationLaneLongitudinalController.h" />
+    <ClInclude Include="VirtualLongitudinalController.h" />
     <ClInclude Include="LateralController.h" />
     <ClInclude Include="LoggedVehicle.h" />
     <ClInclude Include="LongitudinalController.h" />
     <ClInclude Include="DriverModel.h" />
     <ClInclude Include="Constants.h" />
     <ClInclude Include="NearbyVehicle.h" />
-    <ClInclude Include="OriginLaneLongitudinalController.h" />
+    <ClInclude Include="RealLongitudinalController.h" />
     <ClInclude Include="SimulationLogger.h" />
     <ClInclude Include="SSMManager.h" />
     <ClInclude Include="EgoVehicle.h" />
