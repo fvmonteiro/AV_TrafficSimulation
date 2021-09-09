@@ -16,8 +16,8 @@
 //}
 
 VelocityFilter::VelocityFilter(double max_acceleration, 
-	double min_acceleration, double time_step, bool verbose) 
-	: max_acceleration{ max_acceleration },
+	double min_acceleration, double time_step, bool verbose) :
+	max_acceleration{ max_acceleration },
 	min_acceleration{ -std::abs(min_acceleration) }, /* minimum
 	acceleration (maximum braking) is sometimes given in absolute value,
 	so we have to make sure to get a negative value here*/

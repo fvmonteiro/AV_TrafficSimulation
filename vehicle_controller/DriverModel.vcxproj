@@ -244,6 +244,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="ControlManager.cpp" />
+    <ClCompile Include="RelativeLane.cpp" />
     <ClCompile Include="VirtualLongitudinalController.cpp" />
     <ClCompile Include="LateralController.cpp" />
     <ClCompile Include="LoggedVehicle.cpp" />
@@ -272,6 +273,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ControlManager.h" />
+    <ClInclude Include="RelativeLane.h" />
     <ClInclude Include="VirtualLongitudinalController.h" />
     <ClInclude Include="LateralController.h" />
     <ClInclude Include="LoggedVehicle.h" />

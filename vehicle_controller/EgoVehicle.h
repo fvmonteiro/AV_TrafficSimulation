@@ -56,13 +56,10 @@ public:
 		return adjustment_speed_factor;
 	};*/
 	double get_desired_lane_angle() const { return desired_lane_angle; };
-	long get_rel_target_lane() const { 
-		return static_cast<long>(rel_target_lane);
+	RelativeLane get_rel_target_lane() const { 
+		return relative_target_lane;
 	};
 	long get_turning_indicator() const { return turning_indicator; };
-	long get_desired_lane_change_direction() const {
-		return static_cast<int>(desired_lane_change_direction);
-	};
 	/* If the ego vehicle is not connected, returns lambda_1 */
 	double get_lambda_1_connected() const {
 		return is_connected() ? lambda_1_connected : lambda_1;
@@ -71,7 +68,7 @@ public:
 	void EgoVehicle::set_desired_velocity(double desired_velocity) {
 		this->desired_velocity = desired_velocity;
 	};
-	void set_color(long color) { this->color = color; };
+	//void set_color(long color) { this->color = color; };
 	void set_use_internal_lane_change_decision(long use) {
 		this->use_internal_lane_change_decision = use > 0;
 	};
@@ -91,12 +88,12 @@ public:
 	long get_lane() const;
 	long get_link() const;
 	double get_lateral_position() const;
-	long get_preferred_relative_lane() const;
+	RelativeLane get_preferred_relative_lane() const;
 	double get_velocity() const;
 	double get_acceleration() const;
 	double get_desired_acceleration() const;
 	double get_vissim_acceleration() const;
-	long get_active_lane_change_direction() const;
+	RelativeLane get_active_lane_change_direction() const;
 	long get_vissim_active_lane_change() const;
 	double get_lane_end_distance() const;
 	long get_leader_id() const;
@@ -226,8 +223,7 @@ public:
 	double compute_safe_gap_to_destination_lane_follower();*/
 	/* Calls the controller to decide whether the vehicle can start a 
 	lane change. Returns -1 for right lane changes, +1 for left lane 
-	changes and 0 for lane keeping. 
-	TODO: return member of enum class relative_lane*/
+	changes and 0 for lane keeping. */
 	long decide_lane_change_direction();
 	std::string state_to_string(State vehicle_state);
 
@@ -244,12 +240,6 @@ public:
 	and other. */
 	double compute_transient_gap(
 		std::shared_ptr<NearbyVehicle> other_vehicle);
-	/* Returns the vehicle following gap from the
-	destination lane follower to the ego vehicle. */
-	//double compute_time_headway_gap_to_destination_lane_follower();
-	/* Returns the transiend gap from the destination lane
-	follower to the ego vehicle. */
-	//double compute_transient_gap_to_destination_lane_follower();
 
 
 	/* Methods for logging */
@@ -268,8 +258,7 @@ private:
 	double tau{ ACTUATOR_CONSTANT }; // actuator constant [s].
 	/* constant used in the discrete approximation of
 	the vehicle first order actuator dynamics */
-	double tau_d{ 0.0 }; 
-	//double lane_change_max_brake{ CAR_MAX_BRAKE / 2 }; // [m/s^2]
+	double tau_d{ 0.0 };
 	double comfortable_brake{ COMFORTABLE_BRAKE }; // [m/s^2]
 
 	/* Parameter related to emergency braking during lane change [m/s] */
@@ -331,7 +320,7 @@ private:
 	double desired_velocity{ 0 };
 	std::vector<long> lane;
 	std::vector<long> link;
-	std::vector<long> preferred_relative_lane;
+	std::vector<RelativeLane> preferred_relative_lane;
 	/* distance of the front end from the middle of the lane [m]
 	(positive = left of the middle, negative = right) */
 	std::vector<double> lateral_position;
@@ -341,7 +330,7 @@ private:
 	/* VISSIM suggested acceleration */
 	std::vector<double> vissim_acceleration;
 	/* +1 = to the left, 0 = none, -1 = to the right */
-	std::vector<long> active_lane_change_direction;
+	std::vector<RelativeLane> active_lane_change_direction;
 	/* VISSIM suggested active lane change */
 	std::vector<long> vissim_active_lane_change;
 	/* Determines if we use our lane change decision model or VISSIM's */
@@ -351,7 +340,7 @@ private:
 	std::vector<double> lane_end_distance;
 	std::vector<State> state;
 	double desired_lane_angle{ 0.0 };
-	long rel_target_lane{ 0 };
+	RelativeLane relative_target_lane{ RelativeLane::same };
 	long turning_indicator{ 0 };
 
 	/*Surrogate Safety Measurements (SSMs)*/
@@ -367,7 +356,7 @@ private:
 	/* TODO: state and desired_lane_change_direction members
 	can become a single member. They are redundant. */
 	
-	void set_desired_lane_change_direction(/*long preferred_relative_lane*/);
+	void set_desired_lane_change_direction();
 
 	/* For printing and debugging purporses */
 	bool verbose = false; /* when true, will print results to 

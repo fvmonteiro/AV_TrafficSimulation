@@ -14,8 +14,8 @@ LongitudinalController::LongitudinalController(
 	const VehicleParameters& ego_parameters,
 	VelocityControllerGains velocity_controller_gains,
 	AutonomousGains autonomous_gains, ConnectedGains connected_gains,
-	double max_brake, double filter_brake_limit, bool verbose)
-	: simulation_time_step{ ego_parameters.sampling_interval },
+	double max_brake, double filter_brake_limit, bool verbose) :
+	simulation_time_step{ ego_parameters.sampling_interval },
 	velocity_controller_gains{ velocity_controller_gains },
 	autonomous_gains{ autonomous_gains },
 	connected_gains{ connected_gains },

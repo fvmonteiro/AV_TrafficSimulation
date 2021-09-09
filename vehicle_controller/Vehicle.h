@@ -2,7 +2,8 @@
 
 #include <vector>
 
-#include"Constants.h"
+#include "Constants.h"
+#include "RelativeLane.h"
 
 class Vehicle
 {
@@ -15,7 +16,10 @@ public:
 	double get_length() const { return length; };
 	double get_width() const { return width; };
 	VehicleCategory get_category() const { return category; };
-	VehicleType get_type() const { return type; }
+	VehicleType get_type() const { return type; };
+	RelativeLane get_desired_lane_change_direction() const {
+		return desired_lane_change_direction;
+	};
 
 	void set_length(double length) { this->length = length; };
 	void set_width(double width) { this->width = width; };
@@ -38,8 +42,8 @@ public:
 	- same->same
 	TODO: This method should be moved into some RelativeLane struct
 	or class (to be created) */
-	RelativeLane get_opposite_relative_lane(
-		const RelativeLane& relative_lane) const;
+	/*RelativeLane get_opposite_relative_lane(
+		const RelativeLane& relative_lane) const;*/
 
 protected:
 	/* The variables below are a way of describing the emergency braking, 

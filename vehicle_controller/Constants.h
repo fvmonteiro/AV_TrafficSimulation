@@ -40,13 +40,13 @@ const double CONNECTED_BRAKE_DELAY{ 0.1 }; // [s]
 const double AUTONOMOUS_BRAKE_DELAY{ 0.2 }; // [s]
 const double HUMAN_BRAKE_DELAY{ 0.75 }; // [s]
 
-enum class RelativeLane {
-	right_right = -2, // second to the right
-	right, // next to the right
-	same,
-	left, // next to the left
-	left_left, // second to the left
-};
+//enum class RelativeLane {
+//	right_right = -2, // second to the right
+//	right, // next to the right
+//	same,
+//	left, // next to the left
+//	left_left, // second to the left
+//};
 
 /* Categories set by VISSIM */
 enum class VehicleCategory {

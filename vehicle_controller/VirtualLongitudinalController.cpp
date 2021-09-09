@@ -10,15 +10,15 @@
 #include "VirtualLongitudinalController.h"
 #include "EgoVehicle.h"
 
-VirtualLongitudinalController::VirtualLongitudinalController()
-	: LongitudinalController() {}
+VirtualLongitudinalController::VirtualLongitudinalController() :
+	LongitudinalController() {}
 
 VirtualLongitudinalController::VirtualLongitudinalController(
 	const VehicleParameters& ego_parameters, double max_brake,
 	VelocityControllerGains velocity_controller_gains,
 	AutonomousGains autonomous_gains, ConnectedGains connected_gains, 
-	bool verbose)
-	: LongitudinalController(ego_parameters, velocity_controller_gains,
+	bool verbose) :
+	LongitudinalController(ego_parameters, velocity_controller_gains,
 		autonomous_gains, connected_gains,
 		max_brake,
 		ego_parameters.comfortable_brake, verbose) {
@@ -31,8 +31,8 @@ VirtualLongitudinalController::VirtualLongitudinalController(
 VirtualLongitudinalController::VirtualLongitudinalController(
 	const VehicleParameters& ego_parameters, double max_brake,
 	VelocityControllerGains velocity_controller_gains,
-	AutonomousGains autonomous_gains, ConnectedGains connected_gains)
-	: VirtualLongitudinalController(ego_parameters, max_brake,
+	AutonomousGains autonomous_gains, ConnectedGains connected_gains) :
+	VirtualLongitudinalController(ego_parameters, max_brake,
 		velocity_controller_gains, autonomous_gains, connected_gains, 
 		false) {}
 

@@ -9,15 +9,15 @@
 #include "RealLongitudinalController.h"
 #include "EgoVehicle.h"
 
-RealLongitudinalController::RealLongitudinalController()
-	: LongitudinalController() {}
+RealLongitudinalController::RealLongitudinalController() :
+	LongitudinalController() {}
 
 RealLongitudinalController::RealLongitudinalController(
 	const VehicleParameters& ego_parameters,
 	VelocityControllerGains velocity_controller_gains,
 	AutonomousGains autonomous_gains, ConnectedGains connected_gains, 
-	bool verbose)
-	: LongitudinalController(ego_parameters, velocity_controller_gains,
+	bool verbose) :
+	LongitudinalController(ego_parameters, velocity_controller_gains,
 		autonomous_gains, connected_gains,
 		ego_parameters.max_brake, ego_parameters.max_brake, verbose) {
 	
@@ -29,8 +29,8 @@ RealLongitudinalController::RealLongitudinalController(
 RealLongitudinalController::RealLongitudinalController(
 	const VehicleParameters& ego_parameters,
 	VelocityControllerGains velocity_controller_gains,
-	AutonomousGains autonomous_gains, ConnectedGains connected_gains)
-	: RealLongitudinalController(ego_parameters, velocity_controller_gains,
+	AutonomousGains autonomous_gains, ConnectedGains connected_gains) :
+	RealLongitudinalController(ego_parameters, velocity_controller_gains,
 		autonomous_gains, connected_gains, false) {
 }
 

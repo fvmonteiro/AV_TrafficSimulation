@@ -34,8 +34,9 @@ EgoVehicle::EgoVehicle(long id, double simulation_time_step,
 	because vehicle parameters depend on the category and type. */
 }
 
-EgoVehicle::EgoVehicle(long id, double simulation_time_step, double creation_time)
-	: EgoVehicle(id, simulation_time_step, creation_time, false) {}
+EgoVehicle::EgoVehicle(long id, double simulation_time_step, 
+	double creation_time) :
+	EgoVehicle(id, simulation_time_step, creation_time, false) {}
 
 EgoVehicle::~EgoVehicle() {
 	std::vector<Member> members{
@@ -76,7 +77,7 @@ long EgoVehicle::get_link() const {
 double EgoVehicle::get_lateral_position() const {
 	return lateral_position.back();
 }
-long EgoVehicle::get_preferred_relative_lane() const {
+RelativeLane EgoVehicle::get_preferred_relative_lane() const {
 	return preferred_relative_lane.back();
 }
 double EgoVehicle::get_velocity() const {
@@ -95,7 +96,7 @@ double EgoVehicle::get_desired_acceleration() const {
 double EgoVehicle::get_vissim_acceleration() const {
 	return vissim_acceleration.back();
 }
-long EgoVehicle::get_active_lane_change_direction() const {
+RelativeLane EgoVehicle::get_active_lane_change_direction() const {
 	return active_lane_change_direction.back();
 }
 long EgoVehicle::get_vissim_active_lane_change() const {
@@ -156,7 +157,8 @@ void EgoVehicle::set_vissim_acceleration(double vissim_acceleration) {
 	this->vissim_acceleration.push_back(vissim_acceleration);
 }
 void EgoVehicle::set_active_lane_change_direction(long direction) {
-	this->active_lane_change_direction.push_back(direction);
+	this->active_lane_change_direction.push_back(
+		RelativeLane::from_long(direction));
 }
 void EgoVehicle::set_vissim_active_lane_change(int active_lane_change) {
 	this->vissim_active_lane_change.push_back(active_lane_change);
@@ -237,12 +239,14 @@ void EgoVehicle::set_type(long type) {
 }
 
 void EgoVehicle::set_preferred_relative_lane(long preferred_relative_lane) {
-	this->preferred_relative_lane.push_back(preferred_relative_lane);
+	this->preferred_relative_lane.push_back(
+		RelativeLane::from_long(preferred_relative_lane));
 	//set_desired_lane_change_direction(preferred_relative_lane);	
 }
 
 void EgoVehicle::set_rel_target_lane(long target_relative_lane) {
-	this->rel_target_lane = target_relative_lane;
+	this->relative_target_lane = 
+		RelativeLane::from_long(target_relative_lane);
 	//set_desired_lane_change_direction(target_relative_lane);
 }
 
@@ -540,7 +544,7 @@ void EgoVehicle::update_state(/*long preferred_relative_lane*/) {
 }
 
 bool EgoVehicle::is_lane_changing() const {
-	return get_active_lane_change_direction() != 0;
+	return get_active_lane_change_direction() != RelativeLane::same;
 }
 
 //EgoVehicle::State EgoVehicle::get_previous_state() const {
@@ -731,7 +735,7 @@ long EgoVehicle::decide_lane_change_direction() {
 				&& no_conflict) {
 				// will start lane change
 				lane_change_direction = 
-					static_cast<int>(desired_lane_change_direction);
+					desired_lane_change_direction.to_int();
 			}
 			else {
 				//controller.update_headways_with_risk(*this);
@@ -746,7 +750,7 @@ long EgoVehicle::decide_lane_change_direction() {
 	}
 
 	//this->active_lane_change_direction.push_back(temp_result);
-	return static_cast<int>(lane_change_direction);
+	return lane_change_direction;
 }
 
 bool EgoVehicle::has_lane_change_conflict() const {
@@ -758,15 +762,12 @@ bool EgoVehicle::has_lane_change_conflict() const {
 		return false;
 	}
 
-	RelativeLane opposite_direction =
-		get_opposite_relative_lane(desired_lane_change_direction);
-
 	for (int i = 0; i < nearby_vehicles.size();  i++) {
 		NearbyVehicle& nv = *nearby_vehicles[i];
 
 		if (nv.is_lane_changing()) {
-			RelativeLane nv_lane = nv.get_relative_lane();
-			RelativeLane nv_lc_direction = nv.get_lane_change_direction();
+			RelativeLane& nv_lane = nv.get_relative_lane();
+			RelativeLane& nv_lc_direction = nv.get_lane_change_direction();
 
 			// Vehicles on the same lane
 			if (nv_lane == RelativeLane::same) {
@@ -775,10 +776,10 @@ bool EgoVehicle::has_lane_change_conflict() const {
 			}
 			// Vehicles on other lanes
 			else {
-				bool nv_moving_towards_ego = (static_cast<int>(nv_lane) 
-					* static_cast<int>(nv_lc_direction)) < 0;
-				bool ego_moving_towards_nv = (static_cast<int>(nv_lane)
-					* static_cast<int>(desired_lane_change_direction)) > 0;
+				bool nv_moving_towards_ego = 
+					!nv_lane.on_same_side(nv_lc_direction);
+				bool ego_moving_towards_nv = 
+					nv_lane.on_same_side(desired_lane_change_direction);
 
 				if (nv_moving_towards_ego && ego_moving_towards_nv) 
 					return true;
@@ -977,19 +978,18 @@ void EgoVehicle::set_desired_lane_change_direction(
 	/* Both preferred_relative_lane and rel_target_lane indicate
 	desire to change lanes. The former indicates preference due to 
 	routing, so it takes precedence over the latter. */
-	long pref_rel_lane = get_preferred_relative_lane();
-	long target_rel_lane = get_rel_target_lane();
+	RelativeLane& pref_rel_lane = get_preferred_relative_lane();
 
-	if (pref_rel_lane > 0) {
+	if (pref_rel_lane.is_to_the_left()) {
 		desired_lane_change_direction = RelativeLane::left;
 	}
-	else if (pref_rel_lane < 0) {
+	else if (pref_rel_lane.is_to_the_right()) {
 		desired_lane_change_direction = RelativeLane::right;
 	}
-	else if (target_rel_lane > 0) {
+	else if (relative_target_lane.is_to_the_left()) {
 		desired_lane_change_direction = RelativeLane::left;
 	}
-	else if (target_rel_lane < 0) {
+	else if (relative_target_lane.is_to_the_right()) {
 		desired_lane_change_direction = RelativeLane::right;
 	}
 	else {
@@ -1115,7 +1115,7 @@ std::string EgoVehicle::write_members(
 				oss << link[i];
 				break;
 			case Member::preferred_relative_lane:
-				oss << preferred_relative_lane[i];
+				oss << preferred_relative_lane[i].to_string();
 				break;
 			case Member::velocity:
 				oss << velocity[i];
@@ -1136,7 +1136,7 @@ std::string EgoVehicle::write_members(
 				oss << state_to_string(state[i]);
 				break;
 			case Member::active_lane_change_direction:
-				oss << static_cast<int>(active_lane_change_direction[i]);
+				oss << active_lane_change_direction[i].to_string();
 				break;
 			case Member::vissim_active_lane_change_direction:
 				oss << vissim_active_lane_change[i];

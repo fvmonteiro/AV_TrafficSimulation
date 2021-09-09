@@ -6,16 +6,16 @@
 #include "Constants.h"
 #include "NearbyVehicle.h"
 
-NearbyVehicle::NearbyVehicle(long id, 
-	RelativeLane relative_lane, long relative_position) 
-	: relative_lane{ relative_lane },
+NearbyVehicle::NearbyVehicle(long id, RelativeLane relative_lane,
+	long relative_position) :
+	relative_lane{ relative_lane },
 	relative_position{ relative_position } {
 	this->id = id;
 }
 
 NearbyVehicle::NearbyVehicle(long id, long relative_lane,
-	long relative_position)
-	: NearbyVehicle(id, RelativeLane(relative_lane),
+	long relative_position) :
+	NearbyVehicle(id, RelativeLane::from_long(relative_lane),
 		relative_position) {}
 
 void NearbyVehicle::set_type(VehicleType type) {
@@ -69,9 +69,9 @@ bool NearbyVehicle::is_cutting_in() const {
 		lane center) and the lane change direction have the same sign. */
 		bool moving_into_my_lane =
 			(relative_lane
-				== get_opposite_relative_lane(lane_change_direction))
+				== lane_change_direction.get_opposite())
 			&& ((get_lateral_position()
-				* static_cast<int>(lane_change_direction)) > 0);
+				* lane_change_direction.to_int()) > 0);
 		if (moving_into_my_lane) return true;
 	}
 	return false;
@@ -81,7 +81,7 @@ bool NearbyVehicle::requesting_to_move_in() const {
 	if (is_connected() && (relative_position == 1)
 		&& (has_lane_change_intention())
 		&& (relative_lane 
-			== get_opposite_relative_lane(desired_lane_change_direction))) {
+			== desired_lane_change_direction.get_opposite())) {
 		return true;
 	}
 	return false;
@@ -122,7 +122,7 @@ std::string NearbyVehicle::to_string() const {
 			oss << static_cast<int>(type);
 			break;
 		case Member::relative_lane:
-			oss << static_cast<int>(relative_lane);
+			oss << relative_lane.to_string();
 			break;
 		case Member::relative_position:
 			oss << relative_position;
@@ -140,7 +140,7 @@ std::string NearbyVehicle::to_string() const {
 			oss << acceleration;
 			break;
 		case Member::lane_change_direction:
-			oss << static_cast<int>(lane_change_direction);
+			oss << lane_change_direction.to_string();
 			break;
 		default:
 			oss << "unknown class member";
@@ -158,7 +158,7 @@ std::ostream& operator<<(std::ostream& out, const NearbyVehicle& vehicle)
 	std::vector<std::pair<std::string, long>> printed_long_members{ 
 		{"id", vehicle.get_id()}, 
 		{"category", static_cast<int>(vehicle.get_category())},
-		{"rel. lane", static_cast<int>(vehicle.get_relative_lane())},
+		{"rel. lane", vehicle.get_relative_lane().to_int()},
 		{"rel. position", vehicle.get_relative_position()} 
 	};
 	std::vector<std::pair<std::string, double>> printed_double_members{

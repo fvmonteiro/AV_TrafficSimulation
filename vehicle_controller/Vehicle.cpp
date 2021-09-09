@@ -34,25 +34,25 @@ bool Vehicle::has_lane_change_intention() const {
 	return desired_lane_change_direction != RelativeLane::same;
 }
 
-RelativeLane Vehicle::get_opposite_relative_lane(
-	const RelativeLane& relative_lane) const {
-	switch (relative_lane)
-	{
-	case RelativeLane::right_right:
-		return RelativeLane::left_left;
-	case RelativeLane::right:
-		return RelativeLane::left;
-	case RelativeLane::same:
-		return RelativeLane::same;
-	case RelativeLane::left:
-		return RelativeLane::right;
-	case RelativeLane::left_left:
-		return RelativeLane::right_right;
-	default:
-		break;
-	}
-	return RelativeLane::same;
-}
+//RelativeLane Vehicle::get_opposite_relative_lane(
+//	const RelativeLane& relative_lane) const {
+//	switch (relative_lane)
+//	{
+//	case RelativeLane::right_right:
+//		return RelativeLane::left_left;
+//	case RelativeLane::right:
+//		return RelativeLane::left;
+//	case RelativeLane::same:
+//		return RelativeLane::same;
+//	case RelativeLane::left:
+//		return RelativeLane::right;
+//	case RelativeLane::left_left:
+//		return RelativeLane::right_right;
+//	default:
+//		break;
+//	}
+//	return RelativeLane::same;
+//}
 
 double Vehicle::compute_lambda_0(double max_jerk,
 	double comf_accel, double max_brake,

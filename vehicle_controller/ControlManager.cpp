@@ -14,8 +14,8 @@
 #include "EgoVehicle.h"
 
 ControlManager::ControlManager(const VehicleParameters& vehicle_parameters,
-	bool verbose)
-	: lateral_controller{ LateralController(verbose) },
+	bool verbose) :
+	lateral_controller{ LateralController(verbose) },
 	verbose{ verbose } {
 
 	if (verbose) {

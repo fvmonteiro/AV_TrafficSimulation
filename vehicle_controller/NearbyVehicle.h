@@ -38,9 +38,6 @@ public:
 	RelativeLane get_lane_change_direction() const { 
 		return lane_change_direction; 
 	};
-	RelativeLane get_desired_lane_change_direction() const {
-		return desired_lane_change_direction;
-	};
 
 	void set_lateral_position(double lateral_position) {
 		this->lateral_position = lateral_position;
@@ -55,11 +52,12 @@ public:
 		this->acceleration = acceleration;
 	};
 	void set_lane_change_direction(long lane_change_direction) {
-		this->lane_change_direction = RelativeLane(lane_change_direction);
+		this->lane_change_direction = 
+			RelativeLane::from_long(lane_change_direction);
 	};
 	void set_desired_lane_change_direction(long lane_change_direction) {
 		this->desired_lane_change_direction = 
-			RelativeLane(lane_change_direction);
+			RelativeLane::from_long(lane_change_direction);
 	};
 
 	void set_type(VehicleType type) /*override*/;

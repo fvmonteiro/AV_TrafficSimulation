@@ -212,7 +212,8 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
         }
         return 1;
     case DRIVER_DATA_VEH_COLOR              :
-        vehicles[current_vehicle_id].set_color(long_value);
+        // We define the vehicle color instead
+        //vehicles[current_vehicle_id].set_color(long_value);
         return 1;
     case DRIVER_DATA_VEH_CURRENT_LINK       :
         vehicles[current_vehicle_id].set_link(long_value);
@@ -485,7 +486,7 @@ DRIVERMODEL_API  int  DriverModelGetValue (long   type,
             break;
         case UDA::lane_change_intention:
             *long_value = vehicles[current_vehicle_id].
-                get_desired_lane_change_direction();
+                get_desired_lane_change_direction().to_int();
             break;
         case UDA::dest_leader_id:
             if (vehicles[current_vehicle_id].has_destination_lane_leader()) {
@@ -545,8 +546,10 @@ DRIVERMODEL_API  int  DriverModelGetValue (long   type,
             std::clog << "t=" << ego_vehicle.get_time()
                 << ", id=" << ego_vehicle.get_id()
                 << ", lane=" << ego_vehicle.get_lane()
-                << ", pref. lane=" << ego_vehicle.get_preferred_relative_lane()
-                << ", target lane=" << ego_vehicle.get_rel_target_lane()
+                << ", pref. lane=" 
+                << ego_vehicle.get_preferred_relative_lane().to_string()
+                << ", target lane=" 
+                << ego_vehicle.get_rel_target_lane().to_string()
                 << ", lc decision=" << *long_value
                 /*<< ", active lc.=" 
                 << ego_vehicle.get_active_lane_change_direction()
@@ -559,7 +562,8 @@ DRIVERMODEL_API  int  DriverModelGetValue (long   type,
         }
         return 1;
     case DRIVER_DATA_REL_TARGET_LANE :
-        *long_value = vehicles[current_vehicle_id].get_rel_target_lane();
+        *long_value = 
+            vehicles[current_vehicle_id].get_rel_target_lane().to_int();
         return 1;
     case DRIVER_DATA_SIMPLE_LANECHANGE :
         *long_value = 1;
