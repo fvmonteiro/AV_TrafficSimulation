@@ -19,6 +19,9 @@ post_processed_data/
 VISSIM_networks/*.txt
 VISSIM_networks/autonomous_vehicle_logs
 
+# But I do want to keep track of simulated scenarios
+!VISSIM_networks/simulated_vehicle_inputs.csv
+
 ####### FOR VISUAL STUDIO C++ #######
 ### Suggested from https://github.com/github/gitignore/blob/master/VisualStudio.gitignore
 
