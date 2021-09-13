@@ -204,19 +204,27 @@ void ControlManager::update_assisted_vehicle(
 		ego_velocity);
 }
 
-void ControlManager::estimate_follower_time_headway(
+void ControlManager::update_follower_time_headway(
 	NearbyVehicle& follower) {
 
-	if (std::abs(follower.get_max_brake()
+	if (ego_parameters.is_connected && follower.is_connected()) {
+		destination_lane_controller.set_follower_time_headway(
+			follower.get_h_to_incoming_vehicle());
+		destination_lane_controller.compute_max_risk_to_follower(
+			follower.get_max_brake());
+	}
+	else if (std::abs(follower.get_max_brake() 
 		- destination_lane_follower_max_brake) > 0.5) {
-
-		double estimated_follower_free_flow_velocity = 
+		/* (Re)estimate future follower's headway if the follower is
+		sufficiently different from the previous. */
+		double estimated_follower_free_flow_velocity =
 			ego_parameters.desired_velocity;
 		double ego_max_brake = ego_parameters.max_brake;
-		
+
 		follower.compute_safe_gap_parameters();
 		destination_lane_controller.estimate_follower_time_headway(
-			follower, ego_max_brake, estimated_follower_free_flow_velocity);
+			follower, ego_max_brake, 
+			estimated_follower_free_flow_velocity);
 		destination_lane_controller.compute_max_risk_to_follower(
 			follower.get_max_brake());
 	}
@@ -456,9 +464,16 @@ void ControlManager::update_headways_with_risk(const EgoVehicle& ego_vehicle) {
 		if (ego_vehicle.has_destination_lane_follower()) {
 			std::shared_ptr<NearbyVehicle> dest_lane_follower =
 				ego_vehicle.get_destination_lane_follower();
-			double ego_max_brake = ego_parameters.max_brake;
+
+			if (ego_parameters.is_connected
+				&& dest_lane_follower->is_connected()) {
+				std::clog << "TODO: risk for connected vehicles not "
+					<< "yet fully coded." << std::endl;
+			}
+
 			double estimated_follower_free_flow_velocity =
 				ego_parameters.desired_velocity;
+			double ego_max_brake = ego_parameters.max_brake;
 			dest_lane_follower->compute_safe_gap_parameters();
 			destination_lane_controller.estimate_follower_time_headway(
 				*dest_lane_follower, ego_max_brake,
