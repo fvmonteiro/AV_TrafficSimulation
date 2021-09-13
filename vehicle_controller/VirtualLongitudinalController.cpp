@@ -128,17 +128,17 @@ void VirtualLongitudinalController::estimate_follower_time_headway(
 		std::clog << "Follower type: "
 			<< static_cast<int>(follower.get_type()) << std::endl;
 		std::clog << "Updating follower headway from "
-			<< destination_lane_follower_time_headway;
+			<< follower_time_headway;
 	}
 
-	destination_lane_follower_time_headway = compute_time_headway_with_risk(
+	follower_time_headway = compute_time_headway_with_risk(
 		follower_free_flow_velocity,
 		follower.get_max_brake(), ego_max_brake,
 		follower.get_lambda_1(), rho, accepted_risk_to_follower);
 
 	if (verbose) {
 		std::clog << " to "
-			<< destination_lane_follower_time_headway
+			<< follower_time_headway
 			<< std::endl;
 	}
 }
@@ -209,7 +209,7 @@ void VirtualLongitudinalController::reset_accepted_risks() {
 void VirtualLongitudinalController::compute_max_risk_to_follower(
 	double follower_max_brake) {
 	max_risk_to_follower = std::sqrt(
-		2 * destination_lane_follower_time_headway 
+		2 * follower_time_headway 
 		* follower_max_brake * free_flow_velocity);
 	if (verbose) std::clog << "max risk to follower=" 
 		<< max_risk_to_follower << std::endl;

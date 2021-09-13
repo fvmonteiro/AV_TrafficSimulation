@@ -38,6 +38,9 @@ public:
 	RelativeLane get_lane_change_direction() const { 
 		return lane_change_direction; 
 	};
+	double get_h_to_incoming_vehicle() const {
+		return h_to_incoming_vehicle;
+	};
 
 	void set_lateral_position(double lateral_position) {
 		this->lateral_position = lateral_position;
@@ -58,6 +61,9 @@ public:
 	void set_desired_lane_change_direction(long lane_change_direction) {
 		this->desired_lane_change_direction = 
 			RelativeLane::from_long(lane_change_direction);
+	};
+	void set_h_to_incoming_vehicle(double h) {
+		this->h_to_incoming_vehicle = h;
 	};
 
 	void set_type(VehicleType type) /*override*/;
@@ -95,7 +101,10 @@ private:
 	double relative_velocity{ 0.0 }; // ego speed - other speed [m/s]
 	double acceleration{ 0.0 }; // [m/s^2]
 	RelativeLane lane_change_direction{ RelativeLane::same };
-	
+	/* The time headway the nearby vehicle wants to keep from a connected
+	ego vehicle that wants to merge in front of it.*/
+	double h_to_incoming_vehicle{ 0.0 };
+
 	enum class Member {
 		id,
 		length,

@@ -33,7 +33,7 @@ public:
 	/* Computes the gap variation due to non-zero relative velocities during
 	the lane change. */
 	double compute_transient_gap(const EgoVehicle& ego_vehicle, 
-		const NearbyVehicle& other_vehicle, bool will_accelerate);
+		const NearbyVehicle& other_vehicle, bool will_accelerate) const;
 
 private:
 	bool verbose;
@@ -50,5 +50,5 @@ private:
 
 	void estimate_lane_change_kinematics();
 	double compute_lateral_collision_time(const EgoVehicle& ego_vehicle, 
-		const NearbyVehicle& other_vehicle, double longitudinal_acceleration);
+		const NearbyVehicle& other_vehicle, double longitudinal_acceleration) const;
 };

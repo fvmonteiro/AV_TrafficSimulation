@@ -45,17 +45,23 @@ public:
 
 	/* Each controller should never be accessed directly by external
 	functions. */
-	VirtualLongitudinalController get_destination_lane_controller() const { 
+	const VirtualLongitudinalController& get_gap_generation_lane_controller() 
+		const {
+		return gap_generating_controller;
+	};
+	/* Each controller should never be accessed directly by external
+	functions. */
+	const VirtualLongitudinalController& get_destination_lane_controller() const { 
 		return destination_lane_controller; 
 	};
 	/* Each controller should never be accessed directly by external
 	functions. */
-	LateralController get_lateral_controller() const {
+	const LateralController& get_lateral_controller() const {
 		return lateral_controller;
 	};
 	double get_reference_gap(double ego_velocity) {
 		return origin_lane_controller.compute_desired_gap(ego_velocity);
-	}
+	};
 	/* ----------------------------------------------------------------------- */
 
 	/* Computes the deceleration rate to avoid collision */
@@ -71,7 +77,7 @@ public:
 		const NearbyVehicle& leader);
 	void update_assisted_vehicle(double ego_velocity, 
 		const NearbyVehicle& assisted_vehicle);
-	void estimate_follower_time_headway(NearbyVehicle& follower);
+	void update_follower_time_headway(NearbyVehicle& follower);
 	void reset_origin_lane_velocity_controller(double ego_velocity);
 
 	/* Gets the acceleration inputs from the origin (and destination) lane

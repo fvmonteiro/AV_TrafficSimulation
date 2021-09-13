@@ -25,7 +25,7 @@ LateralController::LateralController(bool verbose)
 LateralController::LateralController() : LateralController(false) {}
 
 double LateralController::compute_transient_gap(const EgoVehicle& ego_vehicle,
-	const NearbyVehicle& other_vehicle, bool will_accelerate) {
+	const NearbyVehicle& other_vehicle, bool will_accelerate) const {
 	/* We need to solve:
 	max_{t \in T} [(v_E(t_0) - v_L(t_0))(t - t_0) + 1/2 a_E (t-t_0)^2]
 
@@ -84,7 +84,7 @@ double LateralController::compute_transient_gap(const EgoVehicle& ego_vehicle,
 
 double LateralController::compute_lateral_collision_time(
 	const EgoVehicle& ego_vehicle, const NearbyVehicle& other_vehicle,
-	double longitudinal_acceleration) {
+	double longitudinal_acceleration) const {
 	/* lane_change_lateral_position is the estimated lateral position 
 	of the vehicle's center front. We assume all lane changes are left lane 
 	changes to compute the collision time, which is independent of the lane 

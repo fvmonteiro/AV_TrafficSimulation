@@ -30,14 +30,17 @@ public:
         AutonomousGains autonomous_gains, ConnectedGains connected_gains);
 
     double get_follower_time_headway() {
-        return destination_lane_follower_time_headway;
-    }
+        return follower_time_headway;
+    };
     
+    void set_follower_time_headway(double h) {
+        this->follower_time_headway = h;
+    };
     void set_timer_start(double time) {
         this->timer_start = time;
-    }
+    };
 
-    void set_reference_velocity(double reference_velocity, double ego_velocity);
+    //void set_reference_velocity(double reference_velocity, double ego_velocity);
     //void set_reference_velocity(double ego_velocity, double adjustment_speed_factor);
 
     virtual void determine_controller_state(const EgoVehicle& ego_vehicle,
@@ -64,7 +67,7 @@ public:
 private:
     /* Estimated value of the time headway used by the follower at
     the destination lane. Used when computing lane change safe gaps. */
-    double destination_lane_follower_time_headway{ 0.0 };
+    double follower_time_headway{ 0.0 };
 
     /* Risk at which the lane change headway becomes equal to the
     vehicle following headway. */

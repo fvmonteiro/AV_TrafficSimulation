@@ -104,7 +104,10 @@ public:
 	double get_collision_risk() const;
 
 	/* Other getters and setters */
+
 	VehicleParameters get_static_parameters();
+	/* Used for debugging only */
+	double get_time_headway_to_assisted_vehicle();
 
 	void set_lane(long lane);
 	void set_link(long link);

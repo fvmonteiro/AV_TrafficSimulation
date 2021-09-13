@@ -138,6 +138,10 @@ VehicleParameters EgoVehicle::get_static_parameters() {
 	};
 }
 
+double EgoVehicle::get_time_headway_to_assisted_vehicle() {
+	return controller.get_gap_generation_lane_controller().get_h();
+}
+
 void EgoVehicle::set_lane(long lane) {
 	this->lane.push_back(lane);
 }
@@ -372,7 +376,7 @@ void EgoVehicle::analyze_nearby_vehicles() {
 				if ((!has_destination_lane_follower())
 					|| (destination_lane_follower->get_id()
 						!= current_id)) {
-					controller.estimate_follower_time_headway(*nearby_vehicle);
+					controller.update_follower_time_headway(*nearby_vehicle);
 				}
 				destination_lane_follower = nearby_vehicle;
 			}
