@@ -18,7 +18,7 @@
 
 /*==========================================================================*/
 
-const std::unordered_set<long> LOGGED_VEHICLES_IDS{ 23, 28 };
+const std::unordered_set<long> LOGGED_VEHICLES_IDS{ 0 };
 const bool CLUELESS_DEBUGGING{ false };
 
 SimulationLogger simulation_logger;
@@ -97,6 +97,9 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
         if (index1 >= static_cast<int>(UDA::first)) { 
             UDA uda = UDA(index1);
             switch (uda) {
+            case UDA::h_to_assited_veh: // necessary
+            case UDA::lane_change_intention: // necessary
+                return 1;
             case UDA::gap_to_leader:
             case UDA::gap_to_dest_lane_leader:
             case UDA::gap_to_dest_lane_follower:
@@ -107,7 +110,7 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
             case UDA::transient_gap_to_fd:
             case UDA::veh_following_gap_to_ld:
             case UDA::transient_gap_to_ld:
-                return 0;
+                return 1;
             case UDA::leader_id:
             case UDA::dest_leader_id:
             case UDA::dest_follower_id:
@@ -118,17 +121,6 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
                 return 0;
             case UDA::relative_velocity_to_leader:
                 return 0;
-            case UDA::ttc:
-            case UDA::drac:
-            case UDA::collision_severity_risk:
-                return 0;
-            case UDA::write_veh_log:
-                return 0;
-            case UDA::use_internal_lane_change_decision:
-                return 1;
-            case UDA::lane_change_intention: // necessary
-            case UDA::h_to_assited_veh: // necessary
-                return 1;
             default:
                 return 0;
             }
@@ -207,7 +199,7 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
         return 1;
     case DRIVER_DATA_VEH_TYPE               :
         /* vehicle type is called a few times before VISSIM 
-        actually creates any vehicles, so we perform this quick check */
+        actually creates any vehicles, so we perform this check */
         if (vehicles.find(current_vehicle_id) != vehicles.end()) {
             vehicles[current_vehicle_id].set_type(long_value);
         }
@@ -239,13 +231,6 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
         return 1;
     case DRIVER_DATA_VEH_UDA                :
         switch (UDA(index1)) {
-        case UDA::use_internal_lane_change_decision:
-            vehicles[current_vehicle_id].
-                set_use_internal_lane_change_decision(long_value);
-            break;
-        case UDA::write_veh_log:
-            //vehicles[current_vehicle_id].set_verbose(long_value);
-            break;
         default: // do nothing
             break;
         }
@@ -306,6 +291,7 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
         case UDA::h_to_assited_veh:
             vehicles[current_vehicle_id].peek_nearby_vehicles()
                 ->set_h_to_incoming_vehicle(double_value);
+            break;
         default:
             break;
         }
@@ -462,18 +448,6 @@ DRIVERMODEL_API  int  DriverModelGetValue (long   type,
         case UDA::reference_gap:
             *double_value = vehicles[current_vehicle_id].get_reference_gap();
             break;
-        case UDA::ttc:
-            *double_value = vehicles[current_vehicle_id].get_ttc();
-            break;
-        case UDA::drac:
-            *double_value = vehicles[current_vehicle_id].get_drac();
-            break;
-        case UDA::collision_severity_risk:
-            *double_value = vehicles[current_vehicle_id].get_collision_risk();
-            break;
-        case UDA::write_veh_log:
-            //*long_value = ego_vehicle.is_verbose();
-            break;
         case UDA::relative_velocity_to_leader:
             *double_value = 
                 vehicles[current_vehicle_id].get_relative_velocity_to_leader();
@@ -611,6 +585,10 @@ DRIVERMODEL_API  int  DriverModelExecuteCommand (long number)
     case DRIVER_COMMAND_INIT :
         return 1;
     case DRIVER_COMMAND_CREATE_DRIVER :
+        /* After the driver is created, we have to reset the current id.
+        Otherwise, the value is (wrongly) kept in the next DLL call
+        from VISSIM */
+        current_vehicle_id = 0;
         return 1;
     case DRIVER_COMMAND_KILL_DRIVER :
         /*if (ego_vehicle.is_verbose()) {
