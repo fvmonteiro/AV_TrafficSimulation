@@ -29,33 +29,37 @@
 /*--------------------------------------------------------------------------*/
 /* Definitions that were not in the original DLL example */
 
+/* The order of UDAs here must follow the order in VISSM 
+Most of these are used for debugging. To gain time when running
+simulations to generate data, these should not be updated.
+Essential ones:
+- lane_change_intention*/
 enum class UDA {
-    /* Mandatory UDAs. They must be included
-    in all simulations which use this driver model */
-    h_to_assited_veh = 6, 
-    lane_change_intention,
-    /* Debugging: leader */
-    leader_id = 100, 
-    leader_type, 
-    gap_to_leader,
-    reference_gap,
-    relative_velocity_to_leader,
-    /* Debugging: dest lane leader */
-    dest_leader_id = 110,
-    gap_to_dest_lane_leader,
-    transient_gap_to_ld,
-    veh_following_gap_to_ld,
-    safe_gap_to_dest_lane_leader,
-    /* Debugging: dest lane follower */
-    dest_follower_id = 120,
+    gap_to_dest_lane_leader = 6, // value taken from VISSIM interface.
     gap_to_dest_lane_follower,
-    transient_gap_to_fd,
-    veh_following_gap_to_fd,
+    safe_gap_to_dest_lane_leader,
     safe_gap_to_dest_lane_follower,
-    /* Debugging: assisted vehicle */
-    assisted_veh_id = 130,
+    gap_to_leader,
+    leader_id,
+    use_internal_lane_change_decision,
+    veh_following_gap_to_fd,
+    transient_gap_to_fd,
+    veh_following_gap_to_ld,
+    transient_gap_to_ld,
+    reference_gap,
+    ttc,
+    drac,
+    collision_severity_risk,
+    write_veh_log,
+    relative_velocity_to_leader,
+    leader_type,
+    lane_change_intention,
+    dest_leader_id,
+    dest_follower_id,
+    assisted_veh_id,
+    h_to_assited_veh,
 
-    first = h_to_assited_veh,
+    first = gap_to_dest_lane_leader,
 };
 /*--------------------------------------------------------------------------*/
 
