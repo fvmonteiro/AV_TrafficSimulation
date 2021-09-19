@@ -30,6 +30,11 @@ public:
     /*OriginLaneLongitudinalController(const EgoVehicle& ego_vehicle,
         double kg, double kv, bool verbose);*/
 
+    /* To be used ONLY when the compute_desired_acceleration method is not
+    called. So far, only necessary when we allow VISSIM to take control 
+    of the vehicle. */
+    void update_leader_velocity_filter(double leader_velocity);
+
     /* Determines and sets the current state of the longitudinal controller */
     virtual void determine_controller_state(const EgoVehicle& ego_vehicle,
         const std::shared_ptr<NearbyVehicle> leader,

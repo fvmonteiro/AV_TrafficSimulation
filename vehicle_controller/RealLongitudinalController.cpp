@@ -40,6 +40,10 @@ RealLongitudinalController::RealLongitudinalController(
 //	set_vehicle_following_gains(kg, kv);
 //}
 
+void RealLongitudinalController::update_leader_velocity_filter(
+	double leader_velocity) {
+	leader_velocity_filter.filter_velocity(leader_velocity);
+}
 
 void RealLongitudinalController::determine_controller_state(
 	const EgoVehicle& ego_vehicle,

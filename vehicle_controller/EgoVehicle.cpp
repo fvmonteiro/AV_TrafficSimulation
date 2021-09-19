@@ -204,9 +204,15 @@ void EgoVehicle::set_type(long type) {
 		case VehicleType::truck:
 		case VehicleType::bus:
 			this->brake_delay = HUMAN_BRAKE_DELAY;
+			this->is_lane_change_decision_autonomous = false;
+			break;
+		case VehicleType::ACC_car:
+			this->brake_delay = AUTONOMOUS_BRAKE_DELAY;
+			this->is_lane_change_decision_autonomous = false;
 			break;
 		case VehicleType::autonomous_car:
 			this->brake_delay = AUTONOMOUS_BRAKE_DELAY;
+			this->is_lane_change_decision_autonomous = true;
 			break;
 		case VehicleType::connected_car:
 			/* The connected vehicle brake delay also depends
@@ -216,8 +222,11 @@ void EgoVehicle::set_type(long type) {
 			of the code after the ego vehicle identifies its
 			surrouding vehicles. */
 			this->brake_delay = AUTONOMOUS_BRAKE_DELAY;
+			this->is_lane_change_decision_autonomous = true;
+			break;
 		default:
 			this->brake_delay = AUTONOMOUS_BRAKE_DELAY;
+			this->is_lane_change_decision_autonomous = false;
 			break;
 		}
 
@@ -225,8 +234,8 @@ void EgoVehicle::set_type(long type) {
 		it doens't hurt to double check*/
 		if (this->category != VehicleCategory::undefined) {
 			compute_safe_gap_parameters();
-			this->controller = ControlManager(get_static_parameters()
-			/*, verbose*/);
+			this->controller = ControlManager(get_static_parameters(),
+				verbose);
 		}
 		else {
 			std::clog << "[set_type] t=" << get_time()
@@ -336,16 +345,25 @@ void EgoVehicle::analyze_nearby_vehicles() {
 		long relative_position =
 			nearby_vehicle->get_relative_position();
 
+		if (verbose) {
+			std::clog << nearby_vehicle->to_string() << std::endl;
+		}
+
 		// Looking for "real" (same lane) leader and follower
 		/* We look both at the leading vehicle on the same lane
 		and at possible cutting-in vehicles */
-		if ((relative_position == 1) 
-			&& ((nv_relative_lane == RelativeLane::same)
-			|| nearby_vehicle->is_cutting_in())) {
+		if (((relative_position == 1) 
+			&& (nv_relative_lane == RelativeLane::same))
+			|| nearby_vehicle->is_cutting_in()) {
+
+			//if (verbose) std::clog << "possible leader" << std::endl;
+
 			if (!leader_found 
 				|| (nearby_vehicle->get_distance() < leader->get_distance())) {
+				//if (verbose) std::clog << "chosen as leader" << std::endl;
 				leader = nearby_vehicle;
 			}
+
 			leader_found = true;
 		}
 		else if ((relative_position == -1) 
@@ -373,9 +391,25 @@ void EgoVehicle::analyze_nearby_vehicles() {
 			}
 			else if (relative_position == -1) {
 				dest_lane_follower_found = true;
+
+				/* Three possible conditions to update the 
+				follower:
+				1. There was no previous follower
+				2. The follower id changed
+				3. The ego and follower are connected but
+				the ego still doesn't have the follower's
+				headway*/
 				if ((!has_destination_lane_follower())
 					|| (destination_lane_follower->get_id()
-						!= current_id)) {
+						!= current_id)
+					|| (is_connected() 
+						&& destination_lane_follower->is_connected()
+						&& destination_lane_follower->get_h_to_incoming_vehicle() == 0)) {
+
+					if (verbose) std::clog 
+						<< "Dest lane foll found" 
+						<< std::endl;
+
 					controller.update_follower_time_headway(*nearby_vehicle);
 				}
 				destination_lane_follower = nearby_vehicle;
@@ -408,7 +442,6 @@ void EgoVehicle::analyze_nearby_vehicles() {
 		long current_leader_id = leader->get_id();
 		if (current_leader_id != old_leader_id) {
 			bool had_leader_before = old_leader_id != 0;
-			
 			controller.update_origin_lane_leader(
 				get_velocity(), had_leader_before, *leader);
 		}
@@ -560,7 +593,7 @@ long EgoVehicle::get_color_by_controller_state() {
 	/* We'll assign color to vehicles based on the current longitudinal
 	controller and on whether or not the vehicle is trying to change lanes.*/
 	if (state.empty()) {
-		return WHITE;
+		return orig_lane_vel_control_color;
 	}
 	
 	switch (controller.get_active_longitudinal_controller()) {
@@ -604,6 +637,8 @@ long EgoVehicle::get_color_by_controller_state() {
 		default:
 			return WHITE;
 		}
+	case ControlManager::ActiveLongitudinalController::vissim:
+		return CYAN;
 	default:
 		return WHITE;
 	}
@@ -711,7 +746,7 @@ long EgoVehicle::decide_lane_change_direction() {
 	if (verbose) std::clog << "deciding lane change" << std::endl;
 	
 	long lane_change_direction = 0;
-	if (use_internal_lane_change_decision) {
+	if (is_lane_change_decision_autonomous) {
 		if (has_lane_change_intention()) {
 			bool gap_ahead_is_safe = (!has_destination_lane_leader()) 
 				|| (compute_gap(destination_lane_leader) 

@@ -78,7 +78,7 @@ bool NearbyVehicle::is_cutting_in() const {
 }
 
 bool NearbyVehicle::requesting_to_move_in() const {
-	if (is_connected() && (relative_position == 1)
+	if (is_connected() && is_ahead()
 		&& (has_lane_change_intention())
 		&& (relative_lane 
 			== desired_lane_change_direction.get_opposite())) {
@@ -134,7 +134,7 @@ std::string NearbyVehicle::to_string() const {
 			oss << distance;
 			break;
 		case Member::relative_velocity:
-			oss << distance;
+			oss << relative_velocity;
 			break;
 		case Member::acceleration:
 			oss << acceleration;

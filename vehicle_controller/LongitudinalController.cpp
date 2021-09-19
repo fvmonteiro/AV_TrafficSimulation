@@ -137,7 +137,9 @@ double LongitudinalController::compute_vehicle_following_input(
 		std::clog << "\tleader id = " << leader.get_id()
 			<< ", eg=" << gap - gap_reference
 			<< ", sat(eg)=" << gap_error
-			<< ", ev=" << velocity_error;
+			<< ", ev=" << velocity_error
+			<< ", vl=" << velocity_reference
+			<< ", vl_hat=" << filtered_velocity_reference;
 	}
 
 	double desired_acceleration;
@@ -172,20 +174,20 @@ double LongitudinalController::compute_vehicle_following_input(
 	return desired_acceleration;
 }
 
-double LongitudinalController::compute_vehicle_following_input(
-	double gap_error, double velocity_error) {
-	return autonomous_gains.kg * gap_error 
-		+ autonomous_gains.kv * velocity_error;
-}
-
-double LongitudinalController::compute_vehicle_following_input(
-	double gap_error, double velocity_error, double gap_error_derivative,
-	double acceleration_error) {
-	return connected_gains.kg * gap_error 
-		+ connected_gains.kv * velocity_error 
-		+ connected_gains.kgd * gap_error_derivative 
-		+ connected_gains.ka * acceleration_error;
-}
+//double LongitudinalController::compute_vehicle_following_input(
+//	double gap_error, double velocity_error) {
+//	return autonomous_gains.kg * gap_error 
+//		+ autonomous_gains.kv * velocity_error;
+//}
+//
+//double LongitudinalController::compute_vehicle_following_input(
+//	double gap_error, double velocity_error, double gap_error_derivative,
+//	double acceleration_error) {
+//	return connected_gains.kg * gap_error 
+//		+ connected_gains.kv * velocity_error 
+//		+ connected_gains.kgd * gap_error_derivative 
+//		+ connected_gains.ka * acceleration_error;
+//}
 
 /* PID velocity controller. The derivative of the velocity error equals the 
 ego vehicle acceleration since the desired speed is constant. */
@@ -270,15 +272,15 @@ double LongitudinalController::compute_desired_acceleration(
 		if (old_state != State::velocity_control) {
 			double ego_velocity = ego_vehicle.get_velocity();
 			/* The smooth velocity leads the vel. controller to output a 
-			desired acceleration close to the previous step desired
-			acceleration. */
+			desired acceleration close to the desired acceleration in 
+			the previous step. */
 			double smooth_velocity = (ego_vehicle.get_desired_acceleration()
 				- velocity_controller_gains.kd * ego_vehicle.get_acceleration())
 				/ velocity_controller_gains.kp + ego_velocity;
 			/* We use the smooth velocity only when that helps the vehicle
-			achieve the velocity reference faster. This happens either when
-			the ego vel is lesser than both reference and smooth vel or when
-			the ego vel is greater than both reference and smooth vel. */
+			achieve the velocity reference faster. This happens either when:
+			the ego vel is already lesser (or greater) than both reference
+			and smooth vel */
 			double reset_velocity;
 			if ((ego_velocity < velocity_reference) 
 				 == (ego_velocity < smooth_velocity)) {
@@ -287,7 +289,7 @@ double LongitudinalController::compute_desired_acceleration(
 			else {
 				reset_velocity = ego_velocity;
 			}
-			desired_velocity_filter.reset(reset_velocity);
+			reset_desired_velocity_filter(reset_velocity);
 			reset_velocity_error_integrator();
 		}
 
@@ -357,13 +359,16 @@ void LongitudinalController::update_time_headway(
 //}
 
 void LongitudinalController::reset_leader_velocity_filter(
-	double ego_velocity) {
-	leader_velocity_filter.reset(ego_velocity);
+	double reset_velocity) {
+	leader_velocity_filter.reset(reset_velocity);
 }
 
 void LongitudinalController::reset_desired_velocity_filter(
-	double ego_velocity) {
-	desired_velocity_filter.reset(ego_velocity);
+	double reset_velocity) {
+	/* [Sept 15, 2021] Change to make the function "smarter" and
+	decide what's the best reset velocity. Could lead to unexpected
+	*/
+	desired_velocity_filter.reset(reset_velocity);
 }
 
 /* Protected and private methods ------------------------------------------ */

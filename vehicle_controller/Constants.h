@@ -67,6 +67,7 @@ of the type */
 enum class VehicleType {
 	undefined,
 	human_driven_car = 100,
+	ACC_car = 105,
 	autonomous_car = 110,
 	connected_car = 120,
 	truck = 200,

@@ -46,15 +46,11 @@ public:
 	double get_comfortable_brake() const { return comfortable_brake; };
 	double get_max_jerk() const { return max_jerk; };
 	double get_brake_delay() const { return brake_delay; };
-	// double get_lambda_0() const { return lambda_0; };
 	double get_lambda_1() const { return lambda_1; };
 	double get_lambda_1_lane_change() const { return lambda_1_lane_change; };
-	bool get_use_internal_lane_change_decision() const {
-		return use_internal_lane_change_decision;
+	bool get_is_lane_change_decision_autonomous() const {
+		return is_lane_change_decision_autonomous;
 	};
-	/*double get_adjustment_speed_factor() const {
-		return adjustment_speed_factor;
-	};*/
 	double get_desired_lane_angle() const { return desired_lane_angle; };
 	RelativeLane get_rel_target_lane() const { 
 		return relative_target_lane;
@@ -67,10 +63,6 @@ public:
 
 	void EgoVehicle::set_desired_velocity(double desired_velocity) {
 		this->desired_velocity = desired_velocity;
-	};
-	//void set_color(long color) { this->color = color; };
-	void set_use_internal_lane_change_decision(long use) {
-		this->use_internal_lane_change_decision = use > 0;
 	};
 	void set_desired_lane_angle(double desired_lane_angle) {
 		this->desired_lane_angle = desired_lane_angle;
@@ -337,7 +329,7 @@ private:
 	/* VISSIM suggested active lane change */
 	std::vector<long> vissim_active_lane_change;
 	/* Determines if we use our lane change decision model or VISSIM's */
-	bool use_internal_lane_change_decision{ true };
+	bool is_lane_change_decision_autonomous{ true };
 	/* Distance to the end of the lane. Used to avoid missing exits in case
 	vehicle couldn't lane change earlier. */
 	std::vector<double> lane_end_distance;

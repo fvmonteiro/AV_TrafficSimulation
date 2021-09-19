@@ -89,8 +89,8 @@ public:
 	void update_time_headway(double lambda_1,
 		double new_leader_max_brake);
 	//void update_time_headway_with_new_risk(double lambda_1);
-	void reset_leader_velocity_filter(double ego_velocity);
-	void reset_desired_velocity_filter(double ego_velocity);
+	void reset_leader_velocity_filter(double reset_velocity);
+	void reset_desired_velocity_filter(double reset_velocity);
 	/* Sets integral error to zero*/
 	void reset_velocity_error_integrator();
 	virtual void reset_accepted_risks();

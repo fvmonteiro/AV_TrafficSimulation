@@ -24,29 +24,31 @@ ControlManager::ControlManager(const VehicleParameters& vehicle_parameters,
 
 	this->ego_parameters = vehicle_parameters;
 
+	bool is_long_control_verbose = false;
+
 	this->origin_lane_controller = RealLongitudinalController(
 		vehicle_parameters, desired_velocity_controller_gains,
 		autonomous_real_following_gains, connected_real_following_gains,
-		verbose);
+		is_long_control_verbose);
 	/* Note: the end of lane controller could have special vel control gains
 	but we want to see how the ego vehicle responds to a stopped vehicle. */
 	this->end_of_lane_controller = RealLongitudinalController(
 		vehicle_parameters, desired_velocity_controller_gains,
 		autonomous_real_following_gains, connected_real_following_gains,
-		verbose);
+		is_long_control_verbose);
 	this->destination_lane_controller = VirtualLongitudinalController(
 		vehicle_parameters, vehicle_parameters.lane_change_max_brake,
 		adjustment_velocity_controller_gains, 
 		autonomous_virtual_following_gains, 
 		connected_virtual_following_gains,
-		verbose);
+		is_long_control_verbose);
 	if (vehicle_parameters.is_connected) {
 		this->gap_generating_controller = VirtualLongitudinalController(
 			vehicle_parameters, vehicle_parameters.max_brake,
 			adjustment_velocity_controller_gains,
 			autonomous_virtual_following_gains, 
 			connected_virtual_following_gains,
-			verbose);
+			is_long_control_verbose);
 		/* the gap generating controller is only activated when there are
 		two connected vehicle, so we can set its connection here*/
 		gap_generating_controller.set_connexion(true);
@@ -204,14 +206,21 @@ void ControlManager::update_assisted_vehicle(
 		ego_velocity);
 }
 
+// TODO: create two functions, one for connected one for regular
 void ControlManager::update_follower_time_headway(
 	NearbyVehicle& follower) {
 
 	if (ego_parameters.is_connected && follower.is_connected()) {
+
 		destination_lane_controller.set_follower_time_headway(
 			follower.get_h_to_incoming_vehicle());
 		destination_lane_controller.compute_max_risk_to_follower(
 			follower.get_max_brake());
+
+		if (verbose) {
+			std::clog << destination_lane_controller.get_follower_time_headway()
+				<< std::endl;
+		}
 	}
 	else if (std::abs(follower.get_max_brake() 
 		- destination_lane_follower_max_brake) > 0.5) {
@@ -240,12 +249,22 @@ double ControlManager::determine_desired_acceleration(const EgoVehicle& ego_vehi
 
 	double desired_acceleration;
 
-	if (ego_vehicle.has_lane_change_intention() &&
-		!ego_vehicle.get_use_internal_lane_change_decision()) {
+	if (!ego_vehicle.get_is_lane_change_decision_autonomous() 
+		&& (ego_vehicle.has_lane_change_intention()
+			|| ego_vehicle.is_lane_changing())) {
 		desired_acceleration =
 			ego_vehicle.get_vissim_acceleration();
 		active_longitudinal_controller =
 			ActiveLongitudinalController::vissim;
+
+		/* We need to ensure the velocity filter keeps active 
+		while VISSIM has control of the car to guarantee a smooth
+		movement when taking back control */
+		if (ego_vehicle.has_leader()) {
+			origin_lane_controller.update_leader_velocity_filter(
+				ego_vehicle.get_leader()->compute_velocity(
+					ego_vehicle.get_velocity()));
+		}
 	}
 	else {
 		std::unordered_map<ActiveLongitudinalController, double>
@@ -256,6 +275,16 @@ double ControlManager::determine_desired_acceleration(const EgoVehicle& ego_vehi
 		}
 
 		/* Control relative to the current lane */
+
+		/* While VISSIM has control of the car, the velocity filter is not 
+		updated, so we need to reset it when taking back control.
+		(Other solutions also possible, still exploring )*/
+		/*if (active_longitudinal_controller
+			== ActiveLongitudinalController::vissim) {
+			double ego_velocity = ego_vehicle.get_velocity();
+			origin_lane_controller.reset_leader_velocity_filter(ego_velocity);
+		}*/
+
 		double desired_acceleration_origin_lane =
 			origin_lane_controller.compute_desired_acceleration(
 				ego_vehicle, ego_vehicle.get_leader(),
