@@ -1017,7 +1017,7 @@
 			<intObjectRef key="20"/>
 			<intObjectRef key="30"/>
 		</vehClasses>
-		<vehInpData writeFile="false"/>
+		<vehInpData writeFile="true"/>
 		<vehNetPerf collectData="false" fromTime="0" interval="99999" toTime="99999"/>
 		<vehRec filterType="ALL" fromTime="0" inclParkVehs="false" resolution="1" toTime="99999" writeDatabase="false" writeFile="true">
 			<attributes>
@@ -2137,16 +2137,16 @@
 	<vehicleInputs>
 		<vehicleInput anmFlag="false" link="2" name="in_flow" no="2">
 			<timeIntVehVols>
-				<timeIntervalVehVolume cont="false" timeInt="1 0" vehComp="5" volType="STOCHASTIC" volume="1500"/>
-				<timeIntervalVehVolume cont="true" timeInt="1 60000" vehComp="5" volType="STOCHASTIC" volume="1500"/>
-				<timeIntervalVehVolume cont="true" timeInt="1 120000" vehComp="5" volType="STOCHASTIC" volume="1500"/>
+				<timeIntervalVehVolume cont="false" timeInt="1 0" vehComp="2" volType="STOCHASTIC" volume="1500"/>
+				<timeIntervalVehVolume cont="true" timeInt="1 60000" vehComp="2" volType="STOCHASTIC" volume="1500"/>
+				<timeIntervalVehVolume cont="true" timeInt="1 120000" vehComp="2" volType="STOCHASTIC" volume="1500"/>
 			</timeIntVehVols>
 		</vehicleInput>
 		<vehicleInput anmFlag="false" link="4" name="main_flow" no="3">
 			<timeIntVehVols>
-				<timeIntervalVehVolume cont="false" timeInt="1 0" vehComp="5" volType="STOCHASTIC" volume="3000"/>
-				<timeIntervalVehVolume cont="true" timeInt="1 60000" vehComp="5" volType="STOCHASTIC" volume="3000"/>
-				<timeIntervalVehVolume cont="true" timeInt="1 120000" vehComp="5" volType="STOCHASTIC" volume="3000"/>
+				<timeIntervalVehVolume cont="false" timeInt="1 0" vehComp="2" volType="STOCHASTIC" volume="3000"/>
+				<timeIntervalVehVolume cont="true" timeInt="1 60000" vehComp="2" volType="STOCHASTIC" volume="3000"/>
+				<timeIntervalVehVolume cont="true" timeInt="1 120000" vehComp="2" volType="STOCHASTIC" volume="3000"/>
 			</timeIntVehVols>
 		</vehicleInput>
 	</vehicleInputs>
