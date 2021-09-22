@@ -170,11 +170,18 @@
 		<conflictArea addStopDist="0" anticipRout="0" avoidBlockMajor="true" avoidBlockMinor="1" frontGapDef="0.5" link1="3" link2="10004" mesoCritGap="3.5" minGapBlockDef="3" no="7" obsAdjLns="false" rearGapDef="0.5" safDistFactDef="1.5" status="PASSIVE" visibLink1="100" visibLink2="100"/>
 	</conflictAreas>
 	<dataCollectionMeasurements>
-		<dataCollectionMeasurement name="" no="1">
+		<dataCollectionMeasurement name="in" no="1">
 			<dataCollectionPoints>
 				<intObjectRef key="1"/>
 				<intObjectRef key="2"/>
 				<intObjectRef key="3"/>
+			</dataCollectionPoints>
+		</dataCollectionMeasurement>
+		<dataCollectionMeasurement name="out" no="2">
+			<dataCollectionPoints>
+				<intObjectRef key="4"/>
+				<intObjectRef key="5"/>
+				<intObjectRef key="6"/>
 			</dataCollectionPoints>
 		</dataCollectionMeasurement>
 	</dataCollectionMeasurements>
@@ -182,6 +189,9 @@
 		<dataCollectionPoint lane="3 3" name="" no="1" pos="3"/>
 		<dataCollectionPoint lane="3 2" name="" no="2" pos="3"/>
 		<dataCollectionPoint lane="3 1" name="" no="3" pos="3"/>
+		<dataCollectionPoint lane="6 2" name="" no="4" pos="20"/>
+		<dataCollectionPoint lane="6 1" name="" no="5" pos="20"/>
+		<dataCollectionPoint lane="10003 1" name="" no="6" pos="23"/>
 	</dataCollectionPoints>
 	<desAccelerationFunctions>
 		<desAccelerationFunction name="Car" no="1">
