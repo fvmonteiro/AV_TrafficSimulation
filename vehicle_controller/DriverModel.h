@@ -34,6 +34,7 @@ enum class UDA {
     in all simulations which use this driver model */
     h_to_assited_veh = 6, 
     lane_change_intention,
+    give_control_to_vissim,
     /* Debugging: leader */
     leader_id = 100, 
     leader_type, 
@@ -54,6 +55,8 @@ enum class UDA {
     safe_gap_to_dest_lane_follower,
     /* Debugging: assisted vehicle */
     assisted_veh_id = 130,
+    /* Debugging: other */
+    waiting_time = 140,
 
     first = h_to_assited_veh,
 };

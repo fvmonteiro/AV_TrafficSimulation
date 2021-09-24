@@ -333,8 +333,6 @@ void EgoVehicle::analyze_nearby_vehicles() {
 	bool assisted_vehicle_found = false;
 
 	const long old_leader_id = has_leader() ? get_leader()->get_id() : 0;
-	/*const long old_dest_lane_leader_id = has_destination_lane_leader() ? 
-		get_destination_lane_leader()->get_id() : 0;*/
 	bool dest_lane_leader_has_leader = false;
 	
 	for (int i = 0; i < nearby_vehicles.size(); i++) {
@@ -546,7 +544,7 @@ std::shared_ptr<NearbyVehicle> EgoVehicle::get_assisted_vehicle()
 
 /* State-machine related methods ------------------------------------------ */
 
-void EgoVehicle::update_state(/*long preferred_relative_lane*/) {
+void EgoVehicle::update_state() {
 
 	set_desired_lane_change_direction();
 
@@ -559,18 +557,20 @@ void EgoVehicle::update_state(/*long preferred_relative_lane*/) {
 	}
 
 	/* State change:
-	- Create the destination lane controller when the
-	vehicle first shows its intention to change lanes.
+	- Reset timers when the vehicle first shows its intention to
+	change lanes.
 	- Reset the desired velocity filter when the vehicle
 	finished a lane change */
 	if (old_state != get_state()) {
 		switch (get_state()) {
 		case State::intention_to_change_lanes:
+			waiting_time = 0.0;
 			controller.start_longitudinal_adjustment(get_time()/*, 
 				get_velocity(),
 				adjustment_speed_factor*/);
 			break;
 		case State::lane_keeping:
+			waiting_time = 0.0;
 			controller.reset_origin_lane_velocity_controller(
 				get_velocity());
 			break;
@@ -597,7 +597,7 @@ long EgoVehicle::get_color_by_controller_state() {
 	}
 	
 	switch (controller.get_active_longitudinal_controller()) {
-	case ControlManager::ActiveLongitudinalController::origin_lane:
+	case ControlManager::ActiveACC::origin_lane:
 		switch (controller.get_longitudinal_controller_state())
 		{
 		case LongitudinalController::State::velocity_control:
@@ -607,7 +607,7 @@ long EgoVehicle::get_color_by_controller_state() {
 		default:
 			return WHITE;
 		}
-	case ControlManager::ActiveLongitudinalController::cooperative_gap_generation:
+	case ControlManager::ActiveACC::cooperative_gap_generation:
 		switch (controller.get_longitudinal_controller_state())
 		{
 		case LongitudinalController::State::velocity_control:
@@ -617,7 +617,7 @@ long EgoVehicle::get_color_by_controller_state() {
 		default:
 			return WHITE;
 		}
-	case ControlManager::ActiveLongitudinalController::destination_lane:
+	case ControlManager::ActiveACC::destination_lane:
 		switch (controller.get_longitudinal_controller_state())
 		{
 		case LongitudinalController::State::velocity_control:
@@ -627,7 +627,7 @@ long EgoVehicle::get_color_by_controller_state() {
 		default:
 			return WHITE;
 		}
-	case ControlManager::ActiveLongitudinalController::end_of_lane:
+	case ControlManager::ActiveACC::end_of_lane:
 		switch (controller.get_longitudinal_controller_state())
 		{
 		case LongitudinalController::State::velocity_control:
@@ -637,7 +637,7 @@ long EgoVehicle::get_color_by_controller_state() {
 		default:
 			return WHITE;
 		}
-	case ControlManager::ActiveLongitudinalController::vissim:
+	case ControlManager::ActiveACC::vissim:
 		return CYAN;
 	default:
 		return WHITE;
@@ -680,6 +680,20 @@ std::string EgoVehicle::print_detailed_state() {
 		+ LongitudinalController::state_to_string(
 			controller.get_longitudinal_controller_state());
 	return state_str;
+}
+
+void EgoVehicle::update_waiting_time() {
+	if (get_velocity() < 5.0/3.6) {
+		waiting_time += simulation_time_step;
+	}
+	else {
+		waiting_time = 0.0;
+	}
+}
+
+bool EgoVehicle::give_lane_change_control_to_vissim() const {
+	return ((type == VehicleType::autonomous_car)
+		&& (waiting_time > max_waiting_time));
 }
 
 /* Control related methods ------------------------------------------------ */
@@ -746,7 +760,8 @@ long EgoVehicle::decide_lane_change_direction() {
 	if (verbose) std::clog << "deciding lane change" << std::endl;
 	
 	long lane_change_direction = 0;
-	if (is_lane_change_decision_autonomous) {
+	if (is_lane_change_decision_autonomous 
+		&& !give_lane_change_control_to_vissim()) {
 		if (has_lane_change_intention()) {
 			bool gap_ahead_is_safe = (!has_destination_lane_leader()) 
 				|| (compute_gap(destination_lane_leader) 
@@ -777,6 +792,7 @@ long EgoVehicle::decide_lane_change_direction() {
 					desired_lane_change_direction.to_int();
 			}
 			else {
+				update_waiting_time();
 				//controller.update_headways_with_risk(*this);
 			}
 		}

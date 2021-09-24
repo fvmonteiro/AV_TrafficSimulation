@@ -67,15 +67,15 @@ ControlManager::ControlManager(const VehicleParameters& vehicle_parameters)
 LongitudinalController::State 
 	ControlManager::get_longitudinal_controller_state() {
 	switch (active_longitudinal_controller) {
-	case ActiveLongitudinalController::origin_lane:
+	case ActiveACC::origin_lane:
 		return origin_lane_controller.get_state();
-	case ActiveLongitudinalController::destination_lane:
+	case ActiveACC::destination_lane:
 		return destination_lane_controller.get_state();
-	case ActiveLongitudinalController::cooperative_gap_generation:
+	case ActiveACC::cooperative_gap_generation:
 		return gap_generating_controller.get_state();
-	case ActiveLongitudinalController::end_of_lane:
+	case ActiveACC::end_of_lane:
 		return end_of_lane_controller.get_state();
-	case ActiveLongitudinalController::vissim:
+	case ActiveACC::vissim:
 		return LongitudinalController::State::uninitialized;
 	default:
 		return LongitudinalController::State::uninitialized;
@@ -249,13 +249,14 @@ double ControlManager::determine_desired_acceleration(const EgoVehicle& ego_vehi
 
 	double desired_acceleration;
 
-	if (!ego_vehicle.get_is_lane_change_decision_autonomous() 
+	if ((!ego_vehicle.get_is_lane_change_decision_autonomous()
+		|| ego_vehicle.give_lane_change_control_to_vissim())
 		&& (ego_vehicle.has_lane_change_intention()
 			|| ego_vehicle.is_lane_changing())) {
 		desired_acceleration =
 			ego_vehicle.get_vissim_acceleration();
 		active_longitudinal_controller =
-			ActiveLongitudinalController::vissim;
+			ActiveACC::vissim;
 
 		/* We need to ensure the velocity filter keeps active 
 		while VISSIM has control of the car to guarantee a smooth
@@ -267,7 +268,7 @@ double ControlManager::determine_desired_acceleration(const EgoVehicle& ego_vehi
 		}
 	}
 	else {
-		std::unordered_map<ActiveLongitudinalController, double>
+		std::unordered_map<ActiveACC, double>
 			possible_accelerations;
 
 		if (verbose) {
@@ -289,7 +290,7 @@ double ControlManager::determine_desired_acceleration(const EgoVehicle& ego_vehi
 			origin_lane_controller.compute_desired_acceleration(
 				ego_vehicle, ego_vehicle.get_leader(),
 				ego_parameters.desired_velocity);
-		possible_accelerations[ActiveLongitudinalController::origin_lane] =
+		possible_accelerations[ActiveACC::origin_lane] =
 			desired_acceleration_origin_lane;
 
 		/* Control to adjust to destination lane leader */
@@ -308,7 +309,7 @@ double ControlManager::determine_desired_acceleration(const EgoVehicle& ego_vehi
 			the current lane, the destination lane controller, which
 			uses comfortable constraints, must be updated. */
 			if ((active_longitudinal_controller
-				!= ActiveLongitudinalController::destination_lane)
+				!= ActiveACC::destination_lane)
 				&& destination_lane_controller.is_outdated(ego_velocity)) {
 				destination_lane_controller.reset_desired_velocity_filter(
 					ego_velocity);
@@ -318,7 +319,7 @@ double ControlManager::determine_desired_acceleration(const EgoVehicle& ego_vehi
 				destination_lane_controller.compute_desired_acceleration(
 					ego_vehicle, dest_lane_leader, reference_velocity);
 			possible_accelerations[
-				ActiveLongitudinalController::destination_lane] =
+				ActiveACC::destination_lane] =
 				desired_acceleration_dest_lane;
 		}
 
@@ -353,7 +354,7 @@ double ControlManager::determine_desired_acceleration(const EgoVehicle& ego_vehi
 					ego_vehicle, virtual_vehicle,
 					ego_parameters.desired_velocity);
 			possible_accelerations[
-				ActiveLongitudinalController::end_of_lane] =
+				ActiveACC::end_of_lane] =
 				desired_acceleration_end_of_lane;
 		}
 
@@ -375,7 +376,7 @@ double ControlManager::determine_desired_acceleration(const EgoVehicle& ego_vehi
 			the current lane, the gap generating controller, which
 			uses comfortable constraints, must be updated. */
 			if ((active_longitudinal_controller
-				!= ActiveLongitudinalController::cooperative_gap_generation)
+				!= ActiveACC::cooperative_gap_generation)
 				&& gap_generating_controller.is_outdated(ego_velocity)) {
 				gap_generating_controller.reset_desired_velocity_filter(
 					ego_velocity);
@@ -385,7 +386,7 @@ double ControlManager::determine_desired_acceleration(const EgoVehicle& ego_vehi
 				gap_generating_controller.compute_desired_acceleration(
 					ego_vehicle, assited_vehicle, reference_velocity);
 			possible_accelerations[
-				ActiveLongitudinalController::cooperative_gap_generation] =
+				ActiveACC::cooperative_gap_generation] =
 				desired_acceleration_gap_generation;
 		}
 
@@ -512,19 +513,19 @@ void ControlManager::update_headways_with_risk(const EgoVehicle& ego_vehicle) {
 }
 
 std::string ControlManager::active_longitudinal_controller_to_string(
-	ActiveLongitudinalController active_longitudinal_controller) {
+	ActiveACC active_longitudinal_controller) {
 
 	switch (active_longitudinal_controller)
 	{
-	case ActiveLongitudinalController::origin_lane:
+	case ActiveACC::origin_lane:
 		return "origin lane controller";
-	case ActiveLongitudinalController::destination_lane:
+	case ActiveACC::destination_lane:
 		return "destination lane controller";
-	case ActiveLongitudinalController::cooperative_gap_generation:
+	case ActiveACC::cooperative_gap_generation:
 		return "gap generation controller";
-	case ActiveLongitudinalController::end_of_lane:
+	case ActiveACC::end_of_lane:
 		return "end-of-lane controller";
-	case ActiveLongitudinalController::vissim:
+	case ActiveACC::vissim:
 		return "vissim controller";
 	default:
 		return "unknown active longitudinal controller";

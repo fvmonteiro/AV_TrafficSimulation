@@ -99,6 +99,7 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
             switch (uda) {
             case UDA::h_to_assited_veh: // necessary
             case UDA::lane_change_intention: // necessary
+            case UDA::give_control_to_vissim:
                 return 1;
             case UDA::gap_to_leader:
             case UDA::gap_to_dest_lane_leader:
@@ -110,16 +111,17 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
             case UDA::transient_gap_to_fd:
             case UDA::veh_following_gap_to_ld:
             case UDA::transient_gap_to_ld:
-                return 1;
+                return 0;
             case UDA::leader_id:
             case UDA::dest_leader_id:
             case UDA::dest_follower_id:
-                return 1;
             case UDA::assisted_veh_id:
-                return 1;
+                return 0;
             case UDA::leader_type:
                 return 0;
             case UDA::relative_velocity_to_leader:
+                return 0;
+            case UDA::waiting_time:
                 return 0;
             default:
                 return 0;
@@ -376,6 +378,23 @@ DRIVERMODEL_API  int  DriverModelGetValue (long   type,
     case DRIVER_DATA_VEH_UDA :
         switch (UDA(index1))
         {
+        case UDA::h_to_assited_veh:
+            if (vehicles[current_vehicle_id].is_cooperating_to_generate_gap()) {
+                *double_value = vehicles[current_vehicle_id].
+                    get_time_headway_to_assisted_vehicle();
+            }
+            else {
+                *double_value = 0;
+            }
+            break;
+        case UDA::lane_change_intention:
+            *long_value = vehicles[current_vehicle_id].
+                get_desired_lane_change_direction().to_int();
+            break;
+        case UDA::give_control_to_vissim:
+            *long_value = vehicles[current_vehicle_id].
+                give_lane_change_control_to_vissim();
+            break;
         case UDA::gap_to_dest_lane_leader:
             *double_value = vehicles[current_vehicle_id].
                 compute_gap(vehicles[current_vehicle_id].
@@ -462,10 +481,6 @@ DRIVERMODEL_API  int  DriverModelGetValue (long   type,
                 *long_value = 0;
             }
             break;
-        case UDA::lane_change_intention:
-            *long_value = vehicles[current_vehicle_id].
-                get_desired_lane_change_direction().to_int();
-            break;
         case UDA::dest_leader_id:
             if (vehicles[current_vehicle_id].has_destination_lane_leader()) {
                 *long_value = vehicles[current_vehicle_id].
@@ -493,14 +508,8 @@ DRIVERMODEL_API  int  DriverModelGetValue (long   type,
                 *long_value = 0;
             }
             break;
-        case UDA::h_to_assited_veh:
-            if (vehicles[current_vehicle_id].is_cooperating_to_generate_gap()) {
-                *double_value = vehicles[current_vehicle_id].
-                    get_time_headway_to_assisted_vehicle();
-            }
-            else {
-                *double_value = 0;
-            }
+        case UDA::waiting_time:
+            *double_value = vehicles[current_vehicle_id].get_waiting_time();
             break;
         default:
             return 0; /* doesn't set any UDA values */

@@ -20,7 +20,7 @@ class EgoVehicle;
 class ControlManager {
 public:
 
-	enum class ActiveLongitudinalController {
+	enum class ActiveACC {
 		origin_lane,
 		destination_lane,
 		cooperative_gap_generation,
@@ -33,7 +33,7 @@ public:
 	ControlManager(const VehicleParameters& vehicle_parameters);
 
 	//std::vector<State> get_states() { return states; };
-	ActiveLongitudinalController get_active_longitudinal_controller() {
+	ActiveACC get_active_longitudinal_controller() {
 		return active_longitudinal_controller;
 	}
 	LongitudinalController::State get_longitudinal_controller_state();
@@ -101,7 +101,7 @@ public:
 
 	/* Printing ----------------------------------------------------------- */
 	static std::string active_longitudinal_controller_to_string(
-		ActiveLongitudinalController active_longitudinal_controller);
+		ActiveACC active_longitudinal_controller);
 
 private:
 	VehicleParameters ego_parameters;
@@ -120,9 +120,9 @@ private:
 	VirtualLongitudinalController destination_lane_controller;
 	VirtualLongitudinalController gap_generating_controller;
 	LateralController lateral_controller;
-	ActiveLongitudinalController active_longitudinal_controller{ 
-		ActiveLongitudinalController::origin_lane }; /* indicates which
-	controller is active. Used for debugging and visualization. */
+	/* indicates which controller is active. Used for debugging and
+	visualization. */
+	ActiveACC active_longitudinal_controller{ ActiveACC::origin_lane }; 
 
 	double origin_lane_leader_max_brake{ 0.0 };
 	double destination_lane_leader_max_brake{ 0.0 };
