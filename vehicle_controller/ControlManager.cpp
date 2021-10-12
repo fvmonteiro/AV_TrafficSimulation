@@ -415,12 +415,17 @@ double ControlManager::compute_safe_lane_change_gap(
 	const EgoVehicle& ego_vehicle, const NearbyVehicle& other_vehicle,
 	bool will_accelerate) {
 
-	double time_headway_gap = compute_time_headway_gap(
-		ego_vehicle.get_velocity(), other_vehicle);
+	/*double time_headway_gap = compute_time_headway_gap(
+		ego_vehicle.get_velocity(), other_vehicle);*/
+	/* TODO: the function calls do not make much sense here.
+	You call this method from the ego vehicle, and then call an ego vehicle 
+	method in here.*/
+	double collision_free_gap = ego_vehicle.compute_exact_collision_free_gap(
+		other_vehicle);
 	double transient_gap = lateral_controller.compute_transient_gap(
 		ego_vehicle, other_vehicle, will_accelerate);
 
-	return time_headway_gap + transient_gap;
+	return /*time_headway_gap*/collision_free_gap + transient_gap;
 }
 
 double ControlManager::compute_time_headway_gap(double ego_velocity,

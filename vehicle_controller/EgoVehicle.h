@@ -181,8 +181,8 @@ public:
 	double compute_drac(const NearbyVehicle& other_vehicle);
 	/* The collision free gap is computed assuming a worst case braking
 	scenario */
-	double compute_exact_collision_free_gap(double ego_velocity,
-		const NearbyVehicle& other_vehicle);
+	double compute_exact_collision_free_gap(
+		const NearbyVehicle& other_vehicle) const;
 	/* Relative velocity at collision time under the worst case scenario*/
 	double compute_collision_severity_risk(
 		const NearbyVehicle& other_vehicle);

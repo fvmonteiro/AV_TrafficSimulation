@@ -725,9 +725,8 @@ double EgoVehicle::compute_safe_lane_change_gap(
 	if (other_vehicle != nullptr) {
 		safe_gap = controller.compute_safe_lane_change_gap(*this,
 			*other_vehicle);
-		if (safe_gap < 1.0) safe_gap = 1.0;
 	}
-	return safe_gap;
+	return std::max(safe_gap, 1.0);
 }
 
 double EgoVehicle::get_reference_gap() {
@@ -916,11 +915,12 @@ double EgoVehicle::compute_drac(const NearbyVehicle& other_vehicle) {
 }
 
 double EgoVehicle::compute_exact_collision_free_gap(
-	double ego_velocity, const NearbyVehicle& other_vehicle) {
+	const NearbyVehicle& other_vehicle) const {
 
 	double follower_lambda_0, follower_lambda_1;
 	double v_follower, v_leader;
 	double brake_follower, brake_leader;
+	double ego_velocity = get_velocity();
 	double delta_v = other_vehicle.get_relative_velocity();
 	if (other_vehicle.is_ahead()) {
 		follower_lambda_0 = lambda_0;
@@ -986,7 +986,7 @@ double EgoVehicle::compute_collision_severity_risk(
 			- leader_vel / leader_max_brake
 			* (max_brake - leader_max_brake) / 2)
 		+ lambda_0;
-	gap_thresholds[3] = compute_exact_collision_free_gap(ego_vel, other_vehicle);
+	gap_thresholds[3] = compute_exact_collision_free_gap(other_vehicle);
 
 	double gap = compute_gap(other_vehicle);
 	double result = 0;
