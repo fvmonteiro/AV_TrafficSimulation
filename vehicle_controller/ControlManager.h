@@ -33,7 +33,7 @@ public:
 	ControlManager(const VehicleParameters& vehicle_parameters);
 
 	//std::vector<State> get_states() { return states; };
-	ActiveACC get_active_longitudinal_controller() {
+	ActiveACC get_active_longitudinal_controller() const {
 		return active_longitudinal_controller;
 	}
 	LongitudinalController::State get_longitudinal_controller_state();

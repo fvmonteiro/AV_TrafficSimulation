@@ -845,7 +845,24 @@ bool EgoVehicle::has_lane_change_conflict() const {
 }
 
 bool EgoVehicle::is_cooperating_to_generate_gap() const {
-	return assisted_vehicle != nullptr;
+	/* When does the ego vehicle cooperate:
+	The ego vehicle is someone's destination lane follower AND:
+	- The ego vehicle is using the origin lane controller and 
+	the vehicle requesting cooperation is far away enough 
+	OR
+	- The ego vehicle is also trying to change lanes
+	*/
+	if (assisted_vehicle != nullptr) {
+		if (controller.get_active_longitudinal_controller()
+			== ControlManager::ActiveACC::origin_lane) {
+			double max_braking_distance =
+				std::pow(get_velocity(), 2) / max_brake;
+			return compute_gap(assisted_vehicle) > max_braking_distance;
+		}
+		return true;
+	}
+	return false;
+	//return assisted_vehicle != nullptr;
 }
 
 //std::shared_ptr<NearbyVehicle> EgoVehicle::find_nearby_vehicle(

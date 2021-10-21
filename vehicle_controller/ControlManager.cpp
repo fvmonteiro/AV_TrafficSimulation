@@ -249,6 +249,7 @@ double ControlManager::determine_desired_acceleration(const EgoVehicle& ego_vehi
 
 	double desired_acceleration;
 
+	/* First case: human (VISSIM) longitudinal controller */
 	if ((!ego_vehicle.get_is_lane_change_decision_autonomous()
 		|| ego_vehicle.give_lane_change_control_to_vissim())
 		&& (ego_vehicle.has_lane_change_intention()
@@ -267,6 +268,7 @@ double ControlManager::determine_desired_acceleration(const EgoVehicle& ego_vehi
 					ego_vehicle.get_velocity()));
 		}
 	}
+	/* Second case: (C)ACC */
 	else {
 		std::unordered_map<ActiveACC, double>
 			possible_accelerations;
@@ -294,7 +296,11 @@ double ControlManager::determine_desired_acceleration(const EgoVehicle& ego_vehi
 			desired_acceleration_origin_lane;
 
 		/* Control to adjust to destination lane leader */
-		if (ego_vehicle.has_destination_lane_leader()) {
+		/* TEST: if the current lane is free, we try to overtake the vehicle
+		at the destination lane */
+		if (ego_vehicle.has_destination_lane_leader()
+			&& (origin_lane_controller.get_state() 
+				!= LongitudinalController::State::velocity_control)) {
 			if (verbose) {
 				std::clog << "Dest. lane controller"
 					<< std::endl;

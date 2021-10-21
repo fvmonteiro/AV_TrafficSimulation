@@ -97,8 +97,9 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
         if (index1 >= static_cast<int>(UDA::first)) { 
             UDA uda = UDA(index1);
             switch (uda) {
-            case UDA::h_to_assited_veh: // necessary
-            case UDA::lane_change_intention: // necessary
+            /* The first three are necessary */
+            case UDA::h_to_assited_veh:
+            case UDA::lane_change_intention: 
             case UDA::give_control_to_vissim:
                 return 1;
             case UDA::gap_to_leader:
