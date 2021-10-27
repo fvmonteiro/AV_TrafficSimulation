@@ -123,6 +123,11 @@ double EgoVehicle::get_collision_risk() const {
 /* ------------------------------------------------------------------------ */
 
 /* Other getters and setters ---------------------------------------------- */
+double EgoVehicle::get_current_max_brake() const {
+	if (is_lane_changing()) return get_lane_change_max_brake();
+	return max_brake;
+}
+
 VehicleParameters EgoVehicle::get_static_parameters() {
 	return {
 		simulation_time_step,
@@ -944,7 +949,7 @@ double EgoVehicle::compute_exact_collision_free_gap(
 		follower_lambda_1 = lambda_1;
 		v_follower = ego_velocity;
 		v_leader = v_follower - delta_v;
-		brake_follower = max_brake;
+		brake_follower = get_current_max_brake();
 		brake_leader = other_vehicle.get_max_brake();
 	}
 	else {
@@ -979,14 +984,15 @@ double EgoVehicle::compute_exact_collision_free_gap(
 double EgoVehicle::compute_collision_severity_risk(
 	const NearbyVehicle& other_vehicle) {
 	
-	double jerk_delay = (comfortable_acceleration + max_brake) / max_jerk;
+	double current_max_brake = get_current_max_brake();
+	double jerk_delay = (comfortable_acceleration + current_max_brake) / max_jerk;
 	double ego_vel = get_velocity();
 
 	double leader_max_brake = other_vehicle.get_max_brake();
 	double relative_vel = other_vehicle.get_relative_velocity();
 	double leader_vel = other_vehicle.compute_velocity(ego_vel);
 
-	double gamma = leader_max_brake / max_brake;
+	double gamma = leader_max_brake / current_max_brake;
 	double gamma_threshold = leader_vel / (ego_vel + lambda_1);
 
 	std::vector<double> gap_thresholds(4);
@@ -996,12 +1002,12 @@ double EgoVehicle::compute_collision_severity_risk(
 	gap_thresholds[1] = (brake_delay + jerk_delay)
 		* (lambda_1 + relative_vel
 			- (brake_delay + jerk_delay)
-			* (max_brake - leader_max_brake) / 2)
+			* (current_max_brake - leader_max_brake) / 2)
 		+ lambda_0;
 	gap_thresholds[2] = leader_vel / leader_max_brake
 		* (lambda_1 + relative_vel
 			- leader_vel / leader_max_brake
-			* (max_brake - leader_max_brake) / 2)
+			* (current_max_brake - leader_max_brake) / 2)
 		+ lambda_0;
 	gap_thresholds[3] = compute_exact_collision_free_gap(other_vehicle);
 
@@ -1019,7 +1025,7 @@ double EgoVehicle::compute_collision_severity_risk(
 		result = std::pow(relative_vel, 2)
 			+ 2 * (comfortable_acceleration + leader_max_brake) * gap;
 		result += std::pow(relative_vel + lambda_1, 2)
-			+ 2 * (leader_max_brake - max_brake)
+			+ 2 * (leader_max_brake - current_max_brake)
 			* (gap - lambda_0);
 		result /= 2;
 		std::clog << "t=" << get_time()
@@ -1030,17 +1036,24 @@ double EgoVehicle::compute_collision_severity_risk(
 	else if (((gamma >= gamma_threshold) && (gap < gap_thresholds[2]))
 		|| (gamma < gamma_threshold) && (gap < gap_thresholds[3])) {
 		result = std::pow(relative_vel + lambda_1, 2)
-			+ 2 * (leader_max_brake - max_brake)
+			+ 2 * (leader_max_brake - current_max_brake)
 			* (gap - lambda_0);
 	}
 	else if ((gamma >= gamma_threshold) && (gap < gap_thresholds[3])) {
 		result = std::pow(ego_vel + lambda_1, 2)
-			- 2 * max_brake
+			- 2 * current_max_brake
 			* (std::pow(leader_vel, 2) / 2 / leader_max_brake
 				+ gap - lambda_0);
 	}
 
 	return result;
+}
+
+double EgoVehicle::compute_collision_severity_risk_to_leader() {
+	if (has_leader()) {
+		return compute_collision_severity_risk(*get_leader());
+	}
+	return 0.0;
 }
 
 /* Private methods -------------------------------------------------------- */

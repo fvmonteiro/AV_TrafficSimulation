@@ -57,6 +57,7 @@ enum class UDA {
     assisted_veh_id = 130,
     /* Debugging: other */
     waiting_time = 140,
+    risk = 141,
 
     first = h_to_assited_veh,
 };

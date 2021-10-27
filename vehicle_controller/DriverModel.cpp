@@ -102,28 +102,35 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
             case UDA::lane_change_intention: 
             case UDA::give_control_to_vissim:
                 return 1;
-            case UDA::gap_to_leader:
-            case UDA::gap_to_dest_lane_leader:
-            case UDA::gap_to_dest_lane_follower:
-            case UDA::reference_gap:
-            case UDA::safe_gap_to_dest_lane_leader:
-            case UDA::safe_gap_to_dest_lane_follower:
-            case UDA::veh_following_gap_to_fd:
-            case UDA::transient_gap_to_fd:
-            case UDA::veh_following_gap_to_ld:
-            case UDA::transient_gap_to_ld:
-                return 0;
+            /* Debugging: leader */
             case UDA::leader_id:
+            case UDA::leader_type:
+            case UDA::gap_to_leader:
+            case UDA::reference_gap:
+            case UDA::relative_velocity_to_leader:
+                return 1;
+            /* Debugging: dest lane leader */
             case UDA::dest_leader_id:
+            case UDA::gap_to_dest_lane_leader:
+            case UDA::transient_gap_to_ld:
+            case UDA::veh_following_gap_to_ld:
+            case UDA::safe_gap_to_dest_lane_leader:
+                return 1;
+            /* Debugging: dest lane follower */
             case UDA::dest_follower_id:
+            case UDA::gap_to_dest_lane_follower:
+            case UDA::transient_gap_to_fd:
+            case UDA::veh_following_gap_to_fd:
+            case UDA::safe_gap_to_dest_lane_follower:
+                return 1;
+            /* Debugging: assisted vehicle */
             case UDA::assisted_veh_id:
                 return 0;
-            case UDA::leader_type:
-                return 0;
-            case UDA::relative_velocity_to_leader:
-                return 0;
+            /* Debugging: other */
             case UDA::waiting_time:
                 return 0;
+            case UDA::risk:
+                return 1;
             default:
                 return 0;
             }
@@ -233,6 +240,7 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
     case DRIVER_DATA_VEH_INTAC_HEADWAY      :
         return 1;
     case DRIVER_DATA_VEH_UDA                :
+        /*We don't need to read any of the ego's UDAs*/
         switch (UDA(index1)) {
         default: // do nothing
             break;
@@ -379,6 +387,7 @@ DRIVERMODEL_API  int  DriverModelGetValue (long   type,
     case DRIVER_DATA_VEH_UDA :
         switch (UDA(index1))
         {
+        /* The first three are necessary */
         case UDA::h_to_assited_veh:
             if (vehicles[current_vehicle_id].is_cooperating_to_generate_gap()) {
                 *double_value = vehicles[current_vehicle_id].
@@ -396,16 +405,57 @@ DRIVERMODEL_API  int  DriverModelGetValue (long   type,
             *long_value = vehicles[current_vehicle_id].
                 give_lane_change_control_to_vissim();
             break;
+        /* Variables used for debugging from here on */
+        case UDA::leader_id:
+            *long_value = vehicles[current_vehicle_id].get_leader_id();
+            break;
+        case UDA::leader_type:
+            // TODO: delete this UDA
+            if (vehicles[current_vehicle_id].has_leader()) {
+                *long_value = static_cast<int>(
+                    vehicles[current_vehicle_id].get_leader()->get_type());
+            }
+            else {
+                *long_value = 0;
+            }
+            break;
+        case UDA::gap_to_leader:
+            *double_value = vehicles[current_vehicle_id].
+                compute_gap(vehicles[current_vehicle_id].get_leader());
+            break;
+        case UDA::reference_gap:
+            *double_value = vehicles[current_vehicle_id].get_reference_gap();
+            break;
+        case UDA::relative_velocity_to_leader:
+            *double_value =
+                vehicles[current_vehicle_id].get_relative_velocity_to_leader();
+            break;
+        case UDA::dest_leader_id:
+            if (vehicles[current_vehicle_id].has_destination_lane_leader()) {
+                *long_value = vehicles[current_vehicle_id].
+                    get_destination_lane_leader()->get_id();
+            }
+            else {
+                *long_value = 0;
+            }
+            break;
         case UDA::gap_to_dest_lane_leader:
             *double_value = vehicles[current_vehicle_id].
                 compute_gap(vehicles[current_vehicle_id].
                     get_destination_lane_leader()
                 );
             break;
-        case UDA::gap_to_dest_lane_follower:
+        case UDA::transient_gap_to_ld:
             *double_value = vehicles[current_vehicle_id].
-                compute_gap(vehicles[current_vehicle_id].
-                    get_destination_lane_follower()
+                compute_transient_gap(
+                    vehicles[current_vehicle_id].
+                    get_destination_lane_leader()
+                );
+            break;
+        case UDA::veh_following_gap_to_ld:
+            *double_value = vehicles[current_vehicle_id].
+                compute_time_headway_gap(
+                    vehicles[current_vehicle_id].get_destination_lane_leader()
                 );
             break;
         case UDA::safe_gap_to_dest_lane_leader:
@@ -420,6 +470,34 @@ DRIVERMODEL_API  int  DriverModelGetValue (long   type,
                 *double_value = 0.0;
             }
             break;
+        case UDA::dest_follower_id:
+            if (vehicles[current_vehicle_id].has_destination_lane_follower()) {
+                *long_value = vehicles[current_vehicle_id].
+                    get_destination_lane_follower()->get_id();
+            }
+            else {
+                *long_value = 0;
+            }
+            break;
+        case UDA::gap_to_dest_lane_follower:
+            *double_value = vehicles[current_vehicle_id].
+                compute_gap(vehicles[current_vehicle_id].
+                    get_destination_lane_follower()
+                );
+            break;
+        case UDA::transient_gap_to_fd:
+            *double_value = vehicles[current_vehicle_id].
+                compute_transient_gap(
+                    vehicles[current_vehicle_id].get_destination_lane_follower()
+                );
+            break;
+        case UDA::veh_following_gap_to_fd:
+            *double_value = vehicles[current_vehicle_id].
+                compute_time_headway_gap(
+                    vehicles[current_vehicle_id].
+                    get_destination_lane_follower()
+                );
+            break;
         case UDA::safe_gap_to_dest_lane_follower:
             if (vehicles[current_vehicle_id].has_lane_change_intention()) {
                 *double_value = vehicles[current_vehicle_id].
@@ -430,74 +508,6 @@ DRIVERMODEL_API  int  DriverModelGetValue (long   type,
             }
             else {
                 *double_value = 0.0;
-            }
-            break;
-        case UDA::gap_to_leader:
-            *double_value = vehicles[current_vehicle_id].
-                compute_gap(vehicles[current_vehicle_id].get_leader());
-            break;
-        case UDA::leader_id:
-            *long_value = vehicles[current_vehicle_id].get_leader_id();
-            break;
-        case UDA::veh_following_gap_to_fd:
-            *double_value = vehicles[current_vehicle_id].
-                compute_time_headway_gap(
-                    vehicles[current_vehicle_id].
-                    get_destination_lane_follower()
-                );
-            break;
-        case UDA::transient_gap_to_fd:
-            *double_value = vehicles[current_vehicle_id].
-                compute_transient_gap(
-                    vehicles[current_vehicle_id].get_destination_lane_follower()
-                );
-            break;
-        case UDA::veh_following_gap_to_ld:
-            *double_value = vehicles[current_vehicle_id].
-                compute_time_headway_gap(
-                    vehicles[current_vehicle_id].get_destination_lane_leader()
-                );
-            break;
-        case UDA::transient_gap_to_ld:
-            *double_value = vehicles[current_vehicle_id].
-                compute_transient_gap(
-                    vehicles[current_vehicle_id].
-                    get_destination_lane_leader()
-                );
-            break;
-        case UDA::reference_gap:
-            *double_value = vehicles[current_vehicle_id].get_reference_gap();
-            break;
-        case UDA::relative_velocity_to_leader:
-            *double_value = 
-                vehicles[current_vehicle_id].get_relative_velocity_to_leader();
-            break;
-        case UDA::leader_type:
-            // TODO: delete this UDA
-            if (vehicles[current_vehicle_id].has_leader()) {
-                *long_value = static_cast<int>(
-                    vehicles[current_vehicle_id].get_leader()->get_type());
-            }
-            else {
-                *long_value = 0;
-            }
-            break;
-        case UDA::dest_leader_id:
-            if (vehicles[current_vehicle_id].has_destination_lane_leader()) {
-                *long_value = vehicles[current_vehicle_id].
-                    get_destination_lane_leader()->get_id();
-            }
-            else {
-                *long_value = 0;
-            }
-            break;
-        case UDA::dest_follower_id:
-            if (vehicles[current_vehicle_id].has_destination_lane_follower()) {
-                *long_value = vehicles[current_vehicle_id].
-                    get_destination_lane_follower()->get_id();
-            }
-            else {
-                *long_value = 0;
             }
             break;
         case UDA::assisted_veh_id:
@@ -511,6 +521,10 @@ DRIVERMODEL_API  int  DriverModelGetValue (long   type,
             break;
         case UDA::waiting_time:
             *double_value = vehicles[current_vehicle_id].get_waiting_time();
+            break;
+        case UDA::risk:
+            *double_value = vehicles[current_vehicle_id].
+                compute_collision_severity_risk_to_leader();
             break;
         default:
             return 0; /* doesn't set any UDA values */

@@ -40,6 +40,7 @@ public:
 	double get_comfortable_acceleration() const { 
 		return comfortable_acceleration;
 	};
+	/* Returns max_brake/2 */
 	double get_lane_change_max_brake() const { 
 		return max_brake / 2;
 	};
@@ -98,6 +99,8 @@ public:
 
 	/* Other getters and setters */
 
+	/* Checks whether vehicle is lane changing and returns proper value*/
+	double get_current_max_brake() const;
 	VehicleParameters get_static_parameters();
 	/* Used for debugging only */
 	double get_time_headway_to_assisted_vehicle();
@@ -186,6 +189,7 @@ public:
 	/* Relative velocity at collision time under the worst case scenario*/
 	double compute_collision_severity_risk(
 		const NearbyVehicle& other_vehicle);
+	double compute_collision_severity_risk_to_leader();
 
 
 	/* State-machine related methods */
