@@ -45,6 +45,9 @@ public:
 
 	/* Each controller should never be accessed directly by external
 	functions. */
+	const RealLongitudinalController& get_origin_lane_controller() const {
+		return origin_lane_controller;
+	}
 	const VirtualLongitudinalController& get_gap_generation_lane_controller() 
 		const {
 		return gap_generating_controller;
@@ -59,9 +62,9 @@ public:
 	const LateralController& get_lateral_controller() const {
 		return lateral_controller;
 	};
-	double get_reference_gap(double ego_velocity) {
-		return origin_lane_controller.compute_desired_gap(ego_velocity);
-	};
+	double get_reference_gap(double ego_velocity,
+		bool has_lane_change_intention); /* could be const */
+
 	/* ----------------------------------------------------------------------- */
 
 	/* Computes the deceleration rate to avoid collision */
@@ -84,12 +87,14 @@ public:
 	ACCs, from the necessary value to avoid colision and from VISSIM and decides
 	which one should be applied to the vehicle */
 	double determine_desired_acceleration(const EgoVehicle& ego_vehicle);
+	double determine_low_velocity_reference(double ego_velocity,
+		const NearbyVehicle& other_vehicle);
 
 	double compute_safe_lane_change_gap(const EgoVehicle& ego_vehicle, 
 		const NearbyVehicle& other_vehicle, bool will_accelerate = false);
 	/* Returns the time headway part of the safe lane change gap. */
 	double compute_time_headway_gap(double ego_velocity,
-		const NearbyVehicle& other_vehicle);
+		bool has_lane_change_intention, const NearbyVehicle& other_vehicle);
 
 	/* Resets accepted risk and risk timer */
 	void start_longitudinal_adjustment(double time);
@@ -100,7 +105,7 @@ public:
 	void update_headways_with_risk(const EgoVehicle& ego_vehicle);
 
 	/* Printing ----------------------------------------------------------- */
-	static std::string active_longitudinal_controller_to_string(
+	static std::string active_ACC_to_string(
 		ActiveACC active_longitudinal_controller);
 
 private:

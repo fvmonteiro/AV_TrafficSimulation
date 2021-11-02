@@ -9,16 +9,16 @@
 #include <cmath>
 #include <iostream>
 
-#include "VelocityFilter.h"
+#include "VariationLimitedFilter.h"
 
 //VelocityFilter::VelocityFilter(double time_step) {
 //	this->time_step = time_step;
 //}
 
-VelocityFilter::VelocityFilter(double max_acceleration, 
-	double min_acceleration, double time_step, bool verbose) :
-	max_acceleration{ max_acceleration },
-	min_acceleration{ -std::abs(min_acceleration) }, /* minimum
+VariationLimitedFilter::VariationLimitedFilter(double max_variation,
+	double min_variation, double time_step, bool verbose) :
+	max_variation_per_second{ max_variation },
+	min_variation_per_second{ -std::abs(min_variation) }, /* minimum
 	acceleration (maximum braking) is sometimes given in absolute value,
 	so we have to make sure to get a negative value here*/
 	time_step{ time_step },
@@ -26,25 +26,25 @@ VelocityFilter::VelocityFilter(double max_acceleration,
 
 	if (verbose) {
 		std::clog << "Creating velocity filter with "
-			<< "max acceleration = " << max_acceleration
-			<< "; min acceleration = " << -std::abs(min_acceleration)
+			<< "max acceleration = " << max_variation
+			<< "; min acceleration = " << -std::abs(min_variation)
 			<< "; time step = " << time_step
 			<< std::endl;
 	}
 
 	this->alpha = std::exp(-gain * time_step);
-	this->max_variation_per_time_step = this->max_acceleration 
+	this->max_variation_per_time_step = this->max_variation_per_second 
 		* this->time_step;
-	this->min_variation_per_time_step = this->min_acceleration 
+	this->min_variation_per_time_step = this->min_variation_per_second 
 		* this->time_step;
 }
 
-VelocityFilter::VelocityFilter(double max_acceleration,
-	double min_acceleration, double time_step) 
-	: VelocityFilter(max_acceleration,
-		min_acceleration, time_step, false) {}
+VariationLimitedFilter::VariationLimitedFilter(double max_variation,
+	double min_variation, double time_step) 
+	: VariationLimitedFilter(max_variation,
+		min_variation, time_step, false) {}
 
-void VelocityFilter::reset(double initial_value) {
+void VariationLimitedFilter::reset(double initial_value) {
 	/*if (verbose) {
 		std::clog << "------- Filter reset. Init value = "
 			<< initial_value << " -------" << std::endl;
@@ -52,7 +52,7 @@ void VelocityFilter::reset(double initial_value) {
 	this->current_value = initial_value;
 }
 
-double VelocityFilter::filter_velocity(double new_velocity) {
+double VariationLimitedFilter::apply_filter(double new_velocity) {
 	/* Filter equations:
 	v_f is the filtered velocity, v_r is the reference velocity
 	Continuous:

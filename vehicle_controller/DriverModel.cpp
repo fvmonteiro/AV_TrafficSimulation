@@ -18,7 +18,7 @@
 
 /*==========================================================================*/
 
-const std::unordered_set<long> LOGGED_VEHICLES_IDS{ 0 };
+const std::unordered_set<long> LOGGED_VEHICLES_IDS{ 9 };
 const bool CLUELESS_DEBUGGING{ false };
 
 SimulationLogger simulation_logger;
@@ -108,21 +108,22 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
             case UDA::gap_to_leader:
             case UDA::reference_gap:
             case UDA::relative_velocity_to_leader:
-                return 1;
+                return 0;
             /* Debugging: dest lane leader */
             case UDA::dest_leader_id:
             case UDA::gap_to_dest_lane_leader:
             case UDA::transient_gap_to_ld:
             case UDA::veh_following_gap_to_ld:
             case UDA::safe_gap_to_dest_lane_leader:
-                return 1;
+                return 0;
             /* Debugging: dest lane follower */
             case UDA::dest_follower_id:
             case UDA::gap_to_dest_lane_follower:
             case UDA::transient_gap_to_fd:
             case UDA::veh_following_gap_to_fd:
             case UDA::safe_gap_to_dest_lane_follower:
-                return 1;
+            case UDA::dest_follower_time_headway:
+                return 0;
             /* Debugging: assisted vehicle */
             case UDA::assisted_veh_id:
                 return 0;
@@ -130,7 +131,9 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
             case UDA::waiting_time:
                 return 0;
             case UDA::risk:
-                return 1;
+                return 0;
+            case UDA::safe_time_headway:
+                return 0;
             default:
                 return 0;
             }
@@ -241,10 +244,10 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
         return 1;
     case DRIVER_DATA_VEH_UDA                :
         /*We don't need to read any of the ego's UDAs*/
-        switch (UDA(index1)) {
-        default: // do nothing
-            break;
-        }
+        //switch (UDA(index1)) {
+        //default: // do nothing
+        //    break;
+        //}
         return 1;
     case DRIVER_DATA_NVEH_ID                :
         if (long_value > 0) { 
@@ -510,6 +513,10 @@ DRIVERMODEL_API  int  DriverModelGetValue (long   type,
                 *double_value = 0.0;
             }
             break;
+        case UDA::dest_follower_time_headway:
+            *double_value = vehicles[current_vehicle_id].
+                get_dest_follower_time_headway();
+            break;
         case UDA::assisted_veh_id:
             if (vehicles[current_vehicle_id].is_cooperating_to_generate_gap()) {
                 *long_value = vehicles[current_vehicle_id].
@@ -525,6 +532,10 @@ DRIVERMODEL_API  int  DriverModelGetValue (long   type,
         case UDA::risk:
             *double_value = vehicles[current_vehicle_id].
                 compute_collision_severity_risk_to_leader();
+            break;
+        case UDA::safe_time_headway:
+            *double_value = vehicles[current_vehicle_id].
+                get_safe_time_headway();
             break;
         default:
             return 0; /* doesn't set any UDA values */

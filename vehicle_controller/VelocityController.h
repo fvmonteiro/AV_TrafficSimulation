@@ -1,6 +1,6 @@
 #pragma once
 
-#include "VelocityFilter.h"
+#include "VariationLimitedFilter.h"
 
 class VelocityController
 {
@@ -16,7 +16,7 @@ public:
 	double compute_input(double velocity_error, double acceleration_error,
 		double comfortable_acceleration);
 
-	VelocityFilter desired_velocity_filter;
+	VariationLimitedFilter desired_velocity_filter;
 
 private:
 	double simulation_time_step;

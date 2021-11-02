@@ -128,7 +128,7 @@ double EgoVehicle::get_current_max_brake() const {
 	return max_brake;
 }
 
-VehicleParameters EgoVehicle::get_static_parameters() {
+VehicleParameters EgoVehicle::get_static_parameters() const {
 	return {
 		simulation_time_step,
 		max_brake,
@@ -144,7 +144,18 @@ VehicleParameters EgoVehicle::get_static_parameters() {
 }
 
 double EgoVehicle::get_time_headway_to_assisted_vehicle() {
-	return controller.get_gap_generation_lane_controller().get_h();
+	return controller.get_gap_generation_lane_controller().
+		get_desired_time_headway();
+}
+
+double EgoVehicle::get_safe_time_headway() const {
+	return controller.get_origin_lane_controller().
+		get_safe_time_headway(has_lane_change_intention());
+}
+
+double EgoVehicle::get_dest_follower_time_headway() const {
+	return controller.get_destination_lane_controller().
+		get_follower_time_headway();
 }
 
 void EgoVehicle::set_lane(long lane) {
@@ -348,9 +359,9 @@ void EgoVehicle::analyze_nearby_vehicles() {
 		long relative_position =
 			nearby_vehicle->get_relative_position();
 
-		if (verbose) {
+		/*if (verbose) {
 			std::clog << nearby_vehicle->to_string() << std::endl;
-		}
+		}*/
 
 		// Looking for "real" (same lane) leader and follower
 		/* We look both at the leading vehicle on the same lane
@@ -409,9 +420,9 @@ void EgoVehicle::analyze_nearby_vehicles() {
 						&& destination_lane_follower->is_connected()
 						&& destination_lane_follower->get_h_to_incoming_vehicle() == 0)) {
 
-					if (verbose) std::clog 
+					/*if (verbose) std::clog 
 						<< "Dest lane foll found" 
-						<< std::endl;
+						<< std::endl;*/
 
 					controller.update_follower_time_headway(*nearby_vehicle);
 				}
@@ -680,7 +691,7 @@ long EgoVehicle::get_color_by_controller_state() {
 std::string EgoVehicle::print_detailed_state() {
 	std::string state_str = 
 		state_to_string(get_state()) + ", "
-		+ ControlManager::active_longitudinal_controller_to_string(
+		+ ControlManager::active_ACC_to_string(
 			controller.get_active_longitudinal_controller()) + ", "
 		+ LongitudinalController::state_to_string(
 			controller.get_longitudinal_controller_state());
@@ -735,7 +746,8 @@ double EgoVehicle::compute_safe_lane_change_gap(
 }
 
 double EgoVehicle::get_reference_gap() {
-	return controller.get_reference_gap(velocity.back());
+	return controller.get_reference_gap(velocity.back(), 
+		has_lane_change_intention());
 }
 
 double EgoVehicle::compute_time_headway_gap(
@@ -744,7 +756,7 @@ double EgoVehicle::compute_time_headway_gap(
 	double time_headway_gap = 0.0;
 	if (other_vehicle != nullptr) {
 		time_headway_gap = controller.compute_time_headway_gap(
-			get_velocity(), *other_vehicle);
+			get_velocity(), has_lane_change_intention(), *other_vehicle);
 	}
 	return time_headway_gap;
 }
@@ -763,20 +775,28 @@ long EgoVehicle::decide_lane_change_direction() {
 	
 	if (verbose) std::clog << "deciding lane change" << std::endl;
 	
+	double margin = 0.01; /* Given the asymptotic nature of controllers, 
+						  vehicles sometimes are very close to, but no exactly
+						  at, the safe gap. We give it some margin to 
+						  avoid unecessary long waits.*/
 	long lane_change_direction = 0;
 	if (is_lane_change_decision_autonomous 
 		&& !give_lane_change_control_to_vissim()) {
 		if (has_lane_change_intention()) {
+			bool gap_same_lane_is_safe = (!has_leader())
+				|| ((compute_gap(leader) + 0.01)
+					>= compute_safe_lane_change_gap(leader));
+
 			bool gap_ahead_is_safe = (!has_destination_lane_leader()) 
-				|| (compute_gap(destination_lane_leader) 
-					> compute_safe_lane_change_gap(destination_lane_leader));
+				|| ((compute_gap(destination_lane_leader) + 0.01) 
+					>= compute_safe_lane_change_gap(destination_lane_leader));
 			
 			/* besides the regular safety conditions, we add the case 
 			where the dest lane follower has completely stopped to give room 
 			to the lane changing vehicle */
 			bool gap_behind_is_safe = (!has_destination_lane_follower())
-				|| (compute_gap(destination_lane_follower)
-					> compute_safe_lane_change_gap(destination_lane_follower))
+				|| ((compute_gap(destination_lane_follower) + 0.01)
+					>= compute_safe_lane_change_gap(destination_lane_follower))
 				|| ((destination_lane_follower->
 					compute_velocity(get_velocity()) <= 1.0)
 					&& (destination_lane_follower->get_distance() <= -1.0));
@@ -789,7 +809,8 @@ long EgoVehicle::decide_lane_change_direction() {
 					<< std::endl;
 			}
 
-			if (gap_ahead_is_safe && gap_behind_is_safe
+			if (gap_same_lane_is_safe 
+				&& gap_ahead_is_safe && gap_behind_is_safe
 				&& no_conflict) {
 				// will start lane change
 				lane_change_direction = 

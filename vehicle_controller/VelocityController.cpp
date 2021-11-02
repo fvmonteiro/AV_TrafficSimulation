@@ -4,7 +4,7 @@ VelocityController::VelocityController(double simulation_time_step,
 	double comfortable_acceleration,
 	double filter_brake_limit) :
 	simulation_time_step{ simulation_time_step },
-	desired_velocity_filter{VelocityFilter(comfortable_acceleration,
+	desired_velocity_filter{ VariationLimitedFilter(comfortable_acceleration,
 		filter_brake_limit, simulation_time_step)} {}
 
 void VelocityController::reset_filter(double ego_velocity) {

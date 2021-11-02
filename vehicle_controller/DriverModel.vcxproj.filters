@@ -31,9 +31,6 @@
     <ClCompile Include="Vehicle.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="VelocityFilter.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="VehicleFollowingController.cpp" />
     <ClCompile Include="VelocityController.cpp" />
     <ClCompile Include="RealLongitudinalController.cpp">
@@ -43,6 +40,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="RelativeLane.cpp" />
+    <ClCompile Include="VariationLimitedFilter.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ControlManager.h">
@@ -75,9 +75,6 @@
     <ClInclude Include="Vehicle.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="VelocityFilter.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Constants.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -90,6 +87,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="RelativeLane.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="VariationLimitedFilter.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

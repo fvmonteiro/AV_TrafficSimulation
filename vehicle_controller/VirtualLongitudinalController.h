@@ -20,16 +20,16 @@ public:
 
     VirtualLongitudinalController();
     VirtualLongitudinalController(
-        const VehicleParameters& ego_parameters, double max_brake,
+        const VehicleParameters& ego_parameters,
         VelocityControllerGains velocity_controller_gains,
         AutonomousGains autonomous_gains, ConnectedGains connected_gains, 
         bool verbose);
     VirtualLongitudinalController(
-        const VehicleParameters& ego_parameters, double max_brake,
+        const VehicleParameters& ego_parameters, 
         VelocityControllerGains velocity_controller_gains,
         AutonomousGains autonomous_gains, ConnectedGains connected_gains);
 
-    double get_follower_time_headway() {
+    double get_follower_time_headway() const {
         return follower_time_headway;
     };
     

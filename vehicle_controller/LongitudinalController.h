@@ -10,7 +10,7 @@
 
 #include <memory>
 #include <string>
-#include "VelocityFilter.h"
+#include "VariationLimitedFilter.h"
 
 // Forward declaration
 class NearbyVehicle;
@@ -63,14 +63,13 @@ public:
 	LongitudinalController(const VehicleParameters& ego_parameters,
 		VelocityControllerGains velocity_controller_gains,
 		AutonomousGains autonomous_gains, ConnectedGains connected_gains,
-		double max_brake, double filter_brake_limit, bool verbose);
+		double filter_brake_limit, bool verbose);
 	/*LongitudinalController(const Vehicle& ego_vehicle,
 		bool is_used_for_lane_change, bool verbose);
 	LongitudinalController(const Vehicle& ego_vehicle,
 		bool is_used_for_lane_change);*/
 
 	State get_state() const { return state; };
-	double get_h() const { return h; };
 	
 	void set_connexion(bool is_conneced) {
 		this->is_connected = is_conneced;
@@ -78,6 +77,13 @@ public:
 	/*void set_vehicle_following_gains(AutonomousGains gains);
 	void set_vehicle_following_gains(ConnectedGains gains);
 	void set_velocity_controller_gains(VelocityControllerGains gains);*/
+
+	/* TODO: This function will likely change to return the current 
+	filtered value of h*/
+	double get_desired_time_headway() const;
+	/* Returns time headway or lane changing time headway depending
+	on the vehicle intentions*/
+	double get_safe_time_headway(bool has_lane_change_intention) const;
 
 	double compute_time_headway_gap(double time_headway, double velocity);
 	/* Computes the time headway value with zero accepted risk and assigns
@@ -94,10 +100,10 @@ public:
 	/* Sets integral error to zero*/
 	void reset_velocity_error_integrator();
 	virtual void reset_accepted_risks();
-	void compute_max_risk_to_leader();
+	void compute_max_risk_to_leader(bool is_lane_changing);
 
 	/* Computes constant time headway following distance */
-	double compute_desired_gap(double ego_velocity);
+	double compute_desired_gap(double ego_velocity, bool has_lane_change_intention);
 	
 	/* Computes gap minus reference gap and upper bounds it 
 	with max_gap_error. */
@@ -107,7 +113,7 @@ public:
 	double compute_velocity_error(double velocity_ego, double velocity_leader);
 
 	double estimate_gap_error_derivative(
-		double velocity_error, double acceleration);
+		double velocity_error, double acceleration, bool has_lane_change_intention);
 
 	double compute_acceleration_error(
 		double acceleration_ego, double acceleration_reference);
@@ -123,21 +129,23 @@ public:
 
 	/* Computes the gap threshold to decide whether velocity or vehicle 
 	following control */
-	double compute_gap_threshold(double free_flow_velocity, double velocity_error);
+	double compute_gap_threshold(double free_flow_velocity, double velocity_error,
+		bool has_lane_change_intention);
 
 	/* Computes the gap threshold to decide whether velocity or vehicle
 	following control */
 	double compute_gap_threshold(double free_flow_velocity, double velocity_error,
-		double gap_error_derivative, double acceleration_error);
+		double gap_error_derivative, double acceleration_error,
+		bool has_lane_change_intention);
 
 	/* Constant time headway based controller */
 	double compute_vehicle_following_input(const EgoVehicle& ego_vehicle,
 		const NearbyVehicle& leader);
-	double compute_vehicle_following_input(double gap_error,
+	/*double compute_vehicle_following_input(double gap_error,
 		double velocity_error);
 	double compute_vehicle_following_input(double gap_error, 
 		double velocity_error, double gap_error_derivative, 
-		double acceleration_error);
+		double acceleration_error);*/
 
 	/* PID velocity controller */
 	double compute_velocity_control_input(const EgoVehicle& ego_vehicle,
@@ -161,14 +169,16 @@ protected:
 	//double ego_reference_velocity{ 0.0 }; // for the velocity controller [m/s]
 	/* Parameters related to the emergency braking scenario */
 	double ego_max_brake{ 0.0 }; // absolute value [m/s^2]
+	double ego_max_brake_lane_change{ 0.0 }; // absolute value [m/s^2]
 	double free_flow_velocity{ 0.0 }; // to compute time headway [m/s]
 	double rho{ 0.15 }; // proportional maximum expected relative speed
 	/* Desired gap parameters */
-	double h{ 0.0 }; /* time headway [s] */
+	double h_vehicle_following{ 0.0 }; /* time headway [s] */
+	double h_lane_change{ 0.0 }; /* time headway during lane change [s]*/
 	double d{ 1.0 }; /* standstill distance [m] */
 
-	VelocityFilter leader_velocity_filter;
-	VelocityFilter desired_velocity_filter;
+	VariationLimitedFilter leader_velocity_filter;
+	VariationLimitedFilter desired_velocity_filter;
 
 	bool verbose{ false };
 

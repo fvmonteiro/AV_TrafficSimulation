@@ -14,20 +14,21 @@ LongitudinalController::LongitudinalController(
 	const VehicleParameters& ego_parameters,
 	VelocityControllerGains velocity_controller_gains,
 	AutonomousGains autonomous_gains, ConnectedGains connected_gains,
-	double max_brake, double filter_brake_limit, bool verbose) :
+	double filter_brake_limit, bool verbose) :
 	simulation_time_step{ ego_parameters.sampling_interval },
 	velocity_controller_gains{ velocity_controller_gains },
 	autonomous_gains{ autonomous_gains },
 	connected_gains{ connected_gains },
-	ego_max_brake{ max_brake },
+	ego_max_brake{ ego_parameters.max_brake },
+	ego_max_brake_lane_change{ego_parameters.lane_change_max_brake},
 	free_flow_velocity{ ego_parameters.desired_velocity },
 	verbose{ verbose } {
 
 	double comfortable_acceleration =
 		ego_parameters.comfortable_acceleration;
-	this->leader_velocity_filter = VelocityFilter(comfortable_acceleration,
+	this->leader_velocity_filter = VariationLimitedFilter(comfortable_acceleration,
 		filter_brake_limit, simulation_time_step);
-	this->desired_velocity_filter = VelocityFilter(comfortable_acceleration,
+	this->desired_velocity_filter = VariationLimitedFilter(comfortable_acceleration,
 		filter_brake_limit, simulation_time_step);
 
 	if (verbose) {
@@ -55,6 +56,15 @@ LongitudinalController::LongitudinalController(
 //	this->velocity_controller_gains = gains;
 //}
 
+double LongitudinalController::get_desired_time_headway() const {
+	return h_vehicle_following;
+}
+
+double LongitudinalController::get_safe_time_headway(
+	bool has_lane_change_intention) const {
+	return has_lane_change_intention ? h_lane_change : h_vehicle_following;
+}
+
 double LongitudinalController::compute_time_headway_gap(double time_headway,
 	double velocity) {
 	/* TODO: for now we assumed the standstill distance (d) is the same for 
@@ -62,8 +72,10 @@ double LongitudinalController::compute_time_headway_gap(double time_headway,
 	return time_headway * velocity + d;
 }
 
-double LongitudinalController::compute_desired_gap(double velocity_ego) {
-	return compute_time_headway_gap(h, velocity_ego);
+double LongitudinalController::compute_desired_gap(double velocity_ego,
+	bool has_lane_change_intention) {
+	double time_headway = get_safe_time_headway(has_lane_change_intention);
+	return compute_time_headway_gap(time_headway, velocity_ego);
 }
 
 double LongitudinalController::compute_gap_error(
@@ -83,8 +95,10 @@ double LongitudinalController::compute_velocity_error(double velocity_ego,
 }
 
 double LongitudinalController::estimate_gap_error_derivative(
-	double velocity_error, double acceleration) {
-	return velocity_error - h * acceleration;
+	double velocity_error, double acceleration, bool has_lane_change_intention) {
+	/* TODO [Oct 29, 2021]: should be changet to e_v - h.a - dh/dt.v */
+	double time_headway = get_safe_time_headway(has_lane_change_intention);
+	return velocity_error - time_headway * acceleration;
 }
 
 double LongitudinalController::compute_acceleration_error(
@@ -93,12 +107,13 @@ double LongitudinalController::compute_acceleration_error(
 }
 
 double LongitudinalController::compute_gap_threshold(double free_flow_velocity, 
-	double velocity_error) {
+	double velocity_error, bool has_lane_change_intention) {
 	/* Threshold is computed such that, at the switch, the vehicle following 
 	input is greater or equal to kg*h*(Vf - v) > 0. */
+	double time_headway = get_safe_time_headway(has_lane_change_intention);
 	double kg = autonomous_gains.kg;
 	double kv = autonomous_gains.kv;
-	return h * free_flow_velocity + d - 1 / kg * (kv * velocity_error);
+	return time_headway * free_flow_velocity + d - 1 / kg * (kv * velocity_error);
 	/* Other threshold options: 
 	- VISSIM's maximum gap: 250 
 	- Worst-case: h*vf + d + (kv*vf)/kg = (h + kv/kg)*vf + d*/
@@ -106,14 +121,15 @@ double LongitudinalController::compute_gap_threshold(double free_flow_velocity,
 
 double LongitudinalController::compute_gap_threshold(double free_flow_velocity,
 	double velocity_error, double gap_error_derivative, 
-	double acceleration_error) {
+	double acceleration_error, bool has_lane_change_intention) {
 	/* Threshold is computed such that, at the switch, the vehicle following
 	input is greater or equal to kg*h*(Vf - v) > 0. */
+	double time_headway = get_safe_time_headway(has_lane_change_intention);
 	double kg = connected_gains.kg;
 	double kv = connected_gains.kv;
 	double kgd = connected_gains.kgd;
 	double ka = connected_gains.ka;
-	return h * free_flow_velocity + d - 1 / kg * (kv * velocity_error 
+	return time_headway * free_flow_velocity + d - 1 / kg * (kv * velocity_error 
 		+ kgd * gap_error_derivative + ka * acceleration_error);
 	/* Other threshold options:
 	- VISSIM's maximum gap: 250
@@ -123,13 +139,15 @@ double LongitudinalController::compute_gap_threshold(double free_flow_velocity,
 double LongitudinalController::compute_vehicle_following_input(
 	const EgoVehicle& ego_vehicle, const NearbyVehicle& leader) {
 
+	bool has_lane_change_intention = ego_vehicle.has_lane_change_intention();
 	double ego_velocity = ego_vehicle.get_velocity();
 	double gap = ego_vehicle.compute_gap(leader);
-	double gap_reference = compute_desired_gap(ego_velocity);
+	double gap_reference = compute_desired_gap(ego_velocity,
+		has_lane_change_intention);
 	double gap_error = compute_gap_error(gap, gap_reference);
 	double velocity_reference = leader.compute_velocity(ego_velocity);
 	double filtered_velocity_reference =
-		leader_velocity_filter.filter_velocity(velocity_reference);
+		leader_velocity_filter.apply_filter(velocity_reference);
 	double velocity_error = compute_velocity_error(
 		ego_velocity, filtered_velocity_reference);
 
@@ -146,7 +164,7 @@ double LongitudinalController::compute_vehicle_following_input(
 	if (is_connected) {
 		double ego_acceleration = ego_vehicle.get_acceleration();
 		double gap_error_derivative = estimate_gap_error_derivative(
-			velocity_error, ego_acceleration);
+			velocity_error, ego_acceleration, has_lane_change_intention);
 		double acceleration_error = compute_acceleration_error(
 			ego_acceleration, leader.get_acceleration());
 		desired_acceleration = connected_gains.kg * gap_error
@@ -198,7 +216,7 @@ double LongitudinalController::compute_velocity_control_input(
 	double ego_acceleration = ego_vehicle.get_acceleration();
 	//double velocity_reference = ego_reference_velocity;
 	double filtered_velocity_reference =
-		desired_velocity_filter.filter_velocity(velocity_reference);
+		desired_velocity_filter.apply_filter(velocity_reference);
 	double velocity_error = compute_velocity_error(
 		ego_velocity, filtered_velocity_reference);
 	double acceleration_error = compute_acceleration_error(
@@ -253,6 +271,8 @@ double LongitudinalController::compute_desired_acceleration(
 	
 	double desired_acceleration;
 	State old_state = state;
+
+	/* TODO: here is where we should choose the time headway */
 
 	determine_controller_state(ego_vehicle, leader, velocity_reference);
 
@@ -319,17 +339,21 @@ void LongitudinalController::reset_accepted_risks() {
 	accepted_risk_to_leader = initial_risk;
 }
 
-void LongitudinalController::compute_max_risk_to_leader() {
+void LongitudinalController::compute_max_risk_to_leader(bool is_lane_changing) {
+	double time_headway = get_safe_time_headway(is_lane_changing);
 	max_risk_to_leader = std::sqrt(
-		2 * h * ego_max_brake * free_flow_velocity);
+		2 * time_headway * ego_max_brake * free_flow_velocity);
 	if (verbose) std::clog << "max risk to leader=" 
 		<< max_risk_to_leader << std::endl;
 }
 
 void LongitudinalController::update_safe_time_headway(
 	double lambda_1, double new_leader_max_brake) {
-	h = compute_time_headway_with_risk(free_flow_velocity,
+	h_vehicle_following = compute_time_headway_with_risk(free_flow_velocity,
 		ego_max_brake, new_leader_max_brake,
+		lambda_1, rho, 0);
+	h_lane_change = compute_time_headway_with_risk(free_flow_velocity,
+		ego_max_brake_lane_change, new_leader_max_brake,
 		lambda_1, rho, 0);
 }
 
@@ -337,14 +361,19 @@ void LongitudinalController::update_time_headway(
 	double lambda_1, double new_leader_max_brake) {
 	
 	if (verbose) {
-		std::clog << "Updating time headway from " << h;
+		std::clog << "Updating veh foll and lc time headways from " 
+			<< h_vehicle_following << " and " << h_lane_change;
 	}
 	
-	h = compute_time_headway_with_risk(free_flow_velocity,
+	h_vehicle_following = compute_time_headway_with_risk(free_flow_velocity,
 		ego_max_brake, new_leader_max_brake,
 		lambda_1, rho, accepted_risk_to_leader);
+	h_lane_change = compute_time_headway_with_risk(free_flow_velocity,
+		ego_max_brake_lane_change, new_leader_max_brake,
+		lambda_1, rho, accepted_risk_to_leader);
 	
-	if (verbose) std::clog << " to " << h << std::endl;
+	if (verbose) std::clog << " to " << h_vehicle_following 
+		<< " and " << h_lane_change << std::endl;
 }
 
 //void LongitudinalController::update_time_headway_with_new_risk(

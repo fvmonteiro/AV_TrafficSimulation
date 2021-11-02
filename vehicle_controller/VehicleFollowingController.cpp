@@ -8,7 +8,7 @@ VehicleFollowingController::VehicleFollowingController(
 	double comfortable_acceleration, double filter_brake_limit)
 	: simulation_time_step{ simulation_time_step },
 	kg{ kg }, kv{ kv }, is_connected{ false },
-	leader_velocity_filter{ VelocityFilter(comfortable_acceleration,
+	leader_velocity_filter{ VariationLimitedFilter(comfortable_acceleration,
 		filter_brake_limit, simulation_time_step) } {}
 
 VehicleFollowingController::VehicleFollowingController(
@@ -17,7 +17,7 @@ VehicleFollowingController::VehicleFollowingController(
 	double filter_brake_limit)
 	: simulation_time_step{ simulation_time_step },
 	kg{ kg }, kv{ kv }, kd{ kd }, ka{ ka }, is_connected{ true },
-	leader_velocity_filter{ VelocityFilter(comfortable_acceleration, 
+	leader_velocity_filter{ VariationLimitedFilter(comfortable_acceleration,
 		filter_brake_limit, simulation_time_step) } {}
 
 void VehicleFollowingController::compute_time_headway_with_risk(
@@ -82,7 +82,7 @@ double VehicleFollowingController::compute_input(
 	double gap, double ego_velocity, double leader_velocity) {
 	double gap_reference = compute_time_headway_gap(h, ego_velocity);
 	double gap_error = compute_gap_error(gap, gap_reference);
-	double velocity_reference = leader_velocity_filter.filter_velocity(
+	double velocity_reference = leader_velocity_filter.apply_filter(
 		leader_velocity);
 	double velocity_error = compute_velocity_error(ego_velocity, 
 		velocity_reference);

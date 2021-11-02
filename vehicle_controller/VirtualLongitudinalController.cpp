@@ -14,13 +14,12 @@ VirtualLongitudinalController::VirtualLongitudinalController() :
 	LongitudinalController() {}
 
 VirtualLongitudinalController::VirtualLongitudinalController(
-	const VehicleParameters& ego_parameters, double max_brake,
+	const VehicleParameters& ego_parameters,
 	VelocityControllerGains velocity_controller_gains,
 	AutonomousGains autonomous_gains, ConnectedGains connected_gains, 
 	bool verbose) :
 	LongitudinalController(ego_parameters, velocity_controller_gains,
 		autonomous_gains, connected_gains,
-		max_brake,
 		ego_parameters.comfortable_brake, verbose) {
 
 	if (verbose) {
@@ -29,10 +28,10 @@ VirtualLongitudinalController::VirtualLongitudinalController(
 }
 
 VirtualLongitudinalController::VirtualLongitudinalController(
-	const VehicleParameters& ego_parameters, double max_brake,
+	const VehicleParameters& ego_parameters, 
 	VelocityControllerGains velocity_controller_gains,
 	AutonomousGains autonomous_gains, ConnectedGains connected_gains) :
-	VirtualLongitudinalController(ego_parameters, max_brake,
+	VirtualLongitudinalController(ego_parameters,
 		velocity_controller_gains, autonomous_gains, connected_gains, 
 		false) {}
 
@@ -67,6 +66,7 @@ void VirtualLongitudinalController::determine_controller_state(
 		state = State::uninitialized;
 	}
 	else {
+		bool has_lane_change_intention = ego_vehicle.has_lane_change_intention();
 		double ego_velocity = ego_vehicle.get_velocity();
 		double leader_velocity = leader->compute_velocity(ego_velocity);
 		double velocity_error = compute_velocity_error(
@@ -78,14 +78,15 @@ void VirtualLongitudinalController::determine_controller_state(
 				reference_velocity,
 				velocity_error, 
 				estimate_gap_error_derivative(velocity_error, 
-					ego_acceleration),
+					ego_acceleration, has_lane_change_intention),
 				compute_acceleration_error(ego_acceleration,
-					leader->get_acceleration())
+					leader->get_acceleration()),
+				has_lane_change_intention
 			);
 		}
 		else {
 			gap_threshold = compute_gap_threshold(
-				reference_velocity, velocity_error);
+				reference_velocity, velocity_error, has_lane_change_intention);
 		}
 
 		double gap = ego_vehicle.compute_gap(leader);
@@ -190,12 +191,13 @@ compute_intermediate_risk_to_leader(double lambda_1,
 	double safe_h_no_lane_change = compute_time_headway_with_risk(
 		free_flow_velocity, max_brake_no_lane_change, leader_max_brake,
 		lambda_1, rho, 0);
-	intermediate_risk_to_leader = std::sqrt(2 * (h - safe_h_no_lane_change)
+	intermediate_risk_to_leader = std::sqrt(2 
+		* (h_lane_change - safe_h_no_lane_change)
 		* ego_max_brake * free_flow_velocity);
 
 	if (verbose) {
 		std::clog << "safe no lc h=" << safe_h_no_lane_change
-			<< ", h_lc=" << h
+			<< ", h_lc=" << h_lane_change
 			<< ", mid risk to leader="
 			<< intermediate_risk_to_leader << std::endl;
 	}

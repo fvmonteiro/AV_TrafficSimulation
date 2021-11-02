@@ -269,7 +269,7 @@
     <ClCompile Include="Vehicle.cpp" />
     <ClCompile Include="VehicleFollowingController.cpp" />
     <ClCompile Include="VelocityController.cpp" />
-    <ClCompile Include="VelocityFilter.cpp" />
+    <ClCompile Include="VariationLimitedFilter.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ControlManager.h" />
@@ -288,7 +288,7 @@
     <ClInclude Include="Vehicle.h" />
     <ClInclude Include="VehicleFollowingController.h" />
     <ClInclude Include="VelocityController.h" />
-    <ClInclude Include="VelocityFilter.h" />
+    <ClInclude Include="VariationLimitedFilter.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

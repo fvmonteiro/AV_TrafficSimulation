@@ -53,11 +53,13 @@ enum class UDA {
     transient_gap_to_fd,
     veh_following_gap_to_fd,
     safe_gap_to_dest_lane_follower,
+    dest_follower_time_headway,
     /* Debugging: assisted vehicle */
     assisted_veh_id = 130,
-    /* Debugging: other */
+    /* Debugging: other stuff */
     waiting_time = 140,
     risk = 141,
+    safe_time_headway = 142,
 
     first = h_to_assited_veh,
 };

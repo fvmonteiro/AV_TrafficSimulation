@@ -19,8 +19,8 @@ RealLongitudinalController::RealLongitudinalController(
 	bool verbose) :
 	LongitudinalController(ego_parameters, velocity_controller_gains,
 		autonomous_gains, connected_gains,
-		ego_parameters.max_brake, ego_parameters.max_brake, verbose) {
-	
+		ego_parameters.max_brake, verbose) {
+
 	if (verbose) {
 		std::clog << "Created real longitudinal controller" << std::endl;
 	}
@@ -42,7 +42,7 @@ RealLongitudinalController::RealLongitudinalController(
 
 void RealLongitudinalController::update_leader_velocity_filter(
 	double leader_velocity) {
-	leader_velocity_filter.filter_velocity(leader_velocity);
+	leader_velocity_filter.apply_filter(leader_velocity);
 }
 
 void RealLongitudinalController::determine_controller_state(
@@ -54,6 +54,7 @@ void RealLongitudinalController::determine_controller_state(
 		state = State::velocity_control;
 	}
 	else {
+		bool has_lane_change_intention = ego_vehicle.has_lane_change_intention();
 		double gap = ego_vehicle.compute_gap(leader);
 		//double gap = ego_vehicle.compute_gap(leader);
 		double ego_velocity = ego_vehicle.get_velocity();
@@ -68,14 +69,15 @@ void RealLongitudinalController::determine_controller_state(
 				reference_velocity,
 				velocity_error, 
 				estimate_gap_error_derivative(velocity_error, 
-					ego_acceleration),
+					ego_acceleration, has_lane_change_intention),
 				compute_acceleration_error(ego_acceleration,
-					leader->get_acceleration())
+					leader->get_acceleration()),
+				has_lane_change_intention
 			);
 		}
 		else {
 			gap_threshold = compute_gap_threshold(
-				reference_velocity, velocity_error);
+				reference_velocity, velocity_error, has_lane_change_intention);
 		}
 		if (state == State::vehicle_following) {
 			gap_threshold += hysteresis_bias;

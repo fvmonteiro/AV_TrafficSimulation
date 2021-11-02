@@ -1,6 +1,6 @@
 #pragma once
 
-#include "VelocityFilter.h"
+#include "VariationLimitedFilter.h"
 
 /* Constant time headway based controller */
 class VehicleFollowingController
@@ -67,6 +67,6 @@ private:
 	double max_gap_error{ 3.0 }; // maximum positive gap error in meters
 	bool is_connected{ false };
 
-	VelocityFilter leader_velocity_filter;
+	VariationLimitedFilter leader_velocity_filter;
 };
 

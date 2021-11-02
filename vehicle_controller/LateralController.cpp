@@ -38,9 +38,9 @@ double LateralController::compute_transient_gap(const EgoVehicle& ego_vehicle,
 		double comfortable_acceleration = 
 			ego_vehicle.get_comfortable_acceleration();
 		longitudinal_acceleration = -relative_velocity / lane_change_duration;
-		longitudinal_acceleration = std::min(std::max(longitudinal_acceleration, 
-											          -comfortable_acceleration), 
-											 comfortable_acceleration);
+		longitudinal_acceleration = std::min(std::max(
+			longitudinal_acceleration, -comfortable_acceleration),
+			comfortable_acceleration);
 	}
 	else {
 		longitudinal_acceleration = 0.0;

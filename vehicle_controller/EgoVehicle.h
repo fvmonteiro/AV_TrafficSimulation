@@ -14,7 +14,6 @@
 #include "Vehicle.h"
 
 
-
 class EgoVehicle : public Vehicle {
 public:
 	//using Vehicle::set_category;
@@ -101,9 +100,12 @@ public:
 
 	/* Checks whether vehicle is lane changing and returns proper value*/
 	double get_current_max_brake() const;
-	VehicleParameters get_static_parameters();
-	/* Used for debugging only */
+	VehicleParameters get_static_parameters() const;
+
+	/* Used for debugging */
 	double get_time_headway_to_assisted_vehicle();
+	double get_safe_time_headway() const;
+	double get_dest_follower_time_headway() const;
 
 	void set_lane(long lane);
 	void set_link(long link);
