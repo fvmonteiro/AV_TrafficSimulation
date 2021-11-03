@@ -295,9 +295,8 @@ double ControlManager::determine_desired_acceleration(
 		possible_accelerations[ActiveACC::origin_lane] =
 			desired_acceleration_origin_lane;
 
-		/* Control to adjust to destination lane leader */
-		/* TEST: if the current lane is free, we try to overtake the vehicle
-		at the destination lane */
+		/* Control to adjust to destination lane leader
+		If the current lane is free, we try to overtake the future leader */
 		if (ego_vehicle.has_destination_lane_leader()
 			&& (origin_lane_controller.get_state() 
 				!= LongitudinalController::State::velocity_control)) {
@@ -366,8 +365,13 @@ double ControlManager::determine_desired_acceleration(
 
 
 		/* Control to generate a gap for a vehicle that wants to
-		move into the ego vehicle lane (cooperative control) */
-		if (ego_vehicle.is_cooperating_to_generate_gap()) {
+		move into the ego vehicle lane (cooperative control) 
+		The ego vehicle doesn't cooperate if its own lane is free ahead*/
+		if (ego_vehicle.is_cooperating_to_generate_gap()
+			&& ((origin_lane_controller.get_state()
+				!= LongitudinalController::State::velocity_control) 
+				|| (end_of_lane_controller.get_state() 
+					!= LongitudinalController::State::velocity_control))) {
 			if (verbose) {
 				std::clog << "Gap generating controller"
 					<< std::endl;

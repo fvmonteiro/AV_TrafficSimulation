@@ -1081,7 +1081,7 @@ double EgoVehicle::compute_collision_severity_risk_to_leader() {
 
 void EgoVehicle::set_desired_lane_change_direction(
 	/*long preferred_relative_lane*/) {
-	/* Both preferred_relative_lane and rel_target_lane indicate
+	/* Both preferred_relative_lane and relative_target_lane indicate
 	desire to change lanes. The former indicates preference due to 
 	routing, so it takes precedence over the latter. */
 	RelativeLane& pref_rel_lane = get_preferred_relative_lane();
