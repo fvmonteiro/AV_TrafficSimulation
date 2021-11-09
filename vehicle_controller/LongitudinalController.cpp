@@ -272,8 +272,6 @@ double LongitudinalController::compute_desired_acceleration(
 	double desired_acceleration;
 	State old_state = state;
 
-	/* TODO: here is where we should choose the time headway */
-
 	determine_controller_state(ego_vehicle, leader, velocity_reference);
 
 	switch (state)

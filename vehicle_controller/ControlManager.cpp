@@ -24,7 +24,7 @@ ControlManager::ControlManager(const VehicleParameters& vehicle_parameters,
 
 	this->ego_parameters = vehicle_parameters;
 
-	bool is_long_control_verbose = verbose & true;
+	bool is_long_control_verbose = verbose & false;
 
 	this->origin_lane_controller = RealLongitudinalController(
 		vehicle_parameters, desired_velocity_controller_gains,
@@ -295,39 +295,6 @@ double ControlManager::determine_desired_acceleration(
 		possible_accelerations[ActiveACC::origin_lane] =
 			desired_acceleration_origin_lane;
 
-		/* Control to adjust to destination lane leader
-		If the current lane is free, we try to overtake the future leader */
-		if (ego_vehicle.has_destination_lane_leader()
-			&& (origin_lane_controller.get_state() 
-				!= LongitudinalController::State::velocity_control)) {
-			if (verbose) {
-				std::clog << "Dest. lane controller"
-					<< std::endl;
-			}
-			std::shared_ptr<NearbyVehicle> dest_lane_leader =
-				ego_vehicle.get_destination_lane_leader();
-			double ego_velocity = ego_vehicle.get_velocity();
-			double reference_velocity = determine_low_velocity_reference(
-				ego_velocity, *dest_lane_leader);
-
-			/* If the ego vehicle is braking hard due to conditions on
-			the current lane, the destination lane controller, which
-			uses comfortable constraints, must be updated. */
-			if ((active_longitudinal_controller
-				!= ActiveACC::destination_lane)
-				&& destination_lane_controller.is_outdated(ego_velocity)) {
-				destination_lane_controller.reset_desired_velocity_filter(
-					ego_velocity);
-			}
-
-			double desired_acceleration_dest_lane =
-				destination_lane_controller.compute_desired_acceleration(
-					ego_vehicle, dest_lane_leader, reference_velocity);
-			possible_accelerations[
-				ActiveACC::destination_lane] =
-				desired_acceleration_dest_lane;
-		}
-
 		/* Control to wait at the end of the lane while
 		looking for an appropriate lane change gap. Without this,
 		vehicles might miss a desired exit. */
@@ -358,11 +325,66 @@ double ControlManager::determine_desired_acceleration(
 				end_of_lane_controller.compute_desired_acceleration(
 					ego_vehicle, virtual_vehicle,
 					ego_parameters.desired_velocity);
-			possible_accelerations[
-				ActiveACC::end_of_lane] =
-				desired_acceleration_end_of_lane;
+			if (end_of_lane_controller.get_state()
+				== LongitudinalController::State::vehicle_following) {
+				possible_accelerations[
+					ActiveACC::end_of_lane] =
+					desired_acceleration_end_of_lane;
+			}
 		}
 
+		/* Control to adjust to destination lane leader
+		If the current lane is free, we try to overtake the future leader
+		[Nov 5] Currently testing new option. Try to overtake only if
+		desired speed is greater than future leader's velocity */
+		double ego_velocity = ego_vehicle.get_velocity();
+		double origin_lane_reference_velocity =
+			ego_parameters.desired_velocity;
+		if (origin_lane_controller.get_state()
+			== LongitudinalController::State::vehicle_following) {
+			origin_lane_reference_velocity = ego_vehicle.get_leader()
+				->compute_velocity(ego_velocity);
+		}
+
+		/* We only activate if the vehicle has a destination lane 
+		leader AND
+		(the velocity reference at the origin lane is lower than the one at 
+		the destination lane OR the end of lane controller is active)*/
+		if (ego_vehicle.has_destination_lane_leader()
+			&& ((ego_vehicle.get_destination_lane_leader()
+				->compute_velocity(ego_velocity)
+				> origin_lane_reference_velocity)
+				|| (end_of_lane_controller.get_state()
+					== LongitudinalController::State::vehicle_following))
+			/*&& (origin_lane_controller.get_state()
+				!= LongitudinalController::State::velocity_control)*/) {
+			if (verbose) {
+				std::clog << "Dest. lane controller"
+					<< std::endl;
+			}
+			std::shared_ptr<NearbyVehicle> dest_lane_leader =
+				ego_vehicle.get_destination_lane_leader();
+			double ego_velocity = ego_vehicle.get_velocity();
+			double reference_velocity = determine_low_velocity_reference(
+				ego_velocity, *dest_lane_leader);
+
+			/* If the ego vehicle is braking hard due to conditions on
+			the current lane, the destination lane controller, which
+			uses comfortable constraints, must be updated. */
+			if ((active_longitudinal_controller
+				!= ActiveACC::destination_lane)
+				&& destination_lane_controller.is_outdated(ego_velocity)) {
+				destination_lane_controller.reset_desired_velocity_filter(
+					ego_velocity);
+			}
+
+			double desired_acceleration_dest_lane =
+				destination_lane_controller.compute_desired_acceleration(
+					ego_vehicle, dest_lane_leader, reference_velocity);
+			possible_accelerations[
+				ActiveACC::destination_lane] =
+				desired_acceleration_dest_lane;
+		}
 
 		/* Control to generate a gap for a vehicle that wants to
 		move into the ego vehicle lane (cooperative control) 
@@ -370,8 +392,8 @@ double ControlManager::determine_desired_acceleration(
 		if (ego_vehicle.is_cooperating_to_generate_gap()
 			&& ((origin_lane_controller.get_state()
 				!= LongitudinalController::State::velocity_control) 
-				|| (end_of_lane_controller.get_state() 
-					!= LongitudinalController::State::velocity_control))) {
+				/*|| (end_of_lane_controller.get_state() 
+					!= LongitudinalController::State::velocity_control)*/)) {
 			if (verbose) {
 				std::clog << "Gap generating controller"
 					<< std::endl;
@@ -432,7 +454,7 @@ double ControlManager::determine_low_velocity_reference(double ego_velocity,
 	/* The fraction of the leader speed has to vary. Otherwise, vehicles 
 	take too long to create safe gaps at low speeds*/
 	double vel_fraction;
-	if (leader_velocity < 10 / 3.6) {
+	if (leader_velocity < 5 / 3.6) {
 		vel_fraction = 0;
 	}
 	else if (leader_velocity < 40 / 3.6) {
