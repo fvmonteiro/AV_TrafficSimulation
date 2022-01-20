@@ -54,6 +54,10 @@ bool NearbyVehicle::is_ahead() const {
 	return get_relative_position() > 0;
 }
 
+bool NearbyVehicle::is_behind() const {
+	return !is_ahead();
+}
+
 bool NearbyVehicle::is_lane_changing() const {
 	return lane_change_direction != RelativeLane::same;
 }
@@ -77,11 +81,18 @@ bool NearbyVehicle::is_cutting_in() const {
 	return false;
 }
 
-bool NearbyVehicle::requesting_to_move_in() const {
-	if (is_connected() && is_ahead()
-		&& (has_lane_change_intention())
-		&& (relative_lane 
-			== desired_lane_change_direction.get_opposite())) {
+bool NearbyVehicle::is_requesting_to_merge_ahead() const {
+	if (is_connected() && is_ahead() && has_lane_change_intention()
+		&& (relative_lane == desired_lane_change_direction.get_opposite())) {
+		return true;
+	}
+	return false;
+}
+
+bool NearbyVehicle::is_requesting_to_merge_behind() const {
+	if (is_connected() && is_behind() && has_lane_change_intention()
+		&& (relative_lane == desired_lane_change_direction.get_opposite()
+			|| relative_lane == RelativeLane::same)) {
 		return true;
 	}
 	return false;

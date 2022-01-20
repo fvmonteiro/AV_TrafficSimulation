@@ -143,6 +143,10 @@ VehicleParameters EgoVehicle::get_static_parameters() const {
 	};
 }
 
+double EgoVehicle::get_free_flow_velocity() const {
+	return try_go_at_max_vel ? MAX_VELOCITY: desired_velocity;
+}
+
 double EgoVehicle::get_time_headway_to_assisted_vehicle() {
 	return controller.get_gap_generation_lane_controller().
 		get_desired_time_headway();
@@ -430,7 +434,9 @@ void EgoVehicle::analyze_nearby_vehicles() {
 			}
 		}
 
-		if (is_connected() && nearby_vehicle->requesting_to_move_in()) {
+		// Dealing with cooperation requests
+		if (is_connected() 
+			&& nearby_vehicle->is_requesting_to_merge_ahead()) {
 			assisted_vehicle_found = true;
 			if (!is_cooperating_to_generate_gap()
 				|| (assisted_vehicle->get_id()
@@ -439,6 +445,15 @@ void EgoVehicle::analyze_nearby_vehicles() {
 					get_velocity(), *nearby_vehicle);
 			}
 			assisted_vehicle = nearby_vehicle;
+		}
+
+		if (is_connected() 
+			&& nearby_vehicle->is_requesting_to_merge_behind()) {
+			try_go_at_max_vel = true; /* [Jan 17] deactivated this 
+									   option for tests*/
+		}
+		else {
+			try_go_at_max_vel = false;
 		}
 	}
 
@@ -617,7 +632,8 @@ long EgoVehicle::get_color_by_controller_state() {
 		switch (controller.get_longitudinal_controller_state())
 		{
 		case LongitudinalController::State::velocity_control:
-			return orig_lane_vel_control_color;
+			return try_go_at_max_vel? 
+				orig_lane_max_vel_control_color : orig_lane_vel_control_color;
 		case LongitudinalController::State::vehicle_following:
 			return orig_lane_veh_foll_color;
 		default:
@@ -784,18 +800,18 @@ long EgoVehicle::decide_lane_change_direction() {
 		&& !give_lane_change_control_to_vissim()) {
 		if (has_lane_change_intention()) {
 			bool gap_same_lane_is_safe = (!has_leader())
-				|| ((compute_gap(leader) + 0.01)
+				|| ((compute_gap(leader) + 0.1)
 					>= compute_safe_lane_change_gap(leader));
 
 			bool gap_ahead_is_safe = (!has_destination_lane_leader()) 
-				|| ((compute_gap(destination_lane_leader) + 0.01) 
+				|| ((compute_gap(destination_lane_leader) + 0.1) 
 					>= compute_safe_lane_change_gap(destination_lane_leader));
 			
 			/* besides the regular safety conditions, we add the case 
 			where the dest lane follower has completely stopped to give room 
 			to the lane changing vehicle */
 			bool gap_behind_is_safe = (!has_destination_lane_follower())
-				|| ((compute_gap(destination_lane_follower) + 0.01)
+				|| ((compute_gap(destination_lane_follower) + 0.1)
 					>= compute_safe_lane_change_gap(destination_lane_follower))
 				|| ((destination_lane_follower->
 					compute_velocity(get_velocity()) <= 1.0)
@@ -878,7 +894,7 @@ bool EgoVehicle::is_cooperating_to_generate_gap() const {
 	OR
 	- The ego vehicle is also trying to change lanes
 	*/
-	if (assisted_vehicle != nullptr) {
+	/*if (assisted_vehicle != nullptr) {
 		if (controller.get_active_longitudinal_controller()
 			== ControlManager::ActiveACC::origin_lane) {
 			double max_braking_distance =
@@ -887,8 +903,8 @@ bool EgoVehicle::is_cooperating_to_generate_gap() const {
 		}
 		return true;
 	}
-	return false;
-	//return assisted_vehicle != nullptr;
+	return false;*/
+	return assisted_vehicle != nullptr;
 }
 
 //std::shared_ptr<NearbyVehicle> EgoVehicle::find_nearby_vehicle(
@@ -1085,6 +1101,11 @@ void EgoVehicle::set_desired_lane_change_direction(
 	desire to change lanes. The former indicates preference due to 
 	routing, so it takes precedence over the latter. */
 	RelativeLane& pref_rel_lane = get_preferred_relative_lane();
+
+	/* TODO: check all lane change possible variables from vissim */
+	/*if (verbose) {
+		std::clog << 
+	}*/
 
 	if (pref_rel_lane.is_to_the_left()) {
 		desired_lane_change_direction = RelativeLane::left;

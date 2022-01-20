@@ -110,6 +110,7 @@ public:
 
 private:
 	VehicleParameters ego_parameters;
+	double min_overtaking_rel_vel{ 10.0 / 3.6 };
 
 	AutonomousGains autonomous_real_following_gains{ 0.2, 1.0 };
 	AutonomousGains autonomous_virtual_following_gains{ 0.4, 1.0 };

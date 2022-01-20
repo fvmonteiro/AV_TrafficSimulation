@@ -76,15 +76,18 @@ public:
 	double compute_velocity(double ego_velocity) const;
 	bool is_on_same_lane() const;
 	bool is_ahead() const;
+	bool is_behind() const;
 	bool is_lane_changing() const override;
 	bool is_cutting_in() const;
-	bool requesting_to_move_in() const;
+	bool is_requesting_to_merge_ahead() const;
+	bool is_requesting_to_merge_behind() const;
 	/*void fill_with_dummy_values();
 	void copy_current_states(NearbyVehicle& nearby_vehicle);*/
 	void compute_safe_gap_parameters();
 
 	std::string to_string() const;
-	friend std::ostream& operator<< (std::ostream& out, const NearbyVehicle& vehicle);
+	friend std::ostream& operator<< (std::ostream& out, 
+		const NearbyVehicle& vehicle);
 
 private:
 	RelativeLane relative_lane{ RelativeLane::same };

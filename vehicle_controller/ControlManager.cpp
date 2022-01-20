@@ -60,7 +60,7 @@ ControlManager::ControlManager(const VehicleParameters& vehicle_parameters,
 	this stopped vehicle has a lower max brake so that the time headway
 	will be small. */
 	end_of_lane_controller.update_time_headway(
-		ego_parameters.lambda_1, ego_parameters.max_brake / 2);
+		ego_parameters.lambda_1, ego_parameters.max_brake / 4);
 }
 
 ControlManager::ControlManager(const VehicleParameters& vehicle_parameters)
@@ -291,7 +291,7 @@ double ControlManager::determine_desired_acceleration(
 		double desired_acceleration_origin_lane =
 			origin_lane_controller.compute_desired_acceleration(
 				ego_vehicle, ego_vehicle.get_leader(),
-				ego_parameters.desired_velocity);
+				ego_vehicle.get_free_flow_velocity());
 		possible_accelerations[ActiveACC::origin_lane] =
 			desired_acceleration_origin_lane;
 
@@ -334,9 +334,8 @@ double ControlManager::determine_desired_acceleration(
 		}
 
 		/* Control to adjust to destination lane leader
-		If the current lane is free, we try to overtake the future leader
-		[Nov 5] Currently testing new option. Try to overtake only if
-		desired speed is greater than future leader's velocity */
+		Try to overtake only if desired speed is greater than future 
+		leader's velocity */
 		double ego_velocity = ego_vehicle.get_velocity();
 		double origin_lane_reference_velocity =
 			ego_parameters.desired_velocity;
@@ -353,7 +352,7 @@ double ControlManager::determine_desired_acceleration(
 		if (ego_vehicle.has_destination_lane_leader()
 			&& ((ego_vehicle.get_destination_lane_leader()
 				->compute_velocity(ego_velocity)
-				> origin_lane_reference_velocity)
+				> origin_lane_reference_velocity - min_overtaking_rel_vel)
 				|| (end_of_lane_controller.get_state()
 					== LongitudinalController::State::vehicle_following))
 			/*&& (origin_lane_controller.get_state()
@@ -388,12 +387,16 @@ double ControlManager::determine_desired_acceleration(
 
 		/* Control to generate a gap for a vehicle that wants to
 		move into the ego vehicle lane (cooperative control) 
-		The ego vehicle doesn't cooperate if its own lane is free ahead*/
+		
+		[No longer true - Jan 17]
+		The ego vehicle doesn't cooperate if its own lane is free ahead */
+
 		if (ego_vehicle.is_cooperating_to_generate_gap()
-			&& ((origin_lane_controller.get_state()
-				!= LongitudinalController::State::velocity_control) 
+			/*&& ((origin_lane_controller.get_state()
+				!= LongitudinalController::State::velocity_control) */
 				/*|| (end_of_lane_controller.get_state() 
-					!= LongitudinalController::State::velocity_control)*/)) {
+					!= LongitudinalController::State::velocity_control))*/
+			) {
 			if (verbose) {
 				std::clog << "Gap generating controller"
 					<< std::endl;

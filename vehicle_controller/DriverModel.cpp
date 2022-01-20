@@ -18,7 +18,7 @@
 
 /*==========================================================================*/
 
-const std::unordered_set<long> LOGGED_VEHICLES_IDS{ 9 };
+const std::unordered_set<long> LOGGED_VEHICLES_IDS{ 2 };
 const bool CLUELESS_DEBUGGING{ false };
 
 SimulationLogger simulation_logger;
@@ -126,7 +126,7 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
                 return 0;
             /* Debugging: assisted vehicle */
             case UDA::assisted_veh_id:
-                return 0;
+                return 1;
             /* Debugging: other */
             case UDA::waiting_time:
                 return 0;
@@ -346,6 +346,7 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
             long_value);
         return 1;
     case DRIVER_DATA_REL_TARGET_LANE        :
+        /* Apparently this is VISSIM's suggestion of target lane */
         vehicles[current_vehicle_id].set_rel_target_lane(long_value);
         return 1;
     default :

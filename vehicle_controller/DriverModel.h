@@ -155,7 +155,7 @@ enum class UDA {
 #define  DRIVER_DATA_VEH_USE_PREFERRED_LANE  215
 
 /* double: desired speed [m/s]              */
-           /*         (also used by DriverModelGetValue()!) */
+/*         (also used by DriverModelGetValue()!) */
 #define  DRIVER_DATA_VEH_DESIRED_VELOCITY    216
 
 /* double: world coordinate X (vehicle front end) */
