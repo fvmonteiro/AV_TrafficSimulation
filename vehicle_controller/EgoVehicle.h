@@ -264,15 +264,17 @@ private:
 	double tau_d{ 0.0 };
 	double comfortable_brake{ COMFORTABLE_BRAKE }; // [m/s^2]
 
-	/* Parameter related to emergency braking during lane change [m/s] */
-	double lambda_1_lane_change{ 0.0 };
-	
-	/* Connected vehicles following non-connected vehicles must use
-	non-connected parameters. */
-	double lambda_1_connected{ 0.0 };
-	/* Connected vehicles following non-connected vehicles must use
-	non-connected parameters. */
-	double lambda_0_connected{ 0.0 };
+	/* Emergency braking parameters for special cases */
+
+	/* Emergency braking parameter during lane change */
+	double lambda_1_lane_change{ 0.0 }; // [m/s]
+	/* Emergency braking parameter between connected vehicles */
+	double lambda_1_connected{ 0.0 }; // [m/s]
+	double lambda_0_connected{ 0.0 }; // [m]
+	/* Emergency braking parameter between connected vehicles 
+	during lane change */
+	double lambda_1_lane_change_connected{ 0.0 }; // [m/s]
+
 
 	/* Keeps track of stopped time waiting for lane change */
 	double waiting_time{ 0.0 };

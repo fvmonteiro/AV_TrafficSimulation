@@ -30,6 +30,11 @@ LongitudinalController::LongitudinalController(
 		filter_brake_limit, simulation_time_step);
 	this->desired_velocity_filter = VariationLimitedFilter(comfortable_acceleration,
 		filter_brake_limit, simulation_time_step);
+	/* Let's not limit the variation of h for now. Just filtering it 
+	should be enough */
+	this->time_headway_filter = VariationLimitedFilter(100, -100, 
+		simulation_time_step);
+	time_headway_filter.set_gain(0.3);
 
 	if (verbose) {
 		std::clog << "Created base longitudinal controller with "
@@ -72,9 +77,19 @@ double LongitudinalController::compute_time_headway_gap(double time_headway,
 	return time_headway * velocity + d;
 }
 
+double LongitudinalController::compute_safe_time_headway_gap(
+	double ego_velocity, bool has_lane_change_intention) {
+
+	return get_safe_time_headway(has_lane_change_intention) * ego_velocity
+		+ d;
+}
+
 double LongitudinalController::compute_desired_gap(double velocity_ego,
 	bool has_lane_change_intention) {
 	double time_headway = get_safe_time_headway(has_lane_change_intention);
+
+	/* TODO: have a filter for the desired time headway */
+
 	return compute_time_headway_gap(time_headway, velocity_ego);
 }
 
@@ -345,33 +360,56 @@ void LongitudinalController::compute_max_risk_to_leader(bool is_lane_changing) {
 		<< max_risk_to_leader << std::endl;
 }
 
-void LongitudinalController::update_safe_time_headway(
-	double lambda_1, double new_leader_max_brake) {
-	h_vehicle_following = compute_time_headway_with_risk(free_flow_velocity,
-		ego_max_brake, new_leader_max_brake,
-		lambda_1, rho, 0);
-	h_lane_change = compute_time_headway_with_risk(free_flow_velocity,
-		ego_max_brake_lane_change, new_leader_max_brake,
-		lambda_1, rho, 0);
-}
+//void LongitudinalController::update_safe_time_headway(
+//	double lambda_1, double new_leader_max_brake) {
+//	h_vehicle_following = compute_time_headway_with_risk(free_flow_velocity,
+//		ego_max_brake, new_leader_max_brake,
+//		lambda_1, rho, 0);
+//	h_lane_change = compute_time_headway_with_risk(free_flow_velocity,
+//		ego_max_brake_lane_change, new_leader_max_brake,
+//		lambda_1, rho, 0);
+//}
+
+//void LongitudinalController::update_time_headway(
+//	double lambda_1, double new_leader_max_brake) {
+//	
+//	if (verbose) {
+//		std::clog << "Updating veh foll and lc time headways from " 
+//			<< h_vehicle_following << " and " << h_lane_change;
+//	}
+//	
+//	h_vehicle_following = compute_time_headway_with_risk(free_flow_velocity,
+//		ego_max_brake, new_leader_max_brake,
+//		lambda_1, rho, accepted_risk_to_leader);
+//	h_lane_change = compute_time_headway_with_risk(free_flow_velocity,
+//		ego_max_brake_lane_change, new_leader_max_brake,
+//		lambda_1, rho, accepted_risk_to_leader);
+//	
+//	if (verbose) std::clog << " to " << h_vehicle_following 
+//		<< " and " << h_lane_change << std::endl;
+//}
 
 void LongitudinalController::update_time_headway(
-	double lambda_1, double new_leader_max_brake) {
-	
+	double lambda_1, double lambda_1_lc, double new_leader_max_brake) {
+
 	if (verbose) {
-		std::clog << "Updating veh foll and lc time headways from " 
+		std::clog << "Updating veh foll and lc time headways from "
 			<< h_vehicle_following << " and " << h_lane_change;
 	}
-	
+
 	h_vehicle_following = compute_time_headway_with_risk(free_flow_velocity,
 		ego_max_brake, new_leader_max_brake,
 		lambda_1, rho, accepted_risk_to_leader);
 	h_lane_change = compute_time_headway_with_risk(free_flow_velocity,
 		ego_max_brake_lane_change, new_leader_max_brake,
-		lambda_1, rho, accepted_risk_to_leader);
-	
-	if (verbose) std::clog << " to " << h_vehicle_following 
+		lambda_1_lc, rho, accepted_risk_to_leader);
+
+	if (verbose) std::clog << " to " << h_vehicle_following
 		<< " and " << h_lane_change << std::endl;
+
+	if (!time_headway_filter.get_is_initialized()) {
+		time_headway_filter.reset(h_vehicle_following);
+	}
 }
 
 //void LongitudinalController::update_time_headway_with_new_risk(

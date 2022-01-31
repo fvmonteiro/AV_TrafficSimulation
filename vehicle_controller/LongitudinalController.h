@@ -27,6 +27,7 @@ struct VehicleParameters {
 	double lambda_1{ 0.0 };
 	double lambda_1_lane_change{ 0.0 };
 	double lambda_1_connected{ 0.0 };
+	double lambda_1_lane_change_connected{ 0.0 };
 	bool is_connected{ false };
 };
 
@@ -88,11 +89,13 @@ public:
 	double compute_time_headway_gap(double time_headway, double velocity);
 	/* Computes the time headway value with zero accepted risk and assigns
 	this value to member h. */
-	void update_safe_time_headway(double lambda_1,
-		double new_leader_max_brake);
+	/*void update_safe_time_headway(double lambda_1,
+		double new_leader_max_brake);*/
 	/* Computes the time headway value using the currently accepted risk 
 	and assigns this value to member h. */
-	void update_time_headway(double lambda_1,
+	/*void update_time_headway(double lambda_1,
+		double new_leader_max_brake);*/
+	void update_time_headway(double lambda_1, double lambda_1_lc,
 		double new_leader_max_brake);
 	//void update_time_headway_with_new_risk(double lambda_1);
 	void reset_leader_velocity_filter(double reset_velocity);
@@ -102,9 +105,12 @@ public:
 	virtual void reset_accepted_risks();
 	void compute_max_risk_to_leader(bool is_lane_changing);
 
-	/* Computes constant time headway following distance */
+	double compute_safe_time_headway_gap(double ego_velocity,
+		bool has_lane_change_intention);
+
+	/* Computes desired gap with a possibly varying time headway */
 	double compute_desired_gap(double ego_velocity, bool has_lane_change_intention);
-	
+
 	/* Computes gap minus reference gap and upper bounds it 
 	with max_gap_error. */
 	double compute_gap_error(double gap, double reference_gap);
@@ -179,6 +185,7 @@ protected:
 
 	VariationLimitedFilter leader_velocity_filter;
 	VariationLimitedFilter desired_velocity_filter;
+	VariationLimitedFilter time_headway_filter;
 
 	bool verbose{ false };
 

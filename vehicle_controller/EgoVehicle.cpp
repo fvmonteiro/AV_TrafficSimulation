@@ -139,6 +139,7 @@ VehicleParameters EgoVehicle::get_static_parameters() const {
 		lambda_1,
 		lambda_1_lane_change,
 		lambda_1_connected,
+		lambda_1_lane_change_connected,
 		is_connected()
 	};
 }
@@ -771,7 +772,7 @@ double EgoVehicle::compute_time_headway_gap(
 
 	double time_headway_gap = 0.0;
 	if (other_vehicle != nullptr) {
-		time_headway_gap = controller.compute_time_headway_gap(
+		time_headway_gap = controller.compute_safe_time_headway_gap(
 			get_velocity(), has_lane_change_intention(), *other_vehicle);
 	}
 	return time_headway_gap;
@@ -791,7 +792,7 @@ long EgoVehicle::decide_lane_change_direction() {
 	
 	if (verbose) std::clog << "deciding lane change" << std::endl;
 	
-	double margin = 0.01; /* Given the asymptotic nature of controllers, 
+	double margin = 0.1; /* Given the asymptotic nature of controllers, 
 						  vehicles sometimes are very close to, but no exactly
 						  at, the safe gap. We give it some margin to 
 						  avoid unecessary long waits.*/
@@ -800,11 +801,11 @@ long EgoVehicle::decide_lane_change_direction() {
 		&& !give_lane_change_control_to_vissim()) {
 		if (has_lane_change_intention()) {
 			bool gap_same_lane_is_safe = (!has_leader())
-				|| ((compute_gap(leader) + 0.1)
+				|| ((compute_gap(leader) + margin)
 					>= compute_safe_lane_change_gap(leader));
 
 			bool gap_ahead_is_safe = (!has_destination_lane_leader()) 
-				|| ((compute_gap(destination_lane_leader) + 0.1) 
+				|| ((compute_gap(destination_lane_leader) + margin) 
 					>= compute_safe_lane_change_gap(destination_lane_leader));
 			
 			/* besides the regular safety conditions, we add the case 
@@ -1133,7 +1134,7 @@ void EgoVehicle::compute_safe_gap_parameters() {
 		comfortable_acceleration, get_lane_change_max_brake(), brake_delay);
 	
 	/* Non-connected vehicles only have one value for lambda_1 and lambda_0.
-	Connected vehicles have the "regular value" and a "non-connected" value
+	Connected vehicles have a "regular value" and a "non-connected" value
 	when dealing with non-connected neighbors. */
 	if (is_connected()) {
 		lambda_0_connected = 
@@ -1142,6 +1143,10 @@ void EgoVehicle::compute_safe_gap_parameters() {
 		lambda_1_connected =
 			compute_lambda_1(max_jerk, comfortable_acceleration,
 				max_brake, CONNECTED_BRAKE_DELAY);
+		lambda_1_lane_change_connected =
+			compute_lambda_1(max_jerk, comfortable_acceleration,
+				get_lane_change_max_brake(), CONNECTED_BRAKE_DELAY);
+		
 	}
 }
 

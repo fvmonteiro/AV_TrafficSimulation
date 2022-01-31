@@ -49,6 +49,7 @@ void VariationLimitedFilter::reset(double initial_value) {
 		std::clog << "------- Filter reset. Init value = "
 			<< initial_value << " -------" << std::endl;
 	}*/
+	if (!is_initialized) is_initialized = true;
 	this->current_value = initial_value;
 }
 
