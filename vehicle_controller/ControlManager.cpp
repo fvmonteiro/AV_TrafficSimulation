@@ -60,7 +60,8 @@ ControlManager::ControlManager(const VehicleParameters& vehicle_parameters,
 	this stopped vehicle has a lower max brake so that the time headway
 	will be small. */
 	end_of_lane_controller.update_time_headway(
-		ego_parameters.lambda_1, ego_parameters.max_brake / 4);
+		ego_parameters.lambda_1, ego_parameters.lambda_1_lane_change,
+		ego_parameters.max_brake / 4);
 }
 
 ControlManager::ControlManager(const VehicleParameters& vehicle_parameters)
@@ -120,18 +121,22 @@ void ControlManager::update_origin_lane_leader(double ego_velocity,
 		origin_lane_leader_type = new_type;
 		/* If both vehicles are connected, we use the connected value
 		of lambda_1. */
-		double appropriate_lambda_1;
+		double appropriate_lambda_1, appropriate_lambda_1_lane_change;
 		if (ego_parameters.is_connected 
 			&& (leader.is_connected())) {
 			origin_lane_controller.set_connexion(true);
 			appropriate_lambda_1 = ego_parameters.lambda_1_connected;
+			appropriate_lambda_1_lane_change =
+				ego_parameters.lambda_1_lane_change_connected;
 		}
 		else {
 			origin_lane_controller.set_connexion(false);
 			appropriate_lambda_1 = ego_parameters.lambda_1;
+			appropriate_lambda_1_lane_change =
+				ego_parameters.lambda_1_lane_change;
 		}
-		origin_lane_controller.update_time_headway(appropriate_lambda_1,
-			new_max_brake);
+		origin_lane_controller.update_time_headway(appropriate_lambda_1, 
+			appropriate_lambda_1_lane_change, new_max_brake);
 	}
 	if (!had_leader) {
 		origin_lane_controller.reset_leader_velocity_filter(ego_velocity);
@@ -154,18 +159,23 @@ void ControlManager::update_destination_lane_leader(
 		
 		/* If both vehicles are connected, we use the connected value
 		of lambda_1. */
-		double appropriate_lambda_1;
+		double appropriate_lambda_1, appropriate_lambda_1_lane_change;
 		if (ego_parameters.is_connected
 			&& (leader.is_connected())) {
 			destination_lane_controller.set_connexion(true);
 			appropriate_lambda_1 = ego_parameters.lambda_1_connected;
+			appropriate_lambda_1_lane_change =
+				ego_parameters.lambda_1_lane_change_connected;
 		}
 		else {
 			destination_lane_controller.set_connexion(false);
 			appropriate_lambda_1 = ego_parameters.lambda_1;
+			appropriate_lambda_1_lane_change =
+				ego_parameters.lambda_1_lane_change;
 		}
 		destination_lane_controller.update_time_headway(
-			appropriate_lambda_1, new_max_brake);
+			appropriate_lambda_1, appropriate_lambda_1_lane_change,
+			new_max_brake);
 		
 		/*destination_lane_controller.compute_intermediate_risk_to_leader(
 			appropriate_lambda_1,
@@ -203,7 +213,9 @@ void ControlManager::update_assisted_vehicle(
 		assisted_vehicle_max_brake = new_max_brake;
 
 		gap_generating_controller.update_time_headway(
-			ego_parameters.lambda_1_connected, new_max_brake);
+			ego_parameters.lambda_1_connected, 
+			ego_parameters.lambda_1_lane_change_connected,
+			new_max_brake);
 
 		// gap_generating_controller.compute_max_risk_to_leader();
 	}
@@ -476,7 +488,7 @@ double ControlManager::compute_safe_lane_change_gap(
 	const EgoVehicle& ego_vehicle, const NearbyVehicle& other_vehicle,
 	bool will_accelerate) {
 
-	double time_headway_gap = compute_time_headway_gap(
+	double safe_time_headway_gap = compute_safe_time_headway_gap(
 		ego_vehicle.get_velocity(), ego_vehicle.has_lane_change_intention(),
 		other_vehicle);
 	/* TODO: the function calls do not make much sense here.
@@ -487,21 +499,23 @@ double ControlManager::compute_safe_lane_change_gap(
 	double transient_gap = lateral_controller.compute_transient_gap(
 		ego_vehicle, other_vehicle, will_accelerate);
 
-	return time_headway_gap /*collision_free_gap*/ + transient_gap;
+	return safe_time_headway_gap /*collision_free_gap*/ + transient_gap;
 }
 
-double ControlManager::compute_time_headway_gap(double ego_velocity,
+double ControlManager::compute_safe_time_headway_gap(double ego_velocity,
 	bool has_lane_change_intention, const NearbyVehicle& other_vehicle) {
 	double time_headway_gap = 0.0;
 	//double ego_velocity = ego_vehicle.get_velocity();
 
 	if (other_vehicle.is_ahead()) {
 		if (other_vehicle.get_relative_lane() == RelativeLane::same) {
-			time_headway_gap = origin_lane_controller.compute_desired_gap(
+			time_headway_gap = 
+				origin_lane_controller.compute_safe_time_headway_gap(
 				ego_velocity, has_lane_change_intention);
 		}
 		else {
-			time_headway_gap = destination_lane_controller.compute_desired_gap(
+			time_headway_gap = 
+				destination_lane_controller.compute_safe_time_headway_gap(
 				ego_velocity, has_lane_change_intention);
 		}
 	}
@@ -541,42 +555,46 @@ void ControlManager::start_longitudinal_adjustment(double time) {
 
 void ControlManager::update_headways_with_risk(const EgoVehicle& ego_vehicle) {
 
-	if (verbose) {
-		std::clog << "Considering to increase risk" << std::endl;
-	}
+	/* This function has to be substantially changed to work. */
 
-	if (destination_lane_controller.update_accepted_risk(
-		ego_vehicle.get_time(), ego_vehicle)) {
+	//if (verbose) {
+	//	std::clog << "Considering to increase risk" << std::endl;
+	//}
 
-		if (ego_vehicle.has_destination_lane_leader()) {
-			destination_lane_controller.update_time_headway(
-				ego_parameters.lambda_1_lane_change,
-				ego_vehicle.get_destination_lane_leader()->get_max_brake());
-		}
-		/* TODO: should only enter this condition if follower_risk 
-		was changed 
-		And even so, we need to recompute the follower's lambda 1
-		because we erase and rebuild the NearbyVehicle object every time.
-		Maybe we should avoid this? */
-		if (ego_vehicle.has_destination_lane_follower()) {
-			std::shared_ptr<NearbyVehicle> dest_lane_follower =
-				ego_vehicle.get_destination_lane_follower();
+	///* TODO: include difference to check whether vehicles are connected */
 
-			if (ego_parameters.is_connected
-				&& dest_lane_follower->is_connected()) {
-				std::clog << "TODO: risk for connected vehicles not "
-					<< "yet fully coded." << std::endl;
-			}
+	//if (destination_lane_controller.update_accepted_risk(
+	//	ego_vehicle.get_time(), ego_vehicle)) {
 
-			double estimated_follower_free_flow_velocity =
-				ego_parameters.desired_velocity;
-			double ego_max_brake = ego_parameters.max_brake;
-			dest_lane_follower->compute_safe_gap_parameters();
-			destination_lane_controller.estimate_follower_time_headway(
-				*dest_lane_follower, ego_max_brake,
-				estimated_follower_free_flow_velocity);
-		}
-	}
+	//	if (ego_vehicle.has_destination_lane_leader()) {
+	//		destination_lane_controller.update_time_headway(
+	//			ego_parameters.lambda_1, ego_parameters.lambda_1_lane_change,
+	//			ego_vehicle.get_destination_lane_leader()->get_max_brake());
+	//	}
+	//	/* TODO: should only enter this condition if follower_risk 
+	//	was changed 
+	//	And even so, we need to recompute the follower's lambda 1
+	//	because we erase and rebuild the NearbyVehicle object every time.
+	//	Maybe we should avoid this? */
+	//	if (ego_vehicle.has_destination_lane_follower()) {
+	//		std::shared_ptr<NearbyVehicle> dest_lane_follower =
+	//			ego_vehicle.get_destination_lane_follower();
+
+	//		if (ego_parameters.is_connected
+	//			&& dest_lane_follower->is_connected()) {
+	//			std::clog << "TODO: risk for connected vehicles not "
+	//				<< "yet fully coded." << std::endl;
+	//		}
+
+	//		double estimated_follower_free_flow_velocity =
+	//			ego_parameters.desired_velocity;
+	//		double ego_max_brake = ego_parameters.max_brake;
+	//		dest_lane_follower->compute_safe_gap_parameters();
+	//		destination_lane_controller.estimate_follower_time_headway(
+	//			*dest_lane_follower, ego_max_brake,
+	//			estimated_follower_free_flow_velocity);
+	//	}
+	//}
 }
 
 std::string ControlManager::active_ACC_to_string(

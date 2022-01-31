@@ -93,7 +93,7 @@ public:
 	double compute_safe_lane_change_gap(const EgoVehicle& ego_vehicle, 
 		const NearbyVehicle& other_vehicle, bool will_accelerate = false);
 	/* Returns the time headway part of the safe lane change gap. */
-	double compute_time_headway_gap(double ego_velocity,
+	double compute_safe_time_headway_gap(double ego_velocity,
 		bool has_lane_change_intention, const NearbyVehicle& other_vehicle);
 
 	/* Resets accepted risk and risk timer */
@@ -102,6 +102,7 @@ public:
 	and the initial value of accepted risk, and starts the a timer. */
 	/*void start_longitudinal_adjustment(double time, double ego_velocity,
 		double adjustment_speed_factor);*/
+
 	void update_headways_with_risk(const EgoVehicle& ego_vehicle);
 
 	/* Printing ----------------------------------------------------------- */
