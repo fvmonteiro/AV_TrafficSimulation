@@ -94,14 +94,6 @@ void VirtualLongitudinalController::determine_controller_state(
 			gap_threshold -= hysteresis_bias;
 		}
 
-		if (verbose) {
-			std::clog << "Gap threshold = "
-				<< gap_threshold
-				<< ", gap = " << gap
-				<< " to leader id " << leader->get_id()
-				<< std::endl;
-		}
-
 		if ((gap > gap_threshold) 
 			|| (ego_velocity < std::min(reference_velocity, 5.0))) {
 			state = State::vehicle_following;
@@ -109,6 +101,16 @@ void VirtualLongitudinalController::determine_controller_state(
 		else {
 			state = State::velocity_control;
 		}
+
+		if (verbose) {
+			std::clog << "Gap threshold = "
+				<< gap_threshold
+				<< ", gap = " << gap
+				<< " to leader id " << leader->get_id()
+				<< ". State: " << state_to_string(state)
+				<< std::endl;
+		}
+
 	}
 }
 

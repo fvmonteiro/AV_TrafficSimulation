@@ -61,7 +61,7 @@ ControlManager::ControlManager(const VehicleParameters& vehicle_parameters,
 	will be small. */
 	end_of_lane_controller.update_time_headway(
 		ego_parameters.lambda_1, ego_parameters.lambda_1_lane_change,
-		ego_parameters.max_brake / 4);
+		ego_parameters.max_brake / 2);
 }
 
 ControlManager::ControlManager(const VehicleParameters& vehicle_parameters)
@@ -315,12 +315,15 @@ double ControlManager::determine_desired_acceleration(
 		At this point, we don't want to use this controller anymore. */
 		if ((ego_vehicle.get_preferred_relative_lane()
 			!= ego_vehicle.get_active_lane_change_direction())
-			&& (ego_vehicle.get_lane_end_distance() > 0)) {
+			&& (ego_vehicle.get_lane_end_distance() > -1)) {
+			// end of lane dist can get small negative values
 
 			if (verbose) {
 				std::clog << "End of lane controller"
 					<< std::endl;
 			}
+			LongitudinalController::State old_state =
+				end_of_lane_controller.get_state();
 
 			/* For now, we simulate a stopped vehicle at the end of
 			the lane to force the vehicle to stop before the end of
@@ -337,12 +340,21 @@ double ControlManager::determine_desired_acceleration(
 				end_of_lane_controller.compute_desired_acceleration(
 					ego_vehicle, virtual_vehicle,
 					ego_parameters.desired_velocity);
+
 			if (end_of_lane_controller.get_state()
 				== LongitudinalController::State::vehicle_following) {
+				
+				/* To avoid sudden high decelerations */
+				if (old_state != end_of_lane_controller.get_state()) {
+					end_of_lane_controller.reset_leader_velocity_filter(
+					ego_vehicle.get_velocity());
+				}
+
 				possible_accelerations[
 					ActiveACC::end_of_lane] =
 					desired_acceleration_end_of_lane;
 			}
+
 		}
 
 		/* Control to adjust to destination lane leader

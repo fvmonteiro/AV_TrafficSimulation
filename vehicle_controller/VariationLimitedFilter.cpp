@@ -32,7 +32,6 @@ VariationLimitedFilter::VariationLimitedFilter(double max_variation,
 			<< std::endl;
 	}
 
-	this->alpha = std::exp(-gain * time_step);
 	this->max_variation_per_time_step = this->max_variation_per_second 
 		* this->time_step;
 	this->min_variation_per_time_step = this->min_variation_per_second 
@@ -49,11 +48,19 @@ void VariationLimitedFilter::reset(double initial_value) {
 		std::clog << "------- Filter reset. Init value = "
 			<< initial_value << " -------" << std::endl;
 	}*/
-	if (!is_initialized) is_initialized = true;
+	if (!is_initialized) {
+		is_initialized = true;
+		compute_alpha();
+	}
 	this->current_value = initial_value;
 }
 
-double VariationLimitedFilter::apply_filter(double new_velocity) {
+void VariationLimitedFilter::set_gain(double new_gain) {
+	this->gain = new_gain;
+	compute_alpha();
+}
+
+double VariationLimitedFilter::apply_filter(double new_value) {
 	/* Filter equations:
 	v_f is the filtered velocity, v_r is the reference velocity
 	Continuous:
@@ -71,7 +78,7 @@ double VariationLimitedFilter::apply_filter(double new_velocity) {
 	*/
 
 	double filtered_variation;
-	double variation = new_velocity - current_value;
+	double variation = new_value - current_value;
 	if ((1 - alpha) * variation > max_variation_per_time_step) {
 		filtered_variation = max_variation_per_time_step;
 	}
@@ -81,7 +88,7 @@ double VariationLimitedFilter::apply_filter(double new_velocity) {
 	else {
 		filtered_variation = (1 - alpha) * variation;
 	}
-	double reference_velocity = current_value + filtered_variation;
+	double filtered_value = current_value + filtered_variation;
 
 	/*if (verbose) {
 		std::clog << "[f] previous value = " << previous_value
@@ -91,6 +98,10 @@ double VariationLimitedFilter::apply_filter(double new_velocity) {
 			<< "; new_value = " << reference_velocity << std::endl;
 	}*/
 
-	current_value = reference_velocity;
-	return reference_velocity;
+	current_value = filtered_value;
+	return filtered_value;
+}
+
+void VariationLimitedFilter::compute_alpha() {
+	alpha = std::exp(-gain * time_step);
 }

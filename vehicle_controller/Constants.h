@@ -32,7 +32,7 @@ const color_t BLUE_GREEN = ARGB(255, 0, 128, 128);
 const double MAX_DISTANCE = 300.0; // [m]
 const double MAX_VELOCITY = 130.0; /* [m/s] depends on which VISSIM desired
 								   speed distribution we use */
-const double CAR_MAX_BRAKE{ 7.5 }; // [m/s^2]
+const double CAR_MAX_BRAKE{ 6.0 }; // [m/s^2]
 const double TRUCK_MAX_BRAKE{ 5.5 }; // [m/s^2]
 const double ACTUATOR_CONSTANT{ 0.5 }; // [s].
 const double COMFORTABLE_ACCELERATION{ 2.0 }; // [m/s^2]

@@ -18,10 +18,10 @@ public:
 
 	double get_current_value() const { return current_value; };
 	bool get_is_initialized() const { return this->is_initialized; };
-	void set_gain(double new_gain) { this->gain = new_gain; };
-	
+		
 	void reset(double initial_value);
-	double apply_filter(double new_velocity);
+	void set_gain(double new_gain);	
+	double apply_filter(double new_value);
 
 private:
 	bool is_initialized{ false };
@@ -37,4 +37,6 @@ private:
 	double alpha{ 0.0 }; /* constant used in the discrete approximation of
 						 the first order actuator dynamics */
 	bool verbose = false;
+
+	void compute_alpha();
 };

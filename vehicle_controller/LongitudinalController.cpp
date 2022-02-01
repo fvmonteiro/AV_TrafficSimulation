@@ -86,9 +86,16 @@ double LongitudinalController::compute_safe_time_headway_gap(
 
 double LongitudinalController::compute_desired_gap(double velocity_ego,
 	bool has_lane_change_intention) {
-	double time_headway = get_safe_time_headway(has_lane_change_intention);
+	double desired_time_headway = 
+		get_safe_time_headway(has_lane_change_intention);
+	double time_headway = time_headway_filter.apply_filter(
+		desired_time_headway);
 
-	/* TODO: have a filter for the desired time headway */
+	if (verbose) {
+		std::clog << "desired h " << desired_time_headway
+			<< ", filtered h " << time_headway
+			<< std::endl;
+	}
 
 	return compute_time_headway_gap(time_headway, velocity_ego);
 }

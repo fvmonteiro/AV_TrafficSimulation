@@ -177,7 +177,7 @@ protected:
 	double ego_max_brake{ 0.0 }; // absolute value [m/s^2]
 	double ego_max_brake_lane_change{ 0.0 }; // absolute value [m/s^2]
 	double free_flow_velocity{ 0.0 }; // to compute time headway [m/s]
-	double rho{ 0.15 }; // proportional maximum expected relative speed
+	double rho{ 0.2 }; // proportional maximum expected relative speed
 	/* Desired gap parameters */
 	double h_vehicle_following{ 0.0 }; /* time headway [s] */
 	double h_lane_change{ 0.0 }; /* time headway during lane change [s]*/
@@ -212,6 +212,7 @@ protected:
 	double compute_time_headway_with_risk(double free_flow_velocity,
 		double follower_max_brake, double leader_max_brake,
 		double lambda_1, double rho, double accepted_risk);
+
 private:
 	/* When set to true, will assume lane changing parameters, such as
 	reduced braking capability. */
@@ -225,7 +226,8 @@ private:
 	VelocityControllerGains velocity_controller_gains;
 	
 	/* Other controller parameters */
-	double max_gap_error{ 10.0 }; // maximum positive gap error in meters
+	double max_gap_error{ 5.0 }; // maximum positive gap error in meters
+	// [Jan 31, 22] from 10 to 5
 	double max_gap_error_connected{ 10.0 }; // maximum positive gap error in meters
 	double velocity_error_integral{ 0.0 };
 
