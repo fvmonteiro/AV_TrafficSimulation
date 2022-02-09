@@ -19,6 +19,11 @@ post_processed_data/
 VISSIM_networks/*.txt
 VISSIM_networks/autonomous_vehicle_logs
 
+# Vissim layout files
+*.layx
+# Vissim signal controller files
+*.sig
+
 # But I do want to keep track of simulated scenarios
 !VISSIM_networks/simulated_vehicle_inputs.csv
 
