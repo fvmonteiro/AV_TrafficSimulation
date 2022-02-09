@@ -2061,7 +2061,7 @@
 		<userDefinedAttribute comment="If the vehicle has a positive value in the user-defined attribute &quot;NextRouteNo&quot;, that value is assigned as route number (if that route exists else no route at all).  If that attribute value is zero or negative or empty, the routing decision assigns a random route as normal." dataSrcType="DATA" dataType="BOOL" decimals="2" formula="" internalDefValueNum="0" internalDefValueStr="" internalMaxValue="INF" internalMinValue="-INF" maxStrLen="100" nameLong="Use vehicle route number" nameShort="UseVehRouteNo" no="4" objType="VEHICLEROUTINGDECISIONPARTIALPT" subAttrs=""/>
 		<userDefinedAttribute comment="If the vehicle has a positive value in the user-defined attribute &quot;NextRouteNo&quot;, that value is assigned as route number (if that route exists else no route at all).  If that attribute value is zero or negative or empty, the routing decision assigns a random route as normal." dataSrcType="DATA" dataType="BOOL" decimals="2" formula="" internalDefValueNum="0" internalDefValueStr="" internalMaxValue="INF" internalMinValue="-INF" maxStrLen="100" nameLong="Use vehicle route number" nameShort="UseVehRouteNo" no="5" objType="VEHICLEROUTINGDECISIONMANAGEDLANES" subAttrs=""/>
 		<userDefinedAttribute comment="Between connected vehicles only" dataSrcType="DATA" dataType="DOUBLE" decimals="2" formula="" internalDefValueStr="" internalMaxValue="INF" internalMinValue="-INF" maxStrLen="100" nameLong="Time headway to assisted vehicle" nameShort="hToAssistVeh" no="6" objType="VEHICLE" subAttrs=""/>
-		<userDefinedAttribute comment="lane change left=1, no lane change=0, lane change right=-1" dataSrcType="DATA" dataType="INT" decimals="2" formula="" internalDefValueNum="0" internalDefValueStr="" internalMaxValue="INF" internalMinValue="-INF" maxStrLen="100" nameLong="Lane change intention" nameShort="lcIntention" no="7" objType="VEHICLE" subAttrs=""/>
+		<userDefinedAttribute comment="lane change left = +id, no lane change = 0, lane change right = -id" dataSrcType="DATA" dataType="INT" decimals="2" formula="" internalDefValueNum="0" internalDefValueStr="" internalMaxValue="INF" internalMinValue="-INF" maxStrLen="100" nameLong="Lane change request" nameShort="lcRequest" no="7" objType="VEHICLE" subAttrs=""/>
 		<userDefinedAttribute comment="When an autonmous vehicle takes too long to find a lane change gap, it gives control to VISSIM" dataSrcType="DATA" dataType="BOOL" decimals="2" formula="" internalDefValueNum="1" internalDefValueStr="" internalMaxValue="INF" internalMinValue="-INF" maxStrLen="100" nameLong="Give Control to Vissim" nameShort="giveControlToVissim" no="8" objType="VEHICLE" subAttrs=""/>
 		<userDefinedAttribute comment="" dataSrcType="DATA" dataType="INT" decimals="2" formula="" internalDefValueNum="0" internalDefValueStr="" internalMaxValue="INF" internalMinValue="-INF" maxStrLen="100" nameLong="Leader ID" nameShort="leaderID" no="100" objType="VEHICLE" subAttrs=""/>
 		<userDefinedAttribute comment="Human driven car=100, Autonomous car = 110, Truck=200, Bus=300" dataSrcType="DATA" dataType="INT" decimals="2" formula="" internalDefValueNum="0" internalDefValueStr="" internalMaxValue="INF" internalMinValue="-INF" maxStrLen="100" nameLong="Leader type" nameShort="leaderType" no="101" objType="VEHICLE" subAttrs=""/>
@@ -2078,8 +2078,11 @@
 		<userDefinedAttribute comment="Gap variation during a lane change assuming constant speeds" dataSrcType="DATA" dataType="SHORTLENGTH" decimals="2" formula="" internalDefValueNum="300" internalDefValueStr="" internalMaxValue="INF" internalMinValue="-INF" maxStrLen="100" nameLong="Transient gap to the destination lane follower" nameShort="transientGapFd" no="122" objType="VEHICLE" subAttrs=""/>
 		<userDefinedAttribute comment="" dataSrcType="DATA" dataType="SHORTLENGTH" decimals="2" formula="" internalDefValueNum="300" internalDefValueStr="" internalMaxValue="INF" internalMinValue="-INF" maxStrLen="100" nameLong="Time headway gap to destination lane follower" nameShort="vehFollGapFd" no="123" objType="VEHICLE" subAttrs=""/>
 		<userDefinedAttribute comment="Sum of a time headway based gap and the transient gap" dataSrcType="DATA" dataType="SHORTLENGTH" decimals="2" formula="" internalDefValueNum="0" internalDefValueStr="" internalMaxValue="INF" internalMinValue="-INF" maxStrLen="100" nameLong="Safe lane changing gap to the destination lane follower" nameShort="safeGapFd" no="124" objType="VEHICLE" subAttrs=""/>
+		<userDefinedAttribute comment="" dataSrcType="DATA" dataType="DOUBLE" decimals="2" formula="" internalDefValueStr="" internalMaxValue="INF" internalMinValue="-INF" maxStrLen="100" nameLong="Destination lane follower time headway" nameShort="destFollowerTimeHeadway" no="125" objType="VEHICLE" subAttrs=""/>
 		<userDefinedAttribute comment="ID of vehicle for which a gap is being generated" dataSrcType="DATA" dataType="INT" decimals="2" formula="" internalDefValueNum="0" internalDefValueStr="" internalMaxValue="INF" internalMinValue="-INF" maxStrLen="100" nameLong="Assisted Vehicle ID" nameShort="assistedVehId" no="130" objType="VEHICLE" subAttrs=""/>
 		<userDefinedAttribute comment="Time stopped and waiting for a lane change" dataSrcType="DATA" dataType="DOUBLE" decimals="2" formula="" internalDefValueNum="0" internalDefValueStr="" internalMaxValue="INF" internalMinValue="-INF" maxStrLen="100" nameLong="Waiting Time" nameShort="waitingTime" no="140" objType="VEHICLE" subAttrs=""/>
+		<userDefinedAttribute comment="Collision severity under worst-case scenario" dataSrcType="DATA" dataType="DOUBLE" decimals="2" formula="" internalDefValueNum="0" internalDefValueStr="" internalMaxValue="INF" internalMinValue="-INF" maxStrLen="100" nameLong="Risk" nameShort="risk" no="141" objType="VEHICLE" subAttrs=""/>
+		<userDefinedAttribute comment="Time headway to leader at origin lane. Depends on whether the vehicle is lane changing." dataSrcType="DATA" dataType="DOUBLE" decimals="2" formula="" internalDefValueStr="" internalMaxValue="INF" internalMinValue="-INF" maxStrLen="100" nameLong="Safe Time Headway" nameShort="safeTimeHeadway" no="142" objType="VEHICLE" subAttrs=""/>
 	</userDefinedAttributes>
 	<vehicleClasses>
 		<vehicleClass anmid="" color="ff000000" name="Car" no="10" useVehTypeColor="true">
@@ -2110,61 +2113,61 @@
 		</vehicleComposition>
 		<vehicleComposition name="with_autonomous" no="2">
 			<vehCompRelFlows>
-				<vehicleCompositionRelativeFlow desSpeedDistr="120" relFlow="60" vehType="100"/>
-				<vehicleCompositionRelativeFlow desSpeedDistr="120" relFlow="40" vehType="110"/>
+				<vehicleCompositionRelativeFlow desSpeedDistr="100" relFlow="60" vehType="100"/>
+				<vehicleCompositionRelativeFlow desSpeedDistr="100" relFlow="40" vehType="110"/>
 			</vehCompRelFlows>
 		</vehicleComposition>
 		<vehicleComposition name="all_autonomous" no="3">
 			<vehCompRelFlows>
-				<vehicleCompositionRelativeFlow desSpeedDistr="120" relFlow="1" vehType="110"/>
+				<vehicleCompositionRelativeFlow desSpeedDistr="100" relFlow="1" vehType="110"/>
 			</vehCompRelFlows>
 		</vehicleComposition>
 		<vehicleComposition name="all_human" no="4">
 			<vehCompRelFlows>
-				<vehicleCompositionRelativeFlow desSpeedDistr="120" relFlow="1" vehType="100"/>
+				<vehicleCompositionRelativeFlow desSpeedDistr="100" relFlow="1" vehType="100"/>
 			</vehCompRelFlows>
 		</vehicleComposition>
 		<vehicleComposition name="with_connected" no="5">
 			<vehCompRelFlows>
-				<vehicleCompositionRelativeFlow desSpeedDistr="120" relFlow="50" vehType="100"/>
-				<vehicleCompositionRelativeFlow desSpeedDistr="120" relFlow="50" vehType="120"/>
+				<vehicleCompositionRelativeFlow desSpeedDistr="100" relFlow="50" vehType="100"/>
+				<vehicleCompositionRelativeFlow desSpeedDistr="100" relFlow="50" vehType="120"/>
 			</vehCompRelFlows>
 		</vehicleComposition>
 		<vehicleComposition name="all_connected" no="6">
 			<vehCompRelFlows>
-				<vehicleCompositionRelativeFlow desSpeedDistr="120" relFlow="1" vehType="120"/>
+				<vehicleCompositionRelativeFlow desSpeedDistr="100" relFlow="1" vehType="120"/>
 			</vehCompRelFlows>
 		</vehicleComposition>
 		<vehicleComposition name="with_ACC" no="7">
 			<vehCompRelFlows>
-				<vehicleCompositionRelativeFlow desSpeedDistr="120" relFlow="1" vehType="100"/>
-				<vehicleCompositionRelativeFlow desSpeedDistr="120" relFlow="1" vehType="105"/>
+				<vehicleCompositionRelativeFlow desSpeedDistr="100" relFlow="1" vehType="100"/>
+				<vehicleCompositionRelativeFlow desSpeedDistr="100" relFlow="1" vehType="105"/>
 			</vehCompRelFlows>
 		</vehicleComposition>
 		<vehicleComposition name="all_ACC" no="8">
 			<vehCompRelFlows>
-				<vehicleCompositionRelativeFlow desSpeedDistr="120" relFlow="1" vehType="105"/>
+				<vehicleCompositionRelativeFlow desSpeedDistr="100" relFlow="1" vehType="105"/>
 			</vehCompRelFlows>
 		</vehicleComposition>
 	</vehicleCompositions>
 	<vehicleInputs>
 		<vehicleInput anmFlag="false" link="2" name="in_flow" no="2">
 			<timeIntVehVols>
-				<timeIntervalVehVolume cont="false" timeInt="1 0" vehComp="3" volType="STOCHASTIC" volume="2000"/>
-				<timeIntervalVehVolume cont="true" timeInt="1 60000" vehComp="3" volType="STOCHASTIC" volume="2000"/>
-				<timeIntervalVehVolume cont="true" timeInt="1 120000" vehComp="3" volType="STOCHASTIC" volume="2000"/>
+				<timeIntervalVehVolume cont="false" timeInt="1 0" vehComp="6" volType="STOCHASTIC" volume="2000"/>
+				<timeIntervalVehVolume cont="true" timeInt="1 60000" vehComp="6" volType="STOCHASTIC" volume="2000"/>
+				<timeIntervalVehVolume cont="true" timeInt="1 120000" vehComp="6" volType="STOCHASTIC" volume="2000"/>
 			</timeIntVehVols>
 		</vehicleInput>
 		<vehicleInput anmFlag="false" link="4" name="main_flow" no="3">
 			<timeIntVehVols>
-				<timeIntervalVehVolume cont="false" timeInt="1 0" vehComp="2" volType="STOCHASTIC" volume="4000"/>
-				<timeIntervalVehVolume cont="true" timeInt="1 60000" vehComp="2" volType="STOCHASTIC" volume="4000"/>
-				<timeIntervalVehVolume cont="true" timeInt="1 120000" vehComp="2" volType="STOCHASTIC" volume="4000"/>
+				<timeIntervalVehVolume cont="false" timeInt="1 0" vehComp="6" volType="STOCHASTIC" volume="4000"/>
+				<timeIntervalVehVolume cont="true" timeInt="1 60000" vehComp="6" volType="STOCHASTIC" volume="4000"/>
+				<timeIntervalVehVolume cont="true" timeInt="1 120000" vehComp="6" volType="STOCHASTIC" volume="4000"/>
 			</timeIntVehVols>
 		</vehicleInput>
 	</vehicleInputs>
 	<vehicleRoutingDecisionsStatic>
-		<vehicleRoutingDecisionStatic allVehTypes="true" anmFlag="false" combineStaRoutDec="false" link="2" name="in_ramp" no="4" pos="0">
+		<vehicleRoutingDecisionStatic allVehTypes="true" anmFlag="false" combineStaRoutDec="false" link="2" name="in_ramp" no="1" pos="0">
 			<vehRoutSta>
 				<vehicleRouteStatic destLink="6" destPos="67.760415933514167" name="" no="1" relFlow="">
 					<linkSeq>
@@ -2175,16 +2178,23 @@
 				</vehicleRouteStatic>
 			</vehRoutSta>
 		</vehicleRoutingDecisionStatic>
-		<vehicleRoutingDecisionStatic allVehTypes="true" anmFlag="false" combineStaRoutDec="false" link="10000" name="exit_ramp" no="6" pos="2.0597348453953574">
+		<vehicleRoutingDecisionStatic allVehTypes="true" anmFlag="false" combineStaRoutDec="false" link="10000" name="main_right" no="2" pos="2.0597348453953574">
 			<vehRoutSta>
-				<vehicleRouteStatic destLink="10003" destPos="78.099182455296983" name="" no="1" relFlow="">
+				<vehicleRouteStatic destLink="5" destPos="7.0722515584901986" name="" no="1" relFlow="">
 					<linkSeq>
 						<intObjectRef key="3"/>
+						<intObjectRef key="10003"/>
+					</linkSeq>
+				</vehicleRouteStatic>
+				<vehicleRouteStatic destLink="6" destPos="50.762058074663692" name="" no="2" relFlow="2 0:9">
+					<linkSeq>
+						<intObjectRef key="3"/>
+						<intObjectRef key="10002"/>
 					</linkSeq>
 				</vehicleRouteStatic>
 			</vehRoutSta>
 		</vehicleRoutingDecisionStatic>
-		<vehicleRoutingDecisionStatic allVehTypes="true" anmFlag="false" combineStaRoutDec="false" link="10004" name="main" no="7" pos="10.593995379497473">
+		<vehicleRoutingDecisionStatic allVehTypes="true" anmFlag="false" combineStaRoutDec="false" link="10004" name="main_left" no="3" pos="10.593995379497473">
 			<vehRoutSta>
 				<vehicleRouteStatic destLink="6" destPos="12.712631974962363" name="" no="1" relFlow="">
 					<linkSeq>
