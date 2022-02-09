@@ -8,7 +8,9 @@
 
 #pragma once
 
+#include <unordered_map>
 #include <vector>
+
 #include "LateralController.h"
 #include "LongitudinalController.h"
 #include "RealLongitudinalController.h"
@@ -87,6 +89,24 @@ public:
 	ACCs, from the necessary value to avoid colision and from VISSIM and decides
 	which one should be applied to the vehicle */
 	double determine_desired_acceleration(const EgoVehicle& ego_vehicle);
+	double use_vissim_desired_acceleration(const EgoVehicle& ego_vehicle);
+	/* Returns true if the computed acceleration was added to the map */
+	bool get_origin_lane_desired_acceleration(
+		const EgoVehicle& ego_vehicle, 
+		std::unordered_map<ActiveACC, double>& possible_accelerations);
+	/* Returns true if the computed acceleration was added to the map */
+	bool get_end_of_lane_desired_acceleration(
+		const EgoVehicle& ego_vehicle,
+		std::unordered_map<ActiveACC, double>& possible_accelerations);
+	/* Returns true if the computed acceleration was added to the map */
+	bool get_destination_lane_desired_acceleration(
+		const EgoVehicle& ego_vehicle,
+		std::unordered_map<ActiveACC, double>& possible_accelerations,
+		bool end_of_lane_controller_is_active);
+	/* Returns true if the computed acceleration was added to the map */
+	bool get_cooperative_desired_acceleration(
+		const EgoVehicle& ego_vehicle,
+		std::unordered_map<ActiveACC, double>& possible_accelerations);
 	double determine_low_velocity_reference(double ego_velocity,
 		const NearbyVehicle& other_vehicle);
 
@@ -138,7 +158,6 @@ private:
 	VehicleType origin_lane_leader_type{ VehicleType::undefined };
 	VehicleType destination_lane_leader_type{ VehicleType::undefined };
 	VehicleType destination_lane_follower_type{ VehicleType::undefined };
-
 
 	bool verbose{ false };
 };

@@ -33,7 +33,7 @@ enum class UDA {
     /* Mandatory UDAs. They must be included
     in all simulations which use this driver model */
     h_to_assited_veh = 6, 
-    lane_change_intention,
+    lane_change_request,
     give_control_to_vissim,
     /* Debugging: leader */
     leader_id = 100, 

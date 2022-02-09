@@ -81,7 +81,7 @@ public:
 
 	/* TODO: This function will likely change to return the current 
 	filtered value of h*/
-	double get_desired_time_headway() const;
+	double get_veh_following_time_headway() const;
 	/* Returns time headway or lane changing time headway depending
 	on the vehicle intentions*/
 	double get_safe_time_headway(bool has_lane_change_intention) const;

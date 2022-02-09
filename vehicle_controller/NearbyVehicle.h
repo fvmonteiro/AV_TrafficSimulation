@@ -38,6 +38,9 @@ public:
 	RelativeLane get_lane_change_direction() const { 
 		return lane_change_direction; 
 	};
+	long get_lane_change_request_veh_id() const {
+		return lane_change_request_veh_id;
+	};
 	double get_h_to_incoming_vehicle() const {
 		return h_to_incoming_vehicle;
 	};
@@ -75,6 +78,7 @@ public:
 
 	double compute_velocity(double ego_velocity) const;
 	bool is_on_same_lane() const;
+	bool is_immediatly_ahead() const;
 	bool is_ahead() const;
 	bool is_behind() const;
 	bool is_lane_changing() const override;
@@ -84,6 +88,7 @@ public:
 	/*void fill_with_dummy_values();
 	void copy_current_states(NearbyVehicle& nearby_vehicle);*/
 	void compute_safe_gap_parameters();
+	void read_lane_change_request(long lane_change_request);
 
 	std::string to_string() const;
 	friend std::ostream& operator<< (std::ostream& out, 
@@ -104,6 +109,10 @@ private:
 	double relative_velocity{ 0.0 }; // ego speed - other speed [m/s]
 	double acceleration{ 0.0 }; // [m/s^2]
 	RelativeLane lane_change_direction{ RelativeLane::same };
+	/* If the vehicle is not part of a platoon, the request_id is the 
+	same as its own id. If the vehicle is in a platoon, the request id
+	depends on the platoon's lane changing strategy. */
+	long lane_change_request_veh_id{ 0 };
 	/* The time headway the nearby vehicle wants to keep from a connected
 	ego vehicle that wants to merge in front of it.*/
 	double h_to_incoming_vehicle{ 0.0 };

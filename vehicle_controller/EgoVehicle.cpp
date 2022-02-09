@@ -9,6 +9,7 @@
 #include <iomanip>
 #include <iostream>
 #include <fstream>
+#include <set>  // temporary
 #include <string>
 #include <sstream>
 
@@ -150,7 +151,7 @@ double EgoVehicle::get_free_flow_velocity() const {
 
 double EgoVehicle::get_time_headway_to_assisted_vehicle() {
 	return controller.get_gap_generation_lane_controller().
-		get_desired_time_headway();
+		get_veh_following_time_headway();
 }
 
 double EgoVehicle::get_safe_time_headway() const {
@@ -188,29 +189,6 @@ void EgoVehicle::set_active_lane_change_direction(long direction) {
 void EgoVehicle::set_vissim_active_lane_change(int active_lane_change) {
 	this->vissim_active_lane_change.push_back(active_lane_change);
 }
-
-//void EgoVehicle::set_category(VehicleCategory category) {
-//	/* We only need to set the category once, but VISSIM passes the
-//	category every time step. */
-//
-//	if (this->category == VehicleCategory::undefined) {
-//		this->category = category;
-//		switch (category) {
-//		case VehicleCategory::truck:
-//			this->max_brake = TRUCK_MAX_BRAKE;
-//			this->max_jerk = TRUCK_MAX_JERK;
-//			break;
-//		case VehicleCategory::car:
-//			this->max_brake = CAR_MAX_BRAKE;
-//			this->max_jerk = CAR_MAX_JERK;
-//			break;
-//		default: // shouldn't happen but assume car if any other category
-//			this->max_brake = CAR_MAX_BRAKE;
-//			this->max_jerk = CAR_MAX_JERK;
-//			break;
-//		}
-//	}
-//}
 
 void EgoVehicle::set_type(long type) {
 
@@ -291,10 +269,42 @@ void EgoVehicle::set_lane_end_distance(double lane_end_distance,
 	}
 }
 
-/* ------------------------------------------------------------------------ */
+/* Nearby Vehicles methods ------------------------------------------------ */
 
-void EgoVehicle::clear_nearby_vehicles() {
+void EgoVehicle::clear_nearby_vehicles() {	
 	nearby_vehicles.clear();
+	leader = nullptr;
+	follower = nullptr;
+	destination_lane_leader = nullptr;
+	destination_lane_follower = nullptr;
+	assisted_vehicle = nullptr;
+}
+
+void EgoVehicle::save_nearby_vehicles_ids() {
+	if (has_leader()) {
+		leader_id.push_back(leader->get_id());
+	}
+	else {
+		leader_id.push_back(0);
+	}
+	if (has_destination_lane_leader()) {
+		dest_lane_leader_id = destination_lane_leader->get_id();
+	}
+	else {
+		dest_lane_leader_id = 0;
+	}
+	if (has_destination_lane_follower()) {
+		dest_lane_follower_id = destination_lane_follower->get_id();
+	}
+	else {
+		dest_lane_follower_id = 0;
+	}
+	if (has_assisted_vehicle()) {
+		assisted_vehicle_id = assisted_vehicle->get_id();
+	}
+	else{
+		assisted_vehicle_id = 0;
+	}
 }
 
 void EgoVehicle::emplace_nearby_vehicle(long id, long relative_lane,
@@ -317,192 +327,12 @@ std::shared_ptr<NearbyVehicle> EgoVehicle::peek_nearby_vehicles() const {
 void EgoVehicle::set_nearby_vehicle_type(long nv_type) {
 	/* If both vehicle are connected, the ego can know the other's type.
 	Otherwise, it is set as undefined. */
-
 	if (is_connected() && 
 		(VehicleType(nv_type) == VehicleType::connected_car)) {
 		peek_nearby_vehicles()->set_type(VehicleType::connected_car);
 	}
 	else {
 		peek_nearby_vehicles()->set_type(VehicleType::undefined);
-	}
-}
-
-//void EgoVehicle::set_nearby_vehicle_lc_intention(long relative_lane) {
-//	std::shared_ptr<NearbyVehicle> nearby_vehicle = peek_nearby_vehicles();
-//	if (is_connected() && nearby_vehicle->is_connected()) {
-//
-//	}
-//}
-
-double EgoVehicle::get_relative_velocity_to_leader() {
-	return has_leader() ? leader->get_relative_velocity() : 0.0;
-	/*if (has_leader()) return leader->get_relative_velocity();
-	else return 0.0;*/
-}
-
-//long EgoVehicle::get_leader_type() {
-//	return has_leader() ? static_cast<long>(leader->get_type()) : 0;
-//	/*if (has_leader()) return static_cast<long>(leader->get_type());
-//	else return 0;*/
-//}
-
-void EgoVehicle::analyze_nearby_vehicles() {
-	bool leader_found = false;
-	bool follower_found = false;
-	bool dest_lane_leader_found = false;
-	bool dest_lane_follower_found = false;
-	bool assisted_vehicle_found = false;
-
-	const long old_leader_id = has_leader() ? get_leader()->get_id() : 0;
-	bool dest_lane_leader_has_leader = false;
-	
-	for (int i = 0; i < nearby_vehicles.size(); i++) {
-		std::shared_ptr<NearbyVehicle> nearby_vehicle = nearby_vehicles[i];
-		long current_id = nearby_vehicle->get_id();
-		RelativeLane nv_relative_lane = 
-			nearby_vehicle->get_relative_lane();
-		long relative_position =
-			nearby_vehicle->get_relative_position();
-
-		/*if (verbose) {
-			std::clog << nearby_vehicle->to_string() << std::endl;
-		}*/
-
-		// Looking for "real" (same lane) leader and follower
-		/* We look both at the leading vehicle on the same lane
-		and at possible cutting-in vehicles */
-		if (((relative_position == 1) 
-			&& (nv_relative_lane == RelativeLane::same))
-			|| nearby_vehicle->is_cutting_in()) {
-
-			//if (verbose) std::clog << "possible leader" << std::endl;
-
-			if (!leader_found 
-				|| (nearby_vehicle->get_distance() < leader->get_distance())) {
-				//if (verbose) std::clog << "chosen as leader" << std::endl;
-				leader = nearby_vehicle;
-			}
-
-			leader_found = true;
-		}
-		else if ((relative_position == -1) 
-			&& (nv_relative_lane == RelativeLane::same)) {
-			follower_found = true;
-			follower = nearby_vehicle;
-		}
-
-		// Looking for destination lane leader and follower
-		if (has_lane_change_intention()
-			&& nv_relative_lane == desired_lane_change_direction) {
-			if (relative_position == 1) {
-				dest_lane_leader_found = true;
-				// Update controller if new leader
-				if ((!has_destination_lane_leader())
-					|| (destination_lane_leader->get_id()
-						!= current_id)) {
-					controller.update_destination_lane_leader(
-						get_velocity(), *nearby_vehicle);
-				}
-				destination_lane_leader = nearby_vehicle;
-			}
-			else if (relative_position == 2) {
-				dest_lane_leader_has_leader = true;
-			}
-			else if (relative_position == -1) {
-				dest_lane_follower_found = true;
-
-				/* Three possible conditions to update the 
-				follower:
-				1. There was no previous follower
-				2. The follower id changed
-				3. The ego and follower are connected but
-				the ego still doesn't have the follower's
-				headway*/
-				if ((!has_destination_lane_follower())
-					|| (destination_lane_follower->get_id()
-						!= current_id)
-					|| (is_connected() 
-						&& destination_lane_follower->is_connected()
-						&& destination_lane_follower->get_h_to_incoming_vehicle() == 0)) {
-
-					/*if (verbose) std::clog 
-						<< "Dest lane foll found" 
-						<< std::endl;*/
-
-					controller.update_follower_time_headway(*nearby_vehicle);
-				}
-				destination_lane_follower = nearby_vehicle;
-			}
-		}
-
-		// Dealing with cooperation requests
-		if (is_connected() 
-			&& nearby_vehicle->is_requesting_to_merge_ahead()) {
-			assisted_vehicle_found = true;
-			if (!is_cooperating_to_generate_gap()
-				|| (assisted_vehicle->get_id()
-					!= current_id)) {
-				controller.update_assisted_vehicle(
-					get_velocity(), *nearby_vehicle);
-			}
-			assisted_vehicle = nearby_vehicle;
-		}
-
-		if (is_connected() 
-			&& nearby_vehicle->is_requesting_to_merge_behind()) {
-			try_go_at_max_vel = true; /* [Jan 17] deactivated this 
-									   option for tests*/
-		}
-		else {
-			try_go_at_max_vel = false;
-		}
-	}
-
-	/* We must ensure to clear the pointers in case the nearby
-	vehicle was not found in this time step. */
-
-	/* Simple cases first */
-	if (!follower_found) follower = nullptr;
-	if (!dest_lane_follower_found) destination_lane_follower = nullptr;
-
-	/* We can only figure out if the leader changed or not after the
-	loop explores all nearby vehicles. Thus, we can only decide whether
-	to update the origin lane controller here. */
-	if (leader_found) {
-		long current_leader_id = leader->get_id();
-		if (current_leader_id != old_leader_id) {
-			bool had_leader_before = old_leader_id != 0;
-			controller.update_origin_lane_leader(
-				get_velocity(), had_leader_before, *leader);
-		}
-		leader_id.push_back(current_leader_id);
-	}
-	else {
-		leader = nullptr;
-		leader_id.push_back(0);
-	}
-	/* To avoid deadlocks, we overtake the destination lane leader in case
-	it is stopped and has no leader. This situation means that the dest
-	lane leader is not moving because we are too close to it.*/
-	if (!dest_lane_leader_found) {
-		destination_lane_leader = nullptr;
-	}
-	else if ((destination_lane_leader->compute_velocity(get_velocity()) < 0.1
-			  && !dest_lane_leader_has_leader)) {
-		destination_lane_follower = destination_lane_leader;
-		destination_lane_leader = nullptr;
-	}
-
-	/* We need to avoid a deadlock in case the ego vehicle is already too
-	close to the vehicle asking to move in and the vehicle asking to move in
-	is already very slow. The only solution would be for the ego vehicle to
-	go backwards, which would lead to a deadlock situation. */
-	if (!assisted_vehicle_found) {
-		assisted_vehicle = nullptr;
-	}
-	else if ((assisted_vehicle->compute_velocity(get_velocity()) < 1)
-		&& compute_gap(assisted_vehicle) < 1) {
-		assisted_vehicle = nullptr;
 	}
 }
 
@@ -517,6 +347,231 @@ bool EgoVehicle::has_destination_lane_leader() const {
 }
 bool EgoVehicle::has_destination_lane_follower() const {
 	return destination_lane_follower != nullptr;
+}
+
+bool EgoVehicle::has_assisted_vehicle() const {
+	return assisted_vehicle != nullptr;
+}
+
+std::shared_ptr<NearbyVehicle> EgoVehicle::get_leader() const {
+	return leader;
+}
+
+std::shared_ptr<NearbyVehicle> EgoVehicle::get_follower() const {
+	return follower;
+}
+
+std::shared_ptr<NearbyVehicle> EgoVehicle::get_destination_lane_leader()
+const {
+	return destination_lane_leader;
+}
+
+std::shared_ptr<NearbyVehicle> EgoVehicle::get_destination_lane_follower()
+const {
+	return destination_lane_follower;
+}
+
+std::shared_ptr<NearbyVehicle> EgoVehicle::get_assisted_vehicle()
+const {
+	return assisted_vehicle;
+}
+
+std::shared_ptr<NearbyVehicle> EgoVehicle::get_nearby_vehicle_by_id(
+	long nv_id) const {
+	for (std::shared_ptr<NearbyVehicle> nv : nearby_vehicles) {
+		if (nv->get_id() == nv_id) return nv;
+	}
+	
+	/* If we don't find the id in the current nearby vehicle list, 
+	the vehicle is way behind us. In this case, we just create a far away 
+	virtual vehicle to force the ego vehicle into low vel. control mode */
+	std::shared_ptr<NearbyVehicle> virtual_vehicle =
+		std::shared_ptr<NearbyVehicle>(new
+			NearbyVehicle(nv_id, RelativeLane::same, -3));
+	virtual_vehicle->set_relative_velocity(
+		nv_vel);
+	virtual_vehicle->set_distance();
+}
+
+/* TEMPORATY FUNCTION TO DOUBLE CHECK NEARBY_VEHICLES VECOTR */
+void EgoVehicle::nv_double_check() {
+	std::set<int> nv_ids;
+	std::clog << "\tNearby vehicles\n\t";
+	for (std::shared_ptr<NearbyVehicle> nearby_vehicle : nearby_vehicles) {
+		std::clog << nearby_vehicle->get_id() << ", ";
+		nv_ids.insert(nearby_vehicle->get_id());
+	}
+	std::clog << std::endl;
+
+	std::clog << "\tSaved pointers\n\t";
+	int id;
+	if (has_leader()) {
+		id = leader->get_id();
+		std::clog << id;
+		if (nv_ids.find(id) == nv_ids.end()) {
+			std::clog << ", saved veh not in most recent nearby_vehicles vector" << std::endl;
+		}
+	}
+	if (has_follower()) {
+		id = follower->get_id();
+		std::clog << ", " << id;
+		if (nv_ids.find(id) == nv_ids.end()) {
+			std::clog << ", saved veh not in most recent nearby_vehicles vector" << std::endl;
+		}
+	}
+	if (has_destination_lane_leader()) {
+		id = destination_lane_leader->get_id();
+		std::clog << ", " << id;
+		if (nv_ids.find(id) == nv_ids.end()) {
+			std::clog << ", saved veh not in most recent nearby_vehicles vector" << std::endl;
+		}
+	}
+	if (has_destination_lane_follower()) {
+		id = destination_lane_follower->get_id();
+		std::clog << ", " << id;
+		if (nv_ids.find(id) == nv_ids.end()) {
+			std::clog << ", saved veh not in most recent nearby_vehicles vector" << std::endl;
+		}
+	}
+	if (assisted_vehicle != nullptr) {
+		id = assisted_vehicle->get_id();
+		std::clog << ", " << id;
+		if (nv_ids.find(id) == nv_ids.end()) {
+			std::clog << ", saved veh not in most recent nearby_vehicles vector" << std::endl;
+		}
+	}
+	std::clog << std::endl;
+}
+
+void EgoVehicle::analyze_nearby_vehicles() {
+
+	bool dest_lane_leader_has_leader = false;
+	const long old_leader_id = leader_id.empty() ? 0 : leader_id.back();
+
+	for (int i = 0; i < nearby_vehicles.size(); i++) {
+		std::shared_ptr<NearbyVehicle> nearby_vehicle = nearby_vehicles[i];
+		long current_id = nearby_vehicle->get_id();
+		RelativeLane nv_relative_lane = 
+			nearby_vehicle->get_relative_lane();
+		long relative_position =
+			nearby_vehicle->get_relative_position();
+
+		/*if (verbose) {
+			std::clog << nearby_vehicle->to_string() << std::endl;
+		}*/
+
+		// Looking for "real" (same lane) leader and follower
+		if (((relative_position == 1) 
+			&& (nv_relative_lane == RelativeLane::same))
+			|| nearby_vehicle->is_cutting_in()) {
+
+			//if (verbose) std::clog << "possible leader" << std::endl;
+			if (!has_leader()
+				|| (nearby_vehicle->get_distance() < leader->get_distance())) {
+				//if (verbose) std::clog << "chosen as leader" << std::endl;
+				leader = nearby_vehicle;
+			}
+		}
+		if ((relative_position == -1) 
+			&& (nv_relative_lane == RelativeLane::same)) {
+			follower = nearby_vehicle;
+		}
+
+		// Looking for destination lane leader and follower
+		if (has_lane_change_intention()
+			&& nv_relative_lane == desired_lane_change_direction) {
+
+			if (relative_position == 1) {
+				// Update controller if new leader
+				if (current_id != dest_lane_leader_id) {
+					controller.update_destination_lane_leader(
+						get_velocity(), *nearby_vehicle);
+				}
+				destination_lane_leader = nearby_vehicle;
+			}
+			else if (relative_position == 2) {
+				dest_lane_leader_has_leader = true;
+			}
+			else if (relative_position == -1) {
+				// Update parameters if new follower
+				if (current_id != dest_lane_follower_id) {
+					controller.update_follower_time_headway(*nearby_vehicle);
+				}
+				destination_lane_follower = nearby_vehicle;
+			}
+		}
+
+		/* Dealing with cooperation requests */
+		if (is_connected() 
+			&& nearby_vehicle->is_requesting_to_merge_ahead()) {
+			/* Updating the assisted vehicle parameters */
+			long assisted_veh_id = 
+				nearby_vehicle->get_lane_change_request_veh_id();
+			if (assisted_vehicle_id == nearby_vehicle->get_id()) {
+				/* The nearby veh is requesting a gap for itself */
+				assisted_vehicle = nearby_vehicle;
+			}
+			else {
+				/* The nearby veh is requesting a gap for someone
+				else in its platoon */
+
+			}
+
+			if (current_id != assisted_vehicle_id) {
+				controller.update_assisted_vehicle(
+					get_velocity(), *nearby_vehicle);
+			}
+			
+		}
+
+		if (is_connected() 
+			&& nearby_vehicle->is_requesting_to_merge_behind()) {
+			try_go_at_max_vel = true;
+		}
+		else {
+			try_go_at_max_vel = false;
+		}
+	}
+
+	/* We can only figure out if the leader changed or not after the
+	loop explores all nearby vehicles. Thus, we can only decide whether
+	to update the origin lane controller here. */
+	if (has_leader()
+		&& (leader->get_id() != old_leader_id)) {
+		
+		if (verbose) std::clog << "updating leader info" << std::endl;
+
+		controller.update_origin_lane_leader(
+			get_velocity(), old_leader_id != 0, *leader);
+	}	
+
+	/* To avoid deadlocks, we overtake the destination lane leader in case
+	it is stopped and has no leader. This situation means that the dest
+	lane leader is not moving because we are too close to it.*/
+	if (has_destination_lane_leader() 
+		&& (destination_lane_leader->compute_velocity(get_velocity()) < 0.1)
+		&& !dest_lane_leader_has_leader) {
+		destination_lane_follower = destination_lane_leader;
+		destination_lane_leader = nullptr;
+	}
+
+	/* We need to avoid a deadlock in case the ego vehicle is already too
+	close to the vehicle asking to move in and the vehicle asking to move in
+	is already very slow. The only solution would be for the ego vehicle to
+	go backwards, which would lead to a deadlock situation. */
+	if (has_assisted_vehicle()
+		&& (assisted_vehicle->compute_velocity(get_velocity()) < 1)
+		&& compute_gap(assisted_vehicle) < 1) {
+		assisted_vehicle = nullptr;
+	}
+
+	if (verbose) nv_double_check();
+
+	save_nearby_vehicles_ids();
+}
+
+double EgoVehicle::get_relative_velocity_to_leader() {
+	return has_leader() ? leader->get_relative_velocity() : 0.0;
 }
 
 double EgoVehicle::compute_gap(const NearbyVehicle& nearby_vehicle) const {
@@ -545,33 +600,8 @@ double EgoVehicle::compute_gap(
 	}
 }
 
-std::shared_ptr<NearbyVehicle> EgoVehicle::get_leader() const {
-	return leader;
-}
-
-std::shared_ptr<NearbyVehicle> EgoVehicle::get_follower() const {
-	return follower;
-}
-
-std::shared_ptr<NearbyVehicle> EgoVehicle::get_destination_lane_leader() 
-	const {
-	return destination_lane_leader;
-	/* [OLDEST IMPLEMENTATION] If there is no intention to change lanes, the
-	function returns the leader on the same lane. */
-	/*int relative_position = 1;
-	NearbyVehicle* destination_lane_leader = find_nearby_vehicle(
-			desired_lane_change_direction, relative_position);
-	return destination_lane_leader;*/
-}
-
-std::shared_ptr<NearbyVehicle> EgoVehicle::get_destination_lane_follower() 
-	const {
-	return destination_lane_follower;
-}
-
-std::shared_ptr<NearbyVehicle> EgoVehicle::get_assisted_vehicle()
-	const {
-	return assisted_vehicle;
+long EgoVehicle::create_lane_change_request() {
+	return desired_lane_change_direction.to_int() * id;
 }
 
 /* State-machine related methods ------------------------------------------ */
@@ -790,10 +820,10 @@ double EgoVehicle::compute_transient_gap(
 
 long EgoVehicle::decide_lane_change_direction() {
 	
-	double margin = 0.1; /* Given the asymptotic nature of controllers, 
-						  vehicles sometimes are very close to, but no exactly
-						  at, the safe gap. We give it some margin to 
-						  avoid unecessary long waits.*/
+	/* Given the asymptotic nature of controllers, vehicles sometimes are 
+	very close to, but no exactly at, the safe gap. We give it some margin
+	to avoid unecessary long waits.*/
+	double margin = 0.1; 
 	long lane_change_direction = 0;
 	if (is_lane_change_decision_autonomous 
 		&& !give_lane_change_control_to_vissim()) {
@@ -804,16 +834,14 @@ long EgoVehicle::decide_lane_change_direction() {
 			bool gap_same_lane_is_safe = (!has_leader())
 				|| ((compute_gap(leader) + margin)
 					>= compute_safe_lane_change_gap(leader));
-
 			bool gap_ahead_is_safe = (!has_destination_lane_leader()) 
 				|| ((compute_gap(destination_lane_leader) + margin) 
 					>= compute_safe_lane_change_gap(destination_lane_leader));
-			
 			/* besides the regular safety conditions, we add the case 
 			where the dest lane follower has completely stopped to give room 
 			to the lane changing vehicle */
 			bool gap_behind_is_safe = (!has_destination_lane_follower())
-				|| ((compute_gap(destination_lane_follower) + 0.1)
+				|| ((compute_gap(destination_lane_follower) + margin)
 					>= compute_safe_lane_change_gap(destination_lane_follower))
 				|| ((destination_lane_follower->
 					compute_velocity(get_velocity()) <= 1.0)
@@ -827,9 +855,8 @@ long EgoVehicle::decide_lane_change_direction() {
 					<< std::endl;
 			}
 
-			if (gap_same_lane_is_safe 
-				&& gap_ahead_is_safe && gap_behind_is_safe
-				&& no_conflict) {
+			if (gap_same_lane_is_safe && gap_ahead_is_safe 
+				&& gap_behind_is_safe && no_conflict) {
 				// will start lane change
 				lane_change_direction = 
 					desired_lane_change_direction.to_int();
@@ -839,15 +866,12 @@ long EgoVehicle::decide_lane_change_direction() {
 				//controller.update_headways_with_risk(*this);
 			}
 		}
-
 		//if (verbose) std::clog << "LC decided" << std::endl;
-
 	}
 	else {
 		lane_change_direction = get_vissim_active_lane_change();
 	}
 
-	//this->active_lane_change_direction.push_back(temp_result);
 	return lane_change_direction;
 }
 
@@ -884,7 +908,6 @@ bool EgoVehicle::has_lane_change_conflict() const {
 			}
 		}
 	}
-
 	return false;
 }
 

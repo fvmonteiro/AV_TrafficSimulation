@@ -23,7 +23,7 @@ public:
 		intention_to_change_lanes,
 	};
 
-	/* Constructors */
+	/* Constructors ---------------------------------------------------------- */
 	EgoVehicle() = default;
 	EgoVehicle(long id, double simulation_time_step, double creation_time,
 		bool verbose);
@@ -75,7 +75,7 @@ public:
 		this->verbose = value > 0;
 	};
 
-	/* Getters of most recent values */
+	/* Getters of most recent values ----------------------------------------- */
 	
 	double get_time() const;
 	long get_lane() const;
@@ -96,7 +96,7 @@ public:
 	/* delta vel. at collision under the worst case scenario*/
 	double get_collision_risk() const;
 
-	/* Other getters and setters */
+	/* Other getters and setters --------------------------------------------- */
 
 	/* Checks whether vehicle is lane changing and returns proper value */
 	double get_current_max_brake() const;
@@ -129,8 +129,11 @@ public:
 		long lane_number);
 
 
-	/* Dealing with nearby vehicles */
-	
+	/* Dealing with nearby vehicles --------------------------------------- */
+
+	/* TEMPORATY FUNCTION TO DOUBLE CHECK NEARBY_VEHICLES VECOTR */
+	void nv_double_check();
+	/* Clears the vector of pointers and the individually named pointers */
 	void clear_nearby_vehicles();
 	/* Creates an instance of nearby vehicle and populates it with 
 	the given data. */
@@ -155,6 +158,7 @@ public:
 	bool has_follower() const;
 	bool has_destination_lane_leader() const;
 	bool has_destination_lane_follower() const;
+	bool has_assisted_vehicle() const;
 	/* Returns a nullptr if there is no leader */
 	std::shared_ptr<NearbyVehicle> get_leader() const;
 	/* Returns a nullptr if there is no follower */
@@ -166,6 +170,7 @@ public:
 	/* Returns a nullptr if the ego is no vehicle being assisted 
 	(for gap generation) */
 	std::shared_ptr<NearbyVehicle> get_assisted_vehicle() const;
+	std::shared_ptr<NearbyVehicle> get_nearby_vehicle_by_id(long nv_id) const;
 	/* Computes the bumper-to-bumper distance between vehicles.
 	Returns MAX_DISTANCE if nearby_vehicle is empty. */
 	double compute_gap(const NearbyVehicle& nearby_vehicle) const;
@@ -175,13 +180,16 @@ public:
 		const std::shared_ptr<NearbyVehicle> nearby_vehicle) const;
 	bool has_lane_change_conflict() const;
 	bool is_cooperating_to_generate_gap() const;
-
-
 	/* Ego velocity minus leader velocity. Returns zero if there
 	is no leader */
 	double get_relative_velocity_to_leader();
+	/* The lane change request is an int whose absolute value equals the
+	vehicle's id. The signal of the lane change request indicates whether
+	it is a right (-1) or left (+1) lane change. */
+	long create_lane_change_request();
 
-	/* Computation of surrogate safety measurements */
+
+	/* Computation of surrogate safety measurements ----------------------- */
 
 	void compute_all_ssms();
 	double compute_ttc(const NearbyVehicle& other_vehicle);
@@ -195,8 +203,7 @@ public:
 		const NearbyVehicle& other_vehicle);
 	double compute_collision_severity_risk_to_leader();
 
-
-	/* State-machine related methods */
+	/* State-machine related methods ----------------------------------------- */
 
 	void update_state();
 	//bool has_lane_change_intention() const;
@@ -211,7 +218,7 @@ public:
 	too long to find a suitable gap, we may want to give control to VISSM */
 	bool give_lane_change_control_to_vissim() const;
 
-	/* Control related methods */
+	/* Control related methods ----------------------------------------------- */
 
 	/* Computes the longitudinal controller input */
 	double compute_desired_acceleration();
@@ -230,7 +237,7 @@ public:
 	long decide_lane_change_direction();
 	std::string state_to_string(State vehicle_state);
 
-	/* Methods to access internal values. Used for quicker debugging */
+	/* Methods to access internal values. Used for quicker debugging --------- */
 
 	/* Returns the current reference gap to the leader */
 	double get_reference_gap();
@@ -245,7 +252,7 @@ public:
 		std::shared_ptr<NearbyVehicle> other_vehicle);
 
 
-	/* Methods for logging */
+	/* Methods for logging --------------------------------------------------- */
 
 	/* TODO: find better names for the methods */
 
@@ -255,16 +262,14 @@ public:
 	friend std::ostream& operator<< (std::ostream& out, const EgoVehicle& vehicle);
 
 private:
-	/* Estimated parameters used for safe gap computations (no direct equivalent
-	in VISSIM's simulation dynamics) */
+	/* Estimated parameters used for safe gap computations (no direct 
+	equivalent in VISSIM's simulation dynamics) --------------------------- */
 	
 	double tau{ ACTUATOR_CONSTANT }; // actuator constant [s].
 	/* constant used in the discrete approximation of
 	the vehicle first order actuator dynamics */
 	double tau_d{ 0.0 };
 	double comfortable_brake{ COMFORTABLE_BRAKE }; // [m/s^2]
-
-	/* Emergency braking parameters for special cases */
 
 	/* Emergency braking parameter during lane change */
 	double lambda_1_lane_change{ 0.0 }; // [m/s]
@@ -275,23 +280,23 @@ private:
 	during lane change */
 	double lambda_1_lane_change_connected{ 0.0 }; // [m/s]
 
-
 	/* Keeps track of stopped time waiting for lane change */
 	double waiting_time{ 0.0 };
 	double max_waiting_time{ 45.0 }; // [s]
 
-	/* Control related members */
+	/* Control related members ----------------------------------------------- */
 	ControlManager controller;
 	/* Determines whether the vel control ref speed is the vehicle's
 	own desired speed or the max legal velocity. */
 	bool try_go_at_max_vel{ false };
 
-	/* Nearby vehicles data */
+	/* Nearby vehicles ------------------------------------------------------- */
 
 	std::vector<std::shared_ptr<NearbyVehicle>> nearby_vehicles;
 	std::vector<long> leader_id;
-	long dest_lane_leader_id = 0;
-	long dest_lane_follower_id = 0;
+	long dest_lane_leader_id{ 0 };
+	long dest_lane_follower_id{ 0 };
+	long assisted_vehicle_id{ 0 };
 
 	std::shared_ptr<NearbyVehicle> leader{ nullptr };
 	std::shared_ptr<NearbyVehicle> follower{ nullptr };
@@ -302,8 +307,10 @@ private:
 	std::shared_ptr<NearbyVehicle> assisted_vehicle{ nullptr };
 	//RelevantNearbyVehicles relevant_nearby_vehicles;
 
-	/* Colors for easy visualization in VISSIM:
-	General rule: bright colors represent vel control, 
+	void save_nearby_vehicles_ids();
+
+	/* Colors for easy visualization in VISSIM ------------------------------- */
+	/* General rule: bright colors represent vel control, 
 	darker colors represent vehicle following. */
 	color_t orig_lane_vel_control_color{ GREEN };
 	color_t orig_lane_veh_foll_color{ DARK_GREEN };
@@ -315,8 +322,7 @@ private:
 	color_t end_of_lane_vel_control_color{ MAGENTA };
 	color_t end_of_lane_veh_foll_color{ DARK_MAGENTA };
 
-	/* Data obtained from VISSIM or generated by internal computations */
-	//std::vector<double> simulation_time;
+	/* Data obtained from VISSIM or generated by internal computations ------- */
 	double creation_time{ 0.0 };
 	double simulation_time_step{ 0.1 };
 	long color{ 0 };
@@ -347,14 +353,15 @@ private:
 	RelativeLane relative_target_lane{ RelativeLane::same };
 	long turning_indicator{ 0 };
 
-	/*Surrogate Safety Measurements (SSMs)*/
+	/*Surrogate Safety Measurements (SSMs) ----------------------------------- */
 
 	std::vector<double> ttc; // time-to-collision
 	std::vector<double> drac; // deceleration rate to avoid collision
-	std::vector<double> collision_severity_risk; /* delta vel. at collision under the
-											worst case scenario*/
+	std::vector<double> collision_severity_risk; /* delta vel. at collision 
+												 in worst case scenario */
 	
-	/* Vehicle internal methods */
+	/* Vehicle internal methods ------------------------------------------- */
+
 	/* Computes members lambda_0, lambda_1 and lane_change_lambda_1 */
 	void compute_safe_gap_parameters() override;
 	/* TODO: state and desired_lane_change_direction members
@@ -362,7 +369,7 @@ private:
 	
 	void set_desired_lane_change_direction();
 
-	/* For printing and debugging purporses */
+	/* For printing and debugging purporses ------------------------------- */
 	bool verbose = false; /* when true, will print results to 
 						  the default log file and
 						  create a specific log file for this

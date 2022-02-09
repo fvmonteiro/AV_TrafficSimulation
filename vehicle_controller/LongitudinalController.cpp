@@ -61,7 +61,7 @@ LongitudinalController::LongitudinalController(
 //	this->velocity_controller_gains = gains;
 //}
 
-double LongitudinalController::get_desired_time_headway() const {
+double LongitudinalController::get_veh_following_time_headway() const {
 	return h_vehicle_following;
 }
 

@@ -18,7 +18,7 @@
 
 /*==========================================================================*/
 
-const std::unordered_set<long> LOGGED_VEHICLES_IDS{ 2 };
+const std::unordered_set<long> LOGGED_VEHICLES_IDS{ 10 };
 const bool CLUELESS_DEBUGGING{ false };
 
 SimulationLogger simulation_logger;
@@ -99,7 +99,7 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
             switch (uda) {
             /* The first three are necessary */
             case UDA::h_to_assited_veh:
-            case UDA::lane_change_intention: 
+            case UDA::lane_change_request: 
             case UDA::give_control_to_vissim:
                 return 1;
             /* Debugging: leader */
@@ -108,14 +108,14 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
             case UDA::gap_to_leader:
             case UDA::reference_gap:
             case UDA::relative_velocity_to_leader:
-                return 0;
+                return 1;
             /* Debugging: dest lane leader */
             case UDA::dest_leader_id:
             case UDA::gap_to_dest_lane_leader:
             case UDA::transient_gap_to_ld:
             case UDA::veh_following_gap_to_ld:
             case UDA::safe_gap_to_dest_lane_leader:
-                return 0;
+                return 1;
             /* Debugging: dest lane follower */
             case UDA::dest_follower_id:
             case UDA::gap_to_dest_lane_follower:
@@ -123,7 +123,7 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
             case UDA::veh_following_gap_to_fd:
             case UDA::safe_gap_to_dest_lane_follower:
             case UDA::dest_follower_time_headway:
-                return 0;
+                return 1;
             /* Debugging: assisted vehicle */
             case UDA::assisted_veh_id:
                 return 1;
@@ -131,9 +131,9 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
             case UDA::waiting_time:
                 return 0;
             case UDA::risk:
-                return 0;
+                return 1;
             case UDA::safe_time_headway:
-                return 0;
+                return 1;
             default:
                 return 0;
             }
@@ -298,9 +298,10 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
     case DRIVER_DATA_NVEH_UDA               :
         switch (UDA(index1))
         {
-        case UDA::lane_change_intention:
+        case UDA::lane_change_request:
             vehicles[current_vehicle_id].peek_nearby_vehicles()
-                ->set_desired_lane_change_direction(long_value);
+                ->read_lane_change_request(long_value);
+                //->set_desired_lane_change_direction(long_value);
             break;
         case UDA::h_to_assited_veh:
             vehicles[current_vehicle_id].peek_nearby_vehicles()
@@ -401,14 +402,16 @@ DRIVERMODEL_API  int  DriverModelGetValue (long   type,
                 *double_value = 0;
             }
             break;
-        case UDA::lane_change_intention:
+        case UDA::lane_change_request:
             *long_value = vehicles[current_vehicle_id].
-                get_desired_lane_change_direction().to_int();
+                create_lane_change_request();
+                //get_desired_lane_change_direction().to_int();
             break;
         case UDA::give_control_to_vissim:
             *long_value = vehicles[current_vehicle_id].
                 give_lane_change_control_to_vissim();
             break;
+
         /* Variables used for debugging from here on */
         case UDA::leader_id:
             *long_value = vehicles[current_vehicle_id].get_leader_id();
@@ -432,7 +435,8 @@ DRIVERMODEL_API  int  DriverModelGetValue (long   type,
             break;
         case UDA::relative_velocity_to_leader:
             *double_value =
-                vehicles[current_vehicle_id].get_relative_velocity_to_leader();
+                vehicles[current_vehicle_id].get_relative_velocity_to_leader()
+                * 3.6;  // we want to display it in km/h
             break;
         case UDA::dest_leader_id:
             if (vehicles[current_vehicle_id].has_destination_lane_leader()) {
@@ -532,7 +536,8 @@ DRIVERMODEL_API  int  DriverModelGetValue (long   type,
             break;
         case UDA::risk:
             *double_value = vehicles[current_vehicle_id].
-                compute_collision_severity_risk_to_leader();
+                compute_collision_severity_risk_to_leader() * 3.6;  
+            // cause we want to display it in km/h;
             break;
         case UDA::safe_time_headway:
             *double_value = vehicles[current_vehicle_id].

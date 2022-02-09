@@ -50,6 +50,10 @@ bool NearbyVehicle::is_on_same_lane() const {
 	return get_relative_lane() == RelativeLane::same;
 }
 
+bool NearbyVehicle::is_immediatly_ahead() const {
+	return get_relative_position() == 1;
+}
+
 bool NearbyVehicle::is_ahead() const {
 	return get_relative_position() > 0;
 }
@@ -82,7 +86,8 @@ bool NearbyVehicle::is_cutting_in() const {
 }
 
 bool NearbyVehicle::is_requesting_to_merge_ahead() const {
-	if (is_connected() && is_ahead() && has_lane_change_intention()
+	if (is_connected() && is_immediatly_ahead() 
+		&& has_lane_change_intention()
 		&& (relative_lane == desired_lane_change_direction.get_opposite())) {
 		return true;
 	}
@@ -103,6 +108,14 @@ void NearbyVehicle::compute_safe_gap_parameters() {
 		max_brake, brake_delay);
 	lambda_1 = compute_lambda_1(max_jerk, comfortable_acceleration,
 		max_brake, brake_delay);
+}
+
+void NearbyVehicle::read_lane_change_request(long lane_change_request) {
+	/* Getting the sign of lane change request */
+	int request_sign = (lane_change_request > 0) 
+		- (lane_change_request < 0);
+	set_desired_lane_change_direction(request_sign);
+	lane_change_request_veh_id = std::abs(lane_change_request);
 }
 
 std::string NearbyVehicle::to_string() const {
