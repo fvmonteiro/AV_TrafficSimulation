@@ -1805,7 +1805,7 @@
 				<intObjectRef key="1"/>
 			</wttFiles>
 		</signalController>
-		<signalController active="true" cycTm="0" cycTmIsVar="false" debug="false" guiFile="#exe#vissig_gui.dll" name="" no="2" offset="0" progFile="#exe#vissig_controller.dll" progNo="1" scDetRecLabelDet="PORTNUMBER" scDetRecLabelSG="NUMBER" scDetRecShortNam="false" sigTmsTabAutoConfig="true" sigTmsTabLabelDet="PORTNUMBER" sigTmsTabLabelSG="NUMBER" supplyFile1="#exe#vissig.config" supplyFile2="#data#traffic_lights_study1.sig" supplyFile3="" type="FIXEDTIME">
+		<signalController active="true" cycTm="0" cycTmIsVar="false" debug="false" guiFile="#exe#vissig_gui.dll" name="" no="2" offset="0" progFile="#exe#vissig_controller.dll" progNo="1" scDetRecLabelDet="PORTNUMBER" scDetRecLabelSG="NUMBER" scDetRecShortNam="false" sigTmsTabAutoConfig="true" sigTmsTabLabelDet="PORTNUMBER" sigTmsTabLabelSG="NUMBER" supplyFile1="#exe#vissig.config" supplyFile2="#data#traffic_lights_study2.sig" supplyFile3="" type="FIXEDTIME">
 			<sgs>
 				<signalGroup amber="5" greenFlsh="0" minGreen="15" minRed="10" name="Signal group 1" no="1" redAmber="0" type="NORMAL"/>
 			</sgs>
@@ -1827,7 +1827,7 @@
 				<intObjectRef key="5"/>
 			</wttFiles>
 		</signalController>
-		<signalController active="true" cycTm="0" cycTmIsVar="false" debug="false" guiFile="#exe#vissig_gui.dll" name="" no="4" offset="0" progFile="#exe#vissig_controller.dll" progNo="1" scDetRecLabelDet="PORTNUMBER" scDetRecLabelSG="NUMBER" scDetRecShortNam="false" sigTmsTabAutoConfig="true" sigTmsTabLabelDet="PORTNUMBER" sigTmsTabLabelSG="NUMBER" supplyFile1="#exe#vissig.config" supplyFile2="#data#traffic_lights_study1.sig" supplyFile3="" type="FIXEDTIME">
+		<signalController active="true" cycTm="0" cycTmIsVar="false" debug="false" guiFile="#exe#vissig_gui.dll" name="" no="4" offset="0" progFile="#exe#vissig_controller.dll" progNo="1" scDetRecLabelDet="PORTNUMBER" scDetRecLabelSG="NUMBER" scDetRecShortNam="false" sigTmsTabAutoConfig="true" sigTmsTabLabelDet="PORTNUMBER" sigTmsTabLabelSG="NUMBER" supplyFile1="#exe#vissig.config" supplyFile2="#data#traffic_lights_study4.sig" supplyFile3="" type="FIXEDTIME">
 			<sgs>
 				<signalGroup amber="5" greenFlsh="0" minGreen="15" minRed="10" name="Signal group 1" no="1" redAmber="0" type="NORMAL"/>
 			</sgs>
@@ -1835,10 +1835,10 @@
 				<signalOutputConfigurationElement configName="SIGGRP" detPort="0" sg="4 1" title="" varNo="1" wttFilename="vissim"/>
 			</sigTmsTabConfig>
 			<wttFiles>
-				<intObjectRef key="6"/>
+				<intObjectRef key="1"/>
 			</wttFiles>
 		</signalController>
-		<signalController active="true" cycTm="0" cycTmIsVar="false" debug="false" guiFile="#exe#vissig_gui.dll" name="" no="5" offset="0" progFile="#exe#vissig_controller.dll" progNo="1" scDetRecLabelDet="PORTNUMBER" scDetRecLabelSG="NUMBER" scDetRecShortNam="false" sigTmsTabAutoConfig="true" sigTmsTabLabelDet="PORTNUMBER" sigTmsTabLabelSG="NUMBER" supplyFile1="#exe#vissig.config" supplyFile2="#data#traffic_lights_study1.sig" supplyFile3="" type="FIXEDTIME">
+		<signalController active="true" cycTm="0" cycTmIsVar="false" debug="false" guiFile="#exe#vissig_gui.dll" name="" no="5" offset="0" progFile="#exe#vissig_controller.dll" progNo="1" scDetRecLabelDet="PORTNUMBER" scDetRecLabelSG="NUMBER" scDetRecShortNam="false" sigTmsTabAutoConfig="true" sigTmsTabLabelDet="PORTNUMBER" sigTmsTabLabelSG="NUMBER" supplyFile1="#exe#vissig.config" supplyFile2="#data#traffic_lights_study5.sig" supplyFile3="" type="FIXEDTIME">
 			<sgs>
 				<signalGroup amber="5" greenFlsh="0" minGreen="15" minRed="10" name="Signal group 1" no="1" redAmber="0" type="NORMAL"/>
 			</sgs>
@@ -1846,10 +1846,10 @@
 				<signalOutputConfigurationElement configName="SIGGRP" detPort="0" sg="5 1" title="" varNo="1" wttFilename="vissim"/>
 			</sigTmsTabConfig>
 			<wttFiles>
-				<intObjectRef key="7"/>
+				<intObjectRef key="1"/>
 			</wttFiles>
 		</signalController>
-		<signalController active="true" cycTm="0" cycTmIsVar="false" debug="false" guiFile="#exe#vissig_gui.dll" name="" no="6" offset="0" progFile="#exe#vissig_controller.dll" progNo="1" scDetRecLabelDet="PORTNUMBER" scDetRecLabelSG="NUMBER" scDetRecShortNam="false" sigTmsTabAutoConfig="true" sigTmsTabLabelDet="PORTNUMBER" sigTmsTabLabelSG="NUMBER" supplyFile1="#exe#vissig.config" supplyFile2="#data#traffic_lights_study1.sig" supplyFile3="" type="FIXEDTIME">
+		<signalController active="true" cycTm="0" cycTmIsVar="false" debug="false" guiFile="#exe#vissig_gui.dll" name="" no="6" offset="0" progFile="#exe#vissig_controller.dll" progNo="1" scDetRecLabelDet="PORTNUMBER" scDetRecLabelSG="NUMBER" scDetRecShortNam="false" sigTmsTabAutoConfig="true" sigTmsTabLabelDet="PORTNUMBER" sigTmsTabLabelSG="NUMBER" supplyFile1="#exe#vissig.config" supplyFile2="#data#traffic_lights_study6.sig" supplyFile3="" type="FIXEDTIME">
 			<sgs>
 				<signalGroup amber="5" greenFlsh="0" minGreen="15" minRed="10" name="Signal group 1" no="1" redAmber="0" type="NORMAL"/>
 			</sgs>
@@ -1857,10 +1857,10 @@
 				<signalOutputConfigurationElement configName="SIGGRP" detPort="0" sg="6 1" title="" varNo="1" wttFilename="vissim"/>
 			</sigTmsTabConfig>
 			<wttFiles>
-				<intObjectRef key="8"/>
+				<intObjectRef key="1"/>
 			</wttFiles>
 		</signalController>
-		<signalController active="true" cycTm="0" cycTmIsVar="false" debug="false" guiFile="#exe#vissig_gui.dll" name="" no="7" offset="0" progFile="#exe#vissig_controller.dll" progNo="1" scDetRecLabelDet="PORTNUMBER" scDetRecLabelSG="NUMBER" scDetRecShortNam="false" sigTmsTabAutoConfig="true" sigTmsTabLabelDet="PORTNUMBER" sigTmsTabLabelSG="NUMBER" supplyFile1="#exe#vissig.config" supplyFile2="#data#traffic_lights_study1.sig" supplyFile3="" type="FIXEDTIME">
+		<signalController active="true" cycTm="0" cycTmIsVar="false" debug="false" guiFile="#exe#vissig_gui.dll" name="" no="7" offset="0" progFile="#exe#vissig_controller.dll" progNo="1" scDetRecLabelDet="PORTNUMBER" scDetRecLabelSG="NUMBER" scDetRecShortNam="false" sigTmsTabAutoConfig="true" sigTmsTabLabelDet="PORTNUMBER" sigTmsTabLabelSG="NUMBER" supplyFile1="#exe#vissig.config" supplyFile2="#data#traffic_lights_study7.sig" supplyFile3="" type="FIXEDTIME">
 			<sgs>
 				<signalGroup amber="5" greenFlsh="0" minGreen="15" minRed="10" name="Signal group 1" no="1" redAmber="0" type="NORMAL"/>
 			</sgs>
@@ -1868,10 +1868,10 @@
 				<signalOutputConfigurationElement configName="SIGGRP" detPort="0" sg="7 1" title="" varNo="1" wttFilename="vissim"/>
 			</sigTmsTabConfig>
 			<wttFiles>
-				<intObjectRef key="9"/>
+				<intObjectRef key="1"/>
 			</wttFiles>
 		</signalController>
-		<signalController active="true" cycTm="0" cycTmIsVar="false" debug="false" guiFile="#exe#vissig_gui.dll" name="" no="8" offset="0" progFile="#exe#vissig_controller.dll" progNo="1" scDetRecLabelDet="PORTNUMBER" scDetRecLabelSG="NUMBER" scDetRecShortNam="false" sigTmsTabAutoConfig="true" sigTmsTabLabelDet="PORTNUMBER" sigTmsTabLabelSG="NUMBER" supplyFile1="#exe#vissig.config" supplyFile2="#data#traffic_lights_study1.sig" supplyFile3="" type="FIXEDTIME">
+		<signalController active="true" cycTm="0" cycTmIsVar="false" debug="false" guiFile="#exe#vissig_gui.dll" name="" no="8" offset="0" progFile="#exe#vissig_controller.dll" progNo="1" scDetRecLabelDet="PORTNUMBER" scDetRecLabelSG="NUMBER" scDetRecShortNam="false" sigTmsTabAutoConfig="true" sigTmsTabLabelDet="PORTNUMBER" sigTmsTabLabelSG="NUMBER" supplyFile1="#exe#vissig.config" supplyFile2="#data#traffic_lights_study8.sig" supplyFile3="" type="FIXEDTIME">
 			<sgs>
 				<signalGroup amber="5" greenFlsh="0" minGreen="15" minRed="10" name="Signal group 1" no="1" redAmber="0" type="NORMAL"/>
 			</sgs>
@@ -1879,10 +1879,10 @@
 				<signalOutputConfigurationElement configName="SIGGRP" detPort="0" sg="8 1" title="" varNo="1" wttFilename="vissim"/>
 			</sigTmsTabConfig>
 			<wttFiles>
-				<intObjectRef key="10"/>
+				<intObjectRef key="1"/>
 			</wttFiles>
 		</signalController>
-		<signalController active="true" cycTm="0" cycTmIsVar="false" debug="false" guiFile="#exe#vissig_gui.dll" name="" no="9" offset="0" progFile="#exe#vissig_controller.dll" progNo="1" scDetRecLabelDet="PORTNUMBER" scDetRecLabelSG="NUMBER" scDetRecShortNam="false" sigTmsTabAutoConfig="true" sigTmsTabLabelDet="PORTNUMBER" sigTmsTabLabelSG="NUMBER" supplyFile1="#exe#vissig.config" supplyFile2="#data#traffic_lights_study1.sig" supplyFile3="" type="FIXEDTIME">
+		<signalController active="true" cycTm="0" cycTmIsVar="false" debug="false" guiFile="#exe#vissig_gui.dll" name="" no="9" offset="0" progFile="#exe#vissig_controller.dll" progNo="1" scDetRecLabelDet="PORTNUMBER" scDetRecLabelSG="NUMBER" scDetRecShortNam="false" sigTmsTabAutoConfig="true" sigTmsTabLabelDet="PORTNUMBER" sigTmsTabLabelSG="NUMBER" supplyFile1="#exe#vissig.config" supplyFile2="#data#traffic_lights_study9.sig" supplyFile3="" type="FIXEDTIME">
 			<sgs>
 				<signalGroup amber="5" greenFlsh="0" minGreen="15" minRed="10" name="Signal group 1" no="1" redAmber="0" type="NORMAL"/>
 			</sgs>
@@ -1890,10 +1890,10 @@
 				<signalOutputConfigurationElement configName="SIGGRP" detPort="0" sg="9 1" title="" varNo="1" wttFilename="vissim"/>
 			</sigTmsTabConfig>
 			<wttFiles>
-				<intObjectRef key="11"/>
+				<intObjectRef key="1"/>
 			</wttFiles>
 		</signalController>
-		<signalController active="true" cycTm="0" cycTmIsVar="false" debug="false" guiFile="#exe#vissig_gui.dll" name="" no="10" offset="0" progFile="#exe#vissig_controller.dll" progNo="1" scDetRecLabelDet="PORTNUMBER" scDetRecLabelSG="NUMBER" scDetRecShortNam="false" sigTmsTabAutoConfig="true" sigTmsTabLabelDet="PORTNUMBER" sigTmsTabLabelSG="NUMBER" supplyFile1="#exe#vissig.config" supplyFile2="#data#traffic_lights_study1.sig" supplyFile3="" type="FIXEDTIME">
+		<signalController active="true" cycTm="0" cycTmIsVar="false" debug="false" guiFile="#exe#vissig_gui.dll" name="" no="10" offset="0" progFile="#exe#vissig_controller.dll" progNo="1" scDetRecLabelDet="PORTNUMBER" scDetRecLabelSG="NUMBER" scDetRecShortNam="false" sigTmsTabAutoConfig="true" sigTmsTabLabelDet="PORTNUMBER" sigTmsTabLabelSG="NUMBER" supplyFile1="#exe#vissig.config" supplyFile2="#data#traffic_lights_study10.sig" supplyFile3="" type="FIXEDTIME">
 			<sgs>
 				<signalGroup amber="5" greenFlsh="0" minGreen="15" minRed="10" name="Signal group 1" no="1" redAmber="0" type="NORMAL"/>
 			</sgs>
@@ -1901,10 +1901,10 @@
 				<signalOutputConfigurationElement configName="SIGGRP" detPort="0" sg="10 1" title="" varNo="1" wttFilename="vissim"/>
 			</sigTmsTabConfig>
 			<wttFiles>
-				<intObjectRef key="12"/>
+				<intObjectRef key="1"/>
 			</wttFiles>
 		</signalController>
-		<signalController active="true" cycTm="0" cycTmIsVar="false" debug="false" guiFile="#exe#vissig_gui.dll" name="" no="11" offset="0" progFile="#exe#vissig_controller.dll" progNo="1" scDetRecLabelDet="PORTNUMBER" scDetRecLabelSG="NUMBER" scDetRecShortNam="false" sigTmsTabAutoConfig="true" sigTmsTabLabelDet="PORTNUMBER" sigTmsTabLabelSG="NUMBER" supplyFile1="#exe#vissig.config" supplyFile2="#data#traffic_lights_study2.sig" supplyFile3="" type="FIXEDTIME">
+		<signalController active="true" cycTm="0" cycTmIsVar="false" debug="false" guiFile="#exe#vissig_gui.dll" name="" no="11" offset="0" progFile="#exe#vissig_controller.dll" progNo="1" scDetRecLabelDet="PORTNUMBER" scDetRecLabelSG="NUMBER" scDetRecShortNam="false" sigTmsTabAutoConfig="true" sigTmsTabLabelDet="PORTNUMBER" sigTmsTabLabelSG="NUMBER" supplyFile1="#exe#vissig.config" supplyFile2="#data#traffic_lights_study11.sig" supplyFile3="" type="FIXEDTIME">
 			<sgs>
 				<signalGroup amber="5" greenFlsh="0" minGreen="15" minRed="10" name="Signal group 1" no="1" redAmber="0" type="NORMAL"/>
 			</sgs>
@@ -1921,24 +1921,24 @@
 		<signalHead allPedTypes="true" allVehTypes="true" anmFlag="false" complRate="1" dischRecAct="false" isBlockSig="false" lane="1 2" localNo="0" name="" no="2" pos="1000" sg="1 1" slowDownDist="3" type="CIRCULAR" vAmberBlock="0"/>
 		<signalHead allPedTypes="true" allVehTypes="true" anmFlag="false" complRate="1" dischRecAct="false" isBlockSig="false" lane="1 1" localNo="0" name="" no="3" pos="2000" sg="2 1" slowDownDist="3" type="CIRCULAR" vAmberBlock="0"/>
 		<signalHead allPedTypes="true" allVehTypes="true" anmFlag="false" complRate="1" dischRecAct="false" isBlockSig="false" lane="1 2" localNo="0" name="" no="4" pos="2000" sg="2 1" slowDownDist="3" type="CIRCULAR" vAmberBlock="0"/>
-		<signalHead allPedTypes="true" allVehTypes="true" anmFlag="false" complRate="1" dischRecAct="false" isBlockSig="false" lane="1 1" localNo="0" name="" no="5" pos="2200" sg="11 1" slowDownDist="3" type="CIRCULAR" vAmberBlock="0"/>
-		<signalHead allPedTypes="true" allVehTypes="true" anmFlag="false" complRate="1" dischRecAct="false" isBlockSig="false" lane="1 2" localNo="0" name="" no="6" pos="2200" sg="11 1" slowDownDist="3" type="CIRCULAR" vAmberBlock="0"/>
-		<signalHead allPedTypes="true" allVehTypes="true" anmFlag="false" complRate="1" dischRecAct="false" isBlockSig="false" lane="1 1" localNo="0" name="" no="7" pos="2250" sg="3 1" slowDownDist="3" type="CIRCULAR" vAmberBlock="0"/>
-		<signalHead allPedTypes="true" allVehTypes="true" anmFlag="false" complRate="1" dischRecAct="false" isBlockSig="false" lane="1 2" localNo="0" name="" no="8" pos="2250" sg="3 1" slowDownDist="3" type="CIRCULAR" vAmberBlock="0"/>
-		<signalHead allPedTypes="true" allVehTypes="true" anmFlag="false" complRate="1" dischRecAct="false" isBlockSig="false" lane="1 1" localNo="0" name="" no="9" pos="3500" sg="4 1" slowDownDist="3" type="CIRCULAR" vAmberBlock="0"/>
-		<signalHead allPedTypes="true" allVehTypes="true" anmFlag="false" complRate="1" dischRecAct="false" isBlockSig="false" lane="1 2" localNo="0" name="" no="10" pos="3500" sg="4 1" slowDownDist="3" type="CIRCULAR" vAmberBlock="0"/>
-		<signalHead allPedTypes="true" allVehTypes="true" anmFlag="false" complRate="1" dischRecAct="false" isBlockSig="false" lane="1 1" localNo="0" name="" no="11" pos="4300" sg="5 1" slowDownDist="3" type="CIRCULAR" vAmberBlock="0"/>
-		<signalHead allPedTypes="true" allVehTypes="true" anmFlag="false" complRate="1" dischRecAct="false" isBlockSig="false" lane="1 2" localNo="0" name="" no="12" pos="4300" sg="5 1" slowDownDist="3" type="CIRCULAR" vAmberBlock="0"/>
-		<signalHead allPedTypes="true" allVehTypes="true" anmFlag="false" complRate="1" dischRecAct="false" isBlockSig="false" lane="1 1" localNo="0" name="" no="13" pos="4400" sg="6 1" slowDownDist="3" type="CIRCULAR" vAmberBlock="0"/>
-		<signalHead allPedTypes="true" allVehTypes="true" anmFlag="false" complRate="1" dischRecAct="false" isBlockSig="false" lane="1 2" localNo="0" name="" no="14" pos="4400" sg="6 1" slowDownDist="3" type="CIRCULAR" vAmberBlock="0"/>
-		<signalHead allPedTypes="true" allVehTypes="true" anmFlag="false" complRate="1" dischRecAct="false" isBlockSig="false" lane="1 1" localNo="0" name="" no="15" pos="5000" sg="7 1" slowDownDist="3" type="CIRCULAR" vAmberBlock="0"/>
-		<signalHead allPedTypes="true" allVehTypes="true" anmFlag="false" complRate="1" dischRecAct="false" isBlockSig="false" lane="1 2" localNo="0" name="" no="16" pos="5000" sg="7 1" slowDownDist="3" type="CIRCULAR" vAmberBlock="0"/>
-		<signalHead allPedTypes="true" allVehTypes="true" anmFlag="false" complRate="1" dischRecAct="false" isBlockSig="false" lane="1 1" localNo="0" name="" no="17" pos="6500" sg="8 1" slowDownDist="3" type="CIRCULAR" vAmberBlock="0"/>
-		<signalHead allPedTypes="true" allVehTypes="true" anmFlag="false" complRate="1" dischRecAct="false" isBlockSig="false" lane="1 2" localNo="0" name="" no="18" pos="6500" sg="8 1" slowDownDist="3" type="CIRCULAR" vAmberBlock="0"/>
-		<signalHead allPedTypes="true" allVehTypes="true" anmFlag="false" complRate="1" dischRecAct="false" isBlockSig="false" lane="1 1" localNo="0" name="" no="19" pos="6650" sg="9 1" slowDownDist="3" type="CIRCULAR" vAmberBlock="0"/>
-		<signalHead allPedTypes="true" allVehTypes="true" anmFlag="false" complRate="1" dischRecAct="false" isBlockSig="false" lane="1 2" localNo="0" name="" no="20" pos="6650" sg="9 1" slowDownDist="3" type="CIRCULAR" vAmberBlock="0"/>
-		<signalHead allPedTypes="true" allVehTypes="true" anmFlag="false" complRate="1" dischRecAct="false" isBlockSig="false" lane="1 1" localNo="0" name="" no="21" pos="6600" sg="10 1" slowDownDist="3" type="CIRCULAR" vAmberBlock="0"/>
-		<signalHead allPedTypes="true" allVehTypes="true" anmFlag="false" complRate="1" dischRecAct="false" isBlockSig="false" lane="1 2" localNo="0" name="" no="22" pos="6600" sg="10 1" slowDownDist="3" type="CIRCULAR" vAmberBlock="0"/>
+		<signalHead allPedTypes="true" allVehTypes="true" anmFlag="false" complRate="1" dischRecAct="false" isBlockSig="false" lane="1 1" localNo="0" name="" no="5" pos="2200" sg="3 1" slowDownDist="3" type="CIRCULAR" vAmberBlock="0"/>
+		<signalHead allPedTypes="true" allVehTypes="true" anmFlag="false" complRate="1" dischRecAct="false" isBlockSig="false" lane="1 2" localNo="0" name="" no="6" pos="2200" sg="3 1" slowDownDist="3" type="CIRCULAR" vAmberBlock="0"/>
+		<signalHead allPedTypes="true" allVehTypes="true" anmFlag="false" complRate="1" dischRecAct="false" isBlockSig="false" lane="1 1" localNo="0" name="" no="7" pos="2250" sg="4 1" slowDownDist="3" type="CIRCULAR" vAmberBlock="0"/>
+		<signalHead allPedTypes="true" allVehTypes="true" anmFlag="false" complRate="1" dischRecAct="false" isBlockSig="false" lane="1 2" localNo="0" name="" no="8" pos="2250" sg="4 1" slowDownDist="3" type="CIRCULAR" vAmberBlock="0"/>
+		<signalHead allPedTypes="true" allVehTypes="true" anmFlag="false" complRate="1" dischRecAct="false" isBlockSig="false" lane="1 1" localNo="0" name="" no="9" pos="3500" sg="5 1" slowDownDist="3" type="CIRCULAR" vAmberBlock="0"/>
+		<signalHead allPedTypes="true" allVehTypes="true" anmFlag="false" complRate="1" dischRecAct="false" isBlockSig="false" lane="1 2" localNo="0" name="" no="10" pos="3500" sg="5 1" slowDownDist="3" type="CIRCULAR" vAmberBlock="0"/>
+		<signalHead allPedTypes="true" allVehTypes="true" anmFlag="false" complRate="1" dischRecAct="false" isBlockSig="false" lane="1 1" localNo="0" name="" no="11" pos="4300" sg="6 1" slowDownDist="3" type="CIRCULAR" vAmberBlock="0"/>
+		<signalHead allPedTypes="true" allVehTypes="true" anmFlag="false" complRate="1" dischRecAct="false" isBlockSig="false" lane="1 2" localNo="0" name="" no="12" pos="4300" sg="6 1" slowDownDist="3" type="CIRCULAR" vAmberBlock="0"/>
+		<signalHead allPedTypes="true" allVehTypes="true" anmFlag="false" complRate="1" dischRecAct="false" isBlockSig="false" lane="1 1" localNo="0" name="" no="13" pos="4400" sg="7 1" slowDownDist="3" type="CIRCULAR" vAmberBlock="0"/>
+		<signalHead allPedTypes="true" allVehTypes="true" anmFlag="false" complRate="1" dischRecAct="false" isBlockSig="false" lane="1 2" localNo="0" name="" no="14" pos="4400" sg="7 1" slowDownDist="3" type="CIRCULAR" vAmberBlock="0"/>
+		<signalHead allPedTypes="true" allVehTypes="true" anmFlag="false" complRate="1" dischRecAct="false" isBlockSig="false" lane="1 1" localNo="0" name="" no="15" pos="5000" sg="8 1" slowDownDist="3" type="CIRCULAR" vAmberBlock="0"/>
+		<signalHead allPedTypes="true" allVehTypes="true" anmFlag="false" complRate="1" dischRecAct="false" isBlockSig="false" lane="1 2" localNo="0" name="" no="16" pos="5000" sg="8 1" slowDownDist="3" type="CIRCULAR" vAmberBlock="0"/>
+		<signalHead allPedTypes="true" allVehTypes="true" anmFlag="false" complRate="1" dischRecAct="false" isBlockSig="false" lane="1 1" localNo="0" name="" no="17" pos="6500" sg="9 1" slowDownDist="3" type="CIRCULAR" vAmberBlock="0"/>
+		<signalHead allPedTypes="true" allVehTypes="true" anmFlag="false" complRate="1" dischRecAct="false" isBlockSig="false" lane="1 2" localNo="0" name="" no="18" pos="6500" sg="9 1" slowDownDist="3" type="CIRCULAR" vAmberBlock="0"/>
+		<signalHead allPedTypes="true" allVehTypes="true" anmFlag="false" complRate="1" dischRecAct="false" isBlockSig="false" lane="1 1" localNo="0" name="" no="19" pos="6650" sg="10 1" slowDownDist="3" type="CIRCULAR" vAmberBlock="0"/>
+		<signalHead allPedTypes="true" allVehTypes="true" anmFlag="false" complRate="1" dischRecAct="false" isBlockSig="false" lane="1 2" localNo="0" name="" no="20" pos="6650" sg="10 1" slowDownDist="3" type="CIRCULAR" vAmberBlock="0"/>
+		<signalHead allPedTypes="true" allVehTypes="true" anmFlag="false" complRate="1" dischRecAct="false" isBlockSig="false" lane="1 1" localNo="0" name="" no="21" pos="6600" sg="11 1" slowDownDist="3" type="CIRCULAR" vAmberBlock="0"/>
+		<signalHead allPedTypes="true" allVehTypes="true" anmFlag="false" complRate="1" dischRecAct="false" isBlockSig="false" lane="1 2" localNo="0" name="" no="22" pos="6600" sg="11 1" slowDownDist="3" type="CIRCULAR" vAmberBlock="0"/>
 	</signalHeads>
 	<simulation comment="" numCores="1" numRuns="1" randSeed="42" randSeedIncr="1" retroSync="false" simMode="MICRO" simPeriod="3600" simRes="10" simSpeed="10" startTm="0" useAllCores="true" useMaxSimSpeed="true" volumeIncrDynAssign="0"/>
 	<timeDistributions>
@@ -2126,13 +2126,6 @@
 		<wttFile file="#exe#vissig.wtt" no="1"/>
 		<wttFile file="#exe#vissig.wtt" no="3"/>
 		<wttFile file="#exe#vissig.wtt" no="5"/>
-		<wttFile file="#exe#vissig.wtt" no="6"/>
-		<wttFile file="#exe#vissig.wtt" no="7"/>
-		<wttFile file="#exe#vissig.wtt" no="8"/>
-		<wttFile file="#exe#vissig.wtt" no="9"/>
-		<wttFile file="#exe#vissig.wtt" no="10"/>
-		<wttFile file="#exe#vissig.wtt" no="11"/>
-		<wttFile file="#exe#vissig.wtt" no="12"/>
 	</wttFiles>
 	<walkingBehaviors>
 		<walkingBehavior aSocIso="2.72" aSocMean="0.4" bSocIso="0.2" bSocMean="2.8" lambda="0.176" name="Default" no="1" noise="1.2" reactToN="8" sidePref="NONE" tau="0.4" vd="3"/>
