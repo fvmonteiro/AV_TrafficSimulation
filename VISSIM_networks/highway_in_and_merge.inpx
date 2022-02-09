@@ -164,7 +164,7 @@
 	<conflictAreas>
 		<conflictArea addStopDist="0" anticipRout="0" avoidBlockMajor="true" avoidBlockMinor="1" frontGapDef="0.5" link1="3" link2="10001" mesoCritGap="3.5" minGapBlockDef="3" no="3" obsAdjLns="false" rearGapDef="0.5" safDistFactDef="1.5" status="PASSIVE" visibLink1="100" visibLink2="100"/>
 		<conflictArea addStopDist="0" anticipRout="0" avoidBlockMajor="true" avoidBlockMinor="1" frontGapDef="0.5" link1="3" link2="10004" mesoCritGap="3.5" minGapBlockDef="3" no="7" obsAdjLns="false" rearGapDef="0.5" safDistFactDef="1.5" status="PASSIVE" visibLink1="100" visibLink2="100"/>
-		<conflictArea addStopDist="0" anticipRout="0" avoidBlockMajor="true" avoidBlockMinor="1" frontGapDef="0.5" link1="10000" link2="10002" mesoCritGap="3.5" minGapBlockDef="3" no="11" obsAdjLns="false" rearGapDef="0.5" safDistFactDef="1.5" status="PASSIVE" visibLink1="100" visibLink2="100"/>
+		<conflictArea addStopDist="0" anticipRout="0" avoidBlockMajor="true" avoidBlockMinor="1" frontGapDef="0.5" link1="10000" link2="10002" mesoCritGap="3.5" minGapBlockDef="3" no="11" obsAdjLns="false" rearGapDef="0.5" safDistFactDef="1.5" status="ONEYIELDSTWO" visibLink1="100" visibLink2="100"/>
 	</conflictAreas>
 	<dataCollectionMeasurements>
 		<dataCollectionMeasurement name="" no="1">
@@ -975,7 +975,7 @@
 		<routGuid1 interval="999999" offset="0" strategy="NEWROUTETODESTINATIONPARKINGLOT"/>
 		<routGuid2 interval="999999" offset="0" strategy="NEWROUTETODESTINATIONPARKINGLOT"/>
 	</dynamicAssignment>
-	<evaluation autoCreateResultColumns="true" databaseConnection="" evalOutDir="#data#highway_in_and_out_lanes\test" keepPrevResults="KEEPCURRENT" listAutoExportType="FILE" nodesDelaySegmentStart="100" queueBeginSpeed="5" queueConsiderAdjacentLanes="true" queueEndSpeed="10" queueMaxHeadway="20" queueMaxLength="500">
+	<evaluation autoCreateResultColumns="true" databaseConnection="" evalOutDir="#data#highway_in_and_merge\test" keepPrevResults="KEEPCURRENT" listAutoExportType="FILE" nodesDelaySegmentStart="100" queueBeginSpeed="5" queueConsiderAdjacentLanes="true" queueEndSpeed="10" queueMaxHeadway="20" queueMaxLength="500">
 		<areaMeasRawData fromTime="0" toTime="99999" writeFile="false"/>
 		<areaMeasResults collectData="false" fromTime="0" interval="99999" toTime="99999"/>
 		<areaResults collectData="false" fromTime="0" interval="99999" toTime="99999"/>
@@ -1091,8 +1091,8 @@
 		<link assumSpeedOncom="60" costPerKm="0" direction="ALL" displayType="1" emergStopDist="5" gradient="0" hasOvtLn="false" isPedArea="false" level="1" linkBehavType="1" linkEvalAct="false" linkEvalSegLen="800" lnChgDist="200" lnChgDistIsPerLn="false" lnChgEvalAct="true" lookAheadDistOvt="500" mesoFollowUpGap="0" mesoSpeed="50" mesoSpeedModel="VEHICLEBASED" name="main_end" no="6" ovtOnlyPT="false" ovtSpeedFact="1.3" showClsfValues="true" showLinkBar="true" showVeh="true" surch1="0" surch2="0" thickness="0" vehRecAct="true">
 			<geometry>
 				<points3D>
-					<point3D x="1064.39494834725" y="-32.623082991601052" zOffset="0"/>
-					<point3D x="1164.7421588676323" y="-33.11287759375714" zOffset="0"/>
+					<point3D x="1170.6226266209205" y="-31.545410893172509" zOffset="0"/>
+					<point3D x="1270.9698371413028" y="-32.035205495328597" zOffset="0"/>
 				</points3D>
 			</geometry>
 			<lanes>
@@ -1105,7 +1105,10 @@
 			<geometry>
 				<points3D>
 					<point3D x="1039.6281237296294" y="-37.412681092173806" zOffset="0"/>
-					<point3D x="1064.3864067013069" y="-34.373062145843917" zOffset="0"/>
+					<point3D x="1072.3806165969593" y="-36.810077513535816" zOffset="0"/>
+					<point3D x="1105.1211789144581" y="-35.336929718297391" zOffset="0"/>
+					<point3D x="1137.8617039508799" y="-33.872334848807569" zOffset="0"/>
+					<point3D x="1170.6140849749777" y="-33.295390047415381" zOffset="0"/>
 				</points3D>
 			</geometry>
 			<lanes>
@@ -1144,7 +1147,7 @@
 			<geometry>
 				<points3D>
 					<point3D x="1040.2404432470835" y="-32.164991761835367" zOffset="0"/>
-					<point3D x="1064.39494834725" y="-32.623082991601052" zOffset="0"/>
+					<point3D x="1170.6226266209205" y="-31.545410893172509" zOffset="0"/>
 				</points3D>
 			</geometry>
 			<lanes>
@@ -1942,7 +1945,7 @@
 			</distrDataPts>
 		</powerDistribution>
 	</powerDistributions>
-	<simulation comment="" numCores="1" numRuns="1" randSeed="42" randSeedIncr="1" retroSync="false" simMode="MICRO" simPeriod="360" simRes="10" simSpeed="10" startTm="0" useAllCores="false" useMaxSimSpeed="true" volumeIncrDynAssign="0"/>
+	<simulation comment="" numCores="1" numRuns="1" randSeed="9" randSeedIncr="1" retroSync="false" simMode="MICRO" simPeriod="360" simRes="10" simSpeed="10" startTm="0" useAllCores="false" useMaxSimSpeed="true" volumeIncrDynAssign="0"/>
 	<timeDistributions>
 		<timeDistribution mean="0.5" name="0.5 s" no="1" stdDev="0" type="NORMAL"/>
 		<timeDistribution mean="0.9" name="0.9 s" no="2" stdDev="0" type="NORMAL"/>
@@ -2030,6 +2033,7 @@
 		<userDefinedAttribute comment="Vehicle behind which the ego vehicle is trying to merge" dataSrcType="DATA" dataType="INT" decimals="2" formula="" internalDefValueNum="0" internalDefValueStr="" internalMaxValue="INF" internalMinValue="-INF" maxStrLen="100" nameLong="Destination Lane Leader ID" nameShort="destLeaderId" no="25" objType="VEHICLE" subAttrs=""/>
 		<userDefinedAttribute comment="Vehicle in front of which the ego vehicle is trying to merge" dataSrcType="DATA" dataType="INT" decimals="2" formula="" internalDefValueNum="0" internalDefValueStr="" internalMaxValue="INF" internalMinValue="-INF" maxStrLen="100" nameLong="Destination Lane Follower ID" nameShort="destFollowerId" no="26" objType="VEHICLE" subAttrs=""/>
 		<userDefinedAttribute comment="ID of vehicle for which a gap is being generated" dataSrcType="DATA" dataType="INT" decimals="2" formula="" internalDefValueNum="0" internalDefValueStr="" internalMaxValue="INF" internalMinValue="-INF" maxStrLen="100" nameLong="Assisted Vehicle ID" nameShort="assistedVehId" no="27" objType="VEHICLE" subAttrs=""/>
+		<userDefinedAttribute comment="Connected vehicles cooperating to generate a gap share their desired time headway with the incoming vehicle." dataSrcType="DATA" dataType="DOUBLE" decimals="2" formula="" internalDefValueNum="0" internalDefValueStr="" internalMaxValue="INF" internalMinValue="-INF" maxStrLen="100" nameLong="Time Headway to Incoming Vehicle" nameShort="hToIncomingVeh" no="28" objType="VEHICLE" subAttrs=""/>
 	</userDefinedAttributes>
 	<vehicleClasses>
 		<vehicleClass anmid="" color="ff000000" name="Car" no="10" useVehTypeColor="true">
@@ -2088,23 +2092,22 @@
 	<vehicleInputs>
 		<vehicleInput anmFlag="false" link="2" name="in_flow" no="2">
 			<timeIntVehVols>
-				<timeIntervalVehVolume cont="false" timeInt="1 0" vehComp="4" volType="STOCHASTIC" volume="1500"/>
+				<timeIntervalVehVolume cont="false" timeInt="1 0" vehComp="6" volType="STOCHASTIC" volume="2000"/>
 			</timeIntVehVols>
 		</vehicleInput>
 		<vehicleInput anmFlag="false" link="4" name="main_flow" no="3">
 			<timeIntVehVols>
-				<timeIntervalVehVolume cont="false" timeInt="1 0" vehComp="4" volType="STOCHASTIC" volume="3000"/>
+				<timeIntervalVehVolume cont="false" timeInt="1 0" vehComp="6" volType="STOCHASTIC" volume="4000"/>
 			</timeIntVehVols>
 		</vehicleInput>
 	</vehicleInputs>
 	<vehicleRoutingDecisionsStatic>
 		<vehicleRoutingDecisionStatic allVehTypes="true" anmFlag="false" combineStaRoutDec="false" link="2" name="in_ramp" no="4" pos="26.205627698755215">
 			<vehRoutSta>
-				<vehicleRouteStatic destLink="6" destPos="45.2237024273972" name="" no="1" relFlow="">
+				<vehicleRouteStatic destLink="10000" destPos="130.03225109459811" name="" no="1" relFlow="">
 					<linkSeq>
 						<intObjectRef key="10001"/>
 						<intObjectRef key="3"/>
-						<intObjectRef key="10002"/>
 					</linkSeq>
 				</vehicleRouteStatic>
 			</vehRoutSta>
