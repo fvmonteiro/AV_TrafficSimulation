@@ -131,6 +131,7 @@ double EgoVehicle::get_current_max_brake() const {
 
 VehicleParameters EgoVehicle::get_static_parameters() const {
 	return {
+		type,
 		simulation_time_step,
 		max_brake,
 		comfortable_brake,
@@ -150,8 +151,12 @@ double EgoVehicle::get_free_flow_velocity() const {
 }
 
 double EgoVehicle::get_time_headway_to_assisted_vehicle() {
-	return controller.get_gap_generation_lane_controller().
-		get_veh_following_time_headway();
+	if (is_cooperating_to_generate_gap())
+	{
+		return controller.get_gap_generation_lane_controller().
+			get_veh_following_time_headway();
+	}
+	return 0;
 }
 
 double EgoVehicle::get_safe_time_headway() const {
@@ -223,6 +228,10 @@ void EgoVehicle::set_type(long type) {
 			this->brake_delay = AUTONOMOUS_BRAKE_DELAY;
 			this->is_lane_change_decision_autonomous = true;
 			break;
+		case VehicleType::traffic_light_acc_car:
+			this->brake_delay = AUTONOMOUS_BRAKE_DELAY;
+			this->is_lane_change_decision_autonomous = true;
+			break;
 		default:
 			this->brake_delay = AUTONOMOUS_BRAKE_DELAY;
 			this->is_lane_change_decision_autonomous = false;
@@ -269,9 +278,60 @@ void EgoVehicle::set_lane_end_distance(double lane_end_distance,
 	}
 }
 
+void EgoVehicle::set_traffic_light_info(int traffic_light_id,
+	double distance)
+{
+	distance_to_next_traffic_light = distance;
+	if (traffic_light_id != next_traffic_light_id)
+	{
+		time_crossed_last_traffic_light = get_time();
+		next_traffic_light_id = traffic_light_id;
+		/*next_next_traffic_light_id = next_traffic_light_id > 0 ?
+			next_traffic_light_id + 1 : 0;*/
+	}
+}
+
+//void EgoVehicle::set_traffic_light_distance(const TrafficLight& traffic_light,
+//	double distance)
+//{
+//	distance_to_next_traffic_light = distance;
+//	
+//	/* We can check to decide whether or not to update the pointer, but 
+//	maybe it's cheaper to just set it at every step (as above). */
+//	if (next_traffic_light == nullptr)
+//	{
+//		/* this happens once when the vehicle is created. Should we just put 
+//		it in the constructor? Or maybe initialize all traffic lights with
+//		id zero? */
+//		next_traffic_light = std::make_shared<TrafficLight>(traffic_light);
+//		if (verbose) std::clog << "First traffic light: "
+//			<< next_traffic_light->get_id() << "\n";
+//	}
+//	else if (traffic_light.get_id() != next_traffic_light->get_id())
+//	{
+//		last_traffic_light = next_traffic_light;
+//		next_traffic_light = std::make_shared<TrafficLight>(traffic_light);
+//		if (verbose) std::clog << "New traffic light: " 
+//			<< next_traffic_light->get_id() << "\n"
+//			<< "Last traffic light: " << last_traffic_light->get_id() << "\n";
+//	}
+//}
+
+//void EgoVehicle::set_traffic_light_state(TrafficLight& traffic_light,
+//	long state)
+//{
+//
+//}
+//
+//void EgoVehicle::set_traffic_light_state_start_time(TrafficLight& traffic_light,
+//	double start_time)
+//{
+//
+//}
+
 /* Nearby Vehicles methods ------------------------------------------------ */
 
-void EgoVehicle::clear_nearby_vehicles() {	
+void EgoVehicle::clear_nearby_vehicles() {
 	nearby_vehicles.clear();
 	leader = nullptr;
 	follower = nullptr;
@@ -385,12 +445,13 @@ std::shared_ptr<NearbyVehicle> EgoVehicle::get_nearby_vehicle_by_id(
 	/* If we don't find the id in the current nearby vehicle list, 
 	the vehicle is way behind us. In this case, we just create a far away 
 	virtual vehicle to force the ego vehicle into low vel. control mode */
-	std::shared_ptr<NearbyVehicle> virtual_vehicle =
+	/*std::shared_ptr<NearbyVehicle> virtual_vehicle =
 		std::shared_ptr<NearbyVehicle>(new
 			NearbyVehicle(nv_id, RelativeLane::same, -3));
 	virtual_vehicle->set_relative_velocity(
 		nv_vel);
-	virtual_vehicle->set_distance();
+	virtual_vehicle->set_distance();*/
+	return nullptr;
 }
 
 /* TEMPORATY FUNCTION TO DOUBLE CHECK NEARBY_VEHICLES VECOTR */
@@ -539,7 +600,7 @@ void EgoVehicle::analyze_nearby_vehicles() {
 	if (has_leader()
 		&& (leader->get_id() != old_leader_id)) {
 		
-		if (verbose) std::clog << "updating leader info" << std::endl;
+		//if (verbose) std::clog << "updating leader info" << std::endl;
 
 		controller.update_origin_lane_leader(
 			get_velocity(), old_leader_id != 0, *leader);
@@ -565,7 +626,7 @@ void EgoVehicle::analyze_nearby_vehicles() {
 		assisted_vehicle = nullptr;
 	}
 
-	if (verbose) nv_double_check();
+	//if (verbose) nv_double_check();
 
 	save_nearby_vehicles_ids();
 }
@@ -601,7 +662,8 @@ double EgoVehicle::compute_gap(
 }
 
 long EgoVehicle::create_lane_change_request() {
-	return desired_lane_change_direction.to_int() * id;
+	if (is_connected()) return desired_lane_change_direction.to_int() * id;
+	else return 0;
 }
 
 /* State-machine related methods ------------------------------------------ */
@@ -657,6 +719,8 @@ long EgoVehicle::get_color_by_controller_state() {
 	if (state.empty()) {
 		return orig_lane_vel_control_color;
 	}
+
+	/* TODO: add color to traffic light ACC */
 	
 	switch (controller.get_active_longitudinal_controller()) {
 	case ControlManager::ActiveACC::origin_lane:
@@ -705,34 +769,6 @@ long EgoVehicle::get_color_by_controller_state() {
 	default:
 		return WHITE;
 	}
-	
-	/*switch (get_state())
-	{
-	case State::lane_keeping:
-		switch (controller.get_longitudinal_controller_state())
-		{
-		case LongitudinalController::State::velocity_control:
-			return velocity_control_color;
-		case LongitudinalController::State::vehicle_following:
-			return vehicle_following_color;
-		case LongitudinalController::State::uninitialized:
-			return WHITE;
-		}
-	case State::intention_to_change_lanes:
-		switch (controller.get_active_longitudinal_controller())
-		{
-		case ControlManager::ActiveLongitudinalController::vissim:
-		case ControlManager::ActiveLongitudinalController::origin_lane:
-			return lane_change_adjustment_origin_lane_color;
-		case ControlManager::ActiveLongitudinalController::destination_lane:
-			return lane_change_adjustment_destination_lane_color;
-		case ControlManager::ActiveLongitudinalController::end_of_lane:
-			return lane_change_adjustment_end_of_lane_color;
-		}
-	default:
-		return WHITE;
-		break;
-	}*/
 }
 
 std::string EgoVehicle::print_detailed_state() {
@@ -869,6 +905,12 @@ long EgoVehicle::decide_lane_change_direction() {
 		//if (verbose) std::clog << "LC decided" << std::endl;
 	}
 	else {
+		//if (type == VehicleType::traffic_light_acc_car)
+		//{
+		//	// This vehicle type never changes lanes
+		//	lane_change_direction = 0;
+		//}
+		/*else*/
 		lane_change_direction = get_vissim_active_lane_change();
 	}
 
@@ -1157,20 +1199,27 @@ void EgoVehicle::set_desired_lane_change_direction(
 		std::clog << 
 	}*/
 
-	if (pref_rel_lane.is_to_the_left()) {
-		desired_lane_change_direction = RelativeLane::left;
-	}
-	else if (pref_rel_lane.is_to_the_right()) {
-		desired_lane_change_direction = RelativeLane::right;
-	}
-	else if (relative_target_lane.is_to_the_left()) {
-		desired_lane_change_direction = RelativeLane::left;
-	}
-	else if (relative_target_lane.is_to_the_right()) {
-		desired_lane_change_direction = RelativeLane::right;
-	}
-	else {
+	if (type == VehicleType::traffic_light_acc_car)
+	{
 		desired_lane_change_direction = RelativeLane::same;
+	}
+	else
+	{
+		if (pref_rel_lane.is_to_the_left()) {
+			desired_lane_change_direction = RelativeLane::left;
+		}
+		else if (pref_rel_lane.is_to_the_right()) {
+			desired_lane_change_direction = RelativeLane::right;
+		}
+		else if (relative_target_lane.is_to_the_left()) {
+			desired_lane_change_direction = RelativeLane::left;
+		}
+		else if (relative_target_lane.is_to_the_right()) {
+			desired_lane_change_direction = RelativeLane::right;
+		}
+		else {
+			desired_lane_change_direction = RelativeLane::same;
+		}
 	}
 }
 

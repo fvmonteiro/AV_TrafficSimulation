@@ -12,17 +12,20 @@
 
 #include "Constants.h"
 #include "DriverModel.h"
-#include "SimulationLogger.h"
 #include "EgoVehicle.h"
 #include "LoggedVehicle.h"
+#include "SimulationLogger.h"
+#include "TrafficLight.h"
+#include "TrafficLightFileReader.h"
 
 /*==========================================================================*/
 
-const std::unordered_set<long> LOGGED_VEHICLES_IDS{ 10 };
+const std::unordered_set<long> LOGGED_VEHICLES_IDS{ 4 };
 const bool CLUELESS_DEBUGGING{ false };
 
 SimulationLogger simulation_logger;
 std::unordered_map<long, EgoVehicle> vehicles;
+std::unordered_map<int, TrafficLight> traffic_lights;
 long current_vehicle_id = 0;
 double simulation_time_step = -1.0;
 double current_time = 0.0;
@@ -80,6 +83,18 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
             << string_value
             << std::endl;
         return 1;
+    case DRIVER_DATA_PARAMETERFILE          :
+        if (string_value != NULL && string_value[0] != '\0')
+        std::clog << "Parameter file path: "
+            << string_value << std::endl;
+        /* Only the traffic light ACC has a parameter file */
+        TrafficLightFileReader::from_file_to_objects(
+            std::string(string_value), traffic_lights);
+        for (const std::pair<int, TrafficLight>& pair : traffic_lights)
+        {
+            std::clog << pair.second << "\n";
+        }
+        return 1;
     case DRIVER_DATA_TIMESTEP               :
         if (simulation_time_step < 0) {
             simulation_time_step = double_value;
@@ -87,7 +102,8 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
         return 1;
     case DRIVER_DATA_TIME                   :
         if (CLUELESS_DEBUGGING && (double_value != current_time)) {
-            std::clog << "t=" << current_time << std::endl;
+            std::clog << "t=" << current_time 
+                << ", " << vehicles.size() << " vehicles." << std::endl;
         }
         current_time = double_value;
         return 1;
@@ -108,14 +124,14 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
             case UDA::gap_to_leader:
             case UDA::reference_gap:
             case UDA::relative_velocity_to_leader:
-                return 1;
+                return 0;
             /* Debugging: dest lane leader */
             case UDA::dest_leader_id:
             case UDA::gap_to_dest_lane_leader:
             case UDA::transient_gap_to_ld:
             case UDA::veh_following_gap_to_ld:
             case UDA::safe_gap_to_dest_lane_leader:
-                return 1;
+                return 0;
             /* Debugging: dest lane follower */
             case UDA::dest_follower_id:
             case UDA::gap_to_dest_lane_follower:
@@ -123,7 +139,7 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
             case UDA::veh_following_gap_to_fd:
             case UDA::safe_gap_to_dest_lane_follower:
             case UDA::dest_follower_time_headway:
-                return 1;
+                return 0;
             /* Debugging: assisted vehicle */
             case UDA::assisted_veh_id:
                 return 1;
@@ -131,7 +147,7 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
             case UDA::waiting_time:
                 return 0;
             case UDA::risk:
-                return 1;
+                return 0;
             case UDA::safe_time_headway:
                 return 1;
             default:
@@ -323,9 +339,21 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
     case DRIVER_DATA_DIST_TO_MIN_RADIUS     :
     case DRIVER_DATA_SLOPE                  :
     case DRIVER_DATA_SLOPE_AHEAD            :
+        return 1;
     case DRIVER_DATA_SIGNAL_DISTANCE        :
+        vehicles[current_vehicle_id].set_traffic_light_info(
+            index1, double_value);
+        return 1;
     case DRIVER_DATA_SIGNAL_STATE           :
+        /* This is called once for each signal head at the start of 
+        every simulation step. And then once again for each vehicle. */
+        traffic_lights[index1].set_current_state(long_value);
+        return 1;
     case DRIVER_DATA_SIGNAL_STATE_START     :
+        /* Called once for each vehicle close to the signal head, so
+        we may set the same value several times. */
+        traffic_lights[index1].set_current_state_start_time(double_value);
+        return 1;
     case DRIVER_DATA_SPEED_LIMIT_DISTANCE   :
     case DRIVER_DATA_SPEED_LIMIT_VALUE      :
         return 1;
@@ -394,13 +422,8 @@ DRIVERMODEL_API  int  DriverModelGetValue (long   type,
         {
         /* The first three are necessary */
         case UDA::h_to_assited_veh:
-            if (vehicles[current_vehicle_id].is_cooperating_to_generate_gap()) {
-                *double_value = vehicles[current_vehicle_id].
-                    get_time_headway_to_assisted_vehicle();
-            }
-            else {
-                *double_value = 0;
-            }
+           *double_value = vehicles[current_vehicle_id].
+               get_time_headway_to_assisted_vehicle();
             break;
         case UDA::lane_change_request:
             *long_value = vehicles[current_vehicle_id].

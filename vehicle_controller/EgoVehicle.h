@@ -11,6 +11,7 @@
 
 #include "ControlManager.h"
 #include "NearbyVehicle.h"
+#include "TrafficLight.h"
 #include "Vehicle.h"
 
 
@@ -127,6 +128,15 @@ public:
 	void set_rel_target_lane(long target_relative_lane);
 	void set_lane_end_distance(double lane_end_distance,
 		long lane_number);
+	void set_traffic_light_info(int traffic_light_id,
+		double distance);
+
+	//void set_traffic_light_distance(const TrafficLight& traffic_light, 
+	//	double distance);
+	//void set_traffic_light_state(TrafficLight& traffic_light,
+	//	long state); /* [Feb 10, 2022] double check if it's necessary */
+	//void set_traffic_light_state_start_time(TrafficLight& traffic_light,
+	//	double start_time); /*[Feb 10, 2022] double check if it's necessary*/
 
 
 	/* Dealing with nearby vehicles --------------------------------------- */
@@ -308,6 +318,16 @@ private:
 	//RelevantNearbyVehicles relevant_nearby_vehicles;
 
 	void save_nearby_vehicles_ids();
+
+	/* Traffic lights -------------------------------------------------------- */
+	/*std::shared_ptr<TrafficLight> last_traffic_light{ nullptr };
+	std::shared_ptr<TrafficLight> next_traffic_light{ nullptr };
+	std::shared_ptr<TrafficLight> next_next_traffic_light{ nullptr };*/
+	double time_crossed_last_traffic_light{ 0.0 };
+	int next_traffic_light_id{ 0 };
+	//int next_next_traffic_light_id{ 0 };
+	double distance_to_next_traffic_light{ 0.0 };
+	//double distance_to_next_next_traffic_light{ 0.0 };
 
 	/* Colors for easy visualization in VISSIM ------------------------------- */
 	/* General rule: bright colors represent vel control, 

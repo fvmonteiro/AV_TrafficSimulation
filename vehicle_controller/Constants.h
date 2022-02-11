@@ -73,6 +73,7 @@ enum class VehicleType {
 	ACC_car = 105,
 	autonomous_car = 110,
 	connected_car = 120,
+	traffic_light_acc_car = 140,
 	truck = 200,
 	bus = 300
 };

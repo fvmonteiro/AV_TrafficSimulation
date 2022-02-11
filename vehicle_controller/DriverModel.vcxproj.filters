@@ -39,10 +39,16 @@
     <ClCompile Include="VirtualLongitudinalController.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="RelativeLane.cpp" />
     <ClCompile Include="VariationLimitedFilter.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="TrafficLight.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="RelativeLane.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="TrafficLightFileReader.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ControlManager.h">
@@ -92,6 +98,10 @@
     <ClInclude Include="VariationLimitedFilter.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="TrafficLight.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TrafficLightFileReader.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Header Files">

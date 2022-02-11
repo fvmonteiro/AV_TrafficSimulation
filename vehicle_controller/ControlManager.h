@@ -90,6 +90,7 @@ public:
 	which one should be applied to the vehicle */
 	double determine_desired_acceleration(const EgoVehicle& ego_vehicle);
 	double use_vissim_desired_acceleration(const EgoVehicle& ego_vehicle);
+	double get_traffic_light_acc_acceleration(const EgoVehicle& ego_vehicle);
 	/* Returns true if the computed acceleration was added to the map */
 	bool get_origin_lane_desired_acceleration(
 		const EgoVehicle& ego_vehicle, 

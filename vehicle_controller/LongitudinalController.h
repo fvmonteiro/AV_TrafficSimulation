@@ -10,6 +10,8 @@
 
 #include <memory>
 #include <string>
+
+#include "Constants.h"
 #include "VariationLimitedFilter.h"
 
 // Forward declaration
@@ -18,6 +20,7 @@ class EgoVehicle;
 
 /* Vehicle parameters that do not vary with time */
 struct VehicleParameters {
+	VehicleType type{ VehicleType::undefined };
 	double sampling_interval{ 0.0 };
 	double max_brake{ 0.0 };
 	double comfortable_brake{ 0.0 };

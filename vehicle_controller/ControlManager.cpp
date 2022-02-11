@@ -281,6 +281,12 @@ double ControlManager::use_vissim_desired_acceleration(
 	return ego_vehicle.get_vissim_acceleration();
 }
 
+double ControlManager::get_traffic_light_acc_acceleration(
+	const EgoVehicle& ego_vehicle)
+{
+	return use_vissim_desired_acceleration(ego_vehicle);
+}
+
 bool ControlManager::get_origin_lane_desired_acceleration(
 	const EgoVehicle& ego_vehicle,
 	std::unordered_map<ActiveACC, double>& possible_accelerations) {
@@ -451,11 +457,18 @@ double ControlManager::determine_desired_acceleration(
 	if ((!ego_vehicle.get_is_lane_change_decision_autonomous()
 		|| ego_vehicle.give_lane_change_control_to_vissim())
 		&& (ego_vehicle.has_lane_change_intention()
-			|| ego_vehicle.is_lane_changing())) {
+			|| ego_vehicle.is_lane_changing())) 
+	{
 		desired_acceleration = use_vissim_desired_acceleration(ego_vehicle);
 	}
-	/* Second case: (C)ACC */
-	else {
+	/* Second case: ACC with traffic lights */
+	else if (ego_parameters.type == VehicleType::traffic_light_acc_car)
+	{
+		desired_acceleration = get_traffic_light_acc_acceleration(ego_vehicle);
+	}
+	/* Third case: (C)ACC with lane change adjustments*/
+	else
+	{
 		std::unordered_map<ActiveACC, double>
 			possible_accelerations;
 
