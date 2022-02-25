@@ -244,6 +244,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="ControlManager.cpp" />
+    <ClCompile Include="LongitudinalControllerWithTrafficLights.cpp" />
     <ClCompile Include="RelativeLane.cpp" />
     <ClCompile Include="TrafficLight.cpp" />
     <ClCompile Include="TrafficLightFileReader.cpp" />
@@ -275,6 +276,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ControlManager.h" />
+    <ClInclude Include="LongitudinalControllerWithTrafficLights.h" />
     <ClInclude Include="RelativeLane.h" />
     <ClInclude Include="TrafficLight.h" />
     <ClInclude Include="TrafficLightFileReader.h" />

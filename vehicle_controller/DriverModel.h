@@ -60,6 +60,7 @@ enum class UDA {
     waiting_time = 140,
     risk = 141,
     safe_time_headway = 142,
+    gap_error = 143,
 
     first = h_to_assited_veh,
 };

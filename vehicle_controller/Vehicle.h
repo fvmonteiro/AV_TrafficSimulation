@@ -23,8 +23,7 @@ public:
 
 	void set_length(double length) { this->length = length; };
 	void set_width(double width) { this->width = width; };
-	/* Also sets the estimated maximum braking of the
-	vehicle. */
+	/* Also sets the estimated maximum braking of the vehicle. */
 	void set_category(long category);
 	
 	bool is_connected() const;

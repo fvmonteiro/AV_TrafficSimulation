@@ -35,6 +35,6 @@ void TrafficLightFileReader::from_file_to_objects(std::string full_address,
 
 	// An "empty" traffic ligh object for when no traffic light is visible
 	// We still have to check if this is really necessary
-	traffic_lights.emplace(std::piecewise_construct,
-		std::forward_as_tuple(0), std::forward_as_tuple(0, 0, 0, 0, 0));
+	/*traffic_lights.emplace(std::piecewise_construct,
+		std::forward_as_tuple(0), std::forward_as_tuple(0, 0, 0, 0, 0));*/
 }

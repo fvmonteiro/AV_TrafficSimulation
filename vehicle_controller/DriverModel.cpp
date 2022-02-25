@@ -20,8 +20,9 @@
 
 /*==========================================================================*/
 
-const std::unordered_set<long> LOGGED_VEHICLES_IDS{ 4 };
+const std::unordered_set<long> LOGGED_VEHICLES_IDS{ 0 };
 const bool CLUELESS_DEBUGGING{ false };
+//const double DEBUGGING_START_TIME{ 249.0 };
 
 SimulationLogger simulation_logger;
 std::unordered_map<long, EgoVehicle> vehicles;
@@ -101,6 +102,10 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
         }
         return 1;
     case DRIVER_DATA_TIME                   :
+        /*if (double_value > DEBUGGING_START_TIME)
+        {
+            CLUELESS_DEBUGGING = true;
+        }*/
         if (CLUELESS_DEBUGGING && (double_value != current_time)) {
             std::clog << "t=" << current_time 
                 << ", " << vehicles.size() << " vehicles." << std::endl;
@@ -149,6 +154,8 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
             case UDA::risk:
                 return 0;
             case UDA::safe_time_headway:
+                return 1;
+            case UDA::gap_error:
                 return 1;
             default:
                 return 0;
@@ -566,6 +573,10 @@ DRIVERMODEL_API  int  DriverModelGetValue (long   type,
             *double_value = vehicles[current_vehicle_id].
                 get_safe_time_headway();
             break;
+        case UDA::gap_error:
+            *double_value = vehicles[current_vehicle_id].
+                get_gap_error();
+            break;
         default:
             return 0; /* doesn't set any UDA values */
         }
@@ -579,7 +590,17 @@ DRIVERMODEL_API  int  DriverModelGetValue (long   type,
                 << vehicles[current_vehicle_id].get_id() << std::endl;
         }
         *double_value = 
-            vehicles[current_vehicle_id].compute_desired_acceleration();
+            vehicles[current_vehicle_id].compute_desired_acceleration(
+            traffic_lights);
+        if (vehicles[current_vehicle_id].is_verbose())
+        {
+            std::clog << "acceleration computed." << std::endl;
+        }
+
+        if (CLUELESS_DEBUGGING) {
+            std::clog << "decided acceleration for veh. "
+                << vehicles[current_vehicle_id].get_id() << std::endl;
+        }
         return 1;
     case DRIVER_DATA_DESIRED_LANE_ANGLE :
         *double_value = 

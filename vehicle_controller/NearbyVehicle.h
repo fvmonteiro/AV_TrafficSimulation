@@ -69,7 +69,7 @@ public:
 		this->h_to_incoming_vehicle = h;
 	};
 
-	void set_type(VehicleType type) /*override*/;
+	void set_type(int type) /*override*/;
 
 	/* Special getters and setters */
 

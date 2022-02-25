@@ -27,7 +27,8 @@ void Vehicle::set_category(long category) {
 }
 
 bool Vehicle::is_connected() const {
-	return type == VehicleType::connected_car;
+	return (type == VehicleType::connected_car 
+		|| type == VehicleType::traffic_light_cacc_car);
 }
 
 bool Vehicle::has_lane_change_intention() const {

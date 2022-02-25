@@ -18,25 +18,27 @@ NearbyVehicle::NearbyVehicle(long id, long relative_lane,
 	NearbyVehicle(id, RelativeLane::from_long(relative_lane),
 		relative_position) {}
 
-void NearbyVehicle::set_type(VehicleType type) {
-	/* The nearby vehicle is either identified as connected by
-	a connected ego vehicle, or it is seen as undefined.
-	Note: if we change the way of dealing with nearby vehicles and they are
+void NearbyVehicle::set_type(int type) 
+{
+	/* This function is only called by connected ego vehicles
+	trying to set the type of a nearby vehicle.
+	The nearby vehicle type is only set if the nearby vehicle is 
+	also connected. */
+
+	/* Note: if we change the way of dealing with nearby vehicles and they are
 	no longer erased every time step, this function needs a little twitch 
 	to avoid re-setting the type at every time step. */
-	this->type = type;
 
-	switch (this->type)
+	VehicleType temp_veh_type = VehicleType(type);
+	switch (temp_veh_type)
 	{
-	case VehicleType::undefined:
-		this->brake_delay = HUMAN_BRAKE_DELAY;
-		break;
 	case VehicleType::connected_car:
+	case VehicleType::traffic_light_cacc_car:
+		this->type = temp_veh_type;
 		this->brake_delay = CONNECTED_BRAKE_DELAY;
 		break;
 	default:
-		std::clog << "nearby vehicle " << id <<" being set with unknown " 
-			<< "type value " << static_cast<int>(type) << std::endl;
+		this->type = VehicleType::undefined;
 		this->brake_delay = HUMAN_BRAKE_DELAY;
 		break;
 	}
@@ -116,6 +118,12 @@ void NearbyVehicle::read_lane_change_request(long lane_change_request) {
 		- (lane_change_request < 0);
 	set_desired_lane_change_direction(request_sign);
 	lane_change_request_veh_id = std::abs(lane_change_request);
+
+	if (id == 12) std::clog << "lc request: " << lane_change_request 
+		<< ", request sign: "<< request_sign
+		<< ", des lc direction: " << desired_lane_change_direction.to_string()
+		<< ", lc req veh id (1): " << std::abs(lane_change_request)
+		<< ", lc req veh id (2): " << get_lane_change_request_veh_id() << std::endl;
 }
 
 std::string NearbyVehicle::to_string() const {

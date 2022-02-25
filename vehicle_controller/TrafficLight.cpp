@@ -18,47 +18,34 @@ TrafficLight::TrafficLight(std::vector<std::string> ordered_parameters) :
 		std::stoi(ordered_parameters[3]),
 		std::stoi(ordered_parameters[4])) {}
 
-double TrafficLight::time_for_next_red(
-	double state_start_time, double current_time) 
+double TrafficLight::get_time_of_next_red() const
 {
-	double time_in_state = current_time - state_start_time;
 	switch (current_state)
 	{
 	case TrafficLight::State::red:
-		return red_duration - time_in_state + green_duration
+		return current_state_start_time + red_duration + green_duration
 			+ amber_duration;
-		break;
 	case TrafficLight::State::amber:
-		return amber_duration - time_in_state;
-		break;
+		return current_state_start_time + amber_duration;
 	case TrafficLight::State::green:
-		return green_duration - time_in_state + amber_duration;
-		break;
+		return current_state_start_time + green_duration + amber_duration;
 	default:
 		return 0;
-		break;
 	}
 }
 
-double TrafficLight::time_for_next_green(
-	double state_start_time, double current_time)
+double TrafficLight::get_time_of_last_green() const
 {
-	double time_in_state = current_time - state_start_time;
 	switch (current_state)
 	{
 	case TrafficLight::State::red:
-		return red_duration - time_in_state;
-		break;
+		return current_state_start_time - amber_duration - green_duration;
 	case TrafficLight::State::amber:
-		return amber_duration - time_in_state + red_duration;
-		break;
+		return current_state_start_time - green_duration;
 	case TrafficLight::State::green:
-		return green_duration - time_in_state + amber_duration
-			+ red_duration;
-		break;
+		return current_state_start_time;
 	default:
 		return 0;
-		break;
 	}
 }
 

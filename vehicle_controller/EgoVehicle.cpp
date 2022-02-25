@@ -169,6 +169,11 @@ double EgoVehicle::get_dest_follower_time_headway() const {
 		get_follower_time_headway();
 }
 
+double EgoVehicle::get_gap_error() const
+{
+	return controller.get_gap_error();
+}
+
 void EgoVehicle::set_lane(long lane) {
 	this->lane.push_back(lane);
 }
@@ -210,7 +215,7 @@ void EgoVehicle::set_type(long type) {
 			this->brake_delay = HUMAN_BRAKE_DELAY;
 			this->is_lane_change_decision_autonomous = false;
 			break;
-		case VehicleType::ACC_car:
+		case VehicleType::acc_car:
 			this->brake_delay = AUTONOMOUS_BRAKE_DELAY;
 			this->is_lane_change_decision_autonomous = false;
 			break;
@@ -229,6 +234,8 @@ void EgoVehicle::set_type(long type) {
 			this->is_lane_change_decision_autonomous = true;
 			break;
 		case VehicleType::traffic_light_acc_car:
+		case VehicleType::traffic_light_cacc_car: 
+			/* both types have the same parameters */
 			this->brake_delay = AUTONOMOUS_BRAKE_DELAY;
 			this->is_lane_change_decision_autonomous = true;
 			break;
@@ -281,14 +288,15 @@ void EgoVehicle::set_lane_end_distance(double lane_end_distance,
 void EgoVehicle::set_traffic_light_info(int traffic_light_id,
 	double distance)
 {
-	distance_to_next_traffic_light = distance;
-	if (traffic_light_id != next_traffic_light_id)
+	if (has_next_traffic_light() 
+		&& (traffic_light_id != next_traffic_light_id))
 	{
 		time_crossed_last_traffic_light = get_time();
-		next_traffic_light_id = traffic_light_id;
 		/*next_next_traffic_light_id = next_traffic_light_id > 0 ?
 			next_traffic_light_id + 1 : 0;*/
 	}
+	next_traffic_light_id = traffic_light_id;
+	distance_to_next_traffic_light = distance;
 }
 
 //void EgoVehicle::set_traffic_light_distance(const TrafficLight& traffic_light,
@@ -331,7 +339,8 @@ void EgoVehicle::set_traffic_light_info(int traffic_light_id,
 
 /* Nearby Vehicles methods ------------------------------------------------ */
 
-void EgoVehicle::clear_nearby_vehicles() {
+void EgoVehicle::clear_nearby_vehicles() 
+{
 	nearby_vehicles.clear();
 	leader = nullptr;
 	follower = nullptr;
@@ -368,7 +377,8 @@ void EgoVehicle::save_nearby_vehicles_ids() {
 }
 
 void EgoVehicle::emplace_nearby_vehicle(long id, long relative_lane,
-	long relative_position) {
+	long relative_position) 
+{
 	std::shared_ptr<NearbyVehicle> nearby_vehicle = 
 		std::shared_ptr<NearbyVehicle>(new NearbyVehicle(id, relative_lane,
 		relative_position));
@@ -384,16 +394,18 @@ std::shared_ptr<NearbyVehicle> EgoVehicle::peek_nearby_vehicles() const {
 	return nullptr;
 }
 
-void EgoVehicle::set_nearby_vehicle_type(long nv_type) {
-	/* If both vehicle are connected, the ego can know the other's type.
-	Otherwise, it is set as undefined. */
-	if (is_connected() && 
-		(VehicleType(nv_type) == VehicleType::connected_car)) {
-		peek_nearby_vehicles()->set_type(VehicleType::connected_car);
+void EgoVehicle::set_nearby_vehicle_type(long nv_type) 
+{
+	/* If the ego vehicle is connected, the ego "tries" to know the 
+	other's type. Otherwise, it is set as undefined. */
+	if (is_connected()) 
+	{
+		peek_nearby_vehicles()->set_type(nv_type);
 	}
-	else {
+	/*else 
+	{
 		peek_nearby_vehicles()->set_type(VehicleType::undefined);
-	}
+	}*/
 }
 
 bool EgoVehicle::has_leader() const {
@@ -470,35 +482,40 @@ void EgoVehicle::nv_double_check() {
 		id = leader->get_id();
 		std::clog << id;
 		if (nv_ids.find(id) == nv_ids.end()) {
-			std::clog << ", saved veh not in most recent nearby_vehicles vector" << std::endl;
+			std::clog << ", saved veh not in most recent nearby_vehicles vector" 
+				<< std::endl;
 		}
 	}
 	if (has_follower()) {
 		id = follower->get_id();
 		std::clog << ", " << id;
 		if (nv_ids.find(id) == nv_ids.end()) {
-			std::clog << ", saved veh not in most recent nearby_vehicles vector" << std::endl;
+			std::clog << ", saved veh not in most recent nearby_vehicles vector" 
+				<< std::endl;
 		}
 	}
 	if (has_destination_lane_leader()) {
 		id = destination_lane_leader->get_id();
 		std::clog << ", " << id;
 		if (nv_ids.find(id) == nv_ids.end()) {
-			std::clog << ", saved veh not in most recent nearby_vehicles vector" << std::endl;
+			std::clog << ", saved veh not in most recent nearby_vehicles vector" 
+				<< std::endl;
 		}
 	}
 	if (has_destination_lane_follower()) {
 		id = destination_lane_follower->get_id();
 		std::clog << ", " << id;
 		if (nv_ids.find(id) == nv_ids.end()) {
-			std::clog << ", saved veh not in most recent nearby_vehicles vector" << std::endl;
+			std::clog << ", saved veh not in most recent nearby_vehicles vector" 
+				<< std::endl;
 		}
 	}
 	if (assisted_vehicle != nullptr) {
 		id = assisted_vehicle->get_id();
 		std::clog << ", " << id;
 		if (nv_ids.find(id) == nv_ids.end()) {
-			std::clog << ", saved veh not in most recent nearby_vehicles vector" << std::endl;
+			std::clog << ", saved veh not in most recent nearby_vehicles vector" 
+				<< std::endl;
 		}
 	}
 	std::clog << std::endl;
@@ -566,19 +583,19 @@ void EgoVehicle::analyze_nearby_vehicles() {
 		if (is_connected() 
 			&& nearby_vehicle->is_requesting_to_merge_ahead()) {
 			/* Updating the assisted vehicle parameters */
-			long assisted_veh_id = 
+			long lane_change_request_veh_id = 
 				nearby_vehicle->get_lane_change_request_veh_id();
-			if (assisted_vehicle_id == nearby_vehicle->get_id()) {
+
+			if (lane_change_request_veh_id == nearby_vehicle->get_id()) {
 				/* The nearby veh is requesting a gap for itself */
 				assisted_vehicle = nearby_vehicle;
 			}
 			else {
 				/* The nearby veh is requesting a gap for someone
 				else in its platoon */
-
 			}
 
-			if (current_id != assisted_vehicle_id) {
+			if (lane_change_request_veh_id != assisted_vehicle_id) {
 				controller.update_assisted_vehicle(
 					get_velocity(), *nearby_vehicle);
 			}
@@ -666,6 +683,11 @@ long EgoVehicle::create_lane_change_request() {
 	else return 0;
 }
 
+/* Traffic lights --------------------------------------------------------- */
+bool EgoVehicle::has_next_traffic_light() const {
+	return next_traffic_light_id != 0;
+}
+
 /* State-machine related methods ------------------------------------------ */
 
 void EgoVehicle::update_state() {
@@ -719,9 +741,12 @@ long EgoVehicle::get_color_by_controller_state() {
 	if (state.empty()) {
 		return orig_lane_vel_control_color;
 	}
-
-	/* TODO: add color to traffic light ACC */
 	
+	/* TODO: Rewrite code to avoid all these swicth statements.
+	Possible solution: ControlManager has a map of controllers and
+	controllers get assigned colors for their states.
+	Then we can just call controllers[active_controller].get_state_color() */
+
 	switch (controller.get_active_longitudinal_controller()) {
 	case ControlManager::ActiveACC::origin_lane:
 		switch (controller.get_longitudinal_controller_state())
@@ -764,6 +789,22 @@ long EgoVehicle::get_color_by_controller_state() {
 		default:
 			return WHITE;
 		}
+	case ControlManager::ActiveACC::traffic_light_acc:
+		switch (controller.get_longitudinal_controller_with_traffic_lights_state())
+		{
+		case LongitudinalControllerWithTrafficLights::State::max_accel:
+			return max_accel_color;
+		case LongitudinalControllerWithTrafficLights::State::vehicle_following:
+			return veh_foll_color;
+		case LongitudinalControllerWithTrafficLights::State::velocity_control:
+			return vel_control_color;
+		case LongitudinalControllerWithTrafficLights::State::traffic_light:
+			return traffic_light_color;
+		case LongitudinalControllerWithTrafficLights::State::too_close:
+			return too_close_color;
+		default:
+			return WHITE;
+		}
 	case ControlManager::ActiveACC::vissim:
 		return CYAN;
 	default:
@@ -797,13 +838,49 @@ bool EgoVehicle::give_lane_change_control_to_vissim() const {
 
 /* Control related methods ------------------------------------------------ */
 
-double EgoVehicle::compute_desired_acceleration() {
-	double desired_acceleration = 
-		controller.determine_desired_acceleration(*this);
+double EgoVehicle::compute_desired_acceleration(
+	const std::unordered_map<int, TrafficLight>& traffic_lights) 
+{
+	double desired_acceleration = 0.0;
+	bool include_low_level_dynamics = true;
+	switch (type)
+	{
+	case VehicleType::undefined:
+	case VehicleType::truck:
+	case VehicleType::bus:
+	case VehicleType::human_driven_car:
+		desired_acceleration = controller.
+			use_vissim_desired_acceleration(*this);
+		break;
+	case VehicleType::acc_car:
+		desired_acceleration = controller.
+			get_acc_desired_acceleration(*this);
+		break;
+	case VehicleType::autonomous_car:
+		desired_acceleration = controller.
+			get_av_desired_acceleration(*this);
+		break;
+	case VehicleType::connected_car:
+		desired_acceleration = controller.
+			get_cav_desired_acceleration(*this);
+		break;
+	case VehicleType::traffic_light_acc_car:
+	case VehicleType::traffic_light_cacc_car:
+		/* both types call the same control method (at least for now) */
+		desired_acceleration = controller.
+			get_traffic_light_acc_acceleration(*this, traffic_lights);
+		include_low_level_dynamics = false;
+		break;
+	default:
+		break;
+	}
+
 	this->desired_acceleration.push_back(desired_acceleration);
-	double feasible_acceleration = consider_vehicle_dynamics(
-		desired_acceleration);
-	return feasible_acceleration;
+	if (include_low_level_dynamics)
+	{
+		return consider_vehicle_dynamics(desired_acceleration);
+	}
+	else return desired_acceleration;
 }
 
 double EgoVehicle::consider_vehicle_dynamics(double desired_acceleration) {
@@ -905,12 +982,6 @@ long EgoVehicle::decide_lane_change_direction() {
 		//if (verbose) std::clog << "LC decided" << std::endl;
 	}
 	else {
-		//if (type == VehicleType::traffic_light_acc_car)
-		//{
-		//	// This vehicle type never changes lanes
-		//	lane_change_direction = 0;
-		//}
-		/*else*/
 		lane_change_direction = get_vissim_active_lane_change();
 	}
 
@@ -1199,7 +1270,8 @@ void EgoVehicle::set_desired_lane_change_direction(
 		std::clog << 
 	}*/
 
-	if (type == VehicleType::traffic_light_acc_car)
+	if (type == VehicleType::traffic_light_acc_car
+		|| type == VehicleType::traffic_light_cacc_car)
 	{
 		desired_lane_change_direction = RelativeLane::same;
 	}
@@ -1448,7 +1520,7 @@ std::string EgoVehicle::member_enum_to_string(Member member) {
 	switch (member)
 	{
 	case Member::creation_time:
-		return "time";
+		return "creation_time";
 	case Member::id:
 		return "id";
 	case Member::length:

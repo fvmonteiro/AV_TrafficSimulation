@@ -1,0 +1,273 @@
+#include <iostream>
+
+#include "EgoVehicle.h"
+#include "LongitudinalControllerWithTrafficLights.h"
+
+LongitudinalControllerWithTrafficLights::
+LongitudinalControllerWithTrafficLights(bool verbose):
+verbose {verbose} {
+	if (verbose)
+	{
+		std::clog << "Creating traffic-light acc controller" << std::endl;
+	}
+}
+
+bool LongitudinalControllerWithTrafficLights
+::compute_vehicle_following_input(const EgoVehicle& ego_vehicle,
+	std::unordered_map<State, double>& possible_accelerations)
+{
+	if (!ego_vehicle.has_leader()) return false;
+	
+	std::shared_ptr<NearbyVehicle> leader = ego_vehicle.get_leader();
+	double gap = ego_vehicle.compute_gap(leader);
+	double ego_vel = ego_vehicle.get_velocity();
+	double rel_vel = leader->get_relative_velocity();
+	double leader_vel = leader->compute_velocity(ego_vel);
+	double safe_gap = time_headway * ego_vel + standstill_distance
+		+ (std::pow(ego_vel, 2) - std::pow(leader_vel, 2)) / 2 / comfortable_braking;
+	h1 = gap - safe_gap;
+	//double gap_error = gap - safe_gap;
+
+	double leader_accel = leader->get_acceleration();
+	double connected_extra_term = leader_accel / comfortable_braking 
+		* leader_vel;
+
+	if (verbose)
+	{
+		std::clog << "veh type: " << static_cast<int>(ego_vehicle.get_type())
+			<< ", is connected? " << ego_vehicle.is_connected()
+			<< ", leader type: " << static_cast<int>(leader->get_type())
+			<< ", is connected? " << leader->is_connected()
+			<< std::endl;
+	}
+
+	if (ego_vehicle.is_connected() && leader->is_connected())
+	{
+		if (verbose) std::clog << "connected" << std::endl;
+		possible_accelerations[State::vehicle_following] =
+			(-rel_vel + veh_foll_gain * h1 + connected_extra_term)
+			* comfortable_braking / (comfortable_braking + ego_vel);
+	}
+	else
+	{
+		if (verbose) std::clog << "not connected" << std::endl;
+		possible_accelerations[State::vehicle_following] =
+			(-rel_vel + veh_foll_gain * h1)
+			/ (time_headway + ego_vel / comfortable_braking);
+	}
+	return true;
+}
+
+bool LongitudinalControllerWithTrafficLights
+::compute_velocity_control_input(const EgoVehicle& ego_vehicle,
+	std::unordered_map<State, double>& possible_accelerations)
+{
+	double desired_vel = ego_vehicle.get_desired_velocity();
+
+	//double desired_vel = max_speed;
+
+	double ego_vel = ego_vehicle.get_velocity();
+	double vel_error = desired_vel - ego_vel;
+	possible_accelerations[State::velocity_control] = 
+		vel_control_gain * (vel_error);
+	return true;
+}
+
+bool LongitudinalControllerWithTrafficLights
+::compute_traffic_light_input(const EgoVehicle& ego_vehicle,
+	const std::unordered_map<int, TrafficLight>& traffic_lights,
+	std::unordered_map<State, double>& possible_accelerations)
+{
+	if (!ego_vehicle.has_next_traffic_light()) return false;
+
+	double ego_vel = ego_vehicle.get_velocity();
+	compute_traffic_light_input_parameters(ego_vehicle, traffic_lights);
+
+	if (verbose) std::clog << "beta=" << beta
+		<< ", dh3t=" << dht << ", Vf=" << ego_vel << ", h3=" << h3
+		<< std::endl;
+
+	possible_accelerations[State::traffic_light] = 
+		//(dht - ego_vel + h3) / beta;
+		comfortable_braking / (beta * comfortable_braking + ego_vel)
+		* (dht - ego_vel + h3);
+	return true; 
+}
+
+double LongitudinalControllerWithTrafficLights::get_nominal_input(
+	std::unordered_map<State, double>& possible_accelerations)
+{
+	possible_accelerations[State::max_accel] = max_accel;
+	return true;
+}
+
+double LongitudinalControllerWithTrafficLights::choose_minimum_acceleration(
+	std::unordered_map<State, double>& possible_accelerations)
+{
+	if (verbose) std::clog << "Getting min accel:" << "\n\t";
+
+	double desired_acceleration = 1000; // any high value
+	for (const auto& it : possible_accelerations)
+	{
+		if (verbose) std::clog << mode_to_string(it.first)
+			<< "=" << it.second << ", ";
+
+		if (it.second < desired_acceleration)
+		{
+			desired_acceleration = it.second;
+			active_mode = it.first;
+		}
+	}
+
+	if (verbose) std::clog << "\n";
+
+	return desired_acceleration;
+}
+
+double LongitudinalControllerWithTrafficLights::choose_acceleration(
+	const EgoVehicle& ego_vehicle,
+	std::unordered_map<State, double>& possible_accelerations)
+{
+	double min_from_inputs =
+		choose_minimum_acceleration(possible_accelerations);
+	if (!ego_vehicle.has_leader())
+	{
+		return min_from_inputs;
+	}
+
+	// TODO: h1 is already computed in the vehicle_following_input method.
+	double gap = ego_vehicle.compute_gap(ego_vehicle.get_leader());
+	double ego_vel = ego_vehicle.get_velocity();
+	double leader_vel = ego_vehicle.get_leader()->compute_velocity(ego_vel);
+	double gap_error = gap - time_headway * ego_vel - standstill_distance;
+	/*h1 = gap_error
+		- (std::pow(ego_vel, 2) - std::pow(leader_vel, 2)) 
+		/ 2 / comfortable_braking;*/
+	
+	double margin = 0.1; // 0 for connected
+	if (h1 >= -margin)
+	{
+		return min_from_inputs;
+	}
+	else
+	{
+		active_mode = State::too_close;
+		return std::max(min_from_inputs,
+			-ego_vehicle.get_max_brake());
+	}
+}
+
+std::string LongitudinalControllerWithTrafficLights::mode_to_string(
+	State active_mode)
+{
+	switch (active_mode)
+	{
+	case LongitudinalControllerWithTrafficLights::State::vehicle_following:
+		return "vehicle following";
+	case LongitudinalControllerWithTrafficLights::State::velocity_control:
+		return "velocity control";
+	case LongitudinalControllerWithTrafficLights::State::traffic_light:
+		return "traffic light";
+	case LongitudinalControllerWithTrafficLights::State::max_accel:
+		return "nominal (max accel)";
+		break;
+	default:
+		return "unknown mode";
+		break;
+	}
+}
+
+void LongitudinalControllerWithTrafficLights
+::compute_traffic_light_input_parameters(const EgoVehicle& ego_vehicle,
+	const std::unordered_map<int, TrafficLight>& traffic_lights)
+{
+
+	if (verbose) std::clog << "computing tf acc params" << std::endl;
+
+	int next_traffic_light_id = ego_vehicle.get_next_traffic_light_id();
+	if (next_traffic_light_id == 0) return;
+
+	TrafficLight next_traffic_light =
+		traffic_lights.at(next_traffic_light_id);
+	double ego_vel = ego_vehicle.get_velocity();
+	/*double desired_vel = ego_vehicle.get_desired_velocity();*/
+	/* beta is like the time headway for the traffic light,
+	computed for a worst case scenario */
+	//beta = desired_vel / comfortable_braking + 1; // maybe should be a class member
+
+	double distance_between_traffic_lights;
+	int next_next_traffic_light_id = next_traffic_light_id + 1;
+	//vehicles.find(long_value) == vehicles.end()
+	if (traffic_lights.find(next_next_traffic_light_id) !=
+		traffic_lights.end())
+	{
+		distance_between_traffic_lights =
+			traffic_lights.at(next_next_traffic_light_id).get_position()
+			- next_traffic_light.get_position();
+	}
+	else
+	{
+		//Any large value
+		distance_between_traffic_lights = 1000;
+	}
+
+	/* Probably a function ------------------------------------------------ */
+	/* hx is like the safe gap/ safe distance to the traffic light */
+	double dist_to_next_traffic_light =
+		ego_vehicle.get_distance_to_next_traffic_light();
+	double hx = dist_to_next_traffic_light - beta * ego_vel 
+		- standstill_distance
+		- std::pow(ego_vel, 2) / 2 / comfortable_braking;
+	/* -------------------------------------------------------------------- */
+
+	/* Probably a function ------------------------------------------------ */
+	double time = ego_vehicle.get_time();
+	double time_crossed_last_traffic_light =
+		ego_vehicle.get_time_crossed_last_traffic_light();
+	double ht;
+
+	if (next_traffic_light.get_current_state() == TrafficLight::State::red)
+	{
+		ht = 0;
+		dht = 0;
+	}
+	else
+	{
+		// these might be class members
+		/* lambda1 is how fast the safe space is shrinking */
+		double lambda1 = beta * comfortable_braking; //- desired_vel;
+		double epsilon = 1;
+
+		double last_time_next_traffic_light_became_green =
+			next_traffic_light.get_time_of_last_green();
+		double t0 = std::max(time_crossed_last_traffic_light,
+			last_time_next_traffic_light_became_green);
+		double next_red_time = next_traffic_light.get_time_of_next_red();
+		double t01 = next_red_time - t0;
+		double t02 = distance_between_traffic_lights / lambda1;
+		double lambda2 = distance_between_traffic_lights / t01;
+		if (t01 > t02)
+		{
+			if (time <= next_red_time - t02)
+			{
+				ht = -lambda2 * (time - next_red_time) - epsilon;
+				dht = -lambda2;
+			}
+			else
+			{
+				ht = distance_between_traffic_lights - 2 * epsilon;
+				dht = 0;
+			}
+		}
+		else
+		{
+			lambda1 = std::min(lambda1,
+				distance_between_traffic_lights / t01);
+			ht = -lambda1 * (time - next_red_time) - epsilon;
+			dht = -lambda1;
+		}
+	}
+	/* -------------------------------------------------------------------- */
+
+	h3 = ht + hx;
+}

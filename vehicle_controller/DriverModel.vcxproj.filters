@@ -48,7 +48,12 @@
     <ClCompile Include="RelativeLane.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="TrafficLightFileReader.cpp" />
+    <ClCompile Include="TrafficLightFileReader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="LongitudinalControllerWithTrafficLights.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ControlManager.h">
@@ -101,7 +106,12 @@
     <ClInclude Include="TrafficLight.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="TrafficLightFileReader.h" />
+    <ClInclude Include="TrafficLightFileReader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="LongitudinalControllerWithTrafficLights.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Header Files">

@@ -13,6 +13,7 @@
 
 #include "LateralController.h"
 #include "LongitudinalController.h"
+#include "LongitudinalControllerWithTrafficLights.h"
 #include "RealLongitudinalController.h"
 #include "VirtualLongitudinalController.h"
 #include "Vehicle.h"
@@ -28,6 +29,7 @@ public:
 		cooperative_gap_generation,
 		end_of_lane,
 		vissim,
+		traffic_light_acc
 	};
 
 	ControlManager() = default;
@@ -38,7 +40,10 @@ public:
 	ActiveACC get_active_longitudinal_controller() const {
 		return active_longitudinal_controller;
 	}
+
 	LongitudinalController::State get_longitudinal_controller_state();
+	LongitudinalControllerWithTrafficLights::State 
+		get_longitudinal_controller_with_traffic_lights_state();
 	//void create_destination_lane_controller(const Vehicle& ego_vehicle);
 	
 	/* DEBUGGING FUNCTIONS --------------------------------------------------- */
@@ -66,6 +71,7 @@ public:
 	};
 	double get_reference_gap(double ego_velocity,
 		bool has_lane_change_intention); /* could be const */
+	double get_gap_error() const;
 
 	/* ----------------------------------------------------------------------- */
 
@@ -85,32 +91,33 @@ public:
 	void update_follower_time_headway(NearbyVehicle& follower);
 	void reset_origin_lane_velocity_controller(double ego_velocity);
 
+	
+	/* Active ACC during lane keeping; human (vissim) control if there is
+	lane change intention*/
+	double get_acc_desired_acceleration(const EgoVehicle& ego_vehicle);
+	/* Computes ACC desired acceleration plus the acceleration during lane
+	change adjustments and lateral movement. Gives control to human (vissim)
+	if the vehicle is waiting for too long to find a gap. */
+	double get_av_desired_acceleration(const EgoVehicle& ego_vehicle);
+	/* Computes the AV desired acceleration plus the cooperative acceleration
+	to help create a gap for an incoming vehicle, and chooses the minimum. */
+	double get_cav_desired_acceleration(const EgoVehicle& ego_vehicle);
+	/* TODO */
+	double get_traffic_light_acc_acceleration(const EgoVehicle& ego_vehicle,
+		const std::unordered_map<int, TrafficLight>& traffic_lights);
+
+	void print_tfs(const EgoVehicle& ego,
+		const std::unordered_map<int, TrafficLight>& traffic_lights);
+
+	double use_vissim_desired_acceleration(const EgoVehicle& ego_vehicle);
+
 	/* Gets the acceleration inputs from the origin (and destination) lane
 	ACCs, from the necessary value to avoid colision and from VISSIM and decides
 	which one should be applied to the vehicle */
 	double determine_desired_acceleration(const EgoVehicle& ego_vehicle);
-	double use_vissim_desired_acceleration(const EgoVehicle& ego_vehicle);
-	double get_traffic_light_acc_acceleration(const EgoVehicle& ego_vehicle);
-	/* Returns true if the computed acceleration was added to the map */
-	bool get_origin_lane_desired_acceleration(
-		const EgoVehicle& ego_vehicle, 
-		std::unordered_map<ActiveACC, double>& possible_accelerations);
-	/* Returns true if the computed acceleration was added to the map */
-	bool get_end_of_lane_desired_acceleration(
-		const EgoVehicle& ego_vehicle,
-		std::unordered_map<ActiveACC, double>& possible_accelerations);
-	/* Returns true if the computed acceleration was added to the map */
-	bool get_destination_lane_desired_acceleration(
-		const EgoVehicle& ego_vehicle,
-		std::unordered_map<ActiveACC, double>& possible_accelerations,
-		bool end_of_lane_controller_is_active);
-	/* Returns true if the computed acceleration was added to the map */
-	bool get_cooperative_desired_acceleration(
-		const EgoVehicle& ego_vehicle,
-		std::unordered_map<ActiveACC, double>& possible_accelerations);
+
 	double determine_low_velocity_reference(double ego_velocity,
 		const NearbyVehicle& other_vehicle);
-
 	double compute_safe_lane_change_gap(const EgoVehicle& ego_vehicle, 
 		const NearbyVehicle& other_vehicle, bool will_accelerate = false);
 	/* Returns the time headway part of the safe lane change gap. */
@@ -147,6 +154,9 @@ private:
 	RealLongitudinalController end_of_lane_controller;
 	VirtualLongitudinalController destination_lane_controller;
 	VirtualLongitudinalController gap_generating_controller;
+	LongitudinalControllerWithTrafficLights
+		with_traffic_lights_controller;
+
 	LateralController lateral_controller;
 	/* indicates which controller is active. Used for debugging and
 	visualization. */
@@ -161,4 +171,62 @@ private:
 	VehicleType destination_lane_follower_type{ VehicleType::undefined };
 
 	bool verbose{ false };
+
+	/* Initializing controllers */
+
+	void create_acc_controllers(const VehicleParameters& vehicle_parameters,
+		bool verbose);
+	void create_lane_change_adjustment_controller(
+		const VehicleParameters& vehicle_parameters,
+		bool verbose);
+	void create_cooperative_lane_change_controller(
+		const VehicleParameters& vehicle_parameters,
+		bool verbose);
+
+	/* Gets the minimum of the accelerations in the map and sets the
+	active longitudinal controller. */
+	double choose_minimum_acceleration(
+		std::unordered_map<ActiveACC, double>& possible_accelerations);
+
+	/* [Feb 11, 22] Functions for one style of coding --------------------- */
+
+	/* Desired acceleration relative to the current lane.
+	Returns true if the computed acceleration was added to the map */
+	bool get_origin_lane_desired_acceleration(
+		const EgoVehicle& ego_vehicle,
+		std::unordered_map<ActiveACC, double>& possible_accelerations);
+	/* Desired acceleration to wait at the end of the lane while
+	looking for an appropriate lane change gap. Without this,
+	vehicles might miss a desired exit.
+	Returns true if the computed acceleration was added to the map */
+	bool get_end_of_lane_desired_acceleration(
+		const EgoVehicle& ego_vehicle,
+		std::unordered_map<ActiveACC, double>& possible_accelerations);
+	/* Desired acceleration to adjust to destination lane leader.
+	Returns true if the computed acceleration was added to the map */
+	bool get_destination_lane_desired_acceleration(
+		const EgoVehicle& ego_vehicle,
+		std::unordered_map<ActiveACC, double>& possible_accelerations,
+		bool end_of_lane_controller_is_active);
+	/* Returns true if the computed acceleration was added to the map */
+	bool get_cooperative_desired_acceleration(
+		const EgoVehicle& ego_vehicle,
+		std::unordered_map<ActiveACC, double>& possible_accelerations);
+	/* -------------------------------------------------------------------- */
+
+	/* [Feb 11, 22] Functions for one style of coding --------------------- */
+	/* Desired acceleration relative to the current lane */
+	//double get_origin_lane_desired_acceleration(
+	//	const EgoVehicle& ego_vehicle);
+	///* Desired acceleration to wait at the end of the lane while
+	//looking for an appropriate lane change gap. Without this,
+	//vehicles might miss a desired exit. */
+	//double get_end_of_lane_desired_acceleration(
+	//	const EgoVehicle& ego_vehicle);
+	///* Control to adjust to destination lane leader */
+	//double get_destination_lane_desired_acceleration(
+	//	const EgoVehicle& ego_vehicle, bool end_of_lane_controller_is_active);
+	//double ControlManager::get_cooperative_desired_acceleration(
+	//	const EgoVehicle& ego_vehicle);
+	/* -------------------------------------------------------------------- */
 };

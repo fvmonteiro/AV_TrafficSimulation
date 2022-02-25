@@ -7,8 +7,9 @@
 /*==========================================================================*/
 
 #include <iostream>
-#include "LongitudinalController.h"
+
 #include "EgoVehicle.h"
+#include "LongitudinalController.h"
 
 LongitudinalController::LongitudinalController(
 	const VehicleParameters& ego_parameters,

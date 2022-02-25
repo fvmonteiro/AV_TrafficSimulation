@@ -114,53 +114,9 @@ public:
 	/* Computes desired gap with a possibly varying time headway */
 	double compute_desired_gap(double ego_velocity, bool has_lane_change_intention);
 
-	/* Computes gap minus reference gap and upper bounds it 
-	with max_gap_error. */
-	double compute_gap_error(double gap, double reference_gap);
-	
-	/* Computes velocity error "typically": vLeader - vEgo*/
-	double compute_velocity_error(double velocity_ego, double velocity_leader);
-
-	double estimate_gap_error_derivative(
-		double velocity_error, double acceleration, bool has_lane_change_intention);
-
-	double compute_acceleration_error(
-		double acceleration_ego, double acceleration_reference);
-
-	/* Determines and sets the current state of the longitudinal controller 
-	TODO: should this class provide a default implementation?*/
-	virtual void determine_controller_state(const EgoVehicle& ego_vehicle,
-		const std::shared_ptr<NearbyVehicle> leader,
-		double reference_velocity) = 0;
 	/* Determines and sets the current state of the longitudinal controller */
 	/*void determine_controller_state(const Vehicle& ego_vehicle,
 		const NearbyVehicle& leader);*/
-
-	/* Computes the gap threshold to decide whether velocity or vehicle 
-	following control */
-	double compute_gap_threshold(double free_flow_velocity, double velocity_error,
-		bool has_lane_change_intention);
-
-	/* Computes the gap threshold to decide whether velocity or vehicle
-	following control */
-	double compute_gap_threshold(double free_flow_velocity, double velocity_error,
-		double gap_error_derivative, double acceleration_error,
-		bool has_lane_change_intention);
-
-	/* Constant time headway based controller */
-	double compute_vehicle_following_input(const EgoVehicle& ego_vehicle,
-		const NearbyVehicle& leader);
-	/*double compute_vehicle_following_input(double gap_error,
-		double velocity_error);
-	double compute_vehicle_following_input(double gap_error, 
-		double velocity_error, double gap_error_derivative, 
-		double acceleration_error);*/
-
-	/* PID velocity controller */
-	double compute_velocity_control_input(const EgoVehicle& ego_vehicle,
-		double velocity_reference);
-	/*double compute_velocity_control_input(double velocity_error,
-		double acceleration_error, double comfortable_acceleration);*/
 
 	double compute_desired_acceleration(const EgoVehicle& ego_vehicle,
 		const std::shared_ptr<NearbyVehicle> leader,
@@ -169,7 +125,6 @@ public:
 	//	const NearbyVehicle& leader);
 
 	/* Printing ----------------------------------------------------------- */
-
 	static std::string state_to_string(State state);
 
 protected:
@@ -209,12 +164,57 @@ protected:
 
 	bool is_connected{ false };
 
+	/* Determines and sets the current state of the longitudinal controller
+	TODO: should this class provide a default implementation?*/
+	virtual void determine_controller_state(const EgoVehicle& ego_vehicle,
+		const std::shared_ptr<NearbyVehicle> leader,
+		double reference_velocity) = 0;
+
 	/*double compute_safe_time_headway(double free_flow_velocity,
 		double follower_max_brake, double leader_max_brake,
 		double lambda_1, double rho);*/
 	double compute_time_headway_with_risk(double free_flow_velocity,
 		double follower_max_brake, double leader_max_brake,
 		double lambda_1, double rho, double accepted_risk);
+
+	/* Computes gap minus reference gap and upper bounds it
+	with max_gap_error. */
+	double compute_gap_error(double gap, double reference_gap);
+
+	/* Computes velocity error "typically": vLeader - vEgo*/
+	double compute_velocity_error(double velocity_ego, double velocity_leader);
+
+	double estimate_gap_error_derivative(
+		double velocity_error, double acceleration, bool has_lane_change_intention);
+
+	double compute_acceleration_error(
+		double acceleration_ego, double acceleration_reference);
+
+	/* Computes the gap threshold to decide whether velocity or vehicle
+	following control */
+	double compute_gap_threshold(double free_flow_velocity, double velocity_error,
+		bool has_lane_change_intention);
+
+	/* Computes the gap threshold to decide whether velocity or vehicle
+	following control */
+	double compute_gap_threshold(double free_flow_velocity, double velocity_error,
+		double gap_error_derivative, double acceleration_error,
+		bool has_lane_change_intention);
+
+	/* Constant time headway based controller */
+	double compute_vehicle_following_input(const EgoVehicle& ego_vehicle,
+		const NearbyVehicle& leader);
+	/*double compute_vehicle_following_input(double gap_error,
+		double velocity_error);
+	double compute_vehicle_following_input(double gap_error,
+		double velocity_error, double gap_error_derivative,
+		double acceleration_error);*/
+
+		/* PID velocity controller */
+	double compute_velocity_control_input(const EgoVehicle& ego_vehicle,
+		double velocity_reference);
+	/*double compute_velocity_control_input(double velocity_error,
+		double acceleration_error, double comfortable_acceleration);*/
 
 private:
 	/* When set to true, will assume lane changing parameters, such as

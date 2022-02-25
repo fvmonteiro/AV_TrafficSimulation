@@ -8,7 +8,7 @@ class TrafficLight
 {
 public:
 
-	enum class State {
+	enum class State { /* should become enum class after some debugging */
 		no_traffic_light= 0,
 		red=1,
 		amber=2,
@@ -24,8 +24,10 @@ public:
 															   will be used*/
 
 	int get_id() const { return id; };
-	int get_position() const { return position; };
+	double get_position() const { return position; };
 	State get_current_state() const { return current_state; };
+
+
 
 	/* TODO: are these functions an issue? We don't want vehicles being able
 	to set the state of the traffic light. Or does passing them as const 
@@ -35,10 +37,9 @@ public:
 		current_state_start_time = time; 
 	};
 
-	double time_for_next_red(double state_start_time, 
-		double current_time);
-	double time_for_next_green(double state_start_time,
-		double current_time);
+	double get_time_of_next_red() const;
+	double get_time_of_last_green() const;
+	//double get_time_of_next_green() const;
 
 	friend std::ostream& operator<< (std::ostream& out,
 		const TrafficLight& traffic_light);
