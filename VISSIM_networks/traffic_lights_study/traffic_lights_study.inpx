@@ -157,13 +157,13 @@
 		</colorDistribution>
 	</colorDistributions>
 	<dataCollectionMeasurements>
-		<dataCollectionMeasurement name="" no="1">
+		<dataCollectionMeasurement name="output" no="1">
 			<dataCollectionPoints>
 				<intObjectRef key="1"/>
 				<intObjectRef key="2"/>
 			</dataCollectionPoints>
 		</dataCollectionMeasurement>
-		<dataCollectionMeasurement name="" no="2">
+		<dataCollectionMeasurement name="input" no="2">
 			<dataCollectionPoints>
 				<intObjectRef key="3"/>
 				<intObjectRef key="4"/>
@@ -171,10 +171,10 @@
 		</dataCollectionMeasurement>
 	</dataCollectionMeasurements>
 	<dataCollectionPoints>
-		<dataCollectionPoint lane="1 2" name="" no="1" pos="100"/>
-		<dataCollectionPoint lane="1 1" name="" no="2" pos="100"/>
-		<dataCollectionPoint lane="1 2" name="" no="3" pos="2700"/>
-		<dataCollectionPoint lane="1 1" name="" no="4" pos="2700"/>
+		<dataCollectionPoint lane="1 2" name="" no="1" pos="2700"/>
+		<dataCollectionPoint lane="1 1" name="" no="2" pos="2700"/>
+		<dataCollectionPoint lane="1 2" name="" no="3" pos="100"/>
+		<dataCollectionPoint lane="1 1" name="" no="4" pos="100"/>
 	</dataCollectionPoints>
 	<desAccelerationFunctions>
 		<desAccelerationFunction name="Car" no="1">
@@ -2102,7 +2102,7 @@
 	<vehicleInputs>
 		<vehicleInput anmFlag="false" link="1" name="main" no="1">
 			<timeIntVehVols>
-				<timeIntervalVehVolume cont="false" timeInt="1 0" vehComp="7" volType="STOCHASTIC" volume="2000"/>
+				<timeIntervalVehVolume cont="false" timeInt="1 0" vehComp="2" volType="STOCHASTIC" volume="4000"/>
 			</timeIntVehVols>
 		</vehicleInput>
 	</vehicleInputs>
