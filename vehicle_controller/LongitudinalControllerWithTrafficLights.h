@@ -54,13 +54,23 @@ private:
 	double veh_foll_gain{ 2.0 };
 	double vel_control_gain{ 1.0 };
 	double h1{ 0.0 };  // [m] "gap error" considering relative velocity
-	double beta{ 2.0 }; /*desired_vel / comfortable_braking + 1*/
+	double beta{ 4.0 }; // 2.0, desired_vel / comfortable_braking + 1
 	double h3{ 0.0 }, dht{ 0.0 }, dhx{ 0.0 };
 	bool verbose{ false };
 
 	void compute_traffic_light_input_parameters(
 		const EgoVehicle& ego_vehicle,
 		const std::unordered_map<int, TrafficLight>& traffic_lights);
+	double compute_gap_error_to_next_traffic_light(
+		double distance_to_traffic_light, double ego_vel);
+	double compute_transient_safe_set(const EgoVehicle& ego_vehicle,
+		const std::unordered_map<int, TrafficLight>& traffic_lights);
 
+	/* Some version before arriving at the chosen 
+	compute_transient_safe_set method above. */
+	double compute_transient_safe_set_all_space(const EgoVehicle& ego_vehicle,
+		const std::unordered_map<int, TrafficLight>& traffic_lights);
+	double compute_transient_safe_set_amber_light(const EgoVehicle& ego_vehicle,
+		const std::unordered_map<int, TrafficLight>& traffic_lights);
 };
 

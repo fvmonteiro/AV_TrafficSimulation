@@ -16,15 +16,16 @@ public:
 	};
 
 	TrafficLight() = default;
-	TrafficLight(int id, int position, int red_duration, int green_duration,
-		int amber_duration, bool starts_on_red);
-	TrafficLight(int id, int position, int red_duration, int green_duration,
-		int amber_duration);
+	TrafficLight(int id, double position, double red_duration,
+		double green_duration, double amber_duration, bool starts_on_red);
+	TrafficLight(int id, double position, double red_duration,
+		double green_duration, double amber_duration);
 	TrafficLight(std::vector<std::string> ordered_parameters); /*not sure this 
 															   will be used*/
 
 	int get_id() const { return id; };
 	double get_position() const { return position; };
+	double get_amber_duration() const { return amber_duration; };
 	State get_current_state() const { return current_state; };
 
 
@@ -38,15 +39,17 @@ public:
 	};
 
 	double get_time_of_next_red() const;
+	double get_time_of_last_amber() const;
 	double get_time_of_last_green() const;
-	//double get_time_of_next_green() const;
+	double get_time_of_next_green() const;
 
 	friend std::ostream& operator<< (std::ostream& out,
 		const TrafficLight& traffic_light);
 
 private:
 	// Static parameters
-	int id{ 0 }, position{ 0 }, red_duration{ 0 }, green_duration{ 0 }, 
+	int id{ 0 };
+	double position{ 0 }, red_duration{ 0 }, green_duration{ 0 },
 		amber_duration{ 0 };
 	bool starts_on_red{ true };
 	// State

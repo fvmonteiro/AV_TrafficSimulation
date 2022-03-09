@@ -552,23 +552,23 @@ double ControlManager::get_traffic_light_acc_acceleration(
 	const EgoVehicle& ego_vehicle,
 	const std::unordered_map<int, TrafficLight>& traffic_lights)
 {
-	if (verbose) std::clog << "Inside get traffic_light_acc_acceleration\n"
-		<< "Getting nominal input" << std::endl;
+	if (verbose) std::clog << "Inside get traffic_light_acc_acceleration\n";
+		//<< "Getting nominal input" << std::endl;
 
 	std::unordered_map<LongitudinalControllerWithTrafficLights::State, double>
 		possible_accelerations;
 
 	with_traffic_lights_controller.get_nominal_input(possible_accelerations);
 
-	if (verbose) std::clog << "Getting veh foll input" << std::endl;
+	//if (verbose) std::clog << "Getting veh foll input" << std::endl;
 	with_traffic_lights_controller.compute_vehicle_following_input(
 		ego_vehicle, possible_accelerations);
 
-	if (verbose) std::clog << "Getting vel control input" << std::endl;
+	//if (verbose) std::clog << "Getting vel control input" << std::endl;
 	with_traffic_lights_controller.compute_velocity_control_input(
 		ego_vehicle, possible_accelerations);
 
-	if (verbose) std::clog << "Getting traffic light input" << std::endl;
+	//if (verbose) std::clog << "Getting traffic light input" << std::endl;
 	with_traffic_lights_controller.compute_traffic_light_input(
 		ego_vehicle, traffic_lights, possible_accelerations);
 
