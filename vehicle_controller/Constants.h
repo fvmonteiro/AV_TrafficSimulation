@@ -5,6 +5,8 @@
 
 #pragma once
 
+#include <unordered_set>
+
 typedef unsigned long color_t;
 /* Based on the _WINGDI_ RGB definition and some tests on VISSIM */
 //#define ARGB(a,r,g,b)   ((COLORREF)((((BYTE)(b) | ((WORD)((BYTE)(g)) << 8)) | (((DWORD)(BYTE)(r)) << 16))|((BYTE)(a) << 24)))
@@ -43,14 +45,6 @@ const double CONNECTED_BRAKE_DELAY{ 0.1 }; // [s]
 const double AUTONOMOUS_BRAKE_DELAY{ 0.2 }; // [s]
 const double HUMAN_BRAKE_DELAY{ 0.75 }; // [s]
 
-//enum class RelativeLane {
-//	right_right = -2, // second to the right
-//	right, // next to the right
-//	same,
-//	left, // next to the left
-//	left_left, // second to the left
-//};
-
 /* Categories set by VISSIM */
 enum class VehicleCategory {
 	undefined,
@@ -75,6 +69,7 @@ enum class VehicleType {
 	connected_car = 120,
 	traffic_light_acc_car = 130,
 	traffic_light_cacc_car = 135,
+	platoon_car = 140,
 	truck = 200,
 	bus = 300
 };

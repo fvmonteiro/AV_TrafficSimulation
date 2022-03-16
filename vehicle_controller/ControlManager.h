@@ -206,8 +206,7 @@ private:
 	Returns true if the computed acceleration was added to the map */
 	bool get_destination_lane_desired_acceleration(
 		const EgoVehicle& ego_vehicle,
-		std::unordered_map<ActiveACC, double>& possible_accelerations,
-		bool end_of_lane_controller_is_active);
+		std::unordered_map<ActiveACC, double>& possible_accelerations);
 	/* Returns true if the computed acceleration was added to the map */
 	bool get_cooperative_desired_acceleration(
 		const EgoVehicle& ego_vehicle,

@@ -73,6 +73,7 @@ void ControlManager::create_acc_controllers(
 	/* The end of the lane is seen as a stopped vehicle. We can pretend
 	this stopped vehicle has a lower max brake so that the time headway
 	will be small. */
+	/* TODO: must do this somewhere else! After category is set */
 	end_of_lane_controller.update_time_headway(
 		ego_parameters.lambda_1, ego_parameters.lambda_1_lane_change,
 		ego_parameters.max_brake / 2);
@@ -521,11 +522,10 @@ double ControlManager::get_av_desired_acceleration(
 		possible_accelerations;
 	get_origin_lane_desired_acceleration(ego_vehicle,
 		possible_accelerations);
-	bool end_of_lane_controller_is_active =
-		get_end_of_lane_desired_acceleration(ego_vehicle,
-			possible_accelerations);
+	get_end_of_lane_desired_acceleration(ego_vehicle,
+		possible_accelerations);
 	get_destination_lane_desired_acceleration(ego_vehicle,
-		possible_accelerations, end_of_lane_controller_is_active);
+		possible_accelerations);
 
 	return choose_minimum_acceleration(possible_accelerations);
 }
@@ -537,11 +537,10 @@ double ControlManager::get_cav_desired_acceleration(
 		possible_accelerations;
 	get_origin_lane_desired_acceleration(ego_vehicle,
 		possible_accelerations);
-	bool end_of_lane_controller_is_active =
-		get_end_of_lane_desired_acceleration(ego_vehicle,
-			possible_accelerations);
+	get_end_of_lane_desired_acceleration(ego_vehicle,
+		possible_accelerations);
 	get_destination_lane_desired_acceleration(ego_vehicle,
-		possible_accelerations, end_of_lane_controller_is_active);
+		possible_accelerations);
 	get_cooperative_desired_acceleration(ego_vehicle,
 		possible_accelerations);
 
@@ -671,13 +670,15 @@ bool ControlManager::get_end_of_lane_desired_acceleration(
 
 bool ControlManager::get_destination_lane_desired_acceleration(
 	const EgoVehicle& ego_vehicle,
-	std::unordered_map<ActiveACC, double>& possible_accelerations,
-	bool end_of_lane_controller_is_active) {
+	std::unordered_map<ActiveACC, double>& possible_accelerations) {
 
 	bool is_active = false;
 	double origin_lane_reference_velocity;
 	double ego_velocity = ego_vehicle.get_velocity();
 
+	bool end_of_lane_controller_is_active = 
+		end_of_lane_controller.get_state()
+		== LongitudinalController::State::vehicle_following;
 	/* Get the possible max vel at the origin lane */
 	if (origin_lane_controller.get_state()
 		== LongitudinalController::State::vehicle_following) {
@@ -803,7 +804,8 @@ double ControlManager::determine_desired_acceleration(
 
 		/* Control to adjust to destination lane leader */
 		get_destination_lane_desired_acceleration(ego_vehicle,
-			possible_accelerations, end_of_lane_controller_is_active);
+
+			possible_accelerations);
 		
 		/* Control to generate a gap for a vehicle that wants to
 		move into the ego vehicle lane (cooperative control) */

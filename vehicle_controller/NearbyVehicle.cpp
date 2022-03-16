@@ -8,10 +8,9 @@
 
 NearbyVehicle::NearbyVehicle(long id, RelativeLane relative_lane,
 	long relative_position) :
+	Vehicle(id),
 	relative_lane{ relative_lane },
-	relative_position{ relative_position } {
-	this->id = id;
-}
+	relative_position{ relative_position } {}
 
 NearbyVehicle::NearbyVehicle(long id, long relative_lane,
 	long relative_position) :
@@ -118,12 +117,6 @@ void NearbyVehicle::read_lane_change_request(long lane_change_request) {
 		- (lane_change_request < 0);
 	set_desired_lane_change_direction(request_sign);
 	lane_change_request_veh_id = std::abs(lane_change_request);
-
-	if (id == 12) std::clog << "lc request: " << lane_change_request 
-		<< ", request sign: "<< request_sign
-		<< ", des lc direction: " << desired_lane_change_direction.to_string()
-		<< ", lc req veh id (1): " << std::abs(lane_change_request)
-		<< ", lc req veh id (2): " << get_lane_change_request_veh_id() << std::endl;
 }
 
 std::string NearbyVehicle::to_string() const {

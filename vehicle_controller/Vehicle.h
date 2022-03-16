@@ -8,6 +8,7 @@
 class Vehicle
 {
 public:
+	Vehicle(long id);
 
 	/* Getters and setters */
 

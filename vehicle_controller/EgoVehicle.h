@@ -26,6 +26,8 @@ public:
 
 	/* Constructors ---------------------------------------------------------- */
 	EgoVehicle() = default;
+	EgoVehicle(long id, long type, double desired_velocity, 
+		double simulation_time_step, double creation_time, bool verbose);
 	EgoVehicle(long id, double simulation_time_step, double creation_time,
 		bool verbose);
 	EgoVehicle(long id, double simulation_time_step, double creation_time);
@@ -141,14 +143,6 @@ public:
 	void set_traffic_light_info(int traffic_light_id,
 		double distance);
 
-	//void set_traffic_light_distance(const TrafficLight& traffic_light, 
-	//	double distance);
-	//void set_traffic_light_state(TrafficLight& traffic_light,
-	//	long state); /* [Feb 10, 2022] double check if it's necessary */
-	//void set_traffic_light_state_start_time(TrafficLight& traffic_light,
-	//	double start_time); /*[Feb 10, 2022] double check if it's necessary*/
-
-
 	/* Dealing with nearby vehicles --------------------------------------- */
 
 	/* TEMPORATY FUNCTION TO DOUBLE CHECK NEARBY_VEHICLES VECOTR */
@@ -164,10 +158,6 @@ public:
 	/* Sets the nearby vehicle if both the ego and nearby vehicles are connected.
 	Otherwise, set the type as unknown. */
 	void set_nearby_vehicle_type(long type);
-	//void set_nearby_vehicle_lc_intention(long relative_lane);
-	/* Searches the nearby_vehicles array. NO LONGER IN USE */
-	//std::shared_ptr<NearbyVehicle> find_nearby_vehicle(RelativeLane relative_lane,
-	//	int relative_position) const;
 	/* Looks at all nearby vehicles, defines pointers to the leader 
 	(if it exits), and destination lane leader and follower (if there 
 	is lane change intention and if they exist). Also performs time 

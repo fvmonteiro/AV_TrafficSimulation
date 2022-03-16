@@ -16,28 +16,33 @@
 #include "ControlManager.h"
 #include "EgoVehicle.h"
 
-EgoVehicle::EgoVehicle(long id, double simulation_time_step, 
-	double creation_time, bool verbose) :	
+EgoVehicle::EgoVehicle(long id, long type, double desired_velocity,
+	double simulation_time_step, double creation_time, bool verbose) :
+	Vehicle(id),
 	simulation_time_step{ simulation_time_step },
 	creation_time{ creation_time },
-	verbose{ verbose } {
-	
-	this->id = id;
-	this->tau_d = std::exp(-simulation_time_step / tau);
-
+	desired_velocity{desired_velocity},
+	verbose{ verbose } 
+{
 	if (verbose) {
-		std::clog << "Creating vehicle " << id 
+		std::clog << "Creating vehicle " << id
 			<< " at time " << creation_time
 			<< " with simulation time step " << simulation_time_step
+			<< ", category " << type / 100
+			<< ", type " << type
 			<< std::endl;
 	}
-	/* Note: the controller is only created once the category is set
-	because vehicle parameters depend on the category and type. */
+
+	this->tau_d = std::exp(-simulation_time_step / tau);
+	set_category(type / 100);
+	compute_safe_gap_parameters();
+	set_type(type);
 }
 
-EgoVehicle::EgoVehicle(long id, double simulation_time_step, 
-	double creation_time) :
-	EgoVehicle(id, simulation_time_step, creation_time, false) {}
+EgoVehicle::EgoVehicle(long id, long type, double desired_velocity,
+	double simulation_time_step, double creation_time, bool verbose) :
+	EgoVehicle(id, type, desired_velocity, simulation_time_step, 
+		creation_time, false) {}
 
 EgoVehicle::~EgoVehicle() {
 	std::vector<Member> members{
@@ -208,31 +213,22 @@ void EgoVehicle::set_type(long type) {
 		this->type = VehicleType(type);
 		switch (this->type)
 		{
-		case VehicleType::undefined:
-		case VehicleType::human_driven_car:
-		case VehicleType::truck:
-		case VehicleType::bus:
-			this->brake_delay = HUMAN_BRAKE_DELAY;
-			this->is_lane_change_decision_autonomous = false;
-			break;
 		case VehicleType::acc_car:
 			this->brake_delay = AUTONOMOUS_BRAKE_DELAY;
 			this->is_lane_change_decision_autonomous = false;
 			break;
 		case VehicleType::autonomous_car:
+		case VehicleType::connected_car:
+		case VehicleType::platoon_car:
 			this->brake_delay = AUTONOMOUS_BRAKE_DELAY;
 			this->is_lane_change_decision_autonomous = true;
 			break;
-		case VehicleType::connected_car:
 			/* The connected vehicle brake delay also depends
 			on the other vehicle type. If the other vehicle is
 			not connected, the ego connected vehicle behaves like
 			an autonomous vehicle. This issue is addressed in parts
 			of the code after the ego vehicle identifies its
 			surrouding vehicles. */
-			this->brake_delay = AUTONOMOUS_BRAKE_DELAY;
-			this->is_lane_change_decision_autonomous = true;
-			break;
 		case VehicleType::traffic_light_acc_car:
 		case VehicleType::traffic_light_cacc_car: 
 			/* both types have the same parameters */
@@ -240,14 +236,16 @@ void EgoVehicle::set_type(long type) {
 			this->is_lane_change_decision_autonomous = true;
 			break;
 		default:
-			this->brake_delay = AUTONOMOUS_BRAKE_DELAY;
+			this->brake_delay = HUMAN_BRAKE_DELAY;
 			this->is_lane_change_decision_autonomous = false;
 			break;
 		}
 
+		this->controller = ControlManager(get_static_parameters(),
+			verbose);
 		/* Category should have been set before type, but 
 		it doens't hurt to double check*/
-		if (this->category != VehicleCategory::undefined) {
+		/*if (this->category != VehicleCategory::undefined) {
 			compute_safe_gap_parameters();
 			this->controller = ControlManager(get_static_parameters(),
 				verbose);
@@ -262,7 +260,7 @@ void EgoVehicle::set_type(long type) {
 			compute_safe_gap_parameters();
 			this->controller = ControlManager(get_static_parameters(),
 				verbose);
-		}
+		}*/
 	}
 }
 
@@ -298,44 +296,6 @@ void EgoVehicle::set_traffic_light_info(int traffic_light_id,
 	next_traffic_light_id = traffic_light_id;
 	distance_to_next_traffic_light = distance;
 }
-
-//void EgoVehicle::set_traffic_light_distance(const TrafficLight& traffic_light,
-//	double distance)
-//{
-//	distance_to_next_traffic_light = distance;
-//	
-//	/* We can check to decide whether or not to update the pointer, but 
-//	maybe it's cheaper to just set it at every step (as above). */
-//	if (next_traffic_light == nullptr)
-//	{
-//		/* this happens once when the vehicle is created. Should we just put 
-//		it in the constructor? Or maybe initialize all traffic lights with
-//		id zero? */
-//		next_traffic_light = std::make_shared<TrafficLight>(traffic_light);
-//		if (verbose) std::clog << "First traffic light: "
-//			<< next_traffic_light->get_id() << "\n";
-//	}
-//	else if (traffic_light.get_id() != next_traffic_light->get_id())
-//	{
-//		last_traffic_light = next_traffic_light;
-//		next_traffic_light = std::make_shared<TrafficLight>(traffic_light);
-//		if (verbose) std::clog << "New traffic light: " 
-//			<< next_traffic_light->get_id() << "\n"
-//			<< "Last traffic light: " << last_traffic_light->get_id() << "\n";
-//	}
-//}
-
-//void EgoVehicle::set_traffic_light_state(TrafficLight& traffic_light,
-//	long state)
-//{
-//
-//}
-//
-//void EgoVehicle::set_traffic_light_state_start_time(TrafficLight& traffic_light,
-//	double start_time)
-//{
-//
-//}
 
 /* Nearby Vehicles methods ------------------------------------------------ */
 
@@ -397,15 +357,11 @@ std::shared_ptr<NearbyVehicle> EgoVehicle::peek_nearby_vehicles() const {
 void EgoVehicle::set_nearby_vehicle_type(long nv_type) 
 {
 	/* If the ego vehicle is connected, the ego "tries" to know the 
-	other's type. Otherwise, it is set as undefined. */
+	other's type. Otherwise, it is left as undefined. */
 	if (is_connected()) 
 	{
 		peek_nearby_vehicles()->set_type(nv_type);
 	}
-	/*else 
-	{
-		peek_nearby_vehicles()->set_type(VehicleType::undefined);
-	}*/
 }
 
 bool EgoVehicle::has_leader() const {
@@ -482,7 +438,8 @@ void EgoVehicle::nv_double_check() {
 		id = leader->get_id();
 		std::clog << id;
 		if (nv_ids.find(id) == nv_ids.end()) {
-			std::clog << ", saved veh not in most recent nearby_vehicles vector" 
+			std::clog 
+				<< ", saved veh not in most recent nearby_vehicles vector" 
 				<< std::endl;
 		}
 	}
@@ -490,7 +447,8 @@ void EgoVehicle::nv_double_check() {
 		id = follower->get_id();
 		std::clog << ", " << id;
 		if (nv_ids.find(id) == nv_ids.end()) {
-			std::clog << ", saved veh not in most recent nearby_vehicles vector" 
+			std::clog 
+				<< ", saved veh not in most recent nearby_vehicles vector" 
 				<< std::endl;
 		}
 	}
@@ -498,7 +456,8 @@ void EgoVehicle::nv_double_check() {
 		id = destination_lane_leader->get_id();
 		std::clog << ", " << id;
 		if (nv_ids.find(id) == nv_ids.end()) {
-			std::clog << ", saved veh not in most recent nearby_vehicles vector" 
+			std::clog 
+				<< ", saved veh not in most recent nearby_vehicles vector"
 				<< std::endl;
 		}
 	}
@@ -506,7 +465,8 @@ void EgoVehicle::nv_double_check() {
 		id = destination_lane_follower->get_id();
 		std::clog << ", " << id;
 		if (nv_ids.find(id) == nv_ids.end()) {
-			std::clog << ", saved veh not in most recent nearby_vehicles vector" 
+			std::clog 
+				<< ", saved veh not in most recent nearby_vehicles vector"
 				<< std::endl;
 		}
 	}
@@ -514,7 +474,8 @@ void EgoVehicle::nv_double_check() {
 		id = assisted_vehicle->get_id();
 		std::clog << ", " << id;
 		if (nv_ids.find(id) == nv_ids.end()) {
-			std::clog << ", saved veh not in most recent nearby_vehicles vector" 
+			std::clog
+				<< ", saved veh not in most recent nearby_vehicles vector"
 				<< std::endl;
 		}
 	}
@@ -845,13 +806,6 @@ double EgoVehicle::compute_desired_acceleration(
 	bool include_low_level_dynamics = true;
 	switch (type)
 	{
-	case VehicleType::undefined:
-	case VehicleType::truck:
-	case VehicleType::bus:
-	case VehicleType::human_driven_car:
-		desired_acceleration = controller.
-			use_vissim_desired_acceleration(*this);
-		break;
 	case VehicleType::acc_car:
 		desired_acceleration = controller.
 			get_acc_desired_acceleration(*this);
@@ -1295,7 +1249,8 @@ void EgoVehicle::set_desired_lane_change_direction(
 	}
 }
 
-void EgoVehicle::compute_safe_gap_parameters() {
+void EgoVehicle::compute_safe_gap_parameters() 
+{
 	lambda_0 = compute_lambda_0(max_jerk, comfortable_acceleration,
 		max_brake, brake_delay);
 	lambda_1 = compute_lambda_1(max_jerk, comfortable_acceleration,
@@ -1306,7 +1261,8 @@ void EgoVehicle::compute_safe_gap_parameters() {
 	/* Non-connected vehicles only have one value for lambda_1 and lambda_0.
 	Connected vehicles have a "regular value" and a "non-connected" value
 	when dealing with non-connected neighbors. */
-	if (is_connected()) {
+	if (is_connected()) 
+	{
 		lambda_0_connected = 
 			compute_lambda_0(max_jerk, comfortable_acceleration,
 				max_brake, CONNECTED_BRAKE_DELAY);
@@ -1316,7 +1272,6 @@ void EgoVehicle::compute_safe_gap_parameters() {
 		lambda_1_lane_change_connected =
 			compute_lambda_1(max_jerk, comfortable_acceleration,
 				get_lane_change_max_brake(), CONNECTED_BRAKE_DELAY);
-		
 	}
 }
 
@@ -1583,27 +1538,43 @@ std::string EgoVehicle::state_to_string(State vehicle_state) {
 
 std::ostream& operator<< (std::ostream& out, const EgoVehicle& vehicle)
 {
-	std::vector<std::pair<std::string, long>> long_members{ 
-		{"Vehicle id", vehicle.get_id()}, //{"category", vehicle.get_category()}, 
-		{"lane", vehicle.get_lane()} 
-	};
-	std::vector<std::pair<std::string, double>> double_members{
-		{ "velocity", vehicle.get_velocity()},
-		{ "des. velocity", vehicle.get_desired_velocity()},
-		{"acceleration", vehicle.get_acceleration()},
-		{"des. acceleration", vehicle.get_desired_acceleration()},
-		//{"length", vehicle.get_length()}, {"width", vehicle.get_width()} 
-	};
+	out << "t=" << vehicle.get_time()
+		<< ", id=" << vehicle.get_id()
+		<< ", lane=" << vehicle.get_lane()
+		<< ", pref. lane="
+		<< vehicle.get_preferred_relative_lane().to_string()
+		<< ", target lane="
+		<< vehicle.get_rel_target_lane().to_string()
+		/*<< ", active lc.="
+		<< ego_vehicle.get_active_lane_change_direction()
+		<< ", vissim active lc="
+		<< ego_vehicle.get_vissim_active_lane_change()
+		<< ", lat pos.=" << ego_vehicle.get_lateral_position()*/
+		<< ", vel=" << vehicle.get_velocity()
+		<< ", accel=" << vehicle.get_acceleration()
+		<< std::endl;
 
-	for (auto name_value_pair : long_members) {
-		out << name_value_pair.first << ": " <<
-			name_value_pair.second << " | ";
-	}
-	for (auto name_value_pair : double_members) {
-		out << name_value_pair.first << ": " << std::setprecision(4) <<
-			name_value_pair.second << " | ";
-	}
-	out << std::endl;
+	//std::vector<std::pair<std::string, long>> long_members{ 
+	//	{"Vehicle id", vehicle.get_id()}, //{"category", vehicle.get_category()}, 
+	//	{"lane", vehicle.get_lane()} 
+	//};
+	//std::vector<std::pair<std::string, double>> double_members{
+	//	{ "velocity", vehicle.get_velocity()},
+	//	{ "des. velocity", vehicle.get_desired_velocity()},
+	//	{"acceleration", vehicle.get_acceleration()},
+	//	{"des. acceleration", vehicle.get_desired_acceleration()},
+	//	//{"length", vehicle.get_length()}, {"width", vehicle.get_width()} 
+	//};
+
+	//for (auto name_value_pair : long_members) {
+	//	out << name_value_pair.first << ": " <<
+	//		name_value_pair.second << " | ";
+	//}
+	//for (auto name_value_pair : double_members) {
+	//	out << name_value_pair.first << ": " << std::setprecision(4) <<
+	//		name_value_pair.second << " | ";
+	//}
+	//out << std::endl;
 
 	return out; // return std::ostream so we can chain calls to operator<<
 }
