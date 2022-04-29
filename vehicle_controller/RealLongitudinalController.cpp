@@ -50,10 +50,12 @@ void RealLongitudinalController::determine_controller_state(
 	const std::shared_ptr<NearbyVehicle> leader,
 	double reference_velocity) {
 
-	if (leader == nullptr) { // no vehicle ahead
+	if (leader == nullptr) // no vehicle ahead
+	{ 
 		state = State::velocity_control;
 	}
-	else {
+	else 
+	{
 		bool has_lane_change_intention = ego_vehicle.has_lane_change_intention();
 		double gap = ego_vehicle.compute_gap(leader);
 		//double gap = ego_vehicle.compute_gap(leader);
@@ -75,23 +77,28 @@ void RealLongitudinalController::determine_controller_state(
 				has_lane_change_intention
 			);
 		}
-		else {
+		else 
+		{
 			gap_threshold = compute_gap_threshold(
 				reference_velocity, velocity_error, has_lane_change_intention);
 		}
-		if (state == State::vehicle_following) {
+		if (state == State::vehicle_following) 
+		{
 			gap_threshold += hysteresis_bias;
 		}
 
 		if ((gap < gap_threshold)
-			&& (leader_velocity < reference_velocity)) {
+			&& (leader_velocity < reference_velocity)) 
+		{
 			state = State::vehicle_following;
 		}
-		else {
+		else 
+		{
 			state = State::velocity_control;
 		}
 
-		if (verbose) {
+		if (verbose) 
+		{
 			std::clog << "Gap threshold = "
 				<< gap_threshold
 				<< ", gap = " << gap
@@ -99,6 +106,5 @@ void RealLongitudinalController::determine_controller_state(
 				<< ". State: " << state_to_string(state)
 				<< std::endl;
 		}
-
 	}
 }

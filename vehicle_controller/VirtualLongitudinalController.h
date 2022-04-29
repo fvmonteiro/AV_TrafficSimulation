@@ -51,16 +51,16 @@ public:
     the ego velocity. Method should only be called when the 
     destination lane controller is NOT the active one. */
     bool is_outdated(double ego_velocity) const;
-    void estimate_follower_time_headway(const NearbyVehicle& follower,
-        double ego_max_brake, double follower_free_flow_velocity);
+    /*void estimate_follower_time_headway(const NearbyVehicle& follower,
+        double ego_max_brake, double follower_free_flow_velocity);*/
     /* Changes the accepted risk if necessary and returns 
     true if it made any changes*/
     bool update_accepted_risk(double time, const EgoVehicle& ego_vehicle);
     /* Computes the risk at which the lane change headway becomes equal to
     the vehicle following headway. */
-    void compute_intermediate_risk_to_leader(double lambda_1, 
+    /*void compute_intermediate_risk_to_leader(double lambda_1, 
         double lane_change_lambda_1, double max_brake_no_lane_change,
-        double leader_max_brake);
+        double leader_max_brake);*/
     void reset_accepted_risks() override;
     void compute_max_risk_to_follower(double follower_max_brake);
 

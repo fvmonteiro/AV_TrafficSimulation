@@ -24,14 +24,14 @@ struct VehicleParameters {
 	double sampling_interval{ 0.0 };
 	double max_brake{ 0.0 };
 	double comfortable_brake{ 0.0 };
-	double lane_change_max_brake{ 0.0 };
 	double comfortable_acceleration{ 0.0 };
 	double desired_velocity{ 0.0 };
 	double lambda_1{ 0.0 };
-	double lambda_1_lane_change{ 0.0 };
-	double lambda_1_connected{ 0.0 };
-	double lambda_1_lane_change_connected{ 0.0 };
 	bool is_connected{ false };
+	double lane_change_max_brake{ 0.0 };
+	/* double lambda_1_lane_change{ 0.0 };
+	double lambda_1_connected{ 0.0 };
+	double lambda_1_lane_change_connected{ 0.0 };*/
 };
 
 struct AutonomousGains {
@@ -77,32 +77,35 @@ public:
 	
 	void set_connexion(bool is_conneced) {
 		this->is_connected = is_conneced;
-	}
+	};
 	/*void set_vehicle_following_gains(AutonomousGains gains);
 	void set_vehicle_following_gains(ConnectedGains gains);
 	void set_velocity_controller_gains(VelocityControllerGains gains);*/
+	void set_desired_time_headway(double time_headway) {
+		this->desired_time_headway = time_headway;
+	};
 
 	/* TODO: This function will likely change to return the current 
 	filtered value of h*/
-	double get_veh_following_time_headway() const;
+	//double get_veh_following_time_headway() const;
 	/* Returns time headway or lane changing time headway depending
 	on the vehicle intentions*/
-	double get_safe_time_headway(bool has_lane_change_intention) const;
+	//double get_safe_time_headway(bool has_lane_change_intention) const;
+	/* Returns the desired (final) time headway. */
+	double get_safe_time_headway() const;
+	/* Returns the current time headway in use */
+	double get_current_time_headway() const;
+	
 
 	double compute_time_headway_gap(double time_headway, double velocity);
-	/* Computes the time headway value with zero accepted risk and assigns
-	this value to member h. */
-	/*void update_safe_time_headway(double lambda_1,
+	/* Computes the time headway values with accepted risk and assigns
+	this value to members h_vf and h_lc. */
+	/*void update_time_headway(double lambda_1, double lambda_1_lc,
 		double new_leader_max_brake);*/
-	/* Computes the time headway value using the currently accepted risk 
-	and assigns this value to member h. */
-	/*void update_time_headway(double lambda_1,
-		double new_leader_max_brake);*/
-	void update_time_headway(double lambda_1, double lambda_1_lc,
-		double new_leader_max_brake);
 	//void update_time_headway_with_new_risk(double lambda_1);
 	void reset_leader_velocity_filter(double reset_velocity);
 	void reset_desired_velocity_filter(double reset_velocity);
+	void reset_time_headway_filter(double time_headway);
 	/* Sets integral error to zero*/
 	void reset_velocity_error_integrator();
 	virtual void reset_accepted_risks();
@@ -137,9 +140,12 @@ protected:
 	double free_flow_velocity{ 0.0 }; // to compute time headway [m/s]
 	double rho{ 0.2 }; // proportional maximum expected relative speed
 	/* Desired gap parameters */
-	double h_vehicle_following{ 0.0 }; /* time headway [s] */
-	double h_lane_change{ 0.0 }; /* time headway during lane change [s]*/
+	//double h_vehicle_following{ 0.0 }; /* time headway [s] */
+	//double h_lane_change{ 0.0 }; /* time headway during lane change [s]*/
 	double d{ 1.0 }; /* standstill distance [m] */
+	 /* time headway [s] TRYING NEW CODE ORGANIZATION WITH
+    THIS PARAMETER INSTEAD OF h_xxx */
+	double desired_time_headway{ 0.0 };
 
 	VariationLimitedFilter leader_velocity_filter;
 	VariationLimitedFilter desired_velocity_filter;
@@ -173,9 +179,9 @@ protected:
 	/*double compute_safe_time_headway(double free_flow_velocity,
 		double follower_max_brake, double leader_max_brake,
 		double lambda_1, double rho);*/
-	double compute_time_headway_with_risk(double free_flow_velocity,
+	/*double compute_time_headway_with_risk(double free_flow_velocity,
 		double follower_max_brake, double leader_max_brake,
-		double lambda_1, double rho, double accepted_risk);
+		double lambda_1, double rho, double accepted_risk);*/
 
 	/* Computes gap minus reference gap and upper bounds it
 	with max_gap_error. */

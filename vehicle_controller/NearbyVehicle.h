@@ -14,7 +14,7 @@
 
 class NearbyVehicle : public Vehicle{
 public:
-	//using Vehicle::set_category;
+	using Vehicle::compute_safe_gap_parameters;
 
 	NearbyVehicle() = default;
 	NearbyVehicle(long id, RelativeLane relative_lane, long relative_position);
@@ -70,15 +70,16 @@ public:
 	};
 
 	void set_type(int type) /*override*/;
-
 	/* Special getters and setters */
 
 	double get_lambda_0() const { return lambda_0; };
 	double get_lambda_1() const { return lambda_1; };
 
+	bool is_connected() const;
 	double compute_velocity(double ego_velocity) const;
 	bool is_on_same_lane() const;
 	bool is_immediatly_ahead() const;
+	bool is_immediatly_behind() const;
 	bool is_ahead() const;
 	bool is_behind() const;
 	bool is_lane_changing() const override;
@@ -87,8 +88,11 @@ public:
 	bool is_requesting_to_merge_behind() const;
 	/*void fill_with_dummy_values();
 	void copy_current_states(NearbyVehicle& nearby_vehicle);*/
-	void compute_safe_gap_parameters();
+	/*void compute_safe_gap_parameters();*/
 	void read_lane_change_request(long lane_change_request);
+
+	double estimate_desired_time_headway(double free_flow_velocity,
+		double leader_max_brake, double rho, double risk) const;
 
 	std::string to_string() const;
 	friend std::ostream& operator<< (std::ostream& out, 

@@ -9,6 +9,7 @@ class Vehicle
 {
 public:
 	Vehicle(long id);
+	Vehicle(long id, VehicleType type, double brake_delay);
 
 	/* Getters and setters */
 
@@ -27,38 +28,35 @@ public:
 	/* Also sets the estimated maximum braking of the vehicle. */
 	void set_category(long category);
 	
-	bool is_connected() const;
+	/*bool is_connected() const;*/
 	bool has_lane_change_intention() const;
 
-	/* Virtual methods */
-	//virtual void set_type(long type) = 0;
-	virtual void compute_safe_gap_parameters() = 0;
-	/*TODO: Maybe this method could belong to the parent class*/
-	virtual bool is_lane_changing() const = 0;
-
-	/* Returns the opposite of relative_lane:
-	- left->right
-	- right->left
-	- same->same
-	TODO: This method should be moved into some RelativeLane struct
-	or class (to be created) */
-	/*RelativeLane get_opposite_relative_lane(
-		const RelativeLane& relative_lane) const;*/
-
 protected:
+	virtual ~Vehicle() {};
+
+	/* TODO: should the functions below become part of a namespace? */
+	double compute_lambda_0(double max_jerk,
+		double comfortable_acceleration, double max_brake,
+		double brake_delay) const;
+	double compute_lambda_1(double max_jerk,
+		double comfortable_acceleration, double max_brake,
+		double brake_delay) const;
+	double compute_time_headway_with_risk(double free_flow_velocity,
+		double follower_max_brake, double leader_max_brake,
+		double lambda_1, double rho, double accepted_risk) const;
+
+	void compute_safe_gap_parameters();
+
 	/* The variables below are a way of describing the emergency braking, 
 	but they do not correspond to how VISSIM works. VISSIM has varying 
 	max brake based on speed (and no jerk). We estimate these parameters
 	for safe gap computations */
-	double max_brake{ 0.0 };
+
+	double max_brake{ 0.0 }; // [m/s^2]
 	double max_jerk{ 0.0 }; // [m/s^3]
 	double brake_delay{ 0.0 }; // [s]
 	double comfortable_acceleration{ COMFORTABLE_ACCELERATION }; // [m/s^2]
 
-	/* Parameters read from VISSIM which are constant for each vehicle */
-	long id{ 0 };
-	double length{ 0.0 }; // [m]
-	double width{ 0.0 }; // [m]
 	VehicleCategory category{ VehicleCategory::undefined };
 	VehicleType type{ VehicleType::undefined };
 
@@ -69,12 +67,14 @@ protected:
 
 	RelativeLane desired_lane_change_direction{ RelativeLane::same };
 
-	double compute_lambda_0(double max_jerk,
-		double comfortable_acceleration, double max_brake,
-		double brake_delay);
+	/* Desired time headway */
+	//double h{ 0.0 };
 
-	double compute_lambda_1(double max_jerk,
-		double comfortable_acceleration, double max_brake,
-		double brake_delay);
+private:
+	virtual bool is_lane_changing() const = 0;
+
+	long id;
+	double length{ 0.0 }; // [m]
+	double width{ 0.0 }; // [m]
 };
 

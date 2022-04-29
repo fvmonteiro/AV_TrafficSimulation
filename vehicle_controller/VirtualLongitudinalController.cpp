@@ -123,28 +123,28 @@ bool VirtualLongitudinalController::is_outdated(
 	return ego_velocity < desired_velocity_filter.get_current_value();
 }
 
-void VirtualLongitudinalController::estimate_follower_time_headway(
-	const NearbyVehicle& follower, double ego_max_brake,
-	double follower_free_flow_velocity) {
-
-	if (verbose) {
-		std::clog << "Follower type: "
-			<< static_cast<int>(follower.get_type()) << std::endl;
-		std::clog << "Updating follower headway from "
-			<< follower_time_headway;
-	}
-
-	follower_time_headway = compute_time_headway_with_risk(
-		follower_free_flow_velocity,
-		follower.get_max_brake(), ego_max_brake,
-		follower.get_lambda_1(), rho, accepted_risk_to_follower);
-
-	if (verbose) {
-		std::clog << " to "
-			<< follower_time_headway
-			<< std::endl;
-	}
-}
+//void VirtualLongitudinalController::estimate_follower_time_headway(
+//	const NearbyVehicle& follower, double ego_max_brake,
+//	double follower_free_flow_velocity) {
+//
+//	if (verbose) {
+//		std::clog << "Follower type: "
+//			<< static_cast<int>(follower.get_type()) << std::endl;
+//		std::clog << "Updating follower headway from "
+//			<< follower_time_headway;
+//	}
+//
+//	follower_time_headway = compute_time_headway_with_risk(
+//		follower_free_flow_velocity,
+//		follower.get_max_brake(), ego_max_brake,
+//		follower.get_lambda_1(), rho, accepted_risk_to_follower);
+//
+//	if (verbose) {
+//		std::clog << " to "
+//			<< follower_time_headway
+//			<< std::endl;
+//	}
+//}
 
 bool VirtualLongitudinalController::update_accepted_risk(
 	double time, const EgoVehicle& ego_vehicle) {
@@ -185,25 +185,25 @@ bool VirtualLongitudinalController::update_accepted_risk(
 	return has_increased;
 }
 
-void VirtualLongitudinalController::
-compute_intermediate_risk_to_leader(double lambda_1, 
-	double lane_change_lambda_1, double max_brake_no_lane_change, 
-	double leader_max_brake) {
-
-	double safe_h_no_lane_change = compute_time_headway_with_risk(
-		free_flow_velocity, max_brake_no_lane_change, leader_max_brake,
-		lambda_1, rho, 0);
-	intermediate_risk_to_leader = std::sqrt(2 
-		* (h_lane_change - safe_h_no_lane_change)
-		* ego_max_brake * free_flow_velocity);
-
-	if (verbose) {
-		std::clog << "safe no lc h=" << safe_h_no_lane_change
-			<< ", h_lc=" << h_lane_change
-			<< ", mid risk to leader="
-			<< intermediate_risk_to_leader << std::endl;
-	}
-}
+//void VirtualLongitudinalController::
+//compute_intermediate_risk_to_leader(double lambda_1, 
+//	double lane_change_lambda_1, double max_brake_no_lane_change, 
+//	double leader_max_brake) {
+//
+//	double safe_h_no_lane_change = compute_time_headway_with_risk(
+//		free_flow_velocity, max_brake_no_lane_change, leader_max_brake,
+//		lambda_1, rho, 0);
+//	intermediate_risk_to_leader = std::sqrt(2 
+//		* (h_lane_change - safe_h_no_lane_change)
+//		* ego_max_brake * free_flow_velocity);
+//
+//	if (verbose) {
+//		std::clog << "safe no lc h=" << safe_h_no_lane_change
+//			<< ", h_lc=" << h_lane_change
+//			<< ", mid risk to leader="
+//			<< intermediate_risk_to_leader << std::endl;
+//	}
+//}
 
 void VirtualLongitudinalController::reset_accepted_risks() {
 	accepted_risk_to_leader = initial_risk;

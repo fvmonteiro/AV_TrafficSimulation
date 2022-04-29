@@ -13,20 +13,21 @@
 #include "Constants.h"
 #include "DriverModel.h"
 #include "EgoVehicle.h"
-#include "LoggedVehicle.h"
+#include "EgoVehicleFactory.h"
 #include "SimulationLogger.h"
 #include "TrafficLight.h"
 #include "TrafficLightFileReader.h"
 
 /*==========================================================================*/
 
-const std::unordered_set<long> LOGGED_VEHICLES_IDS{ 0 };
+const std::unordered_set<long> LOGGED_VEHICLES_IDS{ 5 };
 const bool CLUELESS_DEBUGGING{ false };
 //const double DEBUGGING_START_TIME{ 249.0 };
 
 SimulationLogger simulation_logger;
 std::unordered_map<long, std::unique_ptr<EgoVehicle>> vehicles;
 std::unordered_map<int, TrafficLight> traffic_lights;
+int i, j;  // temp.; used for debugging
 double simulation_time_step{ -1.0 };
 double current_time{ 0.0 };
 long current_vehicle_type{ 0 };
@@ -108,7 +109,8 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
         {
             CLUELESS_DEBUGGING = true;
         }*/
-        if (CLUELESS_DEBUGGING && (double_value != current_time)) {
+        if (CLUELESS_DEBUGGING && (double_value != current_time))
+        {
             std::clog << "t=" << current_time 
                 << ", " << vehicles.size() << " vehicles." << std::endl;
         }
@@ -117,7 +119,8 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
     case DRIVER_DATA_USE_UDA                :
         /* must return 1 for desired values of index1 if UDA values
         are to be sent from/to Vissim */
-        if (index1 >= static_cast<int>(UDA::first)) { 
+        if (index1 >= static_cast<int>(UDA::first)) 
+        { 
             UDA uda = UDA(index1);
             switch (uda) {
             /* The first three are necessary */
@@ -127,6 +130,7 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
                 return 1;
             /* Debugging: leader */
             case UDA::leader_id:
+                return 1;
             case UDA::leader_type:
             case UDA::gap_to_leader:
             case UDA::reference_gap:
@@ -134,6 +138,7 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
                 return 0;
             /* Debugging: dest lane leader */
             case UDA::dest_leader_id:
+                return 1;
             case UDA::gap_to_dest_lane_leader:
             case UDA::transient_gap_to_ld:
             case UDA::veh_following_gap_to_ld:
@@ -141,6 +146,7 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
                 return 0;
             /* Debugging: dest lane follower */
             case UDA::dest_follower_id:
+                return 1;
             case UDA::gap_to_dest_lane_follower:
             case UDA::transient_gap_to_fd:
             case UDA::veh_following_gap_to_fd:
@@ -156,9 +162,9 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
             case UDA::risk:
                 return 0;
             case UDA::safe_time_headway:
-                return 1;
+                return 0;
             case UDA::gap_error:
-                return 1;
+                return 0;
             default:
                 return 0;
             }
@@ -168,30 +174,14 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
         }
     case DRIVER_DATA_VEH_ID                 :
         if (CLUELESS_DEBUGGING) {
-            std::clog << "getting data for veh. " << long_value << std::endl;
+            std::clog << "t=" << current_time
+                << ", getting data for veh. " << long_value << std::endl;
         }
 
         current_vehicle_id = long_value;
         if (vehicles.find(current_vehicle_id) != vehicles.end()) 
         {
             vehicles[current_vehicle_id]->clear_nearby_vehicles();
-        }
-        else 
-        {
-            /*bool verbose = false;
-            if (LOGGED_VEHICLES_IDS.find(current_vehicle_id)
-                != LOGGED_VEHICLES_IDS.end()) verbose = true;
-
-            vehicles[current_vehicle_id] = std::unique_ptr<EgoVehicle>(
-                new EgoVehicle(current_vehicle_id, simulation_time_step,
-                    current_time, verbose)
-                );*/
-                /* This cumbersome use of emplace guarantees a single
-                creation (and destruction) of each vehicle */
-            /*vehicles.emplace(std::piecewise_construct,
-                std::forward_as_tuple(current_vehicle_id),
-                std::forward_as_tuple(current_vehicle_id,
-                    simulation_time_step, current_time, verbose));*/
         }
         return 1;
     case DRIVER_DATA_VEH_LANE               :
@@ -229,6 +219,8 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
             long_value);
         return 1;
     case DRIVER_DATA_VEH_USE_PREFERRED_LANE :
+        vehicles[current_vehicle_id]->set_vissim_use_preferred_lane(
+            long_value);
         return 1;
     case DRIVER_DATA_VEH_DESIRED_VELOCITY   :
         current_desired_velocity = double_value;
@@ -245,12 +237,11 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
     case DRIVER_DATA_VEH_REAR_Z_COORDINATE  :
         return 1;
     case DRIVER_DATA_VEH_TYPE               :
-        /* vehicle type is called a few times before VISSIM 
-        actually creates any vehicles, so we perform this check */
+        /* We only use this information when a new vehicle is created */
         current_vehicle_type = long_value;
-        if (vehicles.find(current_vehicle_id) != vehicles.end()) {
+        /*if (vehicles.find(current_vehicle_id) != vehicles.end()) {
             vehicles[current_vehicle_id]->set_type(long_value);
-        }
+        }*/
         return 1;
     case DRIVER_DATA_VEH_COLOR              :
         // We define the vehicle color instead
@@ -263,6 +254,7 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
                 /* Must return 1 if these messages are to be sent from
                 VISSIM! */
     case DRIVER_DATA_VEH_NEXT_LINKS         :
+        return 0;
     case DRIVER_DATA_VEH_ACTIVE_LANE_CHANGE :
         vehicles[current_vehicle_id]->set_active_lane_change_direction(
             long_value);
@@ -285,7 +277,8 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
         //}
         return 1;
     case DRIVER_DATA_NVEH_ID                :
-        if (long_value > 0) { 
+        if (long_value > 0) 
+        {
             vehicles[current_vehicle_id]->emplace_nearby_vehicle(
                 long_value, index1, index2);
         }
@@ -360,7 +353,7 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
     case DRIVER_DATA_SLOPE_AHEAD            :
         return 1;
     case DRIVER_DATA_SIGNAL_DISTANCE        :
-        vehicles[current_vehicle_id]->set_traffic_light_info(
+        vehicles[current_vehicle_id]->read_traffic_light(
             index1, double_value);
         return 1;
     case DRIVER_DATA_SIGNAL_STATE           :
@@ -376,10 +369,9 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
     case DRIVER_DATA_SPEED_LIMIT_DISTANCE   :
     case DRIVER_DATA_SPEED_LIMIT_VALUE      :
         return 1;
+    /* IMPORTANT: Following are behavior data suggested for the current time
+    step by Vissim's internal model */
     case DRIVER_DATA_DESIRED_ACCELERATION   :
-        /* We save this value to compare it to our own algorithm.
-        It can also be used in a situation where some assumption
-        breaks or when the vehicle gets stuck. */
         vehicles[current_vehicle_id]->set_vissim_acceleration(
             double_value);
         return 1;
@@ -387,15 +379,12 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
         vehicles[current_vehicle_id]->set_desired_lane_angle(double_value);
         return 1;
     case DRIVER_DATA_ACTIVE_LANE_CHANGE     :
-        /* We save this value to compare it to our own algorithm.
-        It can also be used in a situation where some assumption
-        breaks or when the vehicle gets stuck. */
-        vehicles[current_vehicle_id]->set_vissim_active_lane_change(
-            long_value);
+        /*vehicles[current_vehicle_id]->set_vissim_active_lane_change(
+            long_value);*/
         return 1;
     case DRIVER_DATA_REL_TARGET_LANE        :
         /* Apparently this is VISSIM's suggestion of target lane */
-        vehicles[current_vehicle_id]->set_rel_target_lane(long_value);
+        vehicles[current_vehicle_id]->set_relative_target_lane(long_value);
         return 1;
     default :
         return 0;
@@ -446,12 +435,12 @@ DRIVERMODEL_API  int  DriverModelGetValue (long   type,
             break;
         case UDA::lane_change_request:
             *long_value = vehicles[current_vehicle_id]->
-                create_lane_change_request();
+                get_lane_change_request();
                 //get_desired_lane_change_direction().to_int();
             break;
         case UDA::give_control_to_vissim:
             *long_value = vehicles[current_vehicle_id]->
-                give_lane_change_control_to_vissim();
+                is_vissim_controlling_lane_change();
             break;
 
         /* Variables used for debugging from here on */
@@ -481,97 +470,80 @@ DRIVERMODEL_API  int  DriverModelGetValue (long   type,
                 * 3.6;  // we want to display it in km/h
             break;
         case UDA::dest_leader_id:
-            if (vehicles[current_vehicle_id]->has_destination_lane_leader()) {
-                *long_value = vehicles[current_vehicle_id]->
-                    get_destination_lane_leader()->get_id();
-            }
-            else {
-                *long_value = 0;
-            }
+            *long_value = vehicles[current_vehicle_id]->
+                get_dest_lane_leader_id();
             break;
         case UDA::gap_to_dest_lane_leader:
-            *double_value = vehicles[current_vehicle_id]->
+            *double_value = 0;
+            /*vehicles[current_vehicle_id]->
                 compute_gap(vehicles[current_vehicle_id]->
                     get_destination_lane_leader()
-                );
+                );*/
             break;
         case UDA::transient_gap_to_ld:
-            *double_value = vehicles[current_vehicle_id]->
+            *double_value = 0;
+            /*vehicles[current_vehicle_id]->
                 compute_transient_gap(
                     vehicles[current_vehicle_id]->
                     get_destination_lane_leader()
-                );
+                );*/
             break;
         case UDA::veh_following_gap_to_ld:
-            *double_value = vehicles[current_vehicle_id]->
+            *double_value = 0;
+            /*vehicles[current_vehicle_id]->
                 compute_time_headway_gap(
                     vehicles[current_vehicle_id]->get_destination_lane_leader()
-                );
+                );*/
             break;
         case UDA::safe_gap_to_dest_lane_leader:
-            if (vehicles[current_vehicle_id]->has_lane_change_intention()) {
-                *double_value = vehicles[current_vehicle_id]->
-                    compute_safe_lane_change_gap(
-                        vehicles[current_vehicle_id]->
-                        get_destination_lane_leader()
-                    );
-            }
-            else {
-                *double_value = 0.0;
-            }
+            *double_value = 0;
+            /*vehicles[current_vehicle_id]->
+                compute_safe_lane_change_gap(
+                    vehicles[current_vehicle_id]->
+                    get_destination_lane_leader()
+                );*/
             break;
         case UDA::dest_follower_id:
-            if (vehicles[current_vehicle_id]->has_destination_lane_follower()) {
-                *long_value = vehicles[current_vehicle_id]->
-                    get_destination_lane_follower()->get_id();
-            }
-            else {
-                *long_value = 0;
-            }
+            *long_value = vehicles[current_vehicle_id]->
+                get_dest_lane_follower_id();
             break;
         case UDA::gap_to_dest_lane_follower:
-            *double_value = vehicles[current_vehicle_id]->
+            *double_value = 0;
+            /*vehicles[current_vehicle_id]->
                 compute_gap(vehicles[current_vehicle_id]->
                     get_destination_lane_follower()
-                );
+                );*/
             break;
         case UDA::transient_gap_to_fd:
-            *double_value = vehicles[current_vehicle_id]->
+            *double_value = 0;
+                /*vehicles[current_vehicle_id]->
                 compute_transient_gap(
                     vehicles[current_vehicle_id]->get_destination_lane_follower()
-                );
+                );*/
             break;
         case UDA::veh_following_gap_to_fd:
-            *double_value = vehicles[current_vehicle_id]->
+            *double_value = 0;
+                /*vehicles[current_vehicle_id]->
                 compute_time_headway_gap(
                     vehicles[current_vehicle_id]->
                     get_destination_lane_follower()
-                );
+                );*/
             break;
         case UDA::safe_gap_to_dest_lane_follower:
-            if (vehicles[current_vehicle_id]->has_lane_change_intention()) {
-                *double_value = vehicles[current_vehicle_id]->
-                    compute_safe_lane_change_gap(
-                        vehicles[current_vehicle_id]->
-                        get_destination_lane_follower()
-                    );
-            }
-            else {
-                *double_value = 0.0;
-            }
+            *double_value = 0;
+            /*vehicles[current_vehicle_id]->
+                compute_safe_lane_change_gap(
+                    vehicles[current_vehicle_id]->
+                    get_destination_lane_follower()
+                );*/
             break;
         case UDA::dest_follower_time_headway:
             *double_value = vehicles[current_vehicle_id]->
                 get_dest_follower_time_headway();
             break;
         case UDA::assisted_veh_id:
-            if (vehicles[current_vehicle_id]->is_cooperating_to_generate_gap()) {
-                *long_value = vehicles[current_vehicle_id]->
-                    get_assisted_vehicle()->get_id();
-            }
-            else {
-                *long_value = 0;
-            }
+            *long_value = vehicles[current_vehicle_id]->
+                get_assisted_veh_id();
             break;
         case UDA::waiting_time:
             *double_value = vehicles[current_vehicle_id]->get_waiting_time();
@@ -602,13 +574,8 @@ DRIVERMODEL_API  int  DriverModelGetValue (long   type,
                 << vehicles[current_vehicle_id]->get_id() << std::endl;
         }
         *double_value = 
-            vehicles[current_vehicle_id]->compute_desired_acceleration(
+            vehicles[current_vehicle_id]->get_desired_acceleration(
             traffic_lights);
-        if (vehicles[current_vehicle_id]->is_verbose())
-        {
-            std::clog << "acceleration computed." << std::endl;
-        }
-
         if (CLUELESS_DEBUGGING) {
             std::clog << "decided acceleration for veh. "
                 << vehicles[current_vehicle_id]->get_id() << std::endl;
@@ -625,14 +592,23 @@ DRIVERMODEL_API  int  DriverModelGetValue (long   type,
         }
         *long_value = 
             vehicles[current_vehicle_id]->decide_lane_change_direction();
-        if (vehicles[current_vehicle_id]->is_verbose()) {
-            /*EgoVehicle& ego_vehicle = vehicles[current_vehicle_id];*/
-            std::clog << vehicles[current_vehicle_id] << std::endl;
+        if (CLUELESS_DEBUGGING) {
+            std::clog << "decided lane change " << *long_value
+                << " for veh. " 
+                << vehicles[current_vehicle_id]->get_id() << std::endl;
         }
+
+        if (vehicles[current_vehicle_id]->is_verbose()) 
+        {
+            std::clog << *vehicles[current_vehicle_id] << std::endl;
+        }
+        
         return 1;
     case DRIVER_DATA_REL_TARGET_LANE :
-        *long_value = 
-            vehicles[current_vehicle_id]->get_rel_target_lane().to_int();
+        /* This is used by Vissim only if *long_value was set to 0 in the 
+        call of DriverModelGetValue (DRIVER_DATA_SIMPLE_LANECHANGE) */
+        /**long_value = 
+            vehicles[current_vehicle_id]->get_relative_target_lane();*/
         return 1;
     case DRIVER_DATA_SIMPLE_LANECHANGE :
         *long_value = 1;
@@ -671,33 +647,28 @@ DRIVERMODEL_API  int  DriverModelExecuteCommand (long number)
         bool verbose = false;
         if (LOGGED_VEHICLES_IDS.find(current_vehicle_id)
             != LOGGED_VEHICLES_IDS.end()) verbose = true;
-        vehicles[current_vehicle_id] = std::unique_ptr<EgoVehicle>(
-            new EgoVehicle(current_vehicle_id, current_vehicle_type,
-                current_desired_velocity, simulation_time_step, 
-                current_time, verbose)
+        vehicles[current_vehicle_id] = std::move(
+            EgoVehicleFactory::create_ego_vehicle(current_vehicle_id, 
+                current_vehicle_type, current_desired_velocity, 
+                simulation_time_step, current_time, verbose)
             );
-        /*EgoVehicle veh = EgoVehicle(current_vehicle_id, current_vehicle_type,
-            current_desired_velocity, simulation_time_step, current_time, 
-            true);*/
-        /* After the driver is created, we have to reset the current id.
-        Otherwise, the value is (wrongly) kept in the next DLL call
-        from VISSIM */
         current_vehicle_id = 0;
         return 1;
     }
     case DRIVER_COMMAND_KILL_DRIVER :
-        /*if (ego_vehicle.is_verbose()) {
-        }*/
+        if (CLUELESS_DEBUGGING)
+        {
+            std::clog << "Erasing veh. " << current_vehicle_id << std::endl;
+        }
         vehicles.erase(current_vehicle_id);
         return 1;
     case DRIVER_COMMAND_MOVE_DRIVER :
     {
         /* This is executed after all the set commands and before
         any get command. */
-        /*EgoVehicle& ego_vehicle = vehicles[current_vehicle_id];
-        ego_vehicle.update_state();
-        ego_vehicle.analyze_nearby_vehicles();*/
+        if (CLUELESS_DEBUGGING) std::clog << "Updating states" << std::endl;
         vehicles[current_vehicle_id]->update_state();
+        if (CLUELESS_DEBUGGING) std::clog << "Analyzing nearby vehicles" << std::endl;
         vehicles[current_vehicle_id]->analyze_nearby_vehicles();
         //vehicles[current_vehicle_id]->compute_all_ssms();
         return 1;

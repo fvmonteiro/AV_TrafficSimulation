@@ -62,13 +62,23 @@ LongitudinalController::LongitudinalController(
 //	this->velocity_controller_gains = gains;
 //}
 
-double LongitudinalController::get_veh_following_time_headway() const {
-	return h_vehicle_following;
+//double LongitudinalController::get_veh_following_time_headway() const {
+//	return h_vehicle_following;
+//}
+
+//double LongitudinalController::get_safe_time_headway(
+//	bool has_lane_change_intention) const {
+//	return has_lane_change_intention ? h_lane_change : h_vehicle_following;
+//}
+
+double LongitudinalController::get_safe_time_headway() const 
+{
+	return desired_time_headway;
 }
 
-double LongitudinalController::get_safe_time_headway(
-	bool has_lane_change_intention) const {
-	return has_lane_change_intention ? h_lane_change : h_vehicle_following;
+double LongitudinalController::get_current_time_headway() const 
+{
+	return time_headway_filter.get_current_value();
 }
 
 double LongitudinalController::compute_time_headway_gap(double time_headway,
@@ -81,14 +91,13 @@ double LongitudinalController::compute_time_headway_gap(double time_headway,
 double LongitudinalController::compute_safe_time_headway_gap(
 	double ego_velocity, bool has_lane_change_intention) {
 
-	return get_safe_time_headway(has_lane_change_intention) * ego_velocity
+	return get_safe_time_headway() * ego_velocity
 		+ d;
 }
 
 double LongitudinalController::compute_desired_gap(double velocity_ego,
 	bool has_lane_change_intention) {
-	double desired_time_headway = 
-		get_safe_time_headway(has_lane_change_intention);
+	double desired_time_headway = get_safe_time_headway();
 	double time_headway = time_headway_filter.apply_filter(
 		desired_time_headway);
 
@@ -120,7 +129,7 @@ double LongitudinalController::compute_velocity_error(double velocity_ego,
 double LongitudinalController::estimate_gap_error_derivative(
 	double velocity_error, double acceleration, bool has_lane_change_intention) {
 	/* TODO [Oct 29, 2021]: should be changet to e_v - h.a - dh/dt.v */
-	double time_headway = get_safe_time_headway(has_lane_change_intention);
+	double time_headway = get_safe_time_headway();
 	return velocity_error - time_headway * acceleration;
 }
 
@@ -133,7 +142,7 @@ double LongitudinalController::compute_gap_threshold(double free_flow_velocity,
 	double velocity_error, bool has_lane_change_intention) {
 	/* Threshold is computed such that, at the switch, the vehicle following 
 	input is greater or equal to kg*h*(Vf - v) > 0. */
-	double time_headway = get_safe_time_headway(has_lane_change_intention);
+	double time_headway = get_safe_time_headway();
 	double kg = autonomous_gains.kg;
 	double kv = autonomous_gains.kv;
 	return time_headway * free_flow_velocity + d - 1 / kg * (kv * velocity_error);
@@ -147,7 +156,7 @@ double LongitudinalController::compute_gap_threshold(double free_flow_velocity,
 	double acceleration_error, bool has_lane_change_intention) {
 	/* Threshold is computed such that, at the switch, the vehicle following
 	input is greater or equal to kg*h*(Vf - v) > 0. */
-	double time_headway = get_safe_time_headway(has_lane_change_intention);
+	double time_headway = get_safe_time_headway();
 	double kg = connected_gains.kg;
 	double kv = connected_gains.kv;
 	double kgd = connected_gains.kgd;
@@ -361,7 +370,7 @@ void LongitudinalController::reset_accepted_risks() {
 }
 
 void LongitudinalController::compute_max_risk_to_leader(bool is_lane_changing) {
-	double time_headway = get_safe_time_headway(is_lane_changing);
+	double time_headway = get_safe_time_headway();
 	max_risk_to_leader = std::sqrt(
 		2 * time_headway * ego_max_brake * free_flow_velocity);
 	if (verbose) std::clog << "max risk to leader=" 
@@ -397,28 +406,30 @@ void LongitudinalController::compute_max_risk_to_leader(bool is_lane_changing) {
 //		<< " and " << h_lane_change << std::endl;
 //}
 
-void LongitudinalController::update_time_headway(
-	double lambda_1, double lambda_1_lc, double new_leader_max_brake) {
+//void LongitudinalController::update_time_headway(
+//	double lambda_1, double lambda_1_lc, double new_leader_max_brake) {
+//
+//	if (verbose) {
+//		std::clog << "Updating veh foll and lc time headways from "
+//			<< h_vehicle_following << " and " << h_lane_change;
+//	}
+//
+//	h_vehicle_following = compute_time_headway_with_risk(free_flow_velocity,
+//		ego_max_brake, new_leader_max_brake,
+//		lambda_1, rho, accepted_risk_to_leader);
+//	h_lane_change = compute_time_headway_with_risk(free_flow_velocity,
+//		ego_max_brake_lane_change, new_leader_max_brake,
+//		lambda_1_lc, rho, accepted_risk_to_leader);
+//
+//	if (verbose) std::clog << " to " << h_vehicle_following
+//		<< " and " << h_lane_change << std::endl;
+//
+//	if (!time_headway_filter.get_is_initialized()) {
+//		time_headway_filter.reset(h_vehicle_following);
+//	}
+//}
 
-	if (verbose) {
-		std::clog << "Updating veh foll and lc time headways from "
-			<< h_vehicle_following << " and " << h_lane_change;
-	}
 
-	h_vehicle_following = compute_time_headway_with_risk(free_flow_velocity,
-		ego_max_brake, new_leader_max_brake,
-		lambda_1, rho, accepted_risk_to_leader);
-	h_lane_change = compute_time_headway_with_risk(free_flow_velocity,
-		ego_max_brake_lane_change, new_leader_max_brake,
-		lambda_1_lc, rho, accepted_risk_to_leader);
-
-	if (verbose) std::clog << " to " << h_vehicle_following
-		<< " and " << h_lane_change << std::endl;
-
-	if (!time_headway_filter.get_is_initialized()) {
-		time_headway_filter.reset(h_vehicle_following);
-	}
-}
 
 //void LongitudinalController::update_time_headway_with_new_risk(
 //	double lambda_1) {
@@ -444,6 +455,12 @@ void LongitudinalController::reset_desired_velocity_filter(
 	desired_velocity_filter.reset(reset_velocity);
 }
 
+void LongitudinalController::reset_time_headway_filter(
+	double time_headway)
+{
+	time_headway_filter.reset(time_headway);
+}
+
 /* Protected and private methods ------------------------------------------ */
 
 //double LongitudinalController::compute_safe_time_headway(
@@ -455,36 +472,37 @@ void LongitudinalController::reset_desired_velocity_filter(
 //		rho, 0.0);
 //}
 
-double LongitudinalController::compute_time_headway_with_risk(
-	double free_flow_velocity,
-	double follower_max_brake, double leader_max_brake,
-	double lambda_1, double rho, double accepted_risk) {
+//double LongitudinalController::compute_time_headway_with_risk(
+//	double free_flow_velocity,
+//	double follower_max_brake, double leader_max_brake,
+//	double lambda_1, double rho, double accepted_risk) {
+//
+//	double time_headway;
+//	double gamma = leader_max_brake / follower_max_brake;
+//	double gamma_threshold = (1 - rho) * free_flow_velocity
+//		/ (free_flow_velocity + lambda_1);
+//	double risk_term = std::pow(accepted_risk, 2) / 2 / free_flow_velocity;
+//
+//	if (gamma < gamma_threshold) {
+//		// case where ego brakes harder
+//		time_headway =
+//			(std::pow(rho, 2) * free_flow_velocity / 2
+//				+ rho * lambda_1 - risk_term)
+//			/ ((1 - gamma) * follower_max_brake);
+//	}
+//	else if (gamma >= std::pow(1 - rho, 2)) {
+//		time_headway =
+//			((1 - std::pow(1 - rho, 2) / gamma) * free_flow_velocity / 2
+//				+ lambda_1 - risk_term)
+//			/ follower_max_brake;
+//	}
+//	else {
+//		time_headway = (lambda_1 - risk_term) / follower_max_brake;
+//	}
+//
+//	return time_headway;
+//}
 
-	double time_headway;
-	double gamma = leader_max_brake / follower_max_brake;
-	double gamma_threshold = (1 - rho) * free_flow_velocity
-		/ (free_flow_velocity + lambda_1);
-	double risk_term = std::pow(accepted_risk, 2) / 2 / free_flow_velocity;
-
-	if (gamma < gamma_threshold) {
-		// case where ego brakes harder
-		time_headway =
-			(std::pow(rho, 2) * free_flow_velocity / 2
-				+ rho * lambda_1 - risk_term)
-			/ ((1 - gamma) * follower_max_brake);
-	}
-	else if (gamma >= std::pow(1 - rho, 2)) {
-		time_headway =
-			((1 - std::pow(1 - rho, 2) / gamma) * free_flow_velocity / 2
-				+ lambda_1 - risk_term)
-			/ follower_max_brake;
-	}
-	else {
-		time_headway = (lambda_1 - risk_term) / follower_max_brake;
-	}
-
-	return time_headway;
-}
 /* Convert the State enum to string. Used mostly for printing while
 debugging */
 std::string LongitudinalController::state_to_string(State state) {

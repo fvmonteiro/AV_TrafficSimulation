@@ -1,11 +1,9 @@
 /*==========================================================================*/
 /*  ColorConstants.h													    */
-/*  Version of 2021-06-08                             Fernando V. Monteiro  */
+/*						                              Fernando V. Monteiro  */
 /*==========================================================================*/
 
 #pragma once
-
-#include <unordered_set>
 
 typedef unsigned long color_t;
 /* Based on the _WINGDI_ RGB definition and some tests on VISSIM */

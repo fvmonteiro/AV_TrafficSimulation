@@ -24,10 +24,6 @@ void NearbyVehicle::set_type(int type)
 	The nearby vehicle type is only set if the nearby vehicle is 
 	also connected. */
 
-	/* Note: if we change the way of dealing with nearby vehicles and they are
-	no longer erased every time step, this function needs a little twitch 
-	to avoid re-setting the type at every time step. */
-
 	VehicleType temp_veh_type = VehicleType(type);
 	switch (temp_veh_type)
 	{
@@ -43,6 +39,12 @@ void NearbyVehicle::set_type(int type)
 	}
 }
 
+bool NearbyVehicle::is_connected() const {
+	return (type == VehicleType::connected_car
+		|| type == VehicleType::traffic_light_cacc_car
+		|| type == VehicleType::platoon_car);
+}
+
 double NearbyVehicle::compute_velocity(double ego_velocity) const {
 	return ego_velocity - relative_velocity;
 }
@@ -53,6 +55,10 @@ bool NearbyVehicle::is_on_same_lane() const {
 
 bool NearbyVehicle::is_immediatly_ahead() const {
 	return get_relative_position() == 1;
+}
+
+bool NearbyVehicle::is_immediatly_behind() const {
+	return get_relative_position() == -1;
 }
 
 bool NearbyVehicle::is_ahead() const {
@@ -68,8 +74,8 @@ bool NearbyVehicle::is_lane_changing() const {
 }
 
 bool NearbyVehicle::is_cutting_in() const {
-	if (is_ahead()
-		&& (is_lane_changing())) {
+	if (is_ahead() && (is_lane_changing())) 
+	{
 		/* The nearby vehicle must be changing lanes towards the ego vehicle
 		(that's the first part of the condition below)
 		The first condition alone could misidentify the case where a vehicle
@@ -86,29 +92,21 @@ bool NearbyVehicle::is_cutting_in() const {
 	return false;
 }
 
-bool NearbyVehicle::is_requesting_to_merge_ahead() const {
-	if (is_connected() && is_immediatly_ahead() 
+bool NearbyVehicle::is_requesting_to_merge_ahead() const 
+{
+	return is_connected() 
 		&& has_lane_change_intention()
-		&& (relative_lane == desired_lane_change_direction.get_opposite())) {
-		return true;
-	}
-	return false;
+		&& is_immediatly_ahead()
+		&& (relative_lane == desired_lane_change_direction.get_opposite());
 }
 
-bool NearbyVehicle::is_requesting_to_merge_behind() const {
-	if (is_connected() && is_behind() && has_lane_change_intention()
+bool NearbyVehicle::is_requesting_to_merge_behind() const 
+{
+	return is_connected() 
+		&& has_lane_change_intention() 
+		&& is_behind()
 		&& (relative_lane == desired_lane_change_direction.get_opposite()
-			|| relative_lane == RelativeLane::same)) {
-		return true;
-	}
-	return false;
-}
-
-void NearbyVehicle::compute_safe_gap_parameters() {
-	lambda_0 = compute_lambda_0(max_jerk, comfortable_acceleration, 
-		max_brake, brake_delay);
-	lambda_1 = compute_lambda_1(max_jerk, comfortable_acceleration,
-		max_brake, brake_delay);
+			|| relative_lane == RelativeLane::same);
 }
 
 void NearbyVehicle::read_lane_change_request(long lane_change_request) {
@@ -117,6 +115,13 @@ void NearbyVehicle::read_lane_change_request(long lane_change_request) {
 		- (lane_change_request < 0);
 	set_desired_lane_change_direction(request_sign);
 	lane_change_request_veh_id = std::abs(lane_change_request);
+}
+
+double NearbyVehicle::estimate_desired_time_headway(double free_flow_velocity,
+	double leader_max_brake, double rho, double risk) const
+{
+	return compute_time_headway_with_risk(free_flow_velocity, get_max_brake(), 
+		leader_max_brake, lambda_1, rho, risk);
 }
 
 std::string NearbyVehicle::to_string() const {
@@ -132,19 +137,19 @@ std::string NearbyVehicle::to_string() const {
 		oss << member_to_string.at(m) << "=";
 		switch (m) {
 		case Member::id:
-			oss << id;
+			oss << get_id();
 			break;
 		case Member::length:
-			oss << length;
+			oss << get_length();
 			break;
 		case Member::width:
-			oss << width;
+			oss << get_width();
 			break;
 		case Member::category:
-			oss << static_cast<int>(category);
+			oss << static_cast<int>(get_category());
 			break;
 		case Member::type:
-			oss << static_cast<int>(type);
+			oss << static_cast<int>(get_type());
 			break;
 		case Member::relative_lane:
 			oss << relative_lane.to_string();

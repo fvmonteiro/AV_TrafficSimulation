@@ -7,6 +7,7 @@
 
 /* Forward declaration */
 class EgoVehicle;
+class TrafficLightACCVehicle;
 
 class LongitudinalControllerWithTrafficLights
 {
@@ -31,7 +32,8 @@ public:
 		std::unordered_map<State, double>& possible_accelerations);
 	bool compute_velocity_control_input(const EgoVehicle& ego_vehicle,
 		std::unordered_map<State, double>& possible_accelerations);
-	bool compute_traffic_light_input(const EgoVehicle& ego_vehicle,
+	bool compute_traffic_light_input(
+		const TrafficLightACCVehicle& ego_vehicle,
 		const std::unordered_map<int, TrafficLight>& traffic_lights,
 		std::unordered_map<State, double>& possible_accelerations);
 
@@ -59,18 +61,20 @@ private:
 	bool verbose{ false };
 
 	void compute_traffic_light_input_parameters(
-		const EgoVehicle& ego_vehicle,
+		const TrafficLightACCVehicle& ego_vehicle,
 		const std::unordered_map<int, TrafficLight>& traffic_lights);
 	double compute_gap_error_to_next_traffic_light(
 		double distance_to_traffic_light, double ego_vel);
-	double compute_transient_safe_set(const EgoVehicle& ego_vehicle,
+	double compute_transient_safe_set(const TrafficLightACCVehicle& ego_vehicle,
 		const std::unordered_map<int, TrafficLight>& traffic_lights);
 
 	/* Some version before arriving at the chosen 
 	compute_transient_safe_set method above. */
-	double compute_transient_safe_set_all_space(const EgoVehicle& ego_vehicle,
+	double compute_transient_safe_set_all_space(
+		const TrafficLightACCVehicle& ego_vehicle,
 		const std::unordered_map<int, TrafficLight>& traffic_lights);
-	double compute_transient_safe_set_amber_light(const EgoVehicle& ego_vehicle,
+	double compute_transient_safe_set_amber_light(
+		const TrafficLightACCVehicle& ego_vehicle,
 		const std::unordered_map<int, TrafficLight>& traffic_lights);
 };
 

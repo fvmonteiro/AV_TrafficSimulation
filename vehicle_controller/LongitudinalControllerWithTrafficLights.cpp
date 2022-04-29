@@ -2,6 +2,7 @@
 
 #include "EgoVehicle.h"
 #include "LongitudinalControllerWithTrafficLights.h"
+#include "TrafficLightACCVehicle.h"
 
 LongitudinalControllerWithTrafficLights::
 LongitudinalControllerWithTrafficLights(bool verbose):
@@ -41,7 +42,7 @@ bool LongitudinalControllerWithTrafficLights
 	//		<< std::endl;
 	//}
 
-	if (ego_vehicle.is_connected() && leader->is_connected())
+	if (ego_vehicle.get_is_connected() && leader->is_connected())
 	{
 		//if (verbose) std::clog << "connected" << std::endl;
 		possible_accelerations[State::vehicle_following] =
@@ -74,7 +75,7 @@ bool LongitudinalControllerWithTrafficLights
 }
 
 bool LongitudinalControllerWithTrafficLights
-::compute_traffic_light_input(const EgoVehicle& ego_vehicle,
+::compute_traffic_light_input(const TrafficLightACCVehicle& ego_vehicle,
 	const std::unordered_map<int, TrafficLight>& traffic_lights,
 	std::unordered_map<State, double>& possible_accelerations)
 {
@@ -178,7 +179,8 @@ std::string LongitudinalControllerWithTrafficLights::mode_to_string(
 }
 
 void LongitudinalControllerWithTrafficLights
-::compute_traffic_light_input_parameters(const EgoVehicle& ego_vehicle,
+::compute_traffic_light_input_parameters(
+	const TrafficLightACCVehicle& ego_vehicle,
 	const std::unordered_map<int, TrafficLight>& traffic_lights)
 {
 	int next_traffic_light_id = ego_vehicle.get_next_traffic_light_id();
@@ -197,7 +199,64 @@ void LongitudinalControllerWithTrafficLights
 }
 
 double LongitudinalControllerWithTrafficLights::
-compute_transient_safe_set_amber_light(const EgoVehicle& ego_vehicle,
+compute_transient_safe_set(const TrafficLightACCVehicle& ego_vehicle,
+	const std::unordered_map<int, TrafficLight>& traffic_lights)
+{
+	int next_traffic_light_id = ego_vehicle.get_next_traffic_light_id();
+
+	TrafficLight next_traffic_light =
+		traffic_lights.at(next_traffic_light_id);
+	double distance_between_traffic_lights;
+	int next_next_traffic_light_id = next_traffic_light_id + 1;
+	if (traffic_lights.find(next_next_traffic_light_id) !=
+		traffic_lights.end())
+	{
+		distance_between_traffic_lights =
+			traffic_lights.at(next_next_traffic_light_id).get_position()
+			- next_traffic_light.get_position();
+	}
+	else
+	{
+		//Any large value
+		distance_between_traffic_lights = 1000;
+	}
+
+	double ht;
+	if (next_traffic_light.get_current_state() == TrafficLight::State::red)
+	{
+		ht = 0;
+		dht = 0;
+	}
+	else
+	{
+		double lambda0 = beta * comfortable_braking;
+		double time = ego_vehicle.get_time();
+		double next_red_time = next_traffic_light.get_time_of_next_red();
+		ht = -lambda0 * (time - next_red_time);
+		dht = -lambda0;
+		if (ht > distance_between_traffic_lights)
+		{
+			ht = distance_between_traffic_lights;
+			dht = 0;
+		}
+	}
+	return ht;
+}
+
+double LongitudinalControllerWithTrafficLights::
+compute_gap_error_to_next_traffic_light(double distance_to_traffic_light,
+	double ego_vel)
+{
+	/* hx is like the safe gap/ safe distance to the traffic light */
+	double hx = distance_to_traffic_light - beta * ego_vel
+		- standstill_distance
+		- std::pow(ego_vel, 2) / 2 / comfortable_braking;
+	return hx;
+}
+
+double LongitudinalControllerWithTrafficLights::
+compute_transient_safe_set_amber_light(
+	const TrafficLightACCVehicle& ego_vehicle,
 	const std::unordered_map<int, TrafficLight>& traffic_lights)
 {
 	int next_traffic_light_id = ego_vehicle.get_next_traffic_light_id();
@@ -263,9 +322,9 @@ compute_transient_safe_set_amber_light(const EgoVehicle& ego_vehicle,
 	return ht;
 }
 
-
 double LongitudinalControllerWithTrafficLights::
-compute_transient_safe_set_all_space(const EgoVehicle& ego_vehicle,
+compute_transient_safe_set_all_space(
+	const TrafficLightACCVehicle& ego_vehicle,
 	const std::unordered_map<int, TrafficLight>& traffic_lights)
 {
 	int next_traffic_light_id = ego_vehicle.get_next_traffic_light_id();
@@ -286,7 +345,7 @@ compute_transient_safe_set_all_space(const EgoVehicle& ego_vehicle,
 		//Any large value
 		distance_between_traffic_lights = 1000;
 	}
-	
+
 	double ht;
 	if (next_traffic_light.get_current_state() == TrafficLight::State::red)
 	{
@@ -304,7 +363,7 @@ compute_transient_safe_set_all_space(const EgoVehicle& ego_vehicle,
 		double next_red_time = next_traffic_light.get_time_of_next_red();
 		double t0 = std::max(time_crossed_last_traffic_light,
 			last_time_next_traffic_light_became_green);
-		double t01 = next_red_time - t0; /* available time to converge to 
+		double t01 = next_red_time - t0; /* available time to converge to
 										 safe set of next traffic light */
 		double lambda = distance_between_traffic_lights / t01;
 		double min_lambda = std::min(lambda, lambda0);
@@ -322,60 +381,4 @@ compute_transient_safe_set_all_space(const EgoVehicle& ego_vehicle,
 	}*/
 
 	return ht;
-}
-
-double LongitudinalControllerWithTrafficLights::
-compute_transient_safe_set(const EgoVehicle& ego_vehicle,
-	const std::unordered_map<int, TrafficLight>& traffic_lights)
-{
-	int next_traffic_light_id = ego_vehicle.get_next_traffic_light_id();
-
-	TrafficLight next_traffic_light =
-		traffic_lights.at(next_traffic_light_id);
-	double distance_between_traffic_lights;
-	int next_next_traffic_light_id = next_traffic_light_id + 1;
-	if (traffic_lights.find(next_next_traffic_light_id) !=
-		traffic_lights.end())
-	{
-		distance_between_traffic_lights =
-			traffic_lights.at(next_next_traffic_light_id).get_position()
-			- next_traffic_light.get_position();
-	}
-	else
-	{
-		//Any large value
-		distance_between_traffic_lights = 1000;
-	}
-
-	double ht;
-	if (next_traffic_light.get_current_state() == TrafficLight::State::red)
-	{
-		ht = 0;
-		dht = 0;
-	}
-	else
-	{
-		double lambda0 = beta * comfortable_braking;
-		double time = ego_vehicle.get_time();
-		double next_red_time = next_traffic_light.get_time_of_next_red();
-		ht = -lambda0 * (time - next_red_time);
-		dht = -lambda0;
-		if (ht > distance_between_traffic_lights)
-		{
-			ht = distance_between_traffic_lights;
-			dht = 0;
-		}
-	}
-	return ht;
-}
-
-double LongitudinalControllerWithTrafficLights::
-compute_gap_error_to_next_traffic_light(double distance_to_traffic_light,
-	double ego_vel)
-{
-	/* hx is like the safe gap/ safe distance to the traffic light */
-	double hx = distance_to_traffic_light - beta * ego_vel
-		- standstill_distance
-		- std::pow(ego_vel, 2) / 2 / comfortable_braking;
-	return hx;
 }
