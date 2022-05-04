@@ -250,6 +250,7 @@
     <ClCompile Include="PlatoonVehicle.cpp" />
     <ClCompile Include="RelativeLane.cpp" />
     <ClCompile Include="AutonomousVehicle.cpp" />
+    <ClCompile Include="SwitchedLongitudinalController.cpp" />
     <ClCompile Include="TrafficLight.cpp" />
     <ClCompile Include="TrafficLightACCVehicle.cpp" />
     <ClCompile Include="TrafficLightFileReader.cpp" />
@@ -273,7 +274,7 @@
     <ClCompile Include="SimulationLogger.cpp" />
     <ClCompile Include="EgoVehicle.cpp" />
     <ClCompile Include="Vehicle.cpp" />
-    <ClCompile Include="VehicleFollowingController.cpp" />
+    <ClCompile Include="GapController.cpp" />
     <ClCompile Include="VelocityController.cpp" />
     <ClCompile Include="VariationLimitedFilter.cpp" />
   </ItemGroup>
@@ -286,6 +287,7 @@
     <ClInclude Include="LongitudinalControllerWithTrafficLights.h" />
     <ClInclude Include="PlatoonVehicle.h" />
     <ClInclude Include="RelativeLane.h" />
+    <ClInclude Include="SwitchedLongitudinalController.h" />
     <ClInclude Include="TrafficLight.h" />
     <ClInclude Include="TrafficLightACCVehicle.h" />
     <ClInclude Include="TrafficLightFileReader.h" />
@@ -299,7 +301,7 @@
     <ClInclude Include="SimulationLogger.h" />
     <ClInclude Include="EgoVehicle.h" />
     <ClInclude Include="Vehicle.h" />
-    <ClInclude Include="VehicleFollowingController.h" />
+    <ClInclude Include="GapController.h" />
     <ClInclude Include="VelocityController.h" />
     <ClInclude Include="VariationLimitedFilter.h" />
   </ItemGroup>

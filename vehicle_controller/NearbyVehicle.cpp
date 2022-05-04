@@ -40,6 +40,10 @@ void NearbyVehicle::set_type(int type)
 }
 
 bool NearbyVehicle::is_connected() const {
+	/* The nearby vehicle type is only set if the ego vehicle is 
+	connected. So this function returns false when called by a non
+	connected vehicle. */
+
 	return (type == VehicleType::connected_car
 		|| type == VehicleType::traffic_light_cacc_car
 		|| type == VehicleType::platoon_car);
@@ -120,8 +124,8 @@ void NearbyVehicle::read_lane_change_request(long lane_change_request) {
 double NearbyVehicle::estimate_desired_time_headway(double free_flow_velocity,
 	double leader_max_brake, double rho, double risk) const
 {
-	return compute_time_headway_with_risk(free_flow_velocity, get_max_brake(), 
-		leader_max_brake, lambda_1, rho, risk);
+	return compute_time_headway_with_risk(free_flow_velocity, 
+		get_max_brake(), leader_max_brake, get_lambda_1(), rho, risk);
 }
 
 std::string NearbyVehicle::to_string() const {

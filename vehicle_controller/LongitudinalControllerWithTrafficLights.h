@@ -24,7 +24,7 @@ public:
 	LongitudinalControllerWithTrafficLights(bool verbose);
 
 	State get_state() const { return active_mode; };
-	double get_h1() const { return h1; };
+	double get_h1() const { return gap_error; };
 
 	double get_nominal_input(
 		std::unordered_map<State, double>& possible_accelerations);
@@ -55,7 +55,7 @@ private:
 	double comfortable_braking{ 4.0 }; // [m/s2] absolute value
 	double veh_foll_gain{ 2.0 };
 	double vel_control_gain{ 1.0 };
-	double h1{ 0.0 };  // [m] "gap error" considering relative velocity
+	double gap_error{ 0.0 };  // [m] "gap error" considering relative velocity
 	double beta{ 4.0 }; // 2.0, desired_vel / comfortable_braking + 1
 	double h3{ 0.0 }, dht{ 0.0 }, dhx{ 0.0 };
 	bool verbose{ false };

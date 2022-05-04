@@ -17,6 +17,8 @@ public:
 	long get_id() const { return id; };
 	double get_length() const { return length; };
 	double get_width() const { return width; };
+	double get_lambda_1() const { return lambda_1; };
+	double get_lambda_0() const { return lambda_0; };
 	VehicleCategory get_category() const { return category; };
 	VehicleType get_type() const { return type; };
 	RelativeLane get_desired_lane_change_direction() const {
@@ -60,11 +62,6 @@ protected:
 	VehicleCategory category{ VehicleCategory::undefined };
 	VehicleType type{ VehicleType::undefined };
 
-	/* Parameter related to the emergency braking scenario [m] */
-	double lambda_0{ 0.0 };
-	/* Parameter related to the emergency braking scenario [m/s] */
-	double lambda_1{ 0.0 };
-
 	RelativeLane desired_lane_change_direction{ RelativeLane::same };
 
 	/* Desired time headway */
@@ -76,5 +73,9 @@ private:
 	long id;
 	double length{ 0.0 }; // [m]
 	double width{ 0.0 }; // [m]
+	/* Parameter related to the emergency braking scenario [m] */
+	double lambda_0{ 0.0 };
+	/* Parameter related to the emergency braking scenario [m/s] */
+	double lambda_1{ 0.0 };
 };
 

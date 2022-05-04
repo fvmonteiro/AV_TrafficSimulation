@@ -231,7 +231,7 @@ void AutonomousVehicle::update_destination_lane_leader(
 		{
 			controller.activate_destination_lane_controller(get_velocity(),
 				compute_lane_changing_desired_time_headway(
-					new_leader_max_brake, is_new_leader_connected), 
+					*destination_lane_leader), 
 				is_new_leader_connected);
 		}
 		else if ((std::abs(new_leader_max_brake 
@@ -241,21 +241,28 @@ void AutonomousVehicle::update_destination_lane_leader(
 		{
 			controller.update_destination_lane_controller(get_velocity(),
 				compute_lane_changing_desired_time_headway(
-					new_leader_max_brake, is_new_leader_connected), 
+					*destination_lane_leader), 
 				is_new_leader_connected);
 		}
 	}
-	//destination_lane_leader = new_leader;
-	//dest_lane_leader_id = new_leader_id; /* possibly not needed anymore */
+}
 
-	/*const double old_id = dest_lane_leader_id;
-	if (has_destination_lane_leader() &&
-		destination_lane_leader->get_id() != old_id)
-	{
-		controller.update_destination_lane_leader(get_velocity(),
-			*destination_lane_leader);
-		dest_lane_follower_id = destination_lane_follower->get_id();
-	}*/
+double AutonomousVehicle::compute_current_desired_time_headway(
+	const NearbyVehicle& leader)
+{
+	double current_lambda_1 = has_lane_change_intention() ?
+		lambda_1_lane_change : get_lambda_1();
+	return compute_time_headway_with_risk(get_desired_velocity(),
+		get_current_max_brake(), leader.get_max_brake(),
+		current_lambda_1, get_rho(), 0);
+}
+
+double AutonomousVehicle::compute_lane_changing_desired_time_headway(
+	const NearbyVehicle& leader)
+{
+	return compute_time_headway_with_risk(get_desired_velocity(),
+		get_lane_change_max_brake(), leader.get_max_brake(),
+		lambda_1_lane_change, get_rho(), 0);
 }
 
 /* TODO: not yet sure whether this function should belong in this class 
@@ -328,12 +335,6 @@ bool AutonomousVehicle::is_lane_change_gap_safe(
 	double margin = 0.1;
 	return (compute_gap(nearby_vehicle) + margin)
 		>= compute_safe_lane_change_gap(nearby_vehicle);
-}
-
-double AutonomousVehicle::get_current_lambda_1(
-	bool is_other_connected) const
-{
-	return has_lane_change_intention() ? lambda_1_lane_change : lambda_1;
 }
 
 void AutonomousVehicle::compute_lane_change_gap_parameters()

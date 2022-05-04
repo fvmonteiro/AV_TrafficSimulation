@@ -7,27 +7,29 @@
 /*==========================================================================*/
 
 #pragma once
-#include "LongitudinalController.h"
+#include "SwitchedLongitudinalController.h"
 
 /* Longitudinal controller to follow a virtual leader, that is,
 a vehicle on a different lane. This controller is not as aggressive as the
 RealLongitudinalController, since it is not safety critical, and it
 is deactivated if there is no virtual leader. */
 class VirtualLongitudinalController :
-    public LongitudinalController
+    public SwitchedLongitudinalController
 {
 public:
 
     VirtualLongitudinalController();
     VirtualLongitudinalController(
-        const VehicleParameters& ego_parameters,
+        const EgoVehicle& ego_vehicle,
         VelocityControllerGains velocity_controller_gains,
-        AutonomousGains autonomous_gains, ConnectedGains connected_gains, 
+        AutonomousGains autonomous_gains, ConnectedGains connected_gains,
+        double velocity_filter_gain, double time_headway_filter_gain,
         bool verbose);
     VirtualLongitudinalController(
-        const VehicleParameters& ego_parameters, 
+        const EgoVehicle& ego_vehicle,
         VelocityControllerGains velocity_controller_gains,
-        AutonomousGains autonomous_gains, ConnectedGains connected_gains);
+        AutonomousGains autonomous_gains, ConnectedGains connected_gains,
+        double velocity_filter_gain, double time_headway_filter_gain);
 
     double get_follower_time_headway() const {
         return follower_time_headway;
@@ -43,9 +45,9 @@ public:
     //void set_reference_velocity(double reference_velocity, double ego_velocity);
     //void set_reference_velocity(double ego_velocity, double adjustment_speed_factor);
 
-    virtual void determine_controller_state(const EgoVehicle& ego_vehicle,
+    void determine_controller_state(const EgoVehicle& ego_vehicle,
         const std::shared_ptr<NearbyVehicle> leader,
-        double reference_velocity) override;
+        double reference_velocity, double gap_control_input) override;
     bool is_active() const;
     /* Checks whether the filtered reference velocity is greater than
     the ego velocity. Method should only be called when the 

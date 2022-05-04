@@ -20,7 +20,7 @@
 
 /*==========================================================================*/
 
-const std::unordered_set<long> LOGGED_VEHICLES_IDS{ 5 };
+const std::unordered_set<long> LOGGED_VEHICLES_IDS{ 7 };
 const bool CLUELESS_DEBUGGING{ false };
 //const double DEBUGGING_START_TIME{ 249.0 };
 
@@ -666,11 +666,16 @@ DRIVERMODEL_API  int  DriverModelExecuteCommand (long number)
     {
         /* This is executed after all the set commands and before
         any get command. */
-        if (CLUELESS_DEBUGGING) std::clog << "Updating states" << std::endl;
+        if (CLUELESS_DEBUGGING) {
+            std::clog << "Updating states" << std::endl;
+        }
         vehicles[current_vehicle_id]->update_state();
-        if (CLUELESS_DEBUGGING) std::clog << "Analyzing nearby vehicles" << std::endl;
+        
+        if (CLUELESS_DEBUGGING)
+        {
+            std::clog << "Analyzing nearby vehicles" << std::endl;
+        }
         vehicles[current_vehicle_id]->analyze_nearby_vehicles();
-        //vehicles[current_vehicle_id]->compute_all_ssms();
         return 1;
     }
     default :

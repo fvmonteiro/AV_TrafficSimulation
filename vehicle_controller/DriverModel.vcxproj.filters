@@ -25,8 +25,7 @@
     <ClCompile Include="Vehicle.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="VehicleFollowingController.cpp" />
-    <ClCompile Include="VelocityController.cpp" />
+    <ClCompile Include="GapController.cpp" />
     <ClCompile Include="RealLongitudinalController.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -63,6 +62,12 @@
     <ClCompile Include="AutonomousVehicle.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="SwitchedLongitudinalController.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="VelocityController.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ControlManager.h">
@@ -92,8 +97,7 @@
     <ClInclude Include="Constants.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="VehicleFollowingController.h" />
-    <ClInclude Include="VelocityController.h" />
+    <ClInclude Include="GapController.h" />
     <ClInclude Include="VirtualLongitudinalController.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -131,6 +135,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="AutonomousVehicle.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SwitchedLongitudinalController.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="VelocityController.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

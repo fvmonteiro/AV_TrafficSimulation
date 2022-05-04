@@ -16,7 +16,7 @@
 //#include "ConnectedAutonomousVehicle.h"
 //#include "TrafficLightACCVehicle.h"
 #include "LateralController.h"
-#include "LongitudinalController.h"
+#include "SwitchedLongitudinalController.h"
 #include "LongitudinalControllerWithTrafficLights.h"
 #include "RealLongitudinalController.h"
 #include "VirtualLongitudinalController.h"
@@ -41,15 +41,16 @@ public:
 	};
 
 	ControlManager() = default;
-	ControlManager(const VehicleParameters& vehicle_parameters, bool verbose);
-	ControlManager(const VehicleParameters& vehicle_parameters);
+	ControlManager(const EgoVehicle& ego_vehicle, bool verbose);
+	ControlManager(const EgoVehicle& ego_vehicle);
 
 	//std::vector<State> get_states() { return states; };
 	ACCType get_active_longitudinal_controller() const {
 		return active_longitudinal_controller;
 	}
 
-	LongitudinalController::State get_longitudinal_controller_state();
+	SwitchedLongitudinalController::State 
+		get_longitudinal_controller_state() const;
 	LongitudinalControllerWithTrafficLights::State 
 		get_longitudinal_controller_with_traffic_lights_state();
 	//void create_destination_lane_controller(const Vehicle& ego_vehicle);
@@ -77,11 +78,13 @@ public:
 	const LateralController& get_lateral_controller() const {
 		return lateral_controller;
 	};
-	double get_reference_gap(double ego_velocity,
-		bool has_lane_change_intention); /* could be const */
-	double get_gap_error() const;
+	double get_reference_gap(double ego_velocity); /* could be const */
+	double get_gap_error(VehicleType type) const;
 
 	/* ----------------------------------------------------------------------- */
+
+	/* Extracts and stores the static vehicle parameters */
+	//void extract_vehicle_static_parameters(const EgoVehicle& ego_vehicle);
 
 	/* Computes the deceleration rate to avoid collision */
 	double compute_drac(double relative_velocity, double gap);
@@ -153,7 +156,7 @@ public:
 	double compute_safe_lane_change_gap(const EgoVehicle& ego_vehicle, 
 		const NearbyVehicle& other_vehicle, bool will_accelerate = false);
 	/* Returns the time headway part of the safe lane change gap. */
-	double compute_safe_time_headway_gap(double ego_velocity,
+	double get_safe_time_headway_gap(double ego_velocity,
 		bool has_lane_change_intention, const NearbyVehicle& other_vehicle);
 
 	/* Resets accepted risk and risk timer */
@@ -170,18 +173,21 @@ public:
 		ACCType active_longitudinal_controller);
 
 private:
-	VehicleParameters ego_parameters;
-	double min_overtaking_rel_vel{ 10.0 / 3.6 };
+	/* ------------ Control Parameters ------------ */
 
+	double min_overtaking_rel_vel{ 10.0 / 3.6 };
+	double velocity_filter_gain{ 10.0 };
+	double time_headway_filter_gain{ 0.3 };
 	AutonomousGains autonomous_real_following_gains{ 0.2, 1.0 };
 	AutonomousGains autonomous_virtual_following_gains{ 0.4, 1.0 };
 	ConnectedGains connected_real_following_gains{ 0.2, 2.3, 0.13, 1.3 };
 	ConnectedGains connected_virtual_following_gains{ 0.4, 2.3, 0.13, 1.3 };
-	VelocityControllerGains desired_velocity_controller_gains{ 
+	VelocityControllerGains desired_velocity_controller_gains{
 		0.5, 0.1, 0.03 };
 	VelocityControllerGains adjustment_velocity_controller_gains{
 		1, 0.1, 0.03 };
-
+	/* -------------------------------------------- */
+	
 	RealLongitudinalController origin_lane_controller;
 	RealLongitudinalController end_of_lane_controller;
 	VirtualLongitudinalController destination_lane_controller;
@@ -206,13 +212,13 @@ private:
 
 	/* Initializing controllers */
 
-	void create_acc_controllers(const VehicleParameters& vehicle_parameters,
+	void create_acc_controllers(const EgoVehicle& ego_vehicle,
 		bool verbose);
 	void create_lane_change_adjustment_controller(
-		const VehicleParameters& vehicle_parameters,
+		const EgoVehicle& ego_vehicle,
 		bool verbose);
 	void create_cooperative_lane_change_controller(
-		const VehicleParameters& vehicle_parameters,
+		const EgoVehicle& ego_vehicle,
 		bool verbose);
 
 	/* Gets the minimum of the accelerations in the map and sets the

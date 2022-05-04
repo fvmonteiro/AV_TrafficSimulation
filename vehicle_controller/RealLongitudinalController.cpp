@@ -10,29 +10,34 @@
 #include "EgoVehicle.h"
 
 RealLongitudinalController::RealLongitudinalController() :
-	LongitudinalController() {}
+	SwitchedLongitudinalController() {}
 
 RealLongitudinalController::RealLongitudinalController(
-	const VehicleParameters& ego_parameters,
+	const EgoVehicle& ego_vehicle,
 	VelocityControllerGains velocity_controller_gains,
-	AutonomousGains autonomous_gains, ConnectedGains connected_gains, 
+	AutonomousGains autonomous_gains, ConnectedGains connected_gains,
+	double velocity_filter_gain, double time_headway_filter_gain,
 	bool verbose) :
-	LongitudinalController(ego_parameters, velocity_controller_gains,
-		autonomous_gains, connected_gains,
-		ego_parameters.max_brake, verbose) {
-
-	if (verbose) {
+	SwitchedLongitudinalController(velocity_controller_gains,
+		autonomous_gains, connected_gains, velocity_filter_gain, 
+		time_headway_filter_gain, ego_vehicle.get_max_brake(), 
+		ego_vehicle.get_comfortable_acceleration(),
+		ego_vehicle.get_sampling_interval(), verbose)
+{
+	if (verbose) 
+	{
 		std::clog << "Created real longitudinal controller" << std::endl;
 	}
 }
 
 RealLongitudinalController::RealLongitudinalController(
-	const VehicleParameters& ego_parameters,
+	const EgoVehicle& ego_vehicle,
 	VelocityControllerGains velocity_controller_gains,
-	AutonomousGains autonomous_gains, ConnectedGains connected_gains) :
-	RealLongitudinalController(ego_parameters, velocity_controller_gains,
-		autonomous_gains, connected_gains, false) {
-}
+	AutonomousGains autonomous_gains, ConnectedGains connected_gains,
+	double velocity_filter_gain, double time_headway_filter_gain) :
+	RealLongitudinalController(ego_vehicle,
+		velocity_controller_gains, autonomous_gains, connected_gains,
+		velocity_filter_gain, time_headway_filter_gain, false) {}
 
 //OriginLaneLongitudinalController::OriginLaneLongitudinalController(
 //	const EgoVehicle& ego_vehicle, double kg, double kv, bool verbose)
@@ -41,14 +46,16 @@ RealLongitudinalController::RealLongitudinalController(
 //}
 
 void RealLongitudinalController::update_leader_velocity_filter(
-	double leader_velocity) {
-	leader_velocity_filter.apply_filter(leader_velocity);
+	double leader_velocity) 
+{
+	gap_controller.update_leader_velocity_filter(leader_velocity);
+	//leader_velocity_filter.apply_filter(leader_velocity);
 }
 
 void RealLongitudinalController::determine_controller_state(
 	const EgoVehicle& ego_vehicle,
 	const std::shared_ptr<NearbyVehicle> leader,
-	double reference_velocity) {
+	double reference_velocity, double gap_control_input) {
 
 	if (leader == nullptr) // no vehicle ahead
 	{ 
@@ -56,32 +63,21 @@ void RealLongitudinalController::determine_controller_state(
 	}
 	else 
 	{
-		bool has_lane_change_intention = ego_vehicle.has_lane_change_intention();
-		double gap = ego_vehicle.compute_gap(leader);
-		//double gap = ego_vehicle.compute_gap(leader);
+		/*double gap = ego_vehicle.compute_gap(leader);
 		double ego_velocity = ego_vehicle.get_velocity();
 		double leader_velocity = leader->compute_velocity(ego_velocity);
 		double velocity_error = compute_velocity_error(
 			ego_velocity, leader_velocity);
+		double gap_threshold = gap_controller.compute_gap_threshold(
+			reference_velocity, velocity_error,
+			ego_vehicle.get_acceleration(), leader->get_acceleration()
+		);*/
+		double gap = ego_vehicle.compute_gap(leader);
+		double ego_velocity = ego_vehicle.get_velocity();
+		double leader_velocity = leader->compute_velocity(ego_velocity);
+		double gap_threshold = compute_gap_threshold(gap,
+			reference_velocity - ego_velocity, gap_control_input);
 
-		double gap_threshold;
-		if (is_connected) {
-			double ego_acceleration = ego_vehicle.get_acceleration();
-			gap_threshold = compute_gap_threshold(
-				reference_velocity,
-				velocity_error, 
-				estimate_gap_error_derivative(velocity_error, 
-					ego_acceleration, has_lane_change_intention),
-				compute_acceleration_error(ego_acceleration,
-					leader->get_acceleration()),
-				has_lane_change_intention
-			);
-		}
-		else 
-		{
-			gap_threshold = compute_gap_threshold(
-				reference_velocity, velocity_error, has_lane_change_intention);
-		}
 		if (state == State::vehicle_following) 
 		{
 			gap_threshold += hysteresis_bias;

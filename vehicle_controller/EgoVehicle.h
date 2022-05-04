@@ -43,8 +43,6 @@ public:
 	double get_comfortable_brake() const { return comfortable_brake; };
 	double get_max_jerk() const { return max_jerk; };
 	double get_brake_delay() const { return brake_delay; };
-	double get_lambda_1() const { return lambda_1; };
-	/*double get_lambda_1_lane_change() const { return lambda_1_lane_change; };*/
 	double get_desired_lane_angle() const { return desired_lane_angle; };
 	int get_relative_target_lane() const { 
 		return relative_target_lane.to_int();
@@ -56,7 +54,7 @@ public:
 	};
 	bool get_is_connected() const { return is_connected; };
 	/* Proportional maximum expected relative speed */
-	double get_rho() const { return rho; };
+	//double get_rho() const { return rho; };
 
 	void set_desired_velocity(double desired_velocity) {
 		this->desired_velocity = desired_velocity;
@@ -97,7 +95,6 @@ public:
 
 	/* Other getters and setters --------------------------------------------- */
 
-	VehicleParameters get_static_parameters() const;
 	/* Returns the desired velocity or the max road velocity */
 	double get_free_flow_velocity() const;
 
@@ -182,7 +179,8 @@ public:
 	scenario */
 	double compute_exact_collision_free_gap(
 		const NearbyVehicle& other_vehicle) const;
-	/* Relative velocity at collision time under the worst case scenario*/
+	/* Relative velocity at collision time under the worst case scenario
+	TODO: move to autonomous vehicle class */
 	double compute_collision_severity_risk(
 		const NearbyVehicle& other_vehicle) const;
 	double compute_collision_severity_risk_to_leader();
@@ -195,7 +193,7 @@ public:
 	//State get_previous_state() const;
 	/* Returns the color equivalent to the current state as a long */
 	long get_color_by_controller_state();
-	std::string print_detailed_state();
+	std::string print_detailed_state() const;
 	/* If the lane change decision is autonomous, but the vehicle takes
 	too long to find a suitable gap, we may want to give control to VISSM */
 	bool is_vissim_controlling_lane_change() const
@@ -215,7 +213,6 @@ public:
 
 	double compute_safe_lane_change_gap(
 		std::shared_ptr<NearbyVehicle> other_vehicle);
-	std::string state_to_string(State vehicle_state);
 
 	/* Methods to access internal values. Used for quicker debugging --------- */
 
@@ -243,20 +240,18 @@ protected:
 		double brake_delay, bool is_lane_change_autonomous, bool is_connected,
 		double simulation_time_step, double creation_time, bool verbose);
 
+	/*virtual double get_vehicle_following_lambda_1(
+		bool is_other_connected) const;*/
+	double get_rho() const { return rho; };
+	/* Checks whether vehicle is lane changing and returns proper value
+	TODO: move to autonomous vehicle class */
+	double get_current_max_brake() const;
 	/* Takes the desired acceleration given by the controller and
 	returns the feasible acceleration given the approximated low level
 	dynamics */
 	double consider_vehicle_dynamics(double desired_acceleration);
 	/* Updates the stopped time waiting for lane change */
 	void update_waiting_time();
-	double compute_current_desired_time_headway(
-		double nearby_vehicle_max_brake, bool is_nearby_vehicle_connected);
-	/* TODO: function still has a bug. We must ensure that lambda1 is chosen */
-	double compute_vehicle_following_desired_time_headway(
-		double nearby_vehicle_max_brake, bool is_nearby_vehicle_connected);
-	/* TODO: function still has a bug. We must ensure that lambda1_lc is chosen */
-	double compute_lane_changing_desired_time_headway(
-		double nearby_vehicle_max_brake, bool is_nearby_vehicle_connected);
 
 	ControlManager controller;
 	/* Keeps track of stopped time waiting for lane change */
@@ -307,14 +302,15 @@ private:
 	/* Finds the current leader */
 	virtual void find_relevant_nearby_vehicles();
 	virtual void set_desired_lane_change_direction();
-	virtual double get_current_lambda_1(
-		bool is_other_connected) const;
+	//virtual double get_current_lambda_1(
+	//	bool is_other_connected) const;
+	virtual double compute_current_desired_time_headway(
+		const NearbyVehicle& leader);
+	virtual double compute_vehicle_following_desired_time_headway(
+		const NearbyVehicle& leader);
 
 	bool check_if_is_leader(const NearbyVehicle& nearby_vehicle) const;
 	void update_leader(const std::shared_ptr<NearbyVehicle>& old_leader);
-
-	/* Checks whether vehicle is lane changing and returns proper value */
-	double get_current_max_brake() const;
 
 	/* Estimated parameters used for safe gap computations (no direct 
 	equivalent in VISSIM's simulation dynamics) --------------------------- */
@@ -410,6 +406,8 @@ private:
 	can become a single member. They are redundant. */
 	
 	/* For printing and debugging purporses ------------------------------- */
+	static const std::unordered_map<State, std::string> state_to_string_map;
+
 	std::string log_path = "autonomous_vehicle_logs";
 	enum class Member {
 		creation_time,

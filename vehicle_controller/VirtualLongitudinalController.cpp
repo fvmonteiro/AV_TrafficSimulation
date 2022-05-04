@@ -11,16 +11,20 @@
 #include "EgoVehicle.h"
 
 VirtualLongitudinalController::VirtualLongitudinalController() :
-	LongitudinalController() {}
+	SwitchedLongitudinalController() {}
 
 VirtualLongitudinalController::VirtualLongitudinalController(
-	const VehicleParameters& ego_parameters,
+	const EgoVehicle& ego_vehicle,
 	VelocityControllerGains velocity_controller_gains,
-	AutonomousGains autonomous_gains, ConnectedGains connected_gains, 
+	AutonomousGains autonomous_gains, ConnectedGains connected_gains,
+	double velocity_filter_gain, double time_headway_filter_gain,
 	bool verbose) :
-	LongitudinalController(ego_parameters, velocity_controller_gains,
+	SwitchedLongitudinalController(velocity_controller_gains,
 		autonomous_gains, connected_gains,
-		ego_parameters.comfortable_brake, verbose) {
+		velocity_filter_gain, time_headway_filter_gain,
+		ego_vehicle.get_comfortable_brake(), 
+		ego_vehicle.get_comfortable_acceleration(),
+		ego_vehicle.get_sampling_interval(), verbose) {
 
 	if (verbose) {
 		std::clog << "Created virtual longitudinal controller" << std::endl;
@@ -28,12 +32,13 @@ VirtualLongitudinalController::VirtualLongitudinalController(
 }
 
 VirtualLongitudinalController::VirtualLongitudinalController(
-	const VehicleParameters& ego_parameters, 
+	const EgoVehicle& ego_vehicle,
 	VelocityControllerGains velocity_controller_gains,
-	AutonomousGains autonomous_gains, ConnectedGains connected_gains) :
-	VirtualLongitudinalController(ego_parameters,
-		velocity_controller_gains, autonomous_gains, connected_gains, 
-		false) {}
+	AutonomousGains autonomous_gains, ConnectedGains connected_gains,
+	double velocity_filter_gain, double time_headway_filter_gain) :
+	VirtualLongitudinalController(ego_vehicle,
+		velocity_controller_gains, autonomous_gains, connected_gains,
+		velocity_filter_gain, time_headway_filter_gain, false) {}
 
 //void DestinationLaneLongitudinalController::set_reference_velocity(
 //	double reference_velocity, double ego_velocity) {
@@ -58,47 +63,41 @@ VirtualLongitudinalController::VirtualLongitudinalController(
 void VirtualLongitudinalController::determine_controller_state(
 	const EgoVehicle& ego_vehicle, 
 	const std::shared_ptr<NearbyVehicle> leader,
-	double reference_velocity) {
+	double reference_velocity, double gap_control_input) {
 
-	if (leader == nullptr) { // no vehicle ahead
+	if (leader == nullptr) 
+	{ // no vehicle ahead
 		/*If there's no leader this controller should not be active */
 		if (verbose) std::clog << "\tno leader" << std::endl;
 		state = State::uninitialized;
 	}
-	else {
-		bool has_lane_change_intention = ego_vehicle.has_lane_change_intention();
-		double ego_velocity = ego_vehicle.get_velocity();
+	else 
+	{
+		/*double ego_velocity = ego_vehicle.get_velocity();
 		double leader_velocity = leader->compute_velocity(ego_velocity);
 		double velocity_error = compute_velocity_error(
 			ego_velocity, leader_velocity);
-		double gap_threshold;
-		if (is_connected) {
-			double ego_acceleration = ego_vehicle.get_acceleration();
-			gap_threshold = compute_gap_threshold(
-				reference_velocity,
-				velocity_error, 
-				estimate_gap_error_derivative(velocity_error, 
-					ego_acceleration, has_lane_change_intention),
-				compute_acceleration_error(ego_acceleration,
-					leader->get_acceleration()),
-				has_lane_change_intention
-			);
-		}
-		else {
-			gap_threshold = compute_gap_threshold(
-				reference_velocity, velocity_error, has_lane_change_intention);
-		}
-
+		double gap_threshold = gap_controller.compute_gap_threshold(
+			reference_velocity, velocity_error,
+			ego_vehicle.get_acceleration(), leader->get_acceleration()
+		);*/
+		
 		double gap = ego_vehicle.compute_gap(leader);
+		double ego_velocity = ego_vehicle.get_velocity();
+		double gap_threshold = compute_gap_threshold(gap,
+			reference_velocity - ego_velocity, gap_control_input);
+
 		if (state == State::vehicle_following) {
 			gap_threshold -= hysteresis_bias;
 		}
 
 		if ((gap > gap_threshold) 
-			|| (ego_velocity < std::min(reference_velocity, 5.0))) {
+			|| (ego_velocity < std::min(reference_velocity, 5.0))) 
+		{
 			state = State::vehicle_following;
 		}
-		else {
+		else 
+		{
 			state = State::velocity_control;
 		}
 
@@ -114,37 +113,22 @@ void VirtualLongitudinalController::determine_controller_state(
 	}
 }
 
-bool VirtualLongitudinalController::is_active() const {
+bool VirtualLongitudinalController::is_active() const 
+{
 	return state != State::uninitialized;
 }
 
 bool VirtualLongitudinalController::is_outdated(
-	double ego_velocity) const {
-	return ego_velocity < desired_velocity_filter.get_current_value();
+	double ego_velocity) const 
+{
+	/*bool ret = ego_velocity < desired_velocity_filter.get_current_value();
+	bool new_value = ego_velocity < velocity_controller.get_reference_value();
+	if (ret != new_value)
+	{
+		std::clog << "is_outdated different results" << std::endl;
+	}*/
+	return ego_velocity < velocity_controller.get_reference_value();
 }
-
-//void VirtualLongitudinalController::estimate_follower_time_headway(
-//	const NearbyVehicle& follower, double ego_max_brake,
-//	double follower_free_flow_velocity) {
-//
-//	if (verbose) {
-//		std::clog << "Follower type: "
-//			<< static_cast<int>(follower.get_type()) << std::endl;
-//		std::clog << "Updating follower headway from "
-//			<< follower_time_headway;
-//	}
-//
-//	follower_time_headway = compute_time_headway_with_risk(
-//		follower_free_flow_velocity,
-//		follower.get_max_brake(), ego_max_brake,
-//		follower.get_lambda_1(), rho, accepted_risk_to_follower);
-//
-//	if (verbose) {
-//		std::clog << " to "
-//			<< follower_time_headway
-//			<< std::endl;
-//	}
-//}
 
 bool VirtualLongitudinalController::update_accepted_risk(
 	double time, const EgoVehicle& ego_vehicle) {
@@ -205,16 +189,18 @@ bool VirtualLongitudinalController::update_accepted_risk(
 //	}
 //}
 
-void VirtualLongitudinalController::reset_accepted_risks() {
+void VirtualLongitudinalController::reset_accepted_risks() 
+{
 	accepted_risk_to_leader = initial_risk;
 	accepted_risk_to_follower = initial_risk;
 }
 
-void VirtualLongitudinalController::compute_max_risk_to_follower(
-	double follower_max_brake) {
-	max_risk_to_follower = std::sqrt(
-		2 * follower_time_headway 
-		* follower_max_brake * free_flow_velocity);
-	if (verbose) std::clog << "max risk to follower=" 
-		<< max_risk_to_follower << std::endl;
-}
+//void VirtualLongitudinalController::compute_max_risk_to_follower(
+//	double follower_max_brake) 
+//{
+//	max_risk_to_follower = std::sqrt(
+//		2 * follower_time_headway 
+//		* follower_max_brake * free_flow_velocity);
+//	if (verbose) std::clog << "max risk to follower=" 
+//		<< max_risk_to_follower << std::endl;
+//}

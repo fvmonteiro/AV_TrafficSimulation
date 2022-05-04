@@ -53,8 +53,12 @@ private:
 	{
 		return nv_type;
 	};*/
-	double get_current_lambda_1(
-		bool is_other_connected) const override;
+	double compute_current_desired_time_headway(
+		const NearbyVehicle& leader) override;
+	double compute_vehicle_following_desired_time_headway(
+		const NearbyVehicle& leader) override;
+	double compute_lane_changing_desired_time_headway(
+		const NearbyVehicle& leader) override;
 	long create_lane_change_request() override;
 
 	void find_cooperation_requests();

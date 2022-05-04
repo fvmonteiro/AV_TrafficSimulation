@@ -26,7 +26,7 @@ bool LongitudinalControllerWithTrafficLights
 	double leader_vel = leader->compute_velocity(ego_vel);
 	double safe_gap = time_headway * ego_vel + standstill_distance
 		+ (std::pow(ego_vel, 2) - std::pow(leader_vel, 2)) / 2 / comfortable_braking;
-	h1 = gap - safe_gap;
+	gap_error = gap - safe_gap;
 	//double gap_error = gap - safe_gap;
 
 	double leader_accel = leader->get_acceleration();
@@ -46,14 +46,14 @@ bool LongitudinalControllerWithTrafficLights
 	{
 		//if (verbose) std::clog << "connected" << std::endl;
 		possible_accelerations[State::vehicle_following] =
-			(-rel_vel + veh_foll_gain * h1 + connected_extra_term)
+			(-rel_vel + veh_foll_gain * gap_error + connected_extra_term)
 			* comfortable_braking / (comfortable_braking + ego_vel);
 	}
 	else
 	{
 		//if (verbose) std::clog << "not connected" << std::endl;
 		possible_accelerations[State::vehicle_following] =
-			(-rel_vel + veh_foll_gain * h1)
+			(-rel_vel + veh_foll_gain * gap_error)
 			/ (time_headway + ego_vel / comfortable_braking);
 	}
 	return true;
@@ -146,7 +146,7 @@ double LongitudinalControllerWithTrafficLights::choose_acceleration(
 		/ 2 / comfortable_braking;*/
 	
 	double margin = 0.1; // 0 for connected
-	if (h1 >= -margin)
+	if (gap_error >= -margin)
 	{
 		return min_from_inputs;
 	}

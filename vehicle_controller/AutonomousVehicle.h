@@ -15,7 +15,7 @@ public:
 			VehicleType::autonomous_car, desired_velocity, false,
 			simulation_time_step, creation_time, verbose) {} ;
 
-	double get_lambda_1_lane_change() const { return lambda_1_lane_change; };
+	/*double get_lambda_1_lane_change() const { return lambda_1_lane_change; };*/
 	/* Returns a nullptr if there is no leader at the destination lane */
 	std::shared_ptr<NearbyVehicle> get_destination_lane_leader() const
 	{
@@ -52,6 +52,7 @@ protected:
 		double simulation_time_step, double creation_time,
 		bool verbose = false);
 
+	double get_lambda_1_lane_change() const { return lambda_1_lane_change; }
 	void find_destination_lane_vehicles();
 	bool check_if_is_destination_lane_follower(
 		const NearbyVehicle& nearby_vehicle);
@@ -65,8 +66,6 @@ protected:
 		const std::shared_ptr<NearbyVehicle>& old_leader);
 	//void save_other_relevant_nearby_vehicle_ids() override;
 	//void clear_other_relevant_nearby_vehicles() override;
-	double get_current_lambda_1(
-		bool is_other_connected) const override;
 
 private:
 	/* Finds the current leader and, if the vehicle has lane change 
@@ -82,6 +81,10 @@ private:
 	void compute_lane_change_gap_parameters();
 	virtual void update_destination_lane_follower(
 		const std::shared_ptr<NearbyVehicle>& old_follower);
+	double compute_current_desired_time_headway(
+		const NearbyVehicle& leader) override;
+	virtual double compute_lane_changing_desired_time_headway(
+		const NearbyVehicle& leader);
 	double estimate_nearby_vehicle_time_headway(NearbyVehicle& nearby_vehicle);
 
 	/* possibly not needed anymore */

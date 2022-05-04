@@ -72,8 +72,8 @@ public:
 	void set_type(int type) /*override*/;
 	/* Special getters and setters */
 
-	double get_lambda_0() const { return lambda_0; };
-	double get_lambda_1() const { return lambda_1; };
+	//double get_lambda_0() const { return lambda_0; };
+	//double get_lambda_1() const { return lambda_1; };
 
 	bool is_connected() const;
 	double compute_velocity(double ego_velocity) const;

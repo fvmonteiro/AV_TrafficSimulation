@@ -111,7 +111,7 @@ void ConnectedAutonomousVehicle::update_assisted_vehicle(
 		{
 			controller.update_gap_generation_controller(get_velocity(),
 				compute_vehicle_following_desired_time_headway(
-					new_max_brake, true));
+					*assisted_vehicle));
 		}
 	}
 	//assisted_vehicle = new_assisted_vehicle;
@@ -123,6 +123,45 @@ void ConnectedAutonomousVehicle::update_assisted_vehicle(
 			*assisted_vehicle);
 		assisted_vehicle_id = assisted_vehicle->get_id();
 	}*/
+}
+
+double ConnectedAutonomousVehicle::compute_current_desired_time_headway(
+	const NearbyVehicle& leader)
+{
+	double current_lambda_1;
+	if (leader.is_connected())
+	{
+		current_lambda_1 = has_lane_change_intention() ?
+			lambda_1_lane_change_connected : lambda_1_connected;
+	}
+	else
+	{
+		current_lambda_1 = has_lane_change_intention() ?
+			get_lambda_1_lane_change() : get_lambda_1();
+	}
+	return compute_time_headway_with_risk(get_desired_velocity(),
+		get_current_max_brake(), leader.get_max_brake(),
+		current_lambda_1, get_rho(), 0);
+}
+
+double ConnectedAutonomousVehicle::
+compute_vehicle_following_desired_time_headway(const NearbyVehicle& leader)
+{
+	double current_lambda_1 = leader.is_connected() ?
+		lambda_1_connected : get_lambda_1();
+	return compute_time_headway_with_risk(get_desired_velocity(),
+		get_max_brake(), leader.get_max_brake(),
+		current_lambda_1, get_rho(), 0);
+}
+
+double ConnectedAutonomousVehicle::compute_lane_changing_desired_time_headway(
+	const NearbyVehicle& leader)
+{
+	double current_lambda_1 = leader.is_connected() ?
+		lambda_1_lane_change_connected : get_lambda_1_lane_change();
+	return compute_time_headway_with_risk(get_desired_velocity(),
+		get_lane_change_max_brake(), leader.get_max_brake(),
+		current_lambda_1, get_rho(), 0);
 }
 
 double ConnectedAutonomousVehicle::compute_desired_acceleration(
@@ -182,15 +221,4 @@ void ConnectedAutonomousVehicle::compute_connected_safe_gap_parameters()
 	lambda_1_lane_change_connected =
 		compute_lambda_1(max_jerk, comfortable_acceleration,
 			get_lane_change_max_brake(), CONNECTED_BRAKE_DELAY);
-}
-
-double ConnectedAutonomousVehicle::get_current_lambda_1(
-	bool is_other_connected) const
-{
-	if (is_other_connected)
-	{
-		return has_lane_change_intention() ? 
-			lambda_1_lane_change_connected : lambda_1_connected;
-	}
-	return AutonomousVehicle::get_current_lambda_1(is_other_connected);
 }
