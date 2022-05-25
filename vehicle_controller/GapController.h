@@ -52,10 +52,6 @@ public:
 	/* Returns the current time headway in use */
 	double get_current_time_headway() const;
 
-	//void compute_time_headway_with_risk(double free_flow_velocity,
-	//	double follower_max_brake, double leader_max_brake,
-	//	double lambda_1, double rho, double accepted_risk);
-
 	/* Computes the time headway following distance */
 	double compute_time_headway_gap(double time_headway, 
 		double velocity) const;
@@ -64,13 +60,6 @@ public:
 	double get_safe_time_headway_gap(double ego_velocity,
 		bool has_lane_change_intention) const;
 	double get_desired_gap(double ego_velocity);
-
-	/* Computes the gap threshold when the gap controller should 
-	take over
-	TODO: this function should belong to the switched controller class */
-	//double compute_gap_threshold(double free_flow_velocity,
-	//	double velocity_error, double ego_acceleration, 
-	//	double leader_acceleration) const;
 
 	double compute_desired_acceleration(const EgoVehicle& ego_vehicle, 
 		const std::shared_ptr<NearbyVehicle> leader);

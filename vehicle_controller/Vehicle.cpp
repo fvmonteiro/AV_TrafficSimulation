@@ -88,14 +88,16 @@ double Vehicle::compute_time_headway_with_risk(
 		/ (free_flow_velocity + lambda_1);
 	double risk_term = std::pow(accepted_risk, 2) / 2 / free_flow_velocity;
 
-	if (gamma < gamma_threshold) {
+	if (gamma < gamma_threshold) 
+	{
 		// case where ego brakes harder
 		time_headway =
 			(std::pow(rho, 2) * free_flow_velocity / 2
 				+ rho * lambda_1 - risk_term)
 			/ ((1 - gamma) * follower_max_brake);
 	}
-	else if (gamma >= std::pow(1 - rho, 2)) {
+	else if (gamma >= std::pow(1 - rho, 2)) 
+	{
 		time_headway =
 			((1 - std::pow(1 - rho, 2) / gamma) * free_flow_velocity / 2
 				+ lambda_1 - risk_term)

@@ -26,9 +26,6 @@ public:
 		double comfortable_acceleration,
 		double filter_brake_limit);
 
-	/*double get_ki() const { return ki; };
-	double get_kp() const { return kp; };
-	double get_kd() const { return kd; };*/
 	double get_reference_value() const { 
 		return desired_velocity_filter.get_current_value(); 
 	};
@@ -47,8 +44,7 @@ private:
 	VariationLimitedFilter desired_velocity_filter;
 
 	double simulation_time_step{ 0.1 };
-	/* Gains
-	(computed in Matlab. Should be computed here?) */
+	/* Gains */
 	VelocityControllerGains gains;
 	//double ki{ 0.03 }; //0.07
 	//double kp{ 0.5 };

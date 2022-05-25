@@ -12,8 +12,7 @@ GapController::GapController(double simulation_time_step,
 	double velocity_filter_gain, double time_headway_filter_gain,
 	double comfortable_acceleration, double filter_brake_limit,
 	bool verbose)
-	: //simulation_time_step{ simulation_time_step },
-	autonomous_gains{ autonomous_gains }, 
+	: autonomous_gains{ autonomous_gains }, 
 	connected_gains{ connected_gains },
 	velocity_filter{ VariationLimitedFilter(velocity_filter_gain, 
 		comfortable_acceleration, filter_brake_limit,
@@ -31,37 +30,6 @@ GapController::GapController(double simulation_time_step,
 		connected_gains, velocity_filter_gain, time_headway_filter_gain,
 		comfortable_acceleration, filter_brake_limit, 
 		false) {}
-
-//void GapController::compute_time_headway_with_risk(
-//	double free_flow_velocity,
-//	double follower_max_brake, double leader_max_brake,
-//	double lambda_1, double rho, double accepted_risk) {
-//
-//	double time_headway;
-//	double gamma = leader_max_brake / follower_max_brake;
-//	double gamma_threshold = (1 - rho) * free_flow_velocity
-//		/ (free_flow_velocity + lambda_1);
-//	double risk_term = std::pow(accepted_risk, 2) / 2 / free_flow_velocity;
-//
-//	if (gamma < gamma_threshold) {
-//		// case where ego brakes harder
-//		time_headway =
-//			(std::pow(rho, 2) * free_flow_velocity / 2
-//				+ rho * lambda_1 - risk_term)
-//			/ ((1 - gamma) * follower_max_brake);
-//	}
-//	else if (gamma >= std::pow(1 - rho, 2)) {
-//		time_headway =
-//			((1 - std::pow(1 - rho, 2) / gamma) * free_flow_velocity / 2
-//				+ lambda_1 - risk_term)
-//			/ follower_max_brake;
-//	}
-//	else {
-//		time_headway = (lambda_1 - risk_term) / follower_max_brake;
-//	}
-//
-//	time_headway = time_headway;
-//}
 
 double GapController::get_safe_time_headway() const
 {
@@ -98,13 +66,6 @@ double GapController::compute_desired_gap(double velocity_ego)
 	double desired_time_headway = get_safe_time_headway();
 	double time_headway = time_headway_filter.apply_filter(
 		desired_time_headway);
-
-	if (verbose) {
-		std::clog << "desired h " << desired_time_headway
-			<< ", filtered h " << time_headway
-			<< std::endl;
-	}
-
 	return compute_time_headway_gap(time_headway, velocity_ego);
 }
 
@@ -158,6 +119,7 @@ double GapController::compute_desired_acceleration(
 	if (verbose) {
 		std::clog << "\t[Gap controller]\n\t" 
 			<< "leader id = " << leader->get_id()
+			<< ", h = " << get_current_time_headway()
 			<< ", eg=" << gap - gap_reference
 			<< ", sat(eg)=" << gap_error
 			<< ", ev=" << velocity_error
@@ -212,51 +174,12 @@ double GapController::compute_connected_input(
 		+ connected_gains.ka * acceleration_error;
 }
 
-//double GapController::compute_gap_threshold(double free_flow_velocity,
-//	double velocity_error, double ego_acceleration,
-//	double leader_acceleration) const
-//{
-//	/* Threshold is computed such that, at the switch, the vehicle following
-//	input is greater or equal to kg*h*(Vf - v) > 0. */
-//	double time_headway = get_safe_time_headway();
-//	if (is_connected)
-//	{
-//		double kg = connected_gains.kg;
-//		double kv = connected_gains.kv;
-//		double kgd = connected_gains.kgd;
-//		double ka = connected_gains.ka;
-//		double gap_error_derivative = estimate_gap_error_derivative(
-//			velocity_error, ego_acceleration);
-//		double acceleration_error = compute_acceleration_error(
-//			ego_acceleration, leader_acceleration);
-//
-//		if (verbose)
-//		{
-//			std::clog << "\tCopmuting thresh old\n\t"
-//				<< "h=" << time_headway
-//				<< ", vf=" << free_flow_velocity
-//				<< ", (u/kg - eg) =" << 1 / kg * (kv * velocity_error
-//					+ kgd * gap_error_derivative + ka * acceleration_error) << std::endl;
-//		}
-//
-//		return time_headway * free_flow_velocity + standstill_distance
-//			- 1 / kg * (kv * velocity_error 
-//				+ kgd * gap_error_derivative + ka * acceleration_error);
-//	}
-//	else
-//	{
-//		double kg = autonomous_gains.kg;
-//		double kv = autonomous_gains.kv;
-//		return time_headway * free_flow_velocity + standstill_distance
-//			- 1 / kg * (kv * velocity_error);
-//	}
-//	/* Other threshold options:
-//	- VISSIM's maximum gap: 250
-//	- Worst-case: h*vf + d + (kv*vf)/kg = (h + kv/kg)*vf + d*/
-//}
-
 void GapController::reset_time_headway_filter(double time_headway)
 {
+	//if (verbose)
+	//{
+	//	std::clog << "\t[Gap controller] Reset h=" << time_headway << std::endl;
+	//}
 	time_headway_filter.reset(time_headway);
 }
 

@@ -77,12 +77,9 @@ void ControlManager::create_acc_controllers(
 		connected_real_following_gains,
 		velocity_filter_gain, time_headway_filter_gain,
 		verbose);
-	/* The end of the lane is seen as a stopped vehicle. We can pretend
-	this stopped vehicle has a lower max brake so that the time headway
-	will be small. THIS IS DONE IN THE VEHICLE CONSTRUCTOR NOW */
-	/*end_of_lane_controller.update_time_headway(
-		ego_parameters.lambda_1, ego_parameters.lambda_1_lane_change,
-		ego_parameters.max_brake / 2);*/
+	/* The end of the lane is seen as a stopped vehicle. We set some 
+	time headway to that "vehicle". */
+	activate_end_of_lane_controller(time_headway_to_end_of_lane);
 }
 
 void ControlManager::create_lane_change_adjustment_controller(
@@ -158,22 +155,6 @@ double ControlManager::get_gap_error(VehicleType type) const
 
 /* ----------------------------------------------------------------------- */
 
-//void ControlManager::extract_vehicle_static_parameters(
-//const EgoVehicle& ego_vehicle)
-//{
-//	ego_parameters =  {
-//		ego_vehicle.get_type(),
-//		ego_vehicle.get_sampling_interval(),
-//		ego_vehicle.get_max_brake(),
-//		ego_vehicle.get_comfortable_brake(),
-//		ego_vehicle.get_comfortable_acceleration(),
-//		ego_vehicle.get_desired_velocity(),
-//		ego_vehicle.get_lambda_1(),
-//		ego_vehicle.get_is_connected(),
-//		ego_vehicle.get_lane_change_max_brake(),
-//	};
-//}
-
 double ControlManager::compute_drac(double relative_velocity, double gap) {
 	/* Deceleration (absolute value) to avoid collision assuming constant
 	velocities and instantaneous acceleration. DRAC is only defined when the
@@ -204,6 +185,11 @@ void ControlManager::activate_origin_lane_controller(double ego_velocity,
 void ControlManager::update_origin_lane_controller(
 	double time_headway, bool is_leader_connected)
 {
+	if (verbose)
+	{
+		std::clog << "Setting orig lane ctrl h_r = "
+			<< time_headway << std::endl;
+	}
 	origin_lane_controller.set_desired_time_headway(time_headway);
 	origin_lane_controller.connect_gap_controller(is_leader_connected);
 }
@@ -212,8 +198,6 @@ void ControlManager::update_destination_lane_follower_time_headway(
 	double time_headway)
 {
 	destination_lane_controller.set_follower_time_headway(time_headway);
-	/*destination_lane_controller.compute_max_risk_to_follower(
-		follower.get_max_brake());*/
 }
 
 void ControlManager::activate_destination_lane_controller(double ego_velocity,
@@ -231,7 +215,7 @@ void ControlManager::update_destination_lane_controller(double ego_velocity,
 {
 	destination_lane_controller.set_desired_time_headway(time_headway);
 	destination_lane_controller.connect_gap_controller(is_leader_connected);
-	origin_lane_controller.reset_leader_velocity_filter(ego_velocity);
+	//destination_lane_controller.reset_leader_velocity_filter(ego_velocity);
 }
 
 void ControlManager::update_gap_generation_controller(double ego_velocity,
@@ -245,164 +229,14 @@ void ControlManager::update_gap_generation_controller(double ego_velocity,
 		ego_velocity);
 }
 
-//void ControlManager::update_origin_lane_leader(double ego_velocity,
-//	bool had_leader, const NearbyVehicle& leader) {
-//
-//	double new_max_brake = leader.get_max_brake();
-//	VehicleType new_type = leader.get_type();
-//
-//	/* To avoid repeated computations, we only recompute time headway if
-//	the new leader is different from the previous one. */
-//	if ((std::abs(new_max_brake - origin_lane_leader_max_brake) > 0.5)
-//		|| (origin_lane_leader_type != new_type)) 
-//	{
-//		origin_lane_leader_max_brake = new_max_brake;
-//		origin_lane_leader_type = new_type;
-//		/* If both vehicles are connected, we use the connected value
-//		of lambda_1. */
-//		double appropriate_lambda_1, appropriate_lambda_1_lane_change;
-//		if (ego_parameters.is_connected 
-//			&& (leader.is_connected())) 
-//		{
-//			origin_lane_controller.set_connexion(true);
-//			appropriate_lambda_1 = ego_parameters.lambda_1_connected;
-//			appropriate_lambda_1_lane_change =
-//				ego_parameters.lambda_1_lane_change_connected;
-//		}
-//		else 
-//		{
-//			origin_lane_controller.set_connexion(false);
-//			appropriate_lambda_1 = ego_parameters.lambda_1;
-//			appropriate_lambda_1_lane_change =
-//				ego_parameters.lambda_1_lane_change;
-//		}
-//		origin_lane_controller.update_time_headway(appropriate_lambda_1, 
-//			appropriate_lambda_1_lane_change, new_max_brake);
-//	}
-//	if (!had_leader) 
-//	{
-//		origin_lane_controller.reset_leader_velocity_filter(ego_velocity);
-//	}
-//}
-
-//void ControlManager::update_destination_lane_leader(
-//	double ego_velocity, const NearbyVehicle& leader) {
-//	
-//	double new_max_brake = leader.get_max_brake();
-//	VehicleType new_type = leader.get_type();
-//
-//	/* To avoid repeated computations, we only recompute time headway if
-//	the new leader is different from the previous one. */
-//	if ((std::abs(new_max_brake - destination_lane_leader_max_brake) > 0.5)
-//		|| destination_lane_leader_type != new_type) {
-//
-//		destination_lane_leader_max_brake = new_max_brake;
-//		destination_lane_leader_type = new_type;
-//		
-//		/* If both vehicles are connected, we use the connected value
-//		of lambda_1. */
-//		double appropriate_lambda_1, appropriate_lambda_1_lane_change;
-//		if (ego_parameters.is_connected
-//			&& (leader.is_connected())) {
-//			destination_lane_controller.set_connexion(true);
-//			appropriate_lambda_1 = ego_parameters.lambda_1_connected;
-//			appropriate_lambda_1_lane_change =
-//				ego_parameters.lambda_1_lane_change_connected;
-//		}
-//		else {
-//			destination_lane_controller.set_connexion(false);
-//			appropriate_lambda_1 = ego_parameters.lambda_1;
-//			appropriate_lambda_1_lane_change =
-//				ego_parameters.lambda_1_lane_change;
-//		}
-//		destination_lane_controller.update_time_headway(
-//			appropriate_lambda_1, appropriate_lambda_1_lane_change,
-//			new_max_brake);
-//		
-//		/*destination_lane_controller.compute_intermediate_risk_to_leader(
-//			appropriate_lambda_1,
-//			ego_parameters.lambda_1_lane_change,
-//			ego_parameters.max_brake,
-//			new_max_brake);
-//		destination_lane_controller.compute_max_risk_to_leader();*/
-//	}
-//	//if (!had_leader) {} /*try using this condition*/
-//	destination_lane_controller.reset_leader_velocity_filter(
-//		ego_velocity);
-//}
-
-//void ControlManager::update_assisted_vehicle(
-//	double ego_velocity, const NearbyVehicle& assisted_vehicle) {
-//
-//	// Sanity check
-//	if (!(assisted_vehicle.is_connected() && ego_parameters.is_connected)) {
-//		std::clog << "CODING ERROR: updated_assisted_vehicle called when: "
-//			<< std::endl;
-//		if (!assisted_vehicle.is_connected()) {
-//			std::clog << "nearby veh is not connected" << std::endl;
-//		}
-//		if (!ego_parameters.is_connected) {
-//			std::clog << "ego veh is not connected" << std::endl;
-//		}
-//	}
-//
-//	double new_max_brake = assisted_vehicle.get_max_brake();
-//
-//	/* To avoid repeated computations, we only recompute time headway if
-//	the new leader is different from the previous one. */
-//	if ((std::abs(new_max_brake - assisted_vehicle_max_brake) > 0.5)) {
-//
-//		assisted_vehicle_max_brake = new_max_brake;
-//
-//		gap_generating_controller.update_time_headway(
-//			ego_parameters.lambda_1_connected, 
-//			ego_parameters.lambda_1_lane_change_connected,
-//			new_max_brake);
-//
-//		// gap_generating_controller.compute_max_risk_to_leader();
-//	}
-//	//if (!had_leader) {} /*try using this condition*/
-//	gap_generating_controller.reset_leader_velocity_filter(
-//		ego_velocity);
-//}
-
-// TODO: create two functions, one for connected one for regular
-//void ControlManager::update_follower_time_headway(
-//	NearbyVehicle& follower) {
-//
-//	if (ego_parameters.is_connected && follower.is_connected()) {
-//
-//		destination_lane_controller.set_follower_time_headway(
-//			follower.get_h_to_incoming_vehicle());
-//		destination_lane_controller.compute_max_risk_to_follower(
-//			follower.get_max_brake());
-//
-//		if (verbose) {
-//			std::clog << destination_lane_controller.get_follower_time_headway()
-//				<< std::endl;
-//		}
-//	}
-//	else if (std::abs(follower.get_max_brake() 
-//		- destination_lane_follower_max_brake) > 0.5) {
-//		/* (Re)estimate future follower's headway if the follower is
-//		sufficiently different from the previous. */
-//		double estimated_follower_free_flow_velocity =
-//			ego_parameters.desired_velocity;
-//		double ego_max_brake = ego_parameters.max_brake;
-//
-//		follower.compute_safe_gap_parameters();
-//		destination_lane_controller.estimate_follower_time_headway(
-//			follower, ego_max_brake, 
-//			estimated_follower_free_flow_velocity);
-//		destination_lane_controller.compute_max_risk_to_follower(
-//			follower.get_max_brake());
-//	}
-//}
-
 void ControlManager::reset_origin_lane_velocity_controller(
-	double ego_velocity) {
+	double ego_velocity) 
+{
+	//if (verbose)
+	//{
+	//	std::clog << "Resetting orig lane ctrl vel ctrl." << std::endl;
+	//}
 	origin_lane_controller.reset_velocity_controller(ego_velocity);
-	//origin_lane_controller.reset_velocity_error_integrator();
 }
 
 double ControlManager::use_vissim_desired_acceleration(
@@ -421,154 +255,6 @@ double ControlManager::use_vissim_desired_acceleration(
 	active_longitudinal_controller = ACCType::vissim;
 	return ego_vehicle.get_vissim_acceleration();
 }
-
-/* [Feb 11, 22] Functions for one style of coding --------------------- */
-//double ControlManager::get_origin_lane_desired_acceleration(
-//	const EgoVehicle& ego_vehicle) 
-//{
-//	if (verbose) std::clog << "Origin lane controller" << std::endl;
-//	return origin_lane_controller.compute_desired_acceleration(
-//			ego_vehicle, ego_vehicle.get_leader(),
-//			ego_vehicle.get_free_flow_velocity());
-//}
-//
-//double ControlManager::get_end_of_lane_desired_acceleration(
-//	const EgoVehicle& ego_vehicle) 
-//{
-//	double desired_acceleration = 100;
-//	/* When the lane change direction equals the preferred relative
-//	lane, it means the vehicle is moving into the destination lane.
-//	At this point, we don't want to use this controller anymore. */
-//	if ((ego_vehicle.get_preferred_relative_lane()
-//		!= ego_vehicle.get_active_lane_change_direction())
-//		&& (ego_vehicle.get_lane_end_distance() > -1)) {
-//		// -1 cause end of lane dist can get small negative values
-//
-//		if (verbose) {
-//			std::clog << "End of lane controller"
-//				<< std::endl;
-//		}
-//		/* We simulate a stopped vehicle at the end of
-//		the lane to force the vehicle to stop before the end of
-//		the lane. */
-//		std::shared_ptr<NearbyVehicle> virtual_vehicle =
-//			std::shared_ptr<NearbyVehicle>(new
-//				NearbyVehicle(1, RelativeLane::same, 1));
-//		virtual_vehicle->set_relative_velocity(
-//			ego_vehicle.get_velocity());
-//		virtual_vehicle->set_distance(
-//			ego_vehicle.get_lane_end_distance());
-//		virtual_vehicle->set_length(0.0);
-//
-//		LongitudinalController::State old_state =
-//			end_of_lane_controller.get_state();
-//		double end_of_lane_desired_acceleration =
-//			end_of_lane_controller.compute_desired_acceleration(
-//				ego_vehicle, virtual_vehicle,
-//				ego_parameters.desired_velocity);
-//
-//		/* This controller is only active when it's at vehicle
-//		following mode */
-//		if (end_of_lane_controller.get_state()
-//			== LongitudinalController::State::vehicle_following) {
-//			/* To avoid sudden high decelerations */
-//			if (old_state
-//				== LongitudinalController::State::velocity_control) {
-//				end_of_lane_controller.reset_leader_velocity_filter(
-//					ego_vehicle.get_velocity());
-//			}
-//			desired_acceleration = end_of_lane_desired_acceleration;
-//		}
-//	}
-//	return desired_acceleration;
-//}
-//
-//double ControlManager::get_destination_lane_desired_acceleration(
-//	const EgoVehicle& ego_vehicle, bool end_of_lane_controller_is_active) 
-//{
-//	double origin_lane_reference_velocity;
-//	double ego_velocity = ego_vehicle.get_velocity();
-//	double desired_acceleration = 100;
-//
-//	/* Get the possible max vel at the origin lane */
-//	if (origin_lane_controller.get_state()
-//		== LongitudinalController::State::vehicle_following) {
-//		origin_lane_reference_velocity = ego_vehicle.get_leader()
-//			->compute_velocity(ego_velocity);
-//	}
-//	else {
-//		origin_lane_reference_velocity =
-//			ego_parameters.desired_velocity;
-//	}
-//
-//	/* We only activate if the vehicle has a destination lane
-//	leader AND
-//	(the velocity reference at the origin lane is lower than the one at
-//	the destination lane OR the end of lane controller is active)*/
-//	if (ego_vehicle.has_destination_lane_leader()
-//		&& ((ego_vehicle.get_destination_lane_leader()
-//			->compute_velocity(ego_velocity)
-//				> origin_lane_reference_velocity - min_overtaking_rel_vel)
-//			|| end_of_lane_controller_is_active)) {
-//
-//		if (verbose) std::clog << "Dest. lane controller"
-//				<< std::endl;
-//
-//		std::shared_ptr<NearbyVehicle> dest_lane_leader =
-//			ego_vehicle.get_destination_lane_leader();
-//		double ego_velocity = ego_vehicle.get_velocity();
-//		double reference_velocity = determine_low_velocity_reference(
-//			ego_velocity, *dest_lane_leader);
-//
-//		/* If the ego vehicle is braking hard due to conditions on
-//		the current lane, the destination lane controller, which
-//		uses comfortable constraints, must be updated. */
-//		if ((active_longitudinal_controller
-//			!= ActiveACC::destination_lane)
-//			&& destination_lane_controller.is_outdated(ego_velocity)) {
-//			destination_lane_controller.reset_desired_velocity_filter(
-//				ego_velocity);
-//		}
-//
-//		desired_acceleration =
-//			destination_lane_controller.compute_desired_acceleration(
-//				ego_vehicle, dest_lane_leader, reference_velocity);
-//	}
-//	return desired_acceleration;
-//}
-//
-//double ControlManager::get_cooperative_desired_acceleration(
-//	const EgoVehicle& ego_vehicle) 
-//{
-//	double desired_acceleration = 100;
-//	if (ego_vehicle.is_cooperating_to_generate_gap()) {
-//		if (verbose) {
-//			std::clog << "Gap generating controller"
-//				<< std::endl;
-//		}
-//		std::shared_ptr<NearbyVehicle> assited_vehicle =
-//			ego_vehicle.get_assisted_vehicle();
-//		double ego_velocity = ego_vehicle.get_velocity();
-//		double reference_velocity = determine_low_velocity_reference(
-//			ego_velocity, *assited_vehicle);
-//
-//		/* If the ego vehicle is braking hard due to conditions on
-//		the current lane, the gap generating controller, which
-//		uses comfortable constraints, must be updated. */
-//		if ((active_longitudinal_controller
-//			!= ActiveACC::cooperative_gap_generation)
-//			&& gap_generating_controller.is_outdated(ego_velocity)) {
-//			gap_generating_controller.reset_desired_velocity_filter(
-//				ego_velocity);
-//		}
-//
-//		desired_acceleration =
-//			gap_generating_controller.compute_desired_acceleration(
-//				ego_vehicle, assited_vehicle, reference_velocity);
-//	}
-//	return desired_acceleration;
-//}
-/* -------------------------------------------------------------------- */
 
 double ControlManager::get_acc_desired_acceleration(
 	const ACCVehicle& ego_vehicle)
@@ -670,8 +356,6 @@ void ControlManager::print_traffic_lights(const EgoVehicle& ego,
 	with_traffic_lights_controller.get_nominal_input(possible_accelerations);
 }
 
-/* [Feb 11, 22] Functions for one style of coding --------------------- */
-
 bool ControlManager::get_origin_lane_desired_acceleration(
 	const EgoVehicle& ego_vehicle,
 	std::unordered_map<ACCType, double>& possible_accelerations) {
@@ -696,10 +380,11 @@ bool ControlManager::get_end_of_lane_desired_acceleration(
 	At this point, we don't want to use this controller anymore. */
 	if ((ego_vehicle.get_preferred_relative_lane()
 		!= ego_vehicle.get_active_lane_change_direction())
-		&& (ego_vehicle.get_lane_end_distance() > -1)) {
-		// -1 cause end of lane dist can get small negative values
-
-		if (verbose) {
+		&& (ego_vehicle.get_lane_end_distance() > -1)) 
+		// -1 because end of lane dist can get small negative values
+	{
+		if (verbose) 
+		{
 			std::clog << "End of lane controller"
 				<< std::endl;
 		}
@@ -717,6 +402,13 @@ bool ControlManager::get_end_of_lane_desired_acceleration(
 
 		SwitchedLongitudinalController::State old_state =
 			end_of_lane_controller.get_state();
+		/* To avoid sudden high decelerations */
+		if (old_state
+			== SwitchedLongitudinalController::State::uninitialized)
+		{
+			end_of_lane_controller.reset_leader_velocity_filter(
+				ego_vehicle.get_velocity());
+		}
 		double desired_acceleration =
 			end_of_lane_controller.get_desired_acceleration(
 				ego_vehicle, virtual_vehicle,
@@ -725,12 +417,13 @@ bool ControlManager::get_end_of_lane_desired_acceleration(
 		/* This controller is only active when it's at vehicle 
 		following mode */
 		if (end_of_lane_controller.get_state()
-			== SwitchedLongitudinalController::State::vehicle_following) {
-			/* To avoid sudden high decelerations */
-			if (old_state
-				== SwitchedLongitudinalController::State::velocity_control) {
-				end_of_lane_controller.reset_leader_velocity_filter(
-					ego_vehicle.get_velocity());
+			== SwitchedLongitudinalController::State::vehicle_following)
+		{
+			if (verbose)
+			{
+				std::clog << "active EOL controller. Old state is " 
+					<< LongitudinalController::state_to_string(old_state)
+					<< std::endl;
 			}
 			possible_accelerations[ACCType::end_of_lane] = 
 				desired_acceleration;
@@ -835,8 +528,6 @@ bool ControlManager::get_cooperative_desired_acceleration(
 	return is_active;
 }
 
-/* ------------------------------------------------------------------------ */
-
 double ControlManager::choose_minimum_acceleration(
 	std::unordered_map<ACCType, double>& possible_accelerations)
 {
@@ -926,72 +617,6 @@ double ControlManager::get_safe_time_headway_gap(double ego_velocity,
 	}
 
 	return time_headway_gap;
-}
-
-void ControlManager::start_longitudinal_adjustment(double time)
-{
-	if (verbose) std::clog << "Start of long adjust." << std::endl;
-
-	destination_lane_controller.reset_accepted_risks();
-	destination_lane_controller.set_timer_start(time);
-	/*destination_lane_controller.set_reference_velocity(ego_velocity,
-		adjustment_speed_factor);*/
-}
-
-//void ControlManager::start_longitudinal_adjustment(double time, 
-//	double ego_velocity, double adjustment_speed_factor) {
-//
-//	if (verbose) std::clog << "Start of long adjust." << std::endl;
-//
-//	destination_lane_controller.reset_accepted_risks();
-//	destination_lane_controller.set_timer_start(time);
-//	double reference_velocity = ego_velocity * adjustment_speed_factor;
-//	destination_lane_controller.set_reference_velocity(
-//		reference_velocity, ego_velocity);
-//}
-
-void ControlManager::update_headways_with_risk(const EgoVehicle& ego_vehicle) 
-{
-	/* This function has to be substantially changed to work. */
-
-	//if (verbose) {
-	//	std::clog << "Considering to increase risk" << std::endl;
-	//}
-
-	///* TODO: include difference to check whether vehicles are connected */
-
-	//if (destination_lane_controller.update_accepted_risk(
-	//	ego_vehicle.get_time(), ego_vehicle)) {
-
-	//	if (ego_vehicle.has_destination_lane_leader()) {
-	//		destination_lane_controller.update_time_headway(
-	//			ego_parameters.lambda_1, ego_parameters.lambda_1_lane_change,
-	//			ego_vehicle.get_destination_lane_leader()->get_max_brake());
-	//	}
-	//	/* TODO: should only enter this condition if follower_risk 
-	//	was changed 
-	//	And even so, we need to recompute the follower's lambda 1
-	//	because we erase and rebuild the NearbyVehicle object every time.
-	//	Maybe we should avoid this? */
-	//	if (ego_vehicle.has_destination_lane_follower()) {
-	//		std::shared_ptr<NearbyVehicle> dest_lane_follower =
-	//			ego_vehicle.get_destination_lane_follower();
-
-	//		if (ego_parameters.is_connected
-	//			&& dest_lane_follower->is_connected()) {
-	//			std::clog << "TODO: risk for connected vehicles not "
-	//				<< "yet fully coded." << std::endl;
-	//		}
-
-	//		double estimated_follower_free_flow_velocity =
-	//			ego_parameters.desired_velocity;
-	//		double ego_max_brake = ego_parameters.max_brake;
-	//		dest_lane_follower->compute_safe_gap_parameters();
-	//		destination_lane_controller.estimate_follower_time_headway(
-	//			*dest_lane_follower, ego_max_brake,
-	//			estimated_follower_free_flow_velocity);
-	//	}
-	//}
 }
 
 std::string ControlManager::active_ACC_to_string(

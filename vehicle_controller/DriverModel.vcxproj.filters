@@ -25,7 +25,6 @@
     <ClCompile Include="Vehicle.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="GapController.cpp" />
     <ClCompile Include="RealLongitudinalController.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -68,6 +67,9 @@
     <ClCompile Include="VelocityController.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="GapController.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ControlManager.h">
@@ -97,7 +99,6 @@
     <ClInclude Include="Constants.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="GapController.h" />
     <ClInclude Include="VirtualLongitudinalController.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -141,6 +142,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="VelocityController.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GapController.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

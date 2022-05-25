@@ -109,19 +109,6 @@ public:
 		double time_headway, bool is_leader_connected);
 	void update_gap_generation_controller(double ego_velocity,
 		double time_headway);
-	
-	/* [22/03/22] Time headway updates before refactoring */
-	/* Updates the time headway based on the new leader and 
-	resets the leader velocity filter if there was no leader before */
-	//void update_origin_lane_leader(double ego_velocity, bool had_leader,
-	//	const NearbyVehicle& leader);
-	///* Updates the (risky) time headway based on the new leader and
-	//resets the leader velocity filter */
-	//void update_destination_lane_leader(double ego_velocity, 
-	//	const NearbyVehicle& leader);
-	//void update_assisted_vehicle(double ego_velocity, 
-	//	const NearbyVehicle& assisted_vehicle);
-	//void update_follower_time_headway(NearbyVehicle& follower);
 
 	void reset_origin_lane_velocity_controller(double ego_velocity);
 
@@ -146,11 +133,6 @@ public:
 
 	double use_vissim_desired_acceleration(const EgoVehicle& ego_vehicle);
 
-	/* Gets the acceleration inputs from the origin (and destination) lane
-	ACCs, from the necessary value to avoid colision and from VISSIM and decides
-	which one should be applied to the vehicle */
-	//double determine_desired_acceleration(const EgoVehicle& ego_vehicle);
-
 	double determine_low_velocity_reference(double ego_velocity,
 		const NearbyVehicle& other_vehicle);
 	double compute_safe_lane_change_gap(const EgoVehicle& ego_vehicle, 
@@ -158,15 +140,6 @@ public:
 	/* Returns the time headway part of the safe lane change gap. */
 	double get_safe_time_headway_gap(double ego_velocity,
 		bool has_lane_change_intention, const NearbyVehicle& other_vehicle);
-
-	/* Resets accepted risk and risk timer */
-	void start_longitudinal_adjustment(double time);
-	/* Sets the value of the minimum accepted longitudinal adjustment speed
-	and the initial value of accepted risk, and starts the a timer. */
-	/*void start_longitudinal_adjustment(double time, double ego_velocity,
-		double adjustment_speed_factor);*/
-
-	void update_headways_with_risk(const EgoVehicle& ego_vehicle);
 
 	/* Printing ----------------------------------------------------------- */
 	static std::string active_ACC_to_string(
@@ -186,6 +159,8 @@ private:
 		0.5, 0.1, 0.03 };
 	VelocityControllerGains adjustment_velocity_controller_gains{
 		1, 0.1, 0.03 };
+	/* The time headway used by the end-of-lane controller */
+	double time_headway_to_end_of_lane{ 1.0 };
 	/* -------------------------------------------- */
 	
 	RealLongitudinalController origin_lane_controller;
@@ -226,7 +201,7 @@ private:
 	double choose_minimum_acceleration(
 		std::unordered_map<ACCType, double>& possible_accelerations);
 
-	/* [Feb 11, 22] Functions for one style of coding --------------------- */
+	/* Desired accelerations --------------------- */
 
 	/* Desired acceleration relative to the current lane.
 	Returns true if the computed acceleration was added to the map */
@@ -249,21 +224,4 @@ private:
 	bool get_cooperative_desired_acceleration(
 		const ConnectedAutonomousVehicle& ego_vehicle,
 		std::unordered_map<ACCType, double>& possible_accelerations);
-	/* -------------------------------------------------------------------- */
-
-	/* [Feb 11, 22] Functions for one style of coding --------------------- */
-	/* Desired acceleration relative to the current lane */
-	//double get_origin_lane_desired_acceleration(
-	//	const EgoVehicle& ego_vehicle);
-	///* Desired acceleration to wait at the end of the lane while
-	//looking for an appropriate lane change gap. Without this,
-	//vehicles might miss a desired exit. */
-	//double get_end_of_lane_desired_acceleration(
-	//	const EgoVehicle& ego_vehicle);
-	///* Control to adjust to destination lane leader */
-	//double get_destination_lane_desired_acceleration(
-	//	const EgoVehicle& ego_vehicle, bool end_of_lane_controller_is_active);
-	//double ControlManager::get_cooperative_desired_acceleration(
-	//	const EgoVehicle& ego_vehicle);
-	/* -------------------------------------------------------------------- */
 };

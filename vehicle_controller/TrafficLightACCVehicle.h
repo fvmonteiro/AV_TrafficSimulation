@@ -44,6 +44,10 @@ private:
 	{
 		return false;
 	};
+	double compute_lane_changing_desired_time_headway(
+		const NearbyVehicle& nearby_vehicle) const override {
+		return -1.0;
+	};
 	void set_desired_lane_change_direction() override;
 	bool can_start_lane_change() override;
 

@@ -20,7 +20,7 @@
 
 /*==========================================================================*/
 
-const std::unordered_set<long> LOGGED_VEHICLES_IDS{ 7 };
+const std::unordered_set<long> LOGGED_VEHICLES_IDS{ 9 };
 const bool CLUELESS_DEBUGGING{ false };
 //const double DEBUGGING_START_TIME{ 249.0 };
 
@@ -127,6 +127,7 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
             case UDA::h_to_assited_veh:
             case UDA::lane_change_request: 
             case UDA::give_control_to_vissim:
+            case UDA::max_lane_change_risk:
                 return 1;
             /* Debugging: leader */
             case UDA::leader_id:
@@ -140,19 +141,34 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
             case UDA::dest_leader_id:
                 return 1;
             case UDA::gap_to_dest_lane_leader:
+                return 1;
             case UDA::transient_gap_to_ld:
+                return 1;
             case UDA::veh_following_gap_to_ld:
+                return 1;
             case UDA::safe_gap_to_dest_lane_leader:
-                return 0;
+                return 1;
+            case UDA::delta_gap_to_ld:
+                return 1;
+            case UDA::lc_collision_free_gap_to_ld:
+                return 1;
             /* Debugging: dest lane follower */
             case UDA::dest_follower_id:
                 return 1;
             case UDA::gap_to_dest_lane_follower:
+                return 1;
             case UDA::transient_gap_to_fd:
+                return 1;
             case UDA::veh_following_gap_to_fd:
+                return 1;
             case UDA::safe_gap_to_dest_lane_follower:
+                return 1;
             case UDA::dest_follower_time_headway:
                 return 0;
+            case UDA::delta_gap_to_fd:
+                return 1;
+            case UDA::lc_collision_free_gap_to_fd:
+                return 1;
             /* Debugging: assisted vehicle */
             case UDA::assisted_veh_id:
                 return 1;
@@ -270,11 +286,14 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
     case DRIVER_DATA_VEH_INTAC_HEADWAY      :
         return 1;
     case DRIVER_DATA_VEH_UDA                :
-        /*We don't need to read any of the ego's UDAs*/
-        //switch (UDA(index1)) {
-        //default: // do nothing
-        //    break;
-        //}
+        switch (UDA(index1)) {
+        case UDA::max_lane_change_risk:
+            vehicles[current_vehicle_id]->set_maximum_lane_change_risk(
+                double_value);
+            break;
+        default: // do nothing
+            break;
+        }
         return 1;
     case DRIVER_DATA_NVEH_ID                :
         if (long_value > 0) 
@@ -329,7 +348,6 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
         case UDA::lane_change_request:
             vehicles[current_vehicle_id]->peek_nearby_vehicles()
                 ->read_lane_change_request(long_value);
-                //->set_desired_lane_change_direction(long_value);
             break;
         case UDA::h_to_assited_veh:
             vehicles[current_vehicle_id]->peek_nearby_vehicles()
@@ -443,7 +461,7 @@ DRIVERMODEL_API  int  DriverModelGetValue (long   type,
                 is_vissim_controlling_lane_change();
             break;
 
-        /* Variables used for debugging from here on */
+        /* Debugging: leader */
         case UDA::leader_id:
             *long_value = vehicles[current_vehicle_id]->get_leader_id();
             break;
@@ -469,88 +487,113 @@ DRIVERMODEL_API  int  DriverModelGetValue (long   type,
                 vehicles[current_vehicle_id]->get_relative_velocity_to_leader()
                 * 3.6;  // we want to display it in km/h
             break;
+        /* Debugging: destination lane leader */
         case UDA::dest_leader_id:
             *long_value = vehicles[current_vehicle_id]->
                 get_dest_lane_leader_id();
             break;
         case UDA::gap_to_dest_lane_leader:
-            *double_value = 0;
-            /*vehicles[current_vehicle_id]->
-                compute_gap(vehicles[current_vehicle_id]->
-                    get_destination_lane_leader()
-                );*/
+            *double_value = vehicles[current_vehicle_id]->compute_gap(
+                vehicles[current_vehicle_id]->get_destination_lane_leader()
+                );
             break;
         case UDA::transient_gap_to_ld:
-            *double_value = 0;
-            /*vehicles[current_vehicle_id]->
+            *double_value = vehicles[current_vehicle_id]->
                 compute_transient_gap(
                     vehicles[current_vehicle_id]->
                     get_destination_lane_leader()
-                );*/
+                    );
             break;
         case UDA::veh_following_gap_to_ld:
-            *double_value = 0;
-            /*vehicles[current_vehicle_id]->
+            *double_value = vehicles[current_vehicle_id]->
                 compute_time_headway_gap(
-                    vehicles[current_vehicle_id]->get_destination_lane_leader()
-                );*/
+                    vehicles[current_vehicle_id]->
+                    get_destination_lane_leader()
+                    );
             break;
         case UDA::safe_gap_to_dest_lane_leader:
-            *double_value = 0;
-            /*vehicles[current_vehicle_id]->
+            *double_value = vehicles[current_vehicle_id]->
                 compute_safe_lane_change_gap(
                     vehicles[current_vehicle_id]->
                     get_destination_lane_leader()
-                );*/
+                );
             break;
+        /*case UDA::delta_gap_to_ld:
+            *double_value = vehicles[current_vehicle_id]->
+                get_gap_variation_to(
+                    vehicles[current_vehicle_id]->
+                    get_destination_lane_leader()
+                );
+            break;
+        case UDA::lc_collision_free_gap_to_ld:
+            *double_value = vehicles[current_vehicle_id]->
+                get_collision_free_gap_to(
+                    vehicles[current_vehicle_id]->
+                    get_destination_lane_leader()
+                );
+            break;*/
+        /* Debugging: destination lane follower */
         case UDA::dest_follower_id:
             *long_value = vehicles[current_vehicle_id]->
                 get_dest_lane_follower_id();
             break;
         case UDA::gap_to_dest_lane_follower:
-            *double_value = 0;
-            /*vehicles[current_vehicle_id]->
+            *double_value = vehicles[current_vehicle_id]->
                 compute_gap(vehicles[current_vehicle_id]->
                     get_destination_lane_follower()
-                );*/
+                );
             break;
         case UDA::transient_gap_to_fd:
-            *double_value = 0;
-                /*vehicles[current_vehicle_id]->
+            *double_value = vehicles[current_vehicle_id]->
                 compute_transient_gap(
                     vehicles[current_vehicle_id]->get_destination_lane_follower()
-                );*/
+                );
             break;
         case UDA::veh_following_gap_to_fd:
-            *double_value = 0;
-                /*vehicles[current_vehicle_id]->
+            *double_value = vehicles[current_vehicle_id]->
                 compute_time_headway_gap(
                     vehicles[current_vehicle_id]->
                     get_destination_lane_follower()
-                );*/
+                );
             break;
         case UDA::safe_gap_to_dest_lane_follower:
-            *double_value = 0;
-            /*vehicles[current_vehicle_id]->
+            *double_value = vehicles[current_vehicle_id]->
                 compute_safe_lane_change_gap(
                     vehicles[current_vehicle_id]->
                     get_destination_lane_follower()
-                );*/
+                );
             break;
         case UDA::dest_follower_time_headway:
             *double_value = vehicles[current_vehicle_id]->
                 get_dest_follower_time_headway();
             break;
+        /*case UDA::delta_gap_to_fd:
+            *double_value = vehicles[current_vehicle_id]->
+                get_gap_variation_to(
+                    vehicles[current_vehicle_id]->
+                    get_destination_lane_follower()
+                );
+            break;
+        case UDA::lc_collision_free_gap_to_fd:
+            *double_value = vehicles[current_vehicle_id]->
+                get_collision_free_gap_to(
+                    vehicles[current_vehicle_id]->
+                    get_destination_lane_follower()
+                );
+            break;*/
+        /* Debugging: assited vehicle */
         case UDA::assisted_veh_id:
             *long_value = vehicles[current_vehicle_id]->
                 get_assisted_veh_id();
             break;
+        /* Debugging: others */
         case UDA::waiting_time:
             *double_value = vehicles[current_vehicle_id]->get_waiting_time();
             break;
         case UDA::risk:
-            *double_value = vehicles[current_vehicle_id]->
-                compute_collision_severity_risk_to_leader() * 3.6;  
+            *double_value = 0.0;
+            /*vehicles[current_vehicle_id]->
+                compute_collision_severity_risk_to_leader() * 3.6;  */
             // cause we want to display it in km/h;
             break;
         case UDA::safe_time_headway:

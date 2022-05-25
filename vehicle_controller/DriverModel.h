@@ -35,6 +35,7 @@ enum class UDA {
     h_to_assited_veh = 6, 
     lane_change_request,
     give_control_to_vissim,
+    max_lane_change_risk,
     /* Debugging: leader */
     leader_id = 100, 
     leader_type, 
@@ -47,6 +48,8 @@ enum class UDA {
     transient_gap_to_ld,
     veh_following_gap_to_ld,
     safe_gap_to_dest_lane_leader,
+    delta_gap_to_ld,
+    lc_collision_free_gap_to_ld,
     /* Debugging: dest lane follower */
     dest_follower_id = 120,
     gap_to_dest_lane_follower,
@@ -54,6 +57,8 @@ enum class UDA {
     veh_following_gap_to_fd,
     safe_gap_to_dest_lane_follower,
     dest_follower_time_headway,
+    delta_gap_to_fd,
+    lc_collision_free_gap_to_fd,
     /* Debugging: assisted vehicle */
     assisted_veh_id = 130,
     /* Debugging: other stuff */

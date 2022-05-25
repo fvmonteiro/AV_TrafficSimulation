@@ -20,10 +20,10 @@ public:
 
 	/* Returns a nullptr if the ego is no vehicle being assisted
 	(for gap generation) */
-	std::shared_ptr<NearbyVehicle> get_assisted_vehicle() const
+	/*std::shared_ptr<NearbyVehicle> get_assisted_vehicle() const
 	{
 		return assisted_vehicle;
-	}
+	}*/
 
 	bool has_assisted_vehicle() const;
 	bool is_cooperating_to_generate_gap() const;
@@ -47,19 +47,26 @@ private:
 	};
 	//void save_other_relevant_nearby_vehicle_ids() override;
 	//void clear_other_relevant_nearby_vehicles() override;
+	std::shared_ptr<NearbyVehicle>
+		implement_get_assisted_vehicle() const override;
 	double implement_get_time_headway_to_assisted_vehicle() const override;
 	void try_to_set_nearby_vehicle_type(long nv_type) override;
 	/*long try_to_get_nearby_vehicle_type(long nv_type) const override
 	{
 		return nv_type;
 	};*/
-	double compute_current_desired_time_headway(
-		const NearbyVehicle& leader) override;
+	/*double compute_current_desired_time_headway(
+		const NearbyVehicle& nearby_vehicle) override;*/
 	double compute_vehicle_following_desired_time_headway(
-		const NearbyVehicle& leader) override;
+		const NearbyVehicle& nearby_vehicle) const override;
 	double compute_lane_changing_desired_time_headway(
-		const NearbyVehicle& leader) override;
+		const NearbyVehicle& nearby_vehicle) const override;
+	double compute_collision_free_gap_during_lane_change(
+		const NearbyVehicle& nearby_vehicle) const override;
 	long create_lane_change_request() override;
+
+	double get_lambda_1(bool is_leader_connected) const;
+	double get_lambda_1_lane_change(bool is_leader_connected) const;
 
 	void find_cooperation_requests();
 	/* Returns true if a vehicle is asking to merge in front of us and

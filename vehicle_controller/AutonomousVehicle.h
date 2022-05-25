@@ -17,15 +17,15 @@ public:
 
 	/*double get_lambda_1_lane_change() const { return lambda_1_lane_change; };*/
 	/* Returns a nullptr if there is no leader at the destination lane */
-	std::shared_ptr<NearbyVehicle> get_destination_lane_leader() const
-	{
-		return destination_lane_leader;
-	};
-	/* Returns a nullptr if there is no follower at the destination lane */
-	std::shared_ptr<NearbyVehicle> get_destination_lane_follower() const
-	{
-		return destination_lane_follower;
-	};
+	//std::shared_ptr<NearbyVehicle> get_destination_lane_leader() const
+	//{
+	//	return destination_lane_leader;
+	//};
+	///* Returns a nullptr if there is no follower at the destination lane */
+	//std::shared_ptr<NearbyVehicle> get_destination_lane_follower() const
+	//{
+	//	return destination_lane_follower;
+	//};
 
 	bool has_destination_lane_leader() const;
 	bool has_destination_lane_follower() const;
@@ -53,10 +53,13 @@ protected:
 		bool verbose = false);
 
 	double get_lambda_1_lane_change() const { return lambda_1_lane_change; }
+	double get_accepted_risk_to_leaders() const {
+		return accepted_risk_during_lane_change;
+	}
 	void find_destination_lane_vehicles();
-	bool check_if_is_destination_lane_follower(
+	bool is_destination_lane_follower(
 		const NearbyVehicle& nearby_vehicle);
-	bool check_if_is_destination_lane_leader(
+	bool is_destination_lane_leader(
 		const NearbyVehicle& nearby_vehicle);
 	bool is_leader_of_destination_lane_leader(
 		const NearbyVehicle& nearby_vehicle);
@@ -64,8 +67,10 @@ protected:
 		bool dest_lane_leader_has_leader);
 	void update_destination_lane_leader(
 		const std::shared_ptr<NearbyVehicle>& old_leader);
-	//void save_other_relevant_nearby_vehicle_ids() override;
-	//void clear_other_relevant_nearby_vehicles() override;
+	/* The collision free gap is computed assuming a worst case braking
+	scenario */
+	double compute_collision_free_gap(double current_max_brake,
+		double current_lambda_1, const NearbyVehicle& nearby_vehicle) const;
 
 private:
 	/* Finds the current leader and, if the vehicle has lane change 
@@ -75,24 +80,74 @@ private:
 		const std::unordered_map<int, TrafficLight>& traffic_lights) override;
 	bool give_lane_change_control_to_vissim() const override;
 	bool can_start_lane_change() override;
+	/* Not being used */
+	void compute_lane_change_risks() override;
+	std::shared_ptr<NearbyVehicle>
+		implement_get_destination_lane_leader() const override;
+	std::shared_ptr<NearbyVehicle>
+		implement_get_destination_lane_follower() const override;
+
 	bool has_lane_change_conflict() const;
 	bool is_lane_change_gap_safe(
 		std::shared_ptr<NearbyVehicle>& nearby_vehicle);
+	virtual double compute_collision_free_gap_during_lane_change(
+		const NearbyVehicle& nearby_vehicle) const;
+	double compute_gap_variation_during_lane_change(
+		const NearbyVehicle& nearby_vehicle) const;
 	void compute_lane_change_gap_parameters();
+
 	virtual void update_destination_lane_follower(
 		const std::shared_ptr<NearbyVehicle>& old_follower);
-	double compute_current_desired_time_headway(
-		const NearbyVehicle& leader) override;
-	virtual double compute_lane_changing_desired_time_headway(
-		const NearbyVehicle& leader);
-	double estimate_nearby_vehicle_time_headway(NearbyVehicle& nearby_vehicle);
+	/*double compute_current_desired_time_headway(
+		const NearbyVehicle& nearby_vehicle) override;*/
+	double compute_lane_changing_desired_time_headway(
+		const NearbyVehicle& nearby_vehicle) const override;
+	double estimate_nearby_vehicle_time_headway(
+		NearbyVehicle& nearby_vehicle);
 
-	/* possibly not needed anymore */
-	//long dest_lane_leader_id{ 0 };
-	/* possibly not needed anymore */
-	//long dest_lane_follower_id{ 0 };
+	/* Risk related methods --------------------------------------------- */
+
+	void implement_set_maximum_lane_change_risk(double value) override;
+	/* Resets accepted risks and time */
+	void reset_accepted_lane_change_risks(double time);
+	/* Updates the accepted risk periodically - NOT IMPLEMENTED */
+	bool update_accepted_risk(double time);
+	/* Computes the risk at which he lane change headway becomes equal to the
+	vehicle following headway. */
+	double compute_intermediate_risk_to_leader(double lambda_1,
+		double lane_change_lambda_1, double max_brake_no_lane_change,
+		double leader_max_brake);
+	/* Maximum possible accepted risk to follower that doesn't imply collision
+	- NOT IMPLEMENTED */
+	double compute_max_risk_to_follower(double follower_max_brake);
+	/* NOT IMPLEMENTED */
+	void update_headways_with_risk(const EgoVehicle& ego_vehicle);
+
+	/* Relevant members for lane changing ------------------------------------ */
+
 	std::shared_ptr<NearbyVehicle> destination_lane_leader{ nullptr };
 	std::shared_ptr<NearbyVehicle> destination_lane_follower{ nullptr };
 	/* Emergency braking parameter during lane change */
 	double lambda_1_lane_change{ 0.0 }; // [m/s]
+
+
+	/* Risk related variables --------------------------------------------- */
+	/*The risk is an estimation of the relative velocity at collision
+	time under worst case scenario. */
+
+	/* Stores the time when the vehicle started trying to 
+	change lanes */
+	double lane_change_timer_start{ 0.0 }; // [s]
+	double accepted_risk_during_lane_change{ 5.0 }; // [m/s]
+	/* Accepted risk during lane change adjustments either before 
+	or after the maneuver - NOT IN USE YET*/
+	double accepted_risk_during_adjustments{ 0.0 }; // [m/s]
+	//double initial_risk{ 0.0 }; // [m/s]
+	//double constant_risk_period{ 1.0 }; // [s]
+	//double delta_risk{ 3.0 }; // [m/s]
+	//double max_risk_to_leader{ 0.0 }; // [m/s]
+	/* Risk at which the lane change headway becomes equal to the
+	vehicle following headway. */
+	//double intermediate_risk_to_leader{ 0.0 }; // [m/s] 
+	//double max_risk_to_follower{ 0.0 }; // [m/s]
 };

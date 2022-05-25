@@ -65,9 +65,6 @@ public:
 	void set_turning_indicator(long turning_indicator) {
 		this->turning_indicator = turning_indicator;
 	};
-	/*void set_verbose(long value) {
-		this->verbose = value > 0;
-	};*/
 	void set_vissim_use_preferred_lane(long value) {
 		this->vissim_use_preferred_lane = value;
 	};
@@ -98,9 +95,26 @@ public:
 	/* Returns the desired velocity or the max road velocity */
 	double get_free_flow_velocity() const;
 
-	/* Used for debugging */
+	/* Getters used for debugging */
+
 	double get_safe_time_headway() const;
 	double get_gap_error() const;
+	/* Returns a nullptr if there is no leader at the destination lane */
+	std::shared_ptr<NearbyVehicle> get_destination_lane_leader() const {
+		return implement_get_destination_lane_leader();
+	};
+	/* Returns a nullptr if there is no follower at the destination lane */
+	std::shared_ptr<NearbyVehicle> get_destination_lane_follower() const {
+		return implement_get_destination_lane_follower();
+	};
+	/* Returns a nullptr if there is no assisted vehicle */
+	std::shared_ptr<NearbyVehicle> get_assisted_vehicle() const {
+		return implement_get_assisted_vehicle();
+	};
+	double get_gap_variation_to(
+		const std::shared_ptr<NearbyVehicle> nearby_vehicle) const;
+	double get_collision_free_gap_to(
+		const std::shared_ptr<NearbyVehicle> nearby_vehicle) const;
 
 	void set_lane(long lane);
 	void set_link(long link);
@@ -119,6 +133,10 @@ public:
 	void read_traffic_light(int traffic_light_id, double distance)
 	{
 		set_traffic_light_information(traffic_light_id, distance);
+	}
+	void set_maximum_lane_change_risk(double value)
+	{
+		implement_set_maximum_lane_change_risk(value);
 	}
 
 	/* Dealing with nearby vehicles --------------------------------------- */
@@ -139,6 +157,7 @@ public:
 	void analyze_nearby_vehicles()
 	{
 		find_relevant_nearby_vehicles();
+		//compute_lane_change_risks();
 	};
 	//bool is_cutting_in(const NearbyVehicle& nearby_vehicle) const;
 	bool has_leader() const;
@@ -166,6 +185,8 @@ public:
 
 	/* Methods to debug nearby vehicles information */
 
+	/* TODO: These don't need to be virtual anymore. 
+	Use the get_vehicle methods instead. */
 	virtual long get_dest_lane_leader_id() const { return 0; };
 	virtual long get_dest_lane_follower_id() const { return 0; };
 	virtual long get_assisted_veh_id() const { return 0; };
@@ -175,15 +196,11 @@ public:
 
 	double compute_ttc(const NearbyVehicle& other_vehicle);
 	double compute_drac(const NearbyVehicle& other_vehicle);
-	/* The collision free gap is computed assuming a worst case braking
-	scenario */
-	double compute_exact_collision_free_gap(
-		const NearbyVehicle& other_vehicle) const;
 	/* Relative velocity at collision time under the worst case scenario
 	TODO: move to autonomous vehicle class */
-	double compute_collision_severity_risk(
-		const NearbyVehicle& other_vehicle) const;
-	double compute_collision_severity_risk_to_leader();
+	/*double compute_collision_severity_risk(
+		const NearbyVehicle& nearby_vehicle) const;*/
+	//double compute_collision_severity_risk_to_leader();
 
 	/* State-machine related methods ----------------------------------------- */
 
@@ -240,12 +257,13 @@ protected:
 		double brake_delay, bool is_lane_change_autonomous, bool is_connected,
 		double simulation_time_step, double creation_time, bool verbose);
 
-	/*virtual double get_vehicle_following_lambda_1(
-		bool is_other_connected) const;*/
 	double get_rho() const { return rho; };
 	/* Checks whether vehicle is lane changing and returns proper value
 	TODO: move to autonomous vehicle class */
 	double get_current_max_brake() const;
+	void set_gap_variation_during_lane_change(int nv_id, double value);
+	void set_collision_free_gap(int nv_id, double value);
+
 	/* Takes the desired acceleration given by the controller and
 	returns the feasible acceleration given the approximated low level
 	dynamics */
@@ -261,9 +279,6 @@ protected:
 	/* Nearby vehicles ------------------------------------------------------- */
 
 	void find_leader();
-	/* [22/03/22] Still working on code organization, but these two below
-	can probably be private */
-
 	std::vector<std::shared_ptr<NearbyVehicle>> nearby_vehicles;
 	/* Determines whether the vel control ref speed is the vehicle's
 	own desired speed or the max legal velocity. */
@@ -282,32 +297,38 @@ private:
 	lane change. Returns -1 for right lane changes, +1 for left lane
 	changes and 0 for lane keeping. */
 	virtual bool can_start_lane_change() = 0;
-	virtual void update_other_relevant_nearby_vehicles() {};
+	//virtual void update_other_relevant_nearby_vehicles() {};
 	//virtual void clear_other_relevant_nearby_vehicles() {};
 	virtual long create_lane_change_request() { return 0; };
 	virtual void set_traffic_light_information(int traffic_light_id,
 		double distance) {};
+	virtual void compute_lane_change_risks() {};
 	virtual double implement_get_time_headway_to_assisted_vehicle() const
 	{
 		return 0;
 	};
-	/* TODO: we only need one of the below functions. Either we the 
-	non-connected can't set or can't read the nearby vehicle type. */
+	virtual std::shared_ptr<NearbyVehicle>
+		implement_get_destination_lane_leader() const { return nullptr; };
+	virtual std::shared_ptr<NearbyVehicle>
+		implement_get_destination_lane_follower() const { return nullptr; };
+	virtual std::shared_ptr<NearbyVehicle>
+		implement_get_assisted_vehicle() const { return nullptr; };
+	virtual void implement_set_maximum_lane_change_risk(double value) {};
 	/* Call nv.set_type if the ego vehicle is connected. Otherwise, does
 	nothing. */
 	virtual void try_to_set_nearby_vehicle_type(long nv_type) {};
-	/* Returns nv_type if the ego vehicle is connected. Otherwise, returns
-	unknown type. */
-	//virtual long try_to_get_nearby_vehicle_type(long nv_type) const;
+	
 	/* Finds the current leader */
 	virtual void find_relevant_nearby_vehicles();
 	virtual void set_desired_lane_change_direction();
 	//virtual double get_current_lambda_1(
 	//	bool is_other_connected) const;
-	virtual double compute_current_desired_time_headway(
-		const NearbyVehicle& leader);
+	double compute_current_desired_time_headway(
+		const NearbyVehicle& nearby_vehicle) const;
 	virtual double compute_vehicle_following_desired_time_headway(
-		const NearbyVehicle& leader);
+		const NearbyVehicle& nearby_vehicle) const;
+	virtual double compute_lane_changing_desired_time_headway(
+		const NearbyVehicle& nearby_vehicle) const = 0;
 
 	bool check_if_is_leader(const NearbyVehicle& nearby_vehicle) const;
 	void update_leader(const std::shared_ptr<NearbyVehicle>& old_leader);
@@ -321,15 +342,6 @@ private:
 	the vehicle first order actuator dynamics */
 	double tau_d{ 0.0 };
 	double comfortable_brake{ COMFORTABLE_BRAKE }; // [m/s^2]
-
-	///* Emergency braking parameter during lane change */
-	//double lambda_1_lane_change{ 0.0 }; // [m/s]
-	///* Emergency braking parameter between connected vehicles */
-	//double lambda_1_connected{ 0.0 }; // [m/s]
-	//double lambda_0_connected{ 0.0 }; // [m]
-	///* Emergency braking parameter between connected vehicles 
-	//during lane change */
-	//double lambda_1_lane_change_connected{ 0.0 }; // [m/s]
 
 	std::shared_ptr<NearbyVehicle> leader{ nullptr };
 	std::vector<long> leader_id;
@@ -391,19 +403,21 @@ private:
 	RelativeLane relative_target_lane{ RelativeLane::same };
 	long turning_indicator{ 0 };
 
+	/* Safe lane change decision parameters ---------------------------------- */
+	/* Variables are only needed if we want to be able to see values in VISSIM.
+	Otherwise there is no need to save these values.
+	[May 6, 2022] Not being used. The choice is to keep measuring safety based 
+	only on the time headway */
+
+	std::unordered_map<int, double> gap_variation_during_lane_change;
+	std::unordered_map<int, double> collision_free_gap;
+
 	/*Surrogate Safety Measurements (SSMs) ----------------------------------- */
 
 	std::vector<double> ttc; // time-to-collision
 	std::vector<double> drac; // deceleration rate to avoid collision
 	std::vector<double> collision_severity_risk; /* delta vel. at collision 
 												 in worst case scenario */
-	
-	/* Other internal methods ------------------------------------------- */
-
-	/* Computes members lambda_0, lambda_1 and lane_change_lambda_1 */
-	//void compute_safe_gap_parameters() override;
-	/* TODO: state and desired_lane_change_direction members
-	can become a single member. They are redundant. */
 	
 	/* For printing and debugging purporses ------------------------------- */
 	static const std::unordered_map<State, std::string> state_to_string_map;

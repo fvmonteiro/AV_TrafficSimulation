@@ -60,18 +60,16 @@ void RealLongitudinalController::determine_controller_state(
 	if (leader == nullptr) // no vehicle ahead
 	{ 
 		state = State::velocity_control;
+		
+		if (verbose)
+		{
+			std::clog << "No leader id"
+				<< ". State: " << state_to_string(state)
+				<< std::endl;
+		}
 	}
 	else 
 	{
-		/*double gap = ego_vehicle.compute_gap(leader);
-		double ego_velocity = ego_vehicle.get_velocity();
-		double leader_velocity = leader->compute_velocity(ego_velocity);
-		double velocity_error = compute_velocity_error(
-			ego_velocity, leader_velocity);
-		double gap_threshold = gap_controller.compute_gap_threshold(
-			reference_velocity, velocity_error,
-			ego_vehicle.get_acceleration(), leader->get_acceleration()
-		);*/
 		double gap = ego_vehicle.compute_gap(leader);
 		double ego_velocity = ego_vehicle.get_velocity();
 		double leader_velocity = leader->compute_velocity(ego_velocity);

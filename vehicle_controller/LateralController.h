@@ -41,9 +41,9 @@ private:
 	lateral acceleration profile to compute the transient lane change
 	gap.
 	TODO: could we compute the trajectory only once for all vehicles? */
-	double sampling_time = 0.01; // [s] can be different from VISSIM
-	double lane_change_duration = 5.0; // [s]
-	double lane_width = 3.6; // [m]
+	double sampling_time{ 0.01 }; // [s] can be different from VISSIM
+	double lane_change_duration{ 5.0 }; // [s]
+	double lane_width{ 3.6  }; // [m]
 	std::vector<double> lane_change_lateral_acceleration;
 	std::vector<double> lane_change_lateral_velocity;
 	std::vector<double> lane_change_lateral_position;
