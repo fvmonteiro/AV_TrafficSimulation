@@ -134,9 +134,13 @@ public:
 	{
 		set_traffic_light_information(traffic_light_id, distance);
 	}
-	void set_maximum_lane_change_risk(double value)
+	void set_max_lane_change_risk_to_leaders(double value)
 	{
-		implement_set_maximum_lane_change_risk(value);
+		implement_set_accepted_lane_change_risk_to_leaders(value);
+	}
+	void set_max_lane_change_risk_to_follower(double value)
+	{
+		implement_set_accepted_lane_change_risk_to_follower(value);
 	}
 
 	/* Dealing with nearby vehicles --------------------------------------- */
@@ -194,8 +198,8 @@ public:
 
 	/* Computation of surrogate safety measurements ----------------------- */
 
-	double compute_ttc(const NearbyVehicle& other_vehicle);
-	double compute_drac(const NearbyVehicle& other_vehicle);
+	double compute_ttc(const NearbyVehicle& nearby_vehicle);
+	double compute_drac(const NearbyVehicle& nearby_vehicle);
 	/* Relative velocity at collision time under the worst case scenario
 	TODO: move to autonomous vehicle class */
 	/*double compute_collision_severity_risk(
@@ -228,9 +232,11 @@ public:
 	long decide_lane_change_direction();
 	//RelativeLane get_lane_change_direction();
 
-	double compute_safe_lane_change_gap(
-		std::shared_ptr<NearbyVehicle> other_vehicle);
+	double get_accepted_lane_change_gap(
+		std::shared_ptr<NearbyVehicle> nearby_vehicle);
 
+	double compute_accepted_lane_change_gap(
+		std::shared_ptr<NearbyVehicle> nearby_vehicle, double accepted_risk);
 	/* Methods to access internal values. Used for quicker debugging --------- */
 
 	/* Returns the current reference gap to the leader */
@@ -239,11 +245,11 @@ public:
 	if the ego vehicle is behind and from the other to the ego vehicle
 	if the other vehicle is behind. */
 	double compute_time_headway_gap(
-		std::shared_ptr<NearbyVehicle> other_vehicle);
+		std::shared_ptr<NearbyVehicle> nearby_vehicle);
 	/* Returns the transient lane changing gap between ego vehicle 
 	and other. */
 	double compute_transient_gap(
-		std::shared_ptr<NearbyVehicle> other_vehicle);
+		std::shared_ptr<NearbyVehicle> nearby_vehicle);
 
 
 	/* Methods for logging --------------------------------------------------- */
@@ -256,6 +262,9 @@ protected:
 	EgoVehicle(long id, VehicleType type, double desired_velocity,
 		double brake_delay, bool is_lane_change_autonomous, bool is_connected,
 		double simulation_time_step, double creation_time, bool verbose);
+	
+	virtual double compute_vehicle_following_safe_time_headway(
+		const NearbyVehicle& nearby_vehicle) const;
 
 	double get_rho() const { return rho; };
 	/* Checks whether vehicle is lane changing and returns proper value
@@ -303,6 +312,10 @@ private:
 	virtual void set_traffic_light_information(int traffic_light_id,
 		double distance) {};
 	virtual void compute_lane_change_risks() {};
+	virtual double compute_accepted_lane_change_gap(
+		std::shared_ptr<NearbyVehicle> nearby_vehicle) {
+		return 0.0;
+	};
 	virtual double implement_get_time_headway_to_assisted_vehicle() const
 	{
 		return 0;
@@ -313,7 +326,10 @@ private:
 		implement_get_destination_lane_follower() const { return nullptr; };
 	virtual std::shared_ptr<NearbyVehicle>
 		implement_get_assisted_vehicle() const { return nullptr; };
-	virtual void implement_set_maximum_lane_change_risk(double value) {};
+	virtual void implement_set_accepted_lane_change_risk_to_leaders(
+		double value) {};
+	virtual void implement_set_accepted_lane_change_risk_to_follower(
+		double value) {};
 	/* Call nv.set_type if the ego vehicle is connected. Otherwise, does
 	nothing. */
 	virtual void try_to_set_nearby_vehicle_type(long nv_type) {};
@@ -321,11 +337,8 @@ private:
 	/* Finds the current leader */
 	virtual void find_relevant_nearby_vehicles();
 	virtual void set_desired_lane_change_direction();
-	//virtual double get_current_lambda_1(
-	//	bool is_other_connected) const;
+	
 	double compute_current_desired_time_headway(
-		const NearbyVehicle& nearby_vehicle) const;
-	virtual double compute_vehicle_following_desired_time_headway(
 		const NearbyVehicle& nearby_vehicle) const;
 	virtual double compute_lane_changing_desired_time_headway(
 		const NearbyVehicle& nearby_vehicle) const = 0;

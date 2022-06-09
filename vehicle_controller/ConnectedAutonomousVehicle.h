@@ -57,8 +57,11 @@ private:
 	};*/
 	/*double compute_current_desired_time_headway(
 		const NearbyVehicle& nearby_vehicle) override;*/
-	double compute_vehicle_following_desired_time_headway(
+	double compute_vehicle_following_safe_time_headway(
 		const NearbyVehicle& nearby_vehicle) const override;
+	double compute_vehicle_following_time_headway(
+		const NearbyVehicle& nearby_vehicle, 
+		double nv_max_lane_change_risk) const;
 	double compute_lane_changing_desired_time_headway(
 		const NearbyVehicle& nearby_vehicle) const override;
 	double compute_collision_free_gap_during_lane_change(

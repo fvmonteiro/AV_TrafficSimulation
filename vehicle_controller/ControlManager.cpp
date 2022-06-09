@@ -548,19 +548,23 @@ double ControlManager::choose_minimum_acceleration(
 }
 
 double ControlManager::determine_low_velocity_reference(double ego_velocity,
-	const NearbyVehicle& other_vehicle) {
+	const NearbyVehicle& nearby_vehicle) 
+{
 	double leader_velocity =
-		other_vehicle.compute_velocity(ego_velocity);
+		nearby_vehicle.compute_velocity(ego_velocity);
 	/* The fraction of the leader speed has to vary. Otherwise, vehicles 
 	take too long to create safe gaps at low speeds*/
 	double vel_fraction;
-	if (leader_velocity < 5 / 3.6) {
+	if (leader_velocity < 5 / 3.6) 
+	{
 		vel_fraction = 0;
 	}
-	else if (leader_velocity < 40 / 3.6) {
+	else if (leader_velocity < 40 / 3.6) 
+	{
 		vel_fraction = 0.5;
 	}
-	else  {
+	else  
+	{
 		vel_fraction = 0.8;
 	}
 	double reference_velocity = std::min(
@@ -569,41 +573,61 @@ double ControlManager::determine_low_velocity_reference(double ego_velocity,
 	return reference_velocity;
 }
 
-double ControlManager::compute_safe_lane_change_gap(
-	const EgoVehicle& ego_vehicle, const NearbyVehicle& other_vehicle,
-	bool will_accelerate) {
-
-	double safe_time_headway_gap = get_safe_time_headway_gap(
-		ego_vehicle.get_velocity(), ego_vehicle.has_lane_change_intention(),
-		other_vehicle);
+double ControlManager::compute_desired_lane_change_gap(
+	const AutonomousVehicle& ego_vehicle, 
+	const NearbyVehicle& nearby_vehicle,
+	bool will_accelerate) 
+{
+	double safe_time_headway_gap = get_desired_time_headway_gap(
+		ego_vehicle.get_velocity(), 
+		/*ego_vehicle.has_lane_change_intention(),*/
+		nearby_vehicle);
 	/* TODO: the function calls do not make much sense here.
 	You call this method from the ego vehicle, and then call an ego vehicle 
 	method in here.*/
 	/*double collision_free_gap = ego_vehicle.compute_exact_collision_free_gap(
-		other_vehicle);*/
+		nearby_vehicle);*/
 	double transient_gap = lateral_controller.compute_transient_gap(
-		ego_vehicle, other_vehicle, will_accelerate);
+		ego_vehicle, nearby_vehicle, will_accelerate);
 
 	return safe_time_headway_gap /*collision_free_gap*/ + transient_gap;
 }
 
-double ControlManager::get_safe_time_headway_gap(double ego_velocity,
-	bool has_lane_change_intention, const NearbyVehicle& other_vehicle) 
+//double ControlManager::compute_accepted_lane_change_gap(
+//	const AutonomousVehicle& ego_vehicle, const NearbyVehicle& nearby_vehicle, 
+//	bool will_accelerate) 
+//{
+//	double accepted_time_headway_gap = get_accepted_time_headway_gap(
+//		ego_vehicle, nearby_vehicle);
+//	/* TODO: the function calls do not make much sense here.
+//	You call this method from the ego vehicle, and then call an ego vehicle
+//	method in here.*/
+//	/*double collision_free_gap = ego_vehicle.compute_exact_collision_free_gap(
+//		nearby_vehicle);*/
+//	double transient_gap = lateral_controller.compute_transient_gap(
+//		ego_vehicle, nearby_vehicle, will_accelerate);
+//
+//	return accepted_time_headway_gap /*collision_free_gap*/ + transient_gap;
+//}
+
+double ControlManager::get_desired_time_headway_gap(double ego_velocity,
+	/*bool has_lane_change_intention,*/ const NearbyVehicle& nearby_vehicle) 
 {
 	double time_headway_gap = 0.0;
 	//double ego_velocity = ego_vehicle.get_velocity();
-	if (other_vehicle.is_ahead()) {
-		if (other_vehicle.get_relative_lane() == RelativeLane::same) 
+	if (nearby_vehicle.is_ahead()) 
+	{
+		if (nearby_vehicle.get_relative_lane() == RelativeLane::same) 
 		{
 			time_headway_gap = 
-				origin_lane_controller.get_safe_time_headway_gap(
-				ego_velocity, has_lane_change_intention);
+				origin_lane_controller.get_desired_time_headway_gap(
+				ego_velocity/*, has_lane_change_intention*/);
 		}
 		else 
 		{
 			time_headway_gap = 
-				destination_lane_controller.get_safe_time_headway_gap(
-				ego_velocity, has_lane_change_intention);
+				destination_lane_controller.get_desired_time_headway_gap(
+				ego_velocity/*, has_lane_change_intention*/);
 		}
 	}
 	else
@@ -613,11 +637,47 @@ double ControlManager::get_safe_time_headway_gap(double ego_velocity,
 		time_headway_gap =
 			destination_lane_controller.get_time_headway_gap(
 				dest_lane_follower_time_headway,
-				other_vehicle.compute_velocity(ego_velocity));
+				nearby_vehicle.compute_velocity(ego_velocity));
 	}
 
 	return time_headway_gap;
 }
+
+//double ControlManager::get_accepted_time_headway_gap(
+//	const AutonomousVehicle& ego_vehicle, const NearbyVehicle& nearby_vehicle)
+//{
+//	double time_headway_gap = 0.0;
+//	double ego_velocity = ego_vehicle.get_velocity();
+//	//bool has_lc_intention = ego_vehicle.has_lane_change_intention();
+//
+//	if (nearby_vehicle.is_ahead()) 
+//	{
+//		if (nearby_vehicle.get_relative_lane() == RelativeLane::same)
+//		{
+//			time_headway_gap =
+//				origin_lane_controller.get_desired_time_headway_gap(
+//					ego_velocity/*, has_lc_intention*/);
+//		}
+//		else
+//		{
+//			time_headway_gap =
+//				destination_lane_controller.get_desired_time_headway_gap(
+//					ego_velocity/*, has_lc_intention*/);
+//		}
+//		//double gamma = nearby_vehicle.get_max_brake() / ego_vehicle
+//	}
+//	else
+//	{
+//		double dest_lane_follower_time_headway =
+//			destination_lane_controller.get_follower_time_headway();
+//		time_headway_gap =
+//			destination_lane_controller.get_time_headway_gap(
+//				dest_lane_follower_time_headway,
+//				nearby_vehicle.compute_velocity(ego_velocity));
+//	}
+//
+//	return time_headway_gap;
+//}
 
 std::string ControlManager::active_ACC_to_string(
 	ACCType active_longitudinal_controller) 

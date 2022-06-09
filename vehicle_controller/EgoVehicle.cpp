@@ -40,6 +40,7 @@ EgoVehicle::EgoVehicle(long id, VehicleType type, double desired_velocity,
 			<< " at time " << this->creation_time
 			<< ", category " << static_cast<int>(category)
 			<< ", type " << static_cast<int>(get_type())
+			<< ", des. vel. = " << desired_velocity
 			<< ", lambda 1 = " << get_lambda_1()
 			<< ", lambda 0 = " << get_lambda_0()
 			<< std::endl;
@@ -162,7 +163,7 @@ double EgoVehicle::get_free_flow_velocity() const
 double EgoVehicle::get_safe_time_headway() const 
 {
 	return controller.get_origin_lane_controller().
-		get_safe_time_headway();
+		get_desired_time_headway();
 }
 
 double EgoVehicle::get_gap_error() const
@@ -463,10 +464,10 @@ double EgoVehicle::compute_current_desired_time_headway(
 	{
 		return compute_lane_changing_desired_time_headway(nearby_vehicle);
 	}
-	return compute_vehicle_following_desired_time_headway(nearby_vehicle);
+	return compute_vehicle_following_safe_time_headway(nearby_vehicle);
 }
 
-double EgoVehicle::compute_vehicle_following_desired_time_headway(
+double EgoVehicle::compute_vehicle_following_safe_time_headway(
 	const NearbyVehicle& nearby_vehicle) const
 {
 	return compute_time_headway_with_risk(get_desired_velocity(),
@@ -666,16 +667,10 @@ long EgoVehicle::decide_lane_change_direction()
 	return 0;
 }
 
-double EgoVehicle::compute_safe_lane_change_gap(
-	std::shared_ptr<NearbyVehicle> other_vehicle) 
+double EgoVehicle::get_accepted_lane_change_gap(
+	std::shared_ptr<NearbyVehicle> nearby_vehicle) 
 {
-	double safe_gap = 0.0;
-	if (other_vehicle != nullptr) 
-	{
-		safe_gap = controller.compute_safe_lane_change_gap(*this,
-			*other_vehicle);
-	}
-	return std::max(safe_gap, 1.0);
+	return compute_accepted_lane_change_gap(nearby_vehicle);
 }
 
 double EgoVehicle::get_reference_gap() 
@@ -684,42 +679,44 @@ double EgoVehicle::get_reference_gap()
 }
 
 double EgoVehicle::compute_time_headway_gap(
-	std::shared_ptr<NearbyVehicle> other_vehicle) 
+	std::shared_ptr<NearbyVehicle> nearby_vehicle) 
 {
 	double time_headway_gap = 0.0;
-	if (other_vehicle != nullptr) {
-		time_headway_gap = controller.get_safe_time_headway_gap(
-			get_velocity(), has_lane_change_intention(), *other_vehicle);
+	if (nearby_vehicle != nullptr) 
+	{
+		time_headway_gap = controller.get_desired_time_headway_gap(
+			get_velocity(), /*has_lane_change_intention(),*/ 
+			*nearby_vehicle);
 	}
 	return time_headway_gap;
 }
 
 double EgoVehicle::compute_transient_gap(
-	std::shared_ptr<NearbyVehicle> other_vehicle) {
+	std::shared_ptr<NearbyVehicle> nearby_vehicle) {
 	double transient_gap = 0.0;
-	if (other_vehicle != nullptr) {
+	if (nearby_vehicle != nullptr) {
 		transient_gap = controller.get_lateral_controller().
-			compute_transient_gap(*this, *other_vehicle, false);
+			compute_transient_gap(*this, *nearby_vehicle, false);
 	}
 	return transient_gap;
 }
 
 /* Computation of surrogate safety measurements --------------------------- */
 
-double EgoVehicle::compute_ttc(const NearbyVehicle& other_vehicle) 
+double EgoVehicle::compute_ttc(const NearbyVehicle& nearby_vehicle) 
 {
 	/* Time-to-collision is:
 	(leader x - leader length - ego x) / (ego vel - leader vel), 
 		if ego vel > leader vel 
 	underfined, 
 		if ego vel < leader vel */
-	if (other_vehicle.get_relative_velocity() > 0) {
-		return compute_gap(other_vehicle) / other_vehicle.get_relative_velocity();
+	if (nearby_vehicle.get_relative_velocity() > 0) {
+		return compute_gap(nearby_vehicle) / nearby_vehicle.get_relative_velocity();
 	}
 	return -1.0;	
 }
 
-double EgoVehicle::compute_drac(const NearbyVehicle& other_vehicle) 
+double EgoVehicle::compute_drac(const NearbyVehicle& nearby_vehicle) 
 {
 	/* Deceleration rate to avoid collision
 	(ego vel - leader vel)^2 / 2*(leader x - leader length - ego x),
@@ -727,9 +724,9 @@ double EgoVehicle::compute_drac(const NearbyVehicle& other_vehicle)
 	underfined,
 		if ego vel < leader vel
 	*/
-	if (other_vehicle.get_relative_velocity() > 0) {
-		return std::pow(other_vehicle.get_relative_velocity(), 2)
-			/ 2 / compute_gap(other_vehicle);
+	if (nearby_vehicle.get_relative_velocity() > 0) {
+		return std::pow(nearby_vehicle.get_relative_velocity(), 2)
+			/ 2 / compute_gap(nearby_vehicle);
 	}
 	return -1.0;
 }

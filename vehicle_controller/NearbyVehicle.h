@@ -44,6 +44,9 @@ public:
 	double get_h_to_incoming_vehicle() const {
 		return h_to_incoming_vehicle;
 	};
+	double get_max_lane_change_risk_to_follower() const {
+		return max_lane_change_risk_to_follower;
+	}
 
 	void set_lateral_position(double lateral_position) {
 		this->lateral_position = lateral_position;
@@ -68,6 +71,9 @@ public:
 	void set_h_to_incoming_vehicle(double h) {
 		this->h_to_incoming_vehicle = h;
 	};
+	void set_max_lane_change_risk_to_follower(double r) {
+		this->max_lane_change_risk_to_follower = r;
+	}
 
 	void set_type(int type) /*override*/;
 	/* Special getters and setters */
@@ -92,7 +98,9 @@ public:
 	void read_lane_change_request(long lane_change_request);
 
 	double estimate_desired_time_headway(double free_flow_velocity,
-		double leader_max_brake, double rho, double risk) const;
+		double leader_max_brake, double rho, double risk);
+	double estimate_max_accepted_risk_to_incoming_vehicle(
+		double free_flow_velocity, double leader_max_brake, double rho);
 
 	std::string to_string() const;
 	friend std::ostream& operator<< (std::ostream& out, 
@@ -120,6 +128,7 @@ private:
 	/* The time headway the nearby vehicle wants to keep from a connected
 	ego vehicle that wants to merge in front of it.*/
 	double h_to_incoming_vehicle{ 0.0 };
+	double max_lane_change_risk_to_follower{ 0.0 };
 
 	enum class Member {
 		id,

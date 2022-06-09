@@ -134,12 +134,31 @@ public:
 	double use_vissim_desired_acceleration(const EgoVehicle& ego_vehicle);
 
 	double determine_low_velocity_reference(double ego_velocity,
-		const NearbyVehicle& other_vehicle);
-	double compute_safe_lane_change_gap(const EgoVehicle& ego_vehicle, 
-		const NearbyVehicle& other_vehicle, bool will_accelerate = false);
-	/* Returns the time headway part of the safe lane change gap. */
-	double get_safe_time_headway_gap(double ego_velocity,
-		bool has_lane_change_intention, const NearbyVehicle& other_vehicle);
+		const NearbyVehicle& nearby_vehicle);
+	
+	/* Returns the reference gap used by the longitudinal 
+	controller. It uses a previously defined time headway, which might
+	have been computed assuming some accepted risk. */
+	double compute_desired_lane_change_gap(const AutonomousVehicle& ego_vehicle,
+		const NearbyVehicle& nearby_vehicle, bool will_accelerate = false);
+	
+	/* Returns the accepted lane change gap, which might is different from 
+	the longitudinal controller's reference gap if the accepted risk is 
+	greater than zero. This assumes the longitudinal controller uses a 
+	zero-risk time headway. */
+	//double compute_accepted_lane_change_gap(
+	//	const AutonomousVehicle& ego_vehicle,
+	//	const NearbyVehicle& nearby_vehicle, 
+	//	bool will_accelerate = false);
+	
+	/* Returns the time headway part of the desired lane change gap. */
+	double get_desired_time_headway_gap(double ego_velocity,
+		/*bool has_lane_change_intention,*/ 
+		const NearbyVehicle& nearby_vehicle);
+	/* Returns the time headway part of the accepted lane change gap. */
+	/*double get_accepted_time_headway_gap(const AutonomousVehicle& ego_vehicle,
+		const NearbyVehicle& nearby_vehicle);*/
+
 
 	/* Printing ----------------------------------------------------------- */
 	static std::string active_ACC_to_string(

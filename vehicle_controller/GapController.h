@@ -48,7 +48,7 @@ public:
 	};
 
 	/* Returns the desired (final) time headway. */
-	double get_safe_time_headway() const;
+	double get_desired_time_headway() const;
 	/* Returns the current time headway in use */
 	double get_current_time_headway() const;
 
@@ -57,8 +57,8 @@ public:
 		double velocity) const;
 	/* Computes the time headway following distance using the safe
 	value for time headway*/
-	double get_safe_time_headway_gap(double ego_velocity,
-		bool has_lane_change_intention) const;
+	double get_desired_time_headway_gap(double ego_velocity/*,
+		bool has_lane_change_intention*/) const;
 	double get_desired_gap(double ego_velocity);
 
 	double compute_desired_acceleration(const EgoVehicle& ego_vehicle, 

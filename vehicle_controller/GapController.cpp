@@ -31,7 +31,7 @@ GapController::GapController(double simulation_time_step,
 		comfortable_acceleration, filter_brake_limit, 
 		false) {}
 
-double GapController::get_safe_time_headway() const
+double GapController::get_desired_time_headway() const
 {
 	return desired_time_headway;
 }
@@ -49,10 +49,10 @@ double GapController::compute_time_headway_gap(double time_headway,
 	return time_headway * velocity + standstill_distance;
 }
 
-double GapController::get_safe_time_headway_gap(
-	double ego_velocity, bool has_lane_change_intention) const
+double GapController::get_desired_time_headway_gap(
+	double ego_velocity /*, bool has_lane_change_intention */) const
 {
-	return compute_time_headway_gap(get_safe_time_headway(), ego_velocity);
+	return compute_time_headway_gap(get_desired_time_headway(), ego_velocity);
 }
 
 double GapController::get_desired_gap(double ego_velocity)
@@ -63,7 +63,7 @@ double GapController::get_desired_gap(double ego_velocity)
 
 double GapController::compute_desired_gap(double velocity_ego)
 {
-	double desired_time_headway = get_safe_time_headway();
+	double desired_time_headway = get_desired_time_headway();
 	double time_headway = time_headway_filter.apply_filter(
 		desired_time_headway);
 	return compute_time_headway_gap(time_headway, velocity_ego);
@@ -87,7 +87,7 @@ double GapController::estimate_gap_error_derivative(
 	double velocity_error, double acceleration) const
 {
 	/* TODO [Oct 29, 2021]: should be changed to e_v - h.a - dh/dt.v */
-	double time_headway = get_safe_time_headway();
+	double time_headway = get_desired_time_headway();
 	return velocity_error - time_headway * acceleration;
 }
 

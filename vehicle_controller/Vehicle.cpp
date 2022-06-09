@@ -47,6 +47,17 @@ bool Vehicle::has_lane_change_intention() const
 	return desired_lane_change_direction != RelativeLane::same;
 }
 
+double Vehicle::compute_max_risk(double leader_max_brake,
+	double follower_max_brake, double desired_velocity, double rho)
+{
+	double gamma = leader_max_brake / follower_max_brake;
+	double max_risk = std::sqrt(
+		((1 - std::pow(1 - rho, 2) / gamma) * desired_velocity / 2
+			+ get_lambda_1()) * 2 * desired_velocity
+	);
+	return max_risk;
+}
+
 void Vehicle::compute_safe_gap_parameters()
 {
 	lambda_0 = compute_lambda_0(max_jerk, comfortable_acceleration, 

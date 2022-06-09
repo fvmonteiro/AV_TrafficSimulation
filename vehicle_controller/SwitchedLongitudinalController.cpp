@@ -48,9 +48,9 @@ void SwitchedLongitudinalController::reset_time_headway_filter(
 	gap_controller.reset_time_headway_filter(time_headway);
 }
 
-double SwitchedLongitudinalController::get_safe_time_headway() const
+double SwitchedLongitudinalController::get_desired_time_headway() const
 {
-	return gap_controller.get_safe_time_headway();
+	return gap_controller.get_desired_time_headway();
 }
 
 double SwitchedLongitudinalController::get_current_time_headway() const
@@ -64,11 +64,11 @@ double SwitchedLongitudinalController::get_time_headway_gap(
 	return gap_controller.compute_time_headway_gap(time_headway, velocity);
 }
 
-double SwitchedLongitudinalController::get_safe_time_headway_gap(
-	double ego_velocity, bool has_lane_change_intention) 
+double SwitchedLongitudinalController::get_desired_time_headway_gap(
+	double ego_velocity/*, bool has_lane_change_intention*/) 
 {
-	return gap_controller.get_safe_time_headway_gap(ego_velocity,
-		has_lane_change_intention);
+	return gap_controller.get_desired_time_headway_gap(ego_velocity/*,
+		has_lane_change_intention*/);
 }
 
 double SwitchedLongitudinalController::get_desired_gap(double ego_velocity)
@@ -89,7 +89,7 @@ double SwitchedLongitudinalController::compute_gap_threshold(double gap,
 {
 	/* Threshold is computed such that, at the switch, the vehicle following
 	input is greater or equal to kg*h*(Vf - v) > 0. */
-	double h = gap_controller.get_safe_time_headway();
+	double h = gap_controller.get_desired_time_headway();
 	double kg = gap_controller.get_gap_error_gain();
 	return gap + h * (diff_to_velocity_reference) - gap_control_input / kg;
 	/*double time_headway = get_safe_time_headway();

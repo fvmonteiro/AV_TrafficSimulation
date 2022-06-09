@@ -52,9 +52,15 @@ protected:
 		double simulation_time_step, double creation_time,
 		bool verbose = false);
 
+	/* Necessary when computing lane change gaps with risk */
+	double dest_lane_follower_lambda_1{ 0.0 };
+
 	double get_lambda_1_lane_change() const { return lambda_1_lane_change; }
 	double get_accepted_risk_to_leaders() const {
-		return accepted_risk_during_lane_change;
+		return accepted_lane_change_risk_to_leaders;
+	}
+	double get_accepted_risk_to_follower() const {
+		return accepted_lane_change_risk_to_follower;
 	}
 	void find_destination_lane_vehicles();
 	bool is_destination_lane_follower(
@@ -80,6 +86,8 @@ private:
 		const std::unordered_map<int, TrafficLight>& traffic_lights) override;
 	bool give_lane_change_control_to_vissim() const override;
 	bool can_start_lane_change() override;
+	virtual double compute_accepted_lane_change_gap(
+		std::shared_ptr<NearbyVehicle> nearby_vehicle) override;
 	/* Not being used */
 	void compute_lane_change_risks() override;
 	std::shared_ptr<NearbyVehicle>
@@ -107,7 +115,10 @@ private:
 
 	/* Risk related methods --------------------------------------------- */
 
-	void implement_set_maximum_lane_change_risk(double value) override;
+	void implement_set_accepted_lane_change_risk_to_leaders(
+		double value) override;
+	void implement_set_accepted_lane_change_risk_to_follower(
+		double value) override;
 	/* Resets accepted risks and time */
 	void reset_accepted_lane_change_risks(double time);
 	/* Updates the accepted risk periodically - NOT IMPLEMENTED */
@@ -117,9 +128,10 @@ private:
 	double compute_intermediate_risk_to_leader(double lambda_1,
 		double lane_change_lambda_1, double max_brake_no_lane_change,
 		double leader_max_brake);
-	/* Maximum possible accepted risk to follower that doesn't imply collision
-	- NOT IMPLEMENTED */
-	double compute_max_risk_to_follower(double follower_max_brake);
+	/* Maximum possible accepted risk during vehicle following that keeps 
+	the time headway positive. 
+	This is the same max risk as for gap generation */
+	//double compute_max_vehicle_following_risk(double leader_max_brake);
 	/* NOT IMPLEMENTED */
 	void update_headways_with_risk(const EgoVehicle& ego_vehicle);
 
@@ -137,11 +149,9 @@ private:
 
 	/* Stores the time when the vehicle started trying to 
 	change lanes */
-	double lane_change_timer_start{ 0.0 }; // [s]
-	double accepted_risk_during_lane_change{ 5.0 }; // [m/s]
-	/* Accepted risk during lane change adjustments either before 
-	or after the maneuver - NOT IN USE YET*/
-	double accepted_risk_during_adjustments{ 0.0 }; // [m/s]
+	//double lane_change_timer_start{ 0.0 }; // [s]
+	double accepted_lane_change_risk_to_leaders{ 0.0 }; // [m/s]
+	double accepted_lane_change_risk_to_follower{ 0.0 }; // [m/s]
 	//double initial_risk{ 0.0 }; // [m/s]
 	//double constant_risk_period{ 1.0 }; // [s]
 	//double delta_risk{ 3.0 }; // [m/s]

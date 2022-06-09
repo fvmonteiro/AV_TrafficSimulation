@@ -35,7 +35,8 @@ enum class UDA {
     h_to_assited_veh = 6, 
     lane_change_request,
     give_control_to_vissim,
-    max_lane_change_risk,
+    max_lane_change_risk_to_leaders,
+    max_lane_change_risk_to_follower,
     /* Debugging: leader */
     leader_id = 100, 
     leader_type, 

@@ -8,6 +8,13 @@ ConnectedAutonomousVehicle::ConnectedAutonomousVehicle(
 		true, simulation_time_step, creation_time, verbose) 
 {
 	compute_connected_safe_gap_parameters();
+
+	if (verbose)
+	{
+		std::clog << "lambda1_connected = " << lambda_1_connected
+			<< ", lambda1_connected_lc = " << lambda_1_lane_change_connected
+			<< std::endl;
+	}
 }
 
 bool ConnectedAutonomousVehicle::has_assisted_vehicle() const
@@ -31,7 +38,7 @@ implement_get_time_headway_to_assisted_vehicle() const {
 	if (is_cooperating_to_generate_gap())
 	{
 		return controller.get_gap_generation_lane_controller().
-			get_safe_time_headway();
+			get_desired_time_headway();
 	}
 	return 0;
 }
@@ -93,11 +100,20 @@ void ConnectedAutonomousVehicle::update_destination_lane_follower(
 {
 	if (has_destination_lane_follower())
 	{
+		std::shared_ptr<NearbyVehicle>& dest_lane_follower = 
+			get_destination_lane_follower();
 		controller.update_destination_lane_follower_time_headway(
-			get_destination_lane_follower()->get_h_to_incoming_vehicle());
-		/* TODO: avoid running this computation every simulation.
-		We can store the dest. follower's parameters and then reuse them. */
-		//get_destination_lane_follower()->compute_safe_gap_parameters();	
+			dest_lane_follower->get_h_to_incoming_vehicle());
+
+		/* We need to compute fd's lambda1 here cause it's used later in
+		computing gaps that accept risks. */
+		if ((old_follower != nullptr )
+			&& (old_follower->get_id() != dest_lane_follower->get_id()))
+		{
+			get_destination_lane_follower()->compute_safe_gap_parameters();
+			dest_lane_follower_lambda_1 =
+				get_destination_lane_follower()->get_lambda_1();
+		}
 	}
 }
 
@@ -106,14 +122,19 @@ void ConnectedAutonomousVehicle::update_assisted_vehicle(
 {
 	if (has_assisted_vehicle())
 	{
-		double new_max_brake = assisted_vehicle->get_max_brake();
-		if (old_assisted_vehicle == nullptr
-			|| (std::abs(new_max_brake
-				- old_assisted_vehicle->get_max_brake()) > 0.5))
+		//double new_max_brake = assisted_vehicle->get_max_brake();
+		if ((old_assisted_vehicle == nullptr)
+			/* || (std::abs(new_max_brake
+				- old_assisted_vehicle->get_max_brake()) > 0.5)*/
+			|| (old_assisted_vehicle->get_id() != assisted_vehicle->get_id()))
 		{
-			controller.update_gap_generation_controller(get_velocity(),
-				compute_vehicle_following_desired_time_headway(
-					*assisted_vehicle));
+			double h_to_assisted_vehicle = std::max(0.0,
+				compute_vehicle_following_time_headway(
+					*assisted_vehicle, 0
+					/* assisted_vehicle->get_max_lane_change_risk_to_follower()*/
+				));
+			controller.update_gap_generation_controller(
+				get_velocity(), h_to_assisted_vehicle);
 		}
 	}
 }
@@ -151,13 +172,25 @@ double ConnectedAutonomousVehicle::get_lambda_1_lane_change(
 //}
 
 double ConnectedAutonomousVehicle::
-compute_vehicle_following_desired_time_headway(
+compute_vehicle_following_safe_time_headway(
 	const NearbyVehicle& nearby_vehicle) const
+{
+	/*double current_lambda_1 = get_lambda_1(nearby_vehicle.is_connected());
+	return compute_time_headway_with_risk(get_desired_velocity(),
+		get_max_brake(), nearby_vehicle.get_max_brake(),
+		current_lambda_1, get_rho(), 0);*/
+	return compute_vehicle_following_time_headway(nearby_vehicle, 0);
+}
+
+double ConnectedAutonomousVehicle::
+compute_vehicle_following_time_headway(
+	const NearbyVehicle& nearby_vehicle,
+	double nv_max_lane_change_risk) const
 {
 	double current_lambda_1 = get_lambda_1(nearby_vehicle.is_connected());
 	return compute_time_headway_with_risk(get_desired_velocity(),
 		get_max_brake(), nearby_vehicle.get_max_brake(),
-		current_lambda_1, get_rho(), 0);
+		current_lambda_1, get_rho(), nv_max_lane_change_risk);
 }
 
 double ConnectedAutonomousVehicle::compute_lane_changing_desired_time_headway(
@@ -167,12 +200,20 @@ double ConnectedAutonomousVehicle::compute_lane_changing_desired_time_headway(
 		get_lambda_1_lane_change(nearby_vehicle.is_connected());
 	double h_lc = compute_time_headway_with_risk(get_desired_velocity(),
 		get_lane_change_max_brake(), nearby_vehicle.get_max_brake(),
-		current_lambda_1, get_rho(), get_accepted_risk_to_leaders());
-	double h_no_lc_no_risk =
-		compute_vehicle_following_desired_time_headway(nearby_vehicle);
-	/* For now, we never use time headway values that lead to a positive risk
-	after the lateral maneuver is done. */
-	return std::max(h_lc, h_no_lc_no_risk);
+		current_lambda_1, get_rho(), 0/*get_accepted_risk_to_leaders()*/);
+	return h_lc;
+	/* We only allow the lane changing headway towards the leaders to be below
+	the safe vehicle following headway if a risky headway to the future
+	follower is also allowed */
+	/*if (get_accepted_risk_to_follower() <= 0)
+	{
+		return std::max(h_lc,
+			compute_vehicle_following_safe_time_headway(nearby_vehicle));
+	}
+	else
+	{
+		return h_lc;
+	}*/
 }
 
 double ConnectedAutonomousVehicle::
@@ -205,11 +246,13 @@ bool ConnectedAutonomousVehicle::check_if_is_asking_for_cooperation(
 	{
 		long lane_change_request_veh_id =
 			nearby_vehicle.get_lane_change_request_veh_id();
-		if (lane_change_request_veh_id == nearby_vehicle.get_id()) {
+		if (lane_change_request_veh_id == nearby_vehicle.get_id()) 
+		{
 			/* The nearby veh is requesting a gap for itself */
 			// do nothing
 		}
-		else {
+		else 
+		{
 			/* The nearby veh is requesting a gap for someone
 			else in its platoon */
 		}

@@ -113,7 +113,8 @@ bool NearbyVehicle::is_requesting_to_merge_behind() const
 			|| relative_lane == RelativeLane::same);
 }
 
-void NearbyVehicle::read_lane_change_request(long lane_change_request) {
+void NearbyVehicle::read_lane_change_request(long lane_change_request) 
+{
 	/* Getting the sign of lane change request */
 	int request_sign = (lane_change_request > 0) 
 		- (lane_change_request < 0);
@@ -122,10 +123,18 @@ void NearbyVehicle::read_lane_change_request(long lane_change_request) {
 }
 
 double NearbyVehicle::estimate_desired_time_headway(double free_flow_velocity,
-	double leader_max_brake, double rho, double risk) const
+	double leader_max_brake, double rho, double risk)
 {
+	compute_safe_gap_parameters();
 	return compute_time_headway_with_risk(free_flow_velocity, 
 		get_max_brake(), leader_max_brake, get_lambda_1(), rho, risk);
+}
+
+double NearbyVehicle::estimate_max_accepted_risk_to_incoming_vehicle(
+	double free_flow_velocity, double leader_max_brake, double rho)
+{
+	return compute_max_risk(leader_max_brake, get_max_brake(), 
+		free_flow_velocity, rho);
 }
 
 std::string NearbyVehicle::to_string() const {

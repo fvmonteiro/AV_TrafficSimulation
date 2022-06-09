@@ -46,9 +46,12 @@ protected:
 	double compute_time_headway_with_risk(double free_flow_velocity,
 		double follower_max_brake, double leader_max_brake,
 		double lambda_1, double rho, double accepted_risk) const;
+	/* Maximum possible accepted risk that keeps the time headway positive. */
+	double compute_max_risk(double leader_max_brake,
+		double follower_max_brake, double desired_velocity, double rho);
 
 	void compute_safe_gap_parameters();
-
+	
 	/* The variables below are a way of describing the emergency braking, 
 	but they do not correspond to how VISSIM works. VISSIM has varying 
 	max brake based on speed (and no jerk). We estimate these parameters

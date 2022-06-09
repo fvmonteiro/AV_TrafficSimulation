@@ -20,7 +20,7 @@
 
 /*==========================================================================*/
 
-const std::unordered_set<long> LOGGED_VEHICLES_IDS{ 9 };
+const std::unordered_set<long> LOGGED_VEHICLES_IDS{ 0 };
 const bool CLUELESS_DEBUGGING{ false };
 //const double DEBUGGING_START_TIME{ 249.0 };
 
@@ -123,15 +123,16 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
         { 
             UDA uda = UDA(index1);
             switch (uda) {
-            /* The first three are necessary */
+            /* The first few are necessary */
             case UDA::h_to_assited_veh:
             case UDA::lane_change_request: 
             case UDA::give_control_to_vissim:
-            case UDA::max_lane_change_risk:
+            case UDA::max_lane_change_risk_to_leaders:
+            case UDA::max_lane_change_risk_to_follower:
                 return 1;
             /* Debugging: leader */
             case UDA::leader_id:
-                return 1;
+                return 0;
             case UDA::leader_type:
             case UDA::gap_to_leader:
             case UDA::reference_gap:
@@ -139,39 +140,26 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
                 return 0;
             /* Debugging: dest lane leader */
             case UDA::dest_leader_id:
-                return 1;
             case UDA::gap_to_dest_lane_leader:
-                return 1;
             case UDA::transient_gap_to_ld:
-                return 1;
             case UDA::veh_following_gap_to_ld:
-                return 1;
             case UDA::safe_gap_to_dest_lane_leader:
-                return 1;
             case UDA::delta_gap_to_ld:
-                return 1;
             case UDA::lc_collision_free_gap_to_ld:
-                return 1;
+                return 0;
             /* Debugging: dest lane follower */
             case UDA::dest_follower_id:
-                return 1;
             case UDA::gap_to_dest_lane_follower:
-                return 1;
             case UDA::transient_gap_to_fd:
-                return 1;
             case UDA::veh_following_gap_to_fd:
-                return 1;
             case UDA::safe_gap_to_dest_lane_follower:
-                return 1;
             case UDA::dest_follower_time_headway:
-                return 0;
             case UDA::delta_gap_to_fd:
-                return 1;
             case UDA::lc_collision_free_gap_to_fd:
-                return 1;
+                return 0;
             /* Debugging: assisted vehicle */
             case UDA::assisted_veh_id:
-                return 1;
+                return 0;
             /* Debugging: other */
             case UDA::waiting_time:
                 return 0;
@@ -287,9 +275,13 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
         return 1;
     case DRIVER_DATA_VEH_UDA                :
         switch (UDA(index1)) {
-        case UDA::max_lane_change_risk:
-            vehicles[current_vehicle_id]->set_maximum_lane_change_risk(
-                double_value);
+        case UDA::max_lane_change_risk_to_leaders:
+            vehicles[current_vehicle_id]->
+                set_max_lane_change_risk_to_leaders(double_value);
+            break;
+        case UDA::max_lane_change_risk_to_follower:
+            vehicles[current_vehicle_id]->
+                set_max_lane_change_risk_to_follower(double_value);
             break;
         default: // do nothing
             break;
@@ -352,6 +344,10 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
         case UDA::h_to_assited_veh:
             vehicles[current_vehicle_id]->peek_nearby_vehicles()
                 ->set_h_to_incoming_vehicle(double_value);
+            break;
+        case UDA::max_lane_change_risk_to_follower:
+            vehicles[current_vehicle_id]->peek_nearby_vehicles()
+                ->set_max_lane_change_risk_to_follower(double_value);
             break;
         default:
             break;
@@ -513,7 +509,7 @@ DRIVERMODEL_API  int  DriverModelGetValue (long   type,
             break;
         case UDA::safe_gap_to_dest_lane_leader:
             *double_value = vehicles[current_vehicle_id]->
-                compute_safe_lane_change_gap(
+                get_accepted_lane_change_gap(
                     vehicles[current_vehicle_id]->
                     get_destination_lane_leader()
                 );
@@ -558,7 +554,7 @@ DRIVERMODEL_API  int  DriverModelGetValue (long   type,
             break;
         case UDA::safe_gap_to_dest_lane_follower:
             *double_value = vehicles[current_vehicle_id]->
-                compute_safe_lane_change_gap(
+                get_accepted_lane_change_gap(
                     vehicles[current_vehicle_id]->
                     get_destination_lane_follower()
                 );

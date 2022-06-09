@@ -159,6 +159,8 @@ void AutonomousVehicle::update_destination_lane_follower(
 			controller.update_destination_lane_follower_time_headway(
 				estimate_nearby_vehicle_time_headway(
 					*destination_lane_follower));
+			dest_lane_follower_lambda_1 = 
+				destination_lane_follower->get_lambda_1();
 		}
 	}
 }
@@ -195,16 +197,24 @@ void AutonomousVehicle::update_destination_lane_leader(
 double AutonomousVehicle::compute_lane_changing_desired_time_headway(
 	const NearbyVehicle& nearby_vehicle) const
 {
-	double h_lc = compute_time_headway_with_risk(get_desired_velocity(),
+	double h_lc = compute_time_headway_with_risk(
+		get_desired_velocity(),
 		get_lane_change_max_brake(), nearby_vehicle.get_max_brake(),
-		lambda_1_lane_change, get_rho(), accepted_risk_during_lane_change);
-	double h_no_lc_no_risk =
-		compute_time_headway_with_risk(get_desired_velocity(),
-			get_max_brake(), nearby_vehicle.get_max_brake(),
-			get_lambda_1(), get_rho(), 0);
-	/* For now, we never use time headway values that lead to a positive risk
-	after the lateral maneuver is done. */
-	return std::max(h_lc, h_no_lc_no_risk);
+		lambda_1_lane_change, get_rho(), 0/*accepted_lane_change_risk_to_leaders*/
+	);
+	return h_lc;
+	/* We only allow the lane changing headway towards the leaders to be below
+	the safe vehicle following headway if a risky headway to the future 
+	follower is also allowed */
+	/*if (accepted_lane_change_risk_to_follower <= 0)
+	{
+		return std::max(h_lc, 
+			compute_vehicle_following_safe_time_headway(nearby_vehicle));
+	}
+	else
+	{
+		return h_lc;
+	}*/
 }
 
 /* TODO: not yet sure whether this function should belong in this class 
@@ -212,9 +222,26 @@ or in some controller class */
 double AutonomousVehicle::estimate_nearby_vehicle_time_headway(
 	NearbyVehicle& nearby_vehicle)
 {
-	nearby_vehicle.compute_safe_gap_parameters();
-	return nearby_vehicle.estimate_desired_time_headway(get_desired_velocity(),
-		max_brake, get_rho(), 0);
+	//double accepted_risk = accepted_lane_change_risk_to_follower;
+	//// Condition below is just to avoid unnecessary computations
+	//if (accepted_lane_change_risk_to_follower > 0)
+	//{
+	//	double max_risk =
+	//		nearby_vehicle.estimate_max_accepted_risk_to_incoming_vehicle(
+	//			get_desired_velocity(), max_brake, get_rho());
+	//	accepted_risk = std::min(max_risk, accepted_lane_change_risk_to_follower);
+	//	if (verbose)
+	//	{
+	//		std::clog << "Estimating follower's headway.\n" <<
+	//			"ar = " << accepted_lane_change_risk_to_follower
+	//			<< ", max_risk = " << max_risk << std::endl;
+	//	}
+	//}
+	//return nearby_vehicle.estimate_desired_time_headway(get_desired_velocity(),
+	//	max_brake, get_rho(), accepted_risk);
+	return std::max(0.0, 
+		nearby_vehicle.estimate_desired_time_headway(get_desired_velocity(),
+			max_brake, get_rho(), 0/*accepted_lane_change_risk_to_follower*/));
 }
 
 double AutonomousVehicle::compute_desired_acceleration(
@@ -282,7 +309,54 @@ bool AutonomousVehicle::is_lane_change_gap_safe(
 	//	compute_collision_free_gap_during_lane_change(*nearby_vehicle));
 
 	return (compute_gap(nearby_vehicle) + margin)
-		>= compute_safe_lane_change_gap(nearby_vehicle);
+		>= compute_accepted_lane_change_gap(nearby_vehicle);
+}
+
+double AutonomousVehicle::compute_accepted_lane_change_gap(
+	std::shared_ptr<NearbyVehicle> nearby_vehicle)
+{
+	if (nearby_vehicle == nullptr) return 0.0;
+
+	double desired_gap = controller.compute_desired_lane_change_gap(*this,
+			*nearby_vehicle);
+	double accepted_risk = nearby_vehicle->is_ahead() ?
+		accepted_lane_change_risk_to_leaders : 
+		accepted_lane_change_risk_to_follower;
+	
+	/* To avoid unnecessary computations */
+	//if (accepted_risk == 0) return std::max(desired_gap, 1.0);
+
+	double leader_max_brake, follower_max_brake, follower_lambda_1;
+	if (nearby_vehicle->is_ahead()) 
+	{
+		leader_max_brake = nearby_vehicle->get_max_brake();
+		follower_max_brake = get_lane_change_max_brake();
+		follower_lambda_1 = get_lambda_1_lane_change();
+	}
+	else
+	{
+		leader_max_brake = get_max_brake();
+		follower_max_brake = nearby_vehicle->get_max_brake();
+		follower_lambda_1 = nearby_vehicle->get_lambda_1();
+	}
+	double rho = get_rho();
+	double vf = get_desired_velocity();
+	double gamma = leader_max_brake / follower_max_brake;
+	double Gamma = (1 - rho) * vf / (vf + follower_lambda_1);
+
+	double denominator = gamma >= Gamma ?
+		1 : (1 - gamma);
+	denominator *= 2 * follower_max_brake;
+	double risk_term = std::pow(accepted_risk, 2) / denominator;
+	double accepted_gap = desired_gap - risk_term;
+
+	if (verbose)
+	{
+		std::clog << "Accepted gap to " << nearby_vehicle->get_id()
+			<< ": " << accepted_gap << std::endl;
+	}
+
+	return std::max(accepted_gap, 1.0);
 }
 
 void AutonomousVehicle::compute_lane_change_risks()
@@ -417,25 +491,32 @@ void AutonomousVehicle::compute_lane_change_gap_parameters()
 		comfortable_acceleration, get_lane_change_max_brake(), brake_delay);
 }
 
-void AutonomousVehicle::implement_set_maximum_lane_change_risk(double value)
+void AutonomousVehicle::implement_set_accepted_lane_change_risk_to_leaders(
+	double value)
 {
-	accepted_risk_during_lane_change = value;
+	accepted_lane_change_risk_to_leaders = value;
+}
+
+void AutonomousVehicle::implement_set_accepted_lane_change_risk_to_follower(
+	double value)
+{
+	accepted_lane_change_risk_to_follower = value;
 }
 
 void AutonomousVehicle::reset_accepted_lane_change_risks(double time)
 {
-	accepted_risk_during_lane_change = 0;
-	accepted_risk_during_adjustments = 0;
-	lane_change_timer_start = time;
+	accepted_lane_change_risk_to_leaders = 0;
+	accepted_lane_change_risk_to_follower = 0;
+	//lane_change_timer_start = time;
 }
 
 bool AutonomousVehicle::update_accepted_risk(double time)
 {
-	if (verbose) 
+	/*if (verbose) 
 	{
 		std::clog << "\tt=" << time
 			<< ", timer_start=" << lane_change_timer_start << std::endl;
-	}
+	}*/
 
 	bool has_increased = false;
 
@@ -495,17 +576,6 @@ compute_intermediate_risk_to_leader(double lambda_1,
 	return intermediate_risk_to_leader;
 }
 
-double AutonomousVehicle::compute_max_risk_to_follower(
-	double follower_max_brake) 
-{
-	//double max_risk_to_follower = std::sqrt(
-	//	2 * follower_time_headway 
-	//	* follower_max_brake * get_free_flow_velocity());
-	//if (verbose) std::clog << "max risk to follower=" 
-	//	<< max_risk_to_follower << std::endl;
-	//return max_risk_to_follower;
-	return 0.0;
-}
 
 void AutonomousVehicle::update_headways_with_risk(const EgoVehicle& ego_vehicle)
 {

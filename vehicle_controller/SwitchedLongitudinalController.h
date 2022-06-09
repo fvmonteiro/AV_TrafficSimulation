@@ -46,12 +46,12 @@ public:
 	void reset_leader_velocity_filter(double reset_velocity);
 	void reset_time_headway_filter(double time_headway);
 	/* Returns the desired (final) time headway. */
-	double get_safe_time_headway() const;
+	double get_desired_time_headway() const;
 	/* Returns the current time headway in use */
 	double get_current_time_headway() const;
 	double get_time_headway_gap(double time_headway, double velocity);
-	double get_safe_time_headway_gap(double ego_velocity,
-		bool has_lane_change_intention);
+	double get_desired_time_headway_gap(double ego_velocity/*,
+		bool has_lane_change_intention*/);
 	/* Computes desired gap with a possibly varying time headway */
 	//double compute_desired_gap(double ego_velocity);
 	double get_desired_gap(double ego_velocity);
