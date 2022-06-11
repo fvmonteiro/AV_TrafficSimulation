@@ -679,6 +679,15 @@ double ControlManager::get_desired_time_headway_gap(double ego_velocity,
 //	return time_headway_gap;
 //}
 
+double ControlManager::get_gap_variation_during_lane_change(
+	const AutonomousVehicle& ego_vehicle,
+	const NearbyVehicle& nearby_vehicle,
+	bool will_accelerate)
+{
+	return lateral_controller.compute_transient_gap(
+		ego_vehicle, nearby_vehicle, will_accelerate);
+}
+
 std::string ControlManager::active_ACC_to_string(
 	ACCType active_longitudinal_controller) 
 {

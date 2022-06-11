@@ -158,6 +158,11 @@ public:
 	/* Returns the time headway part of the accepted lane change gap. */
 	/*double get_accepted_time_headway_gap(const AutonomousVehicle& ego_vehicle,
 		const NearbyVehicle& nearby_vehicle);*/
+	/* Returns the expected gap variation during the lane change */
+	double get_gap_variation_during_lane_change(
+		const AutonomousVehicle& ego_vehicle,
+		const NearbyVehicle& nearby_vehicle,
+		bool will_accelerate);
 
 
 	/* Printing ----------------------------------------------------------- */

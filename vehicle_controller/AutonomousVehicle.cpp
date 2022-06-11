@@ -317,42 +317,57 @@ double AutonomousVehicle::compute_accepted_lane_change_gap(
 {
 	if (nearby_vehicle == nullptr) return 0.0;
 
-	double desired_gap = controller.compute_desired_lane_change_gap(*this,
+	double gap_variation_during_lc =
+		controller.get_gap_variation_during_lane_change(*this, 
+			*nearby_vehicle, false);
+	double safe_veh_foll_gap =
+		controller.get_desired_time_headway_gap(get_velocity(), 
 			*nearby_vehicle);
+
+	/*double desired_gap = controller.compute_desired_lane_change_gap(*this,
+			*nearby_vehicle);*/
 	double accepted_risk = nearby_vehicle->is_ahead() ?
 		accepted_lane_change_risk_to_leaders : 
 		accepted_lane_change_risk_to_follower;
 	
+	double accepted_gap;
 	/* To avoid unnecessary computations */
-	//if (accepted_risk == 0) return std::max(desired_gap, 1.0);
-
-	double leader_max_brake, follower_max_brake, follower_lambda_1;
-	if (nearby_vehicle->is_ahead()) 
+	if (accepted_risk == 0) 
 	{
-		leader_max_brake = nearby_vehicle->get_max_brake();
-		follower_max_brake = get_lane_change_max_brake();
-		follower_lambda_1 = get_lambda_1_lane_change();
+		accepted_gap = gap_variation_during_lc + safe_veh_foll_gap;
 	}
 	else
 	{
-		leader_max_brake = get_max_brake();
-		follower_max_brake = nearby_vehicle->get_max_brake();
-		follower_lambda_1 = nearby_vehicle->get_lambda_1();
-	}
-	double rho = get_rho();
-	double vf = get_desired_velocity();
-	double gamma = leader_max_brake / follower_max_brake;
-	double Gamma = (1 - rho) * vf / (vf + follower_lambda_1);
+		double leader_max_brake, follower_max_brake, follower_lambda_1;
+		if (nearby_vehicle->is_ahead())
+		{
+			leader_max_brake = nearby_vehicle->get_max_brake();
+			follower_max_brake = get_lane_change_max_brake();
+			follower_lambda_1 = get_lambda_1_lane_change();
+		}
+		else
+		{
+			leader_max_brake = get_max_brake();
+			follower_max_brake = nearby_vehicle->get_max_brake();
+			follower_lambda_1 = nearby_vehicle->get_lambda_1();
+		}
+		double rho = get_rho();
+		double vf = get_desired_velocity();
+		double gamma = leader_max_brake / follower_max_brake;
+		double Gamma = (1 - rho) * vf / (vf + follower_lambda_1);
 
-	double denominator = gamma >= Gamma ?
-		1 : (1 - gamma);
-	denominator *= 2 * follower_max_brake;
-	double risk_term = std::pow(accepted_risk, 2) / denominator;
-	double accepted_gap = desired_gap - risk_term;
+		double denominator = gamma >= Gamma ?
+			1 : (1 - gamma);
+		denominator *= 2 * follower_max_brake;
+		double risk_term = std::pow(accepted_risk, 2) / denominator;
+		double accepted_veh_foll_gap =
+			std::max(0.0, safe_veh_foll_gap - risk_term);
+		accepted_gap = gap_variation_during_lc + accepted_veh_foll_gap;
+	}
 
 	if (verbose)
 	{
-		std::clog << "Accepted gap to " << nearby_vehicle->get_id()
+		std::clog << "Accepted veh foll gap to " << nearby_vehicle->get_id()
 			<< ": " << accepted_gap << std::endl;
 	}
 
