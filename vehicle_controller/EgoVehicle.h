@@ -142,6 +142,9 @@ public:
 	{
 		implement_set_accepted_lane_change_risk_to_follower(value);
 	}
+	void set_use_linear_lane_change_gap(long value) {
+		implement_set_use_linear_lane_change_gap(value);
+	}
 
 	/* Dealing with nearby vehicles --------------------------------------- */
 
@@ -235,8 +238,8 @@ public:
 	double get_accepted_lane_change_gap(
 		std::shared_ptr<NearbyVehicle> nearby_vehicle);
 
-	double compute_accepted_lane_change_gap(
-		std::shared_ptr<NearbyVehicle> nearby_vehicle, double accepted_risk);
+	/*double compute_accepted_lane_change_gap(
+		std::shared_ptr<NearbyVehicle> nearby_vehicle, double accepted_risk);*/
 	/* Methods to access internal values. Used for quicker debugging --------- */
 
 	/* Returns the current reference gap to the leader */
@@ -330,6 +333,7 @@ private:
 		double value) {};
 	virtual void implement_set_accepted_lane_change_risk_to_follower(
 		double value) {};
+	virtual void implement_set_use_linear_lane_change_gap(long value) {};
 	/* Call nv.set_type if the ego vehicle is connected. Otherwise, does
 	nothing. */
 	//virtual void try_to_set_nearby_vehicle_type(long nv_type) {};

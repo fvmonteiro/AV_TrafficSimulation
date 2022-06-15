@@ -37,6 +37,7 @@ enum class UDA {
     give_control_to_vissim,
     max_lane_change_risk_to_leaders,
     max_lane_change_risk_to_follower,
+    use_linear_lane_change_gap,
     /* Debugging: leader */
     leader_id = 100, 
     leader_type, 

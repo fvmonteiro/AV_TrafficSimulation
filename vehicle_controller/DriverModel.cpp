@@ -122,13 +122,15 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
         if (index1 >= static_cast<int>(UDA::first)) 
         { 
             UDA uda = UDA(index1);
-            switch (uda) {
-            /* The first few are necessary */
+            switch (uda) 
+            {
+            /* The first UDAs are necessary */
             case UDA::h_to_assited_veh:
             case UDA::lane_change_request: 
             case UDA::give_control_to_vissim:
             case UDA::max_lane_change_risk_to_leaders:
             case UDA::max_lane_change_risk_to_follower:
+            case UDA::use_linear_lane_change_gap:
                 return 1;
             /* Debugging: leader */
             case UDA::leader_id:
@@ -274,7 +276,8 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
     case DRIVER_DATA_VEH_INTAC_HEADWAY      :
         return 1;
     case DRIVER_DATA_VEH_UDA                :
-        switch (UDA(index1)) {
+        switch (UDA(index1)) 
+        {
         case UDA::max_lane_change_risk_to_leaders:
             vehicles[current_vehicle_id]->
                 set_max_lane_change_risk_to_leaders(double_value);
@@ -282,6 +285,9 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
         case UDA::max_lane_change_risk_to_follower:
             vehicles[current_vehicle_id]->
                 set_max_lane_change_risk_to_follower(double_value);
+            break;
+        case UDA::use_linear_lane_change_gap:
+            vehicles[current_vehicle_id]->set_use_linear_lane_change_gap(long_value);
             break;
         default: // do nothing
             break;

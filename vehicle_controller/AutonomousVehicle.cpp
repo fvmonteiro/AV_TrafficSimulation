@@ -319,22 +319,23 @@ double AutonomousVehicle::compute_accepted_lane_change_gap(
 {
 	if (nearby_vehicle == nullptr) return 0.0;
 
-	double gap1, gap2; // just for initial debugging
 	double accepted_vehicle_following_gap;
 	
+	// Only to be used during initial checks
+	/*double gap1, gap2;
 	gap1 = compute_time_headway_gap_for_lane_change(*nearby_vehicle);
-	gap2 = compute_vehicle_following_gap_for_lane_change(
-		*nearby_vehicle);
-	if (use_risk_estimate)
+	gap2 = compute_vehicle_following_gap_for_lane_change(*nearby_vehicle);*/
+
+	if (use_linear_lane_change_gap)
 	{
-		accepted_vehicle_following_gap = gap1;
-			//compute_time_headway_gap_for_lane_change(*nearby_vehicle);
+		accepted_vehicle_following_gap = 
+			compute_time_headway_gap_for_lane_change(*nearby_vehicle);
 	}
 	else
 	{
-		accepted_vehicle_following_gap = gap2;
-			/*compute_vehicle_following_gap_for_lane_change(
-				*nearby_vehicle);*/
+		accepted_vehicle_following_gap = 
+			compute_vehicle_following_gap_for_lane_change(
+				*nearby_vehicle);
 	}
 
 	double gap_variation_during_lc =
@@ -346,8 +347,8 @@ double AutonomousVehicle::compute_accepted_lane_change_gap(
 	{
 		std::clog << "nv id " << nearby_vehicle->get_id()
 			<< ": delta g_lc = " << gap_variation_during_lc
-			<< ", g_h = " << gap1
-			<< ", g_non-linear = " << gap2
+			//<< ", g_h = " << gap1
+			//<< ", g_non-linear = " << gap2
 			<< ", g_vf = " << accepted_vehicle_following_gap
 			<< "; g_lc = " << accepted_gap << std::endl;
 	}
@@ -429,16 +430,16 @@ double AutonomousVehicle::compute_vehicle_following_gap_for_lane_change(
 		/ brake_follower;
 	double stop_time_leader = v_leader / brake_leader;
 
-	if (verbose)
-	{
-		std::clog << "vf = " << v_follower
-			<< ", lambda1 = " << follower_lambda_1
-			<< ", df = " << brake_follower
-			<< ", vl = " << v_leader
-			<< ", dl = " << brake_leader
-			<< ", lambda 0 = " << follower_lambda_0
-			<< std::endl;
-	}
+	//if (verbose)
+	//{
+	//	std::clog << "vf = " << v_follower
+	//		<< ", lambda1 = " << follower_lambda_1
+	//		<< ", df = " << brake_follower
+	//		<< ", vl = " << v_leader
+	//		<< ", dl = " << brake_leader
+	//		<< ", lambda 0 = " << follower_lambda_0
+	//		<< std::endl;
+	//}
 
 	double accepted_gap;
 	if (stop_time_follower >= stop_time_leader)
@@ -542,6 +543,12 @@ void AutonomousVehicle::implement_set_accepted_lane_change_risk_to_follower(
 	double value)
 {
 	accepted_lane_change_risk_to_follower = value;
+}
+
+void AutonomousVehicle::implement_set_use_linear_lane_change_gap(
+	long value)
+{
+	use_linear_lane_change_gap = value > 0;
 }
 
 void AutonomousVehicle::reset_accepted_lane_change_risks(double time)

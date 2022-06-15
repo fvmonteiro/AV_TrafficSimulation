@@ -130,6 +130,8 @@ private:
 		double value) override;
 	void implement_set_accepted_lane_change_risk_to_follower(
 		double value) override;
+	void implement_set_use_linear_lane_change_gap(
+		long value) override;
 	/* Resets accepted risks and time */
 	void reset_accepted_lane_change_risks(double time);
 	/* Updates the accepted risk periodically - NOT IMPLEMENTED */
@@ -161,7 +163,7 @@ private:
 	/* Defines if the lane change acceptance decision is based on the 
 	exact risk computation or on the risk estimation based on the time 
 	headway */
-	bool use_risk_estimate{ false };
+	bool use_linear_lane_change_gap{ false };
 	/* Stores the time when the vehicle started trying to 
 	change lanes */
 	//double lane_change_timer_start{ 0.0 }; // [s]

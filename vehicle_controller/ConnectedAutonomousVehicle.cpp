@@ -111,13 +111,6 @@ void ConnectedAutonomousVehicle::update_destination_lane_follower(
 			|| (old_follower->get_id() != dest_lane_follower->get_id()))
 		{
 			dest_lane_follower->compute_safe_gap_parameters();
-			if (verbose)
-			{
-				std::clog << "Updating nv braking params of nv id " 
-					<< dest_lane_follower->get_id() << "\n\t"
-					<< "lambda1 = " << dest_lane_follower->get_lambda_1()
-					<< std::endl;
-			}
 			dest_lane_follower_lambda_0 =
 				get_destination_lane_follower()->get_lambda_0();
 			dest_lane_follower_lambda_1 =
