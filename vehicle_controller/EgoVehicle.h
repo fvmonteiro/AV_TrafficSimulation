@@ -311,7 +311,7 @@ private:
 	virtual long create_lane_change_request() { return 0; };
 	virtual void set_traffic_light_information(int traffic_light_id,
 		double distance) {};
-	virtual void compute_lane_change_risks() {};
+	//virtual void compute_lane_change_risks() {};
 	virtual double compute_accepted_lane_change_gap(
 		std::shared_ptr<NearbyVehicle> nearby_vehicle) {
 		return 0.0;
@@ -332,7 +332,7 @@ private:
 		double value) {};
 	/* Call nv.set_type if the ego vehicle is connected. Otherwise, does
 	nothing. */
-	virtual void try_to_set_nearby_vehicle_type(long nv_type) {};
+	//virtual void try_to_set_nearby_vehicle_type(long nv_type) {};
 	
 	/* Finds the current leader */
 	virtual void find_relevant_nearby_vehicles();

@@ -53,6 +53,8 @@ protected:
 		bool verbose = false);
 
 	/* Necessary when computing lane change gaps with risk */
+	double dest_lane_follower_lambda_0{ 0.0 };
+	/* Necessary when computing lane change gaps with risk */
 	double dest_lane_follower_lambda_1{ 0.0 };
 
 	double get_lambda_1_lane_change() const { return lambda_1_lane_change; }
@@ -73,10 +75,11 @@ protected:
 		bool dest_lane_leader_has_leader);
 	void update_destination_lane_leader(
 		const std::shared_ptr<NearbyVehicle>& old_leader);
-	/* The collision free gap is computed assuming a worst case braking
-	scenario */
-	double compute_collision_free_gap(double current_max_brake,
-		double current_lambda_1, const NearbyVehicle& nearby_vehicle) const;
+
+	/* Non-linear gap based on ego and nearby vehicles states
+	and parameters */
+	double compute_vehicle_following_gap_for_lane_change(
+		const NearbyVehicle& nearby_vehicle, double current_lambda_1) const;
 
 private:
 	/* Finds the current leader and, if the vehicle has lane change 
@@ -86,23 +89,31 @@ private:
 		const std::unordered_map<int, TrafficLight>& traffic_lights) override;
 	bool give_lane_change_control_to_vissim() const override;
 	bool can_start_lane_change() override;
-	virtual double compute_accepted_lane_change_gap(
+	double compute_accepted_lane_change_gap(
 		std::shared_ptr<NearbyVehicle> nearby_vehicle) override;
+	/* Time-headway based gap (hv + d) minus a term based on 
+	accepted risk */
+	double compute_time_headway_gap_for_lane_change(
+		const NearbyVehicle& nearby_vehicle);
+	
 	/* Not being used */
-	void compute_lane_change_risks() override;
+	//void compute_lane_change_risks() override;
 	std::shared_ptr<NearbyVehicle>
 		implement_get_destination_lane_leader() const override;
 	std::shared_ptr<NearbyVehicle>
 		implement_get_destination_lane_follower() const override;
 
+
 	bool has_lane_change_conflict() const;
 	bool is_lane_change_gap_safe(
 		std::shared_ptr<NearbyVehicle>& nearby_vehicle);
-	virtual double compute_collision_free_gap_during_lane_change(
+	void compute_lane_change_gap_parameters();
+	/* Non-linear gap based on ego and nearby vehicles states
+	and parameters */
+	virtual double compute_vehicle_following_gap_for_lane_change(
 		const NearbyVehicle& nearby_vehicle) const;
 	double compute_gap_variation_during_lane_change(
 		const NearbyVehicle& nearby_vehicle) const;
-	void compute_lane_change_gap_parameters();
 
 	virtual void update_destination_lane_follower(
 		const std::shared_ptr<NearbyVehicle>& old_follower);
@@ -147,6 +158,10 @@ private:
 	/*The risk is an estimation of the relative velocity at collision
 	time under worst case scenario. */
 
+	/* Defines if the lane change acceptance decision is based on the 
+	exact risk computation or on the risk estimation based on the time 
+	headway */
+	bool use_risk_estimate{ false };
 	/* Stores the time when the vehicle started trying to 
 	change lanes */
 	//double lane_change_timer_start{ 0.0 }; // [s]

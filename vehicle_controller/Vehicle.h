@@ -30,13 +30,14 @@ public:
 	/* Also sets the estimated maximum braking of the vehicle. */
 	void set_category(long category);
 	
-	/*bool is_connected() const;*/
+	
 	bool has_lane_change_intention() const;
 
 protected:
 	virtual ~Vehicle() {};
 
 	/* TODO: should the functions below become part of a namespace? */
+
 	double compute_lambda_0(double max_jerk,
 		double comfortable_acceleration, double max_brake,
 		double brake_delay) const;
@@ -49,6 +50,9 @@ protected:
 	/* Maximum possible accepted risk that keeps the time headway positive. */
 	double compute_max_risk(double leader_max_brake,
 		double follower_max_brake, double desired_velocity, double rho);
+	bool is_a_connected_type(VehicleType vehicle_type) const;
+
+	/* ------------------------------------------------------------ */
 
 	void compute_safe_gap_parameters();
 	

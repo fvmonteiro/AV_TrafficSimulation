@@ -17,31 +17,46 @@ NearbyVehicle::NearbyVehicle(long id, long relative_lane,
 	NearbyVehicle(id, RelativeLane::from_long(relative_lane),
 		relative_position) {}
 
-void NearbyVehicle::set_type(int type) 
+void NearbyVehicle::set_type(VehicleType nv_type, VehicleType ego_type)
 {
 	/* This function is only called by connected ego vehicles
 	trying to set the type of a nearby vehicle.
 	The nearby vehicle type is only set if the nearby vehicle is 
 	also connected. */
 
-	VehicleType temp_veh_type = VehicleType(type);
-	switch (temp_veh_type)
+	//VehicleType temp_veh_type = VehicleType(nv_type);
+
+	if (is_a_connected_type(ego_type) && is_a_connected_type(nv_type))
 	{
-	case VehicleType::connected_car:
-	case VehicleType::traffic_light_cacc_car:
-		this->type = temp_veh_type;
+		this->type = nv_type;
 		this->brake_delay = CONNECTED_BRAKE_DELAY;
-		break;
-	default:
-		this->type = VehicleType::undefined;
-		this->brake_delay = HUMAN_BRAKE_DELAY;
-		break;
+	}
+	else
+	{
+		/* We assume autonomous vehicles are identifiable visually by other
+		autonomous vehicles without need for communications. 
+		Both CAVs and AVs can differentiate HDVs from all the rest. */
+		switch (nv_type)
+		{
+		case VehicleType::connected_car:
+		case VehicleType::traffic_light_cacc_car:
+		case VehicleType::autonomous_car:
+		case VehicleType::traffic_light_acc_car:
+			this->type = VehicleType::autonomous_car;
+			this->brake_delay = AUTONOMOUS_BRAKE_DELAY;
+			break;
+		default:
+			this->type = VehicleType::undefined;
+			this->brake_delay = HUMAN_BRAKE_DELAY;
+			break;
+		}
 	}
 }
 
-bool NearbyVehicle::is_connected() const {
-	/* The nearby vehicle type is only set if the ego vehicle is 
-	connected. So this function returns false when called by a non
+bool NearbyVehicle::is_connected() const 
+{
+	/* The nearby vehicle type is only set to connected if the ego vehicle
+	is also connected. So this function returns false when called by a non
 	connected vehicle. */
 
 	return (type == VehicleType::connected_car

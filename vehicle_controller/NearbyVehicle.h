@@ -75,7 +75,7 @@ public:
 		this->max_lane_change_risk_to_follower = r;
 	}
 
-	void set_type(int type) /*override*/;
+	void set_type(VehicleType nv_type, VehicleType ego_type) /*override*/;
 	/* Special getters and setters */
 
 	//double get_lambda_0() const { return lambda_0; };

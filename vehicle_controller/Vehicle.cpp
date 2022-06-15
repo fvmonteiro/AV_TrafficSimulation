@@ -34,13 +34,12 @@ void Vehicle::set_category(long category)
 	}
 }
 
-/* TODO: we want to avoid methods using VehicleType.
-Let's instead deal with this through polymorphism */
-//bool Vehicle::is_connected() const {
-//	return (type == VehicleType::connected_car 
-//		|| type == VehicleType::traffic_light_cacc_car
-//		|| type == VehicleType::platoon_car);
-//}
+bool Vehicle::is_a_connected_type(VehicleType vehicle_type) const 
+{
+	return (vehicle_type == VehicleType::connected_car
+		|| vehicle_type == VehicleType::traffic_light_cacc_car
+		|| vehicle_type == VehicleType::platoon_car);
+}
 
 bool Vehicle::has_lane_change_intention() const 
 {

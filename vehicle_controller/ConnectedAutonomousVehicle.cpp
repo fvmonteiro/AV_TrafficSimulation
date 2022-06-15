@@ -43,10 +43,10 @@ implement_get_time_headway_to_assisted_vehicle() const {
 	return 0;
 }
 
-void ConnectedAutonomousVehicle::try_to_set_nearby_vehicle_type(long nv_type)
-{
-	peek_nearby_vehicles()->set_type(nv_type);
-}
+//void ConnectedAutonomousVehicle::try_to_set_nearby_vehicle_type(long nv_type)
+//{
+//	peek_nearby_vehicles()->set_type(nv_type, );
+//}
 
 long ConnectedAutonomousVehicle::create_lane_change_request()
 {
@@ -107,10 +107,19 @@ void ConnectedAutonomousVehicle::update_destination_lane_follower(
 
 		/* We need to compute fd's lambda1 here cause it's used later in
 		computing gaps that accept risks. */
-		if ((old_follower != nullptr )
-			&& (old_follower->get_id() != dest_lane_follower->get_id()))
+		if ((old_follower == nullptr )
+			|| (old_follower->get_id() != dest_lane_follower->get_id()))
 		{
-			get_destination_lane_follower()->compute_safe_gap_parameters();
+			dest_lane_follower->compute_safe_gap_parameters();
+			if (verbose)
+			{
+				std::clog << "Updating nv braking params of nv id " 
+					<< dest_lane_follower->get_id() << "\n\t"
+					<< "lambda1 = " << dest_lane_follower->get_lambda_1()
+					<< std::endl;
+			}
+			dest_lane_follower_lambda_0 =
+				get_destination_lane_follower()->get_lambda_0();
 			dest_lane_follower_lambda_1 =
 				get_destination_lane_follower()->get_lambda_1();
 		}
@@ -217,18 +226,13 @@ double ConnectedAutonomousVehicle::compute_lane_changing_desired_time_headway(
 }
 
 double ConnectedAutonomousVehicle::
-compute_collision_free_gap_during_lane_change(
+compute_vehicle_following_gap_for_lane_change(
 	const NearbyVehicle& nearby_vehicle) const
 {
 	double current_lambda_1 = 
 		get_lambda_1_lane_change(nearby_vehicle.is_connected());
-	if (verbose)
-	{
-		std::clog << "Computing glc*. lambda1lc = "
-			<< current_lambda_1 << std::endl;
-	}
-	return compute_collision_free_gap(get_lane_change_max_brake(),
-		current_lambda_1, nearby_vehicle);
+	return AutonomousVehicle::compute_vehicle_following_gap_for_lane_change(
+		nearby_vehicle, current_lambda_1);
 }
 
 double ConnectedAutonomousVehicle::compute_desired_acceleration(

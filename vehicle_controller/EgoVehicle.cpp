@@ -313,7 +313,8 @@ std::shared_ptr<NearbyVehicle> EgoVehicle::peek_nearby_vehicles() const
 
 void EgoVehicle::set_nearby_vehicle_type(long nv_type) 
 {
-	try_to_set_nearby_vehicle_type(nv_type);
+	peek_nearby_vehicles()->set_type(VehicleType(nv_type), type);
+	//try_to_set_nearby_vehicle_type(nv_type);
 }
 
 bool EgoVehicle::has_leader() const 

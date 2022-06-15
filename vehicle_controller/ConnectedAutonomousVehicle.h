@@ -50,7 +50,7 @@ private:
 	std::shared_ptr<NearbyVehicle>
 		implement_get_assisted_vehicle() const override;
 	double implement_get_time_headway_to_assisted_vehicle() const override;
-	void try_to_set_nearby_vehicle_type(long nv_type) override;
+	//void try_to_set_nearby_vehicle_type(long nv_type) override;
 	/*long try_to_get_nearby_vehicle_type(long nv_type) const override
 	{
 		return nv_type;
@@ -64,7 +64,7 @@ private:
 		double nv_max_lane_change_risk) const;
 	double compute_lane_changing_desired_time_headway(
 		const NearbyVehicle& nearby_vehicle) const override;
-	double compute_collision_free_gap_during_lane_change(
+	virtual double compute_vehicle_following_gap_for_lane_change(
 		const NearbyVehicle& nearby_vehicle) const override;
 	long create_lane_change_request() override;
 
