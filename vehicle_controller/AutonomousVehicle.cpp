@@ -17,15 +17,15 @@ AutonomousVehicle::AutonomousVehicle(long id, VehicleType type,
 	}
 }
 
-bool AutonomousVehicle::has_destination_lane_leader() const
-{
-	return get_destination_lane_leader() != nullptr;
-}
-
-bool AutonomousVehicle::has_destination_lane_follower() const
-{
-	return get_destination_lane_follower() != nullptr;
-}
+//bool AutonomousVehicle::has_destination_lane_leader() const
+//{
+//	return get_destination_lane_leader() != nullptr;
+//}
+//
+//bool AutonomousVehicle::has_destination_lane_follower() const
+//{
+//	return get_destination_lane_follower() != nullptr;
+//}
 
 bool AutonomousVehicle::has_lane_change_conflict() const 
 {

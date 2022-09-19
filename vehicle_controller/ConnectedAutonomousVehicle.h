@@ -25,7 +25,7 @@ public:
 		return assisted_vehicle;
 	}*/
 
-	bool has_assisted_vehicle() const;
+	//bool has_assisted_vehicle() const;
 	bool is_cooperating_to_generate_gap() const;
 
 	/* Debugging methods */
@@ -49,7 +49,7 @@ private:
 	//void clear_other_relevant_nearby_vehicles() override;
 	std::shared_ptr<NearbyVehicle>
 		implement_get_assisted_vehicle() const override;
-	double implement_get_time_headway_to_assisted_vehicle() const;
+	//double implement_get_time_headway_to_assisted_vehicle() const;
 	//void try_to_set_nearby_vehicle_type(long nv_type) override;
 	/*long try_to_get_nearby_vehicle_type(long nv_type) const override
 	{

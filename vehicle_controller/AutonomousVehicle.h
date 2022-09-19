@@ -27,8 +27,8 @@ public:
 	//	return destination_lane_follower;
 	//};
 
-	bool has_destination_lane_leader() const;
-	bool has_destination_lane_follower() const;
+	/*bool has_destination_lane_leader() const;
+	bool has_destination_lane_follower() const;*/
 
 	/* Debugging methods */
 
@@ -154,13 +154,14 @@ private:
 	/* NOT IMPLEMENTED */
 	void update_headways_with_risk(const EgoVehicle& ego_vehicle);
 
+	double max_lane_change_waiting_time{ 60.0 }; // [s]
+
 	/* Relevant members for lane changing ------------------------------------ */
 
 	std::shared_ptr<NearbyVehicle> destination_lane_leader{ nullptr };
 	std::shared_ptr<NearbyVehicle> destination_lane_follower{ nullptr };
 	/* Emergency braking parameter during lane change */
 	double lambda_1_lane_change{ 0.0 }; // [m/s]
-	double max_lane_change_waiting_time{ 45.0 }; // [s]
 
 	/* Risk related variables --------------------------------------------- */
 	/*The risk is an estimation of the relative velocity at collision

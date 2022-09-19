@@ -8,13 +8,13 @@ double ACCVehicle::compute_desired_acceleration(
 	return consider_vehicle_dynamics(desired_acceleration);
 }
 
-double ACCVehicle::compute_lane_changing_desired_time_headway(
-	const NearbyVehicle& nearby_vehicle) const
-{
-	return compute_time_headway_with_risk(get_desired_velocity(),
-		get_max_brake(), nearby_vehicle.get_max_brake(),
-		get_lambda_1(), get_rho(), 0);
-}
+//double ACCVehicle::compute_lane_changing_desired_time_headway(
+//	const NearbyVehicle& nearby_vehicle) const
+//{
+//	return compute_time_headway_with_risk(get_desired_velocity(),
+//		get_max_brake(), nearby_vehicle.get_max_brake(),
+//		get_lambda_1(), get_rho(), 0);
+//}
 
 bool ACCVehicle::can_start_lane_change()
 {

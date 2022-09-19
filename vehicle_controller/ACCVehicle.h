@@ -20,7 +20,10 @@ private:
 	double compute_desired_acceleration(
 		const std::unordered_map<int, TrafficLight>& traffic_lights) override;
 	double compute_lane_changing_desired_time_headway(
-		const NearbyVehicle& nearby_vehicle) const override;
+		const NearbyVehicle& nearby_vehicle) const override
+	{
+		return 0.0;
+	};
 	bool give_lane_change_control_to_vissim() const override
 	{
 		return true;
