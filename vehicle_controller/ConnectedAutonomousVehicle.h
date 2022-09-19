@@ -29,10 +29,10 @@ public:
 	bool is_cooperating_to_generate_gap() const;
 
 	/* Debugging methods */
-	long get_assisted_veh_id() const override { 
+	/*long get_assisted_veh_id() const override { 
 		return has_assisted_vehicle() ?
 			assisted_vehicle->get_id() : 0;
-	};
+	};*/
 
 private:
 	/* Finds the current leader, the destination lane leader 
@@ -49,7 +49,7 @@ private:
 	//void clear_other_relevant_nearby_vehicles() override;
 	std::shared_ptr<NearbyVehicle>
 		implement_get_assisted_vehicle() const override;
-	double implement_get_time_headway_to_assisted_vehicle() const override;
+	double implement_get_time_headway_to_assisted_vehicle() const;
 	//void try_to_set_nearby_vehicle_type(long nv_type) override;
 	/*long try_to_get_nearby_vehicle_type(long nv_type) const override
 	{

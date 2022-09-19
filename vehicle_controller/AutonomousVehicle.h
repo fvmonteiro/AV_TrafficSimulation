@@ -32,7 +32,7 @@ public:
 
 	/* Debugging methods */
 
-	long get_dest_lane_leader_id() const override
+	/*long get_dest_lane_leader_id() const override
 	{
 		return has_destination_lane_leader() ?
 			destination_lane_leader->get_id() : 0;
@@ -44,7 +44,7 @@ public:
 	double get_dest_follower_time_headway() const override {
 		return controller.get_destination_lane_controller().
 			get_follower_time_headway();
-	};
+	};*/
 
 protected:
 	AutonomousVehicle(long id, VehicleType type, double desired_velocity,
@@ -88,6 +88,7 @@ private:
 	double compute_desired_acceleration(
 		const std::unordered_map<int, TrafficLight>& traffic_lights) override;
 	bool give_lane_change_control_to_vissim() const override;
+	long create_lane_change_request() override { return 0; };
 	bool can_start_lane_change() override;
 	double compute_accepted_lane_change_gap(
 		std::shared_ptr<NearbyVehicle> nearby_vehicle) override;
@@ -103,6 +104,11 @@ private:
 	std::shared_ptr<NearbyVehicle>
 		implement_get_destination_lane_follower() const override;
 
+	std::shared_ptr<NearbyVehicle>
+		implement_get_assisted_vehicle() const override
+	{
+		return nullptr;
+	};
 
 	bool has_lane_change_conflict() const;
 	bool is_lane_change_gap_safe(
@@ -154,7 +160,7 @@ private:
 	std::shared_ptr<NearbyVehicle> destination_lane_follower{ nullptr };
 	/* Emergency braking parameter during lane change */
 	double lambda_1_lane_change{ 0.0 }; // [m/s]
-
+	double max_lane_change_waiting_time{ 45.0 }; // [s]
 
 	/* Risk related variables --------------------------------------------- */
 	/*The risk is an estimation of the relative velocity at collision

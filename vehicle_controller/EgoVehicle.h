@@ -161,16 +161,13 @@ public:
 	void set_nearby_vehicle_type(long type);
 	/* Looks at all nearby vehicles to find the relevant ones, such 
 	* as the leader. */
-	void analyze_nearby_vehicles()
-	{
-		find_relevant_nearby_vehicles();
-		//compute_lane_change_risks();
-	};
+	void analyze_nearby_vehicles() { find_relevant_nearby_vehicles(); };
 	//bool is_cutting_in(const NearbyVehicle& nearby_vehicle) const;
 	bool has_leader() const;
-	double get_time_headway_to_assisted_vehicle() const { 
+	double get_time_headway_to_assisted_vehicle() const;
+	/*{
 		return implement_get_time_headway_to_assisted_vehicle();
-	};
+	};*/
 	/* Returns a nullptr if there is no leader */
 	std::shared_ptr<NearbyVehicle> get_leader() const;
 	std::shared_ptr<NearbyVehicle> get_nearby_vehicle_by_id(long nv_id) const;
@@ -190,14 +187,17 @@ public:
 	can create a lane change request*/
 	long get_lane_change_request();
 
+	bool has_destination_lane_leader() const;
+	bool has_destination_lane_follower() const;
+	bool has_assisted_vehicle() const;
 	/* Methods to debug nearby vehicles information */
 
 	/* TODO: These don't need to be virtual anymore. 
 	Use the get_vehicle methods instead. */
-	virtual long get_dest_lane_leader_id() const { return 0; };
-	virtual long get_dest_lane_follower_id() const { return 0; };
-	virtual long get_assisted_veh_id() const { return 0; };
-	virtual double get_dest_follower_time_headway() const { return 0; };
+	long get_dest_lane_leader_id() const; // { return 0; };
+	long get_dest_lane_follower_id() const; // { return 0; };
+	long get_assisted_veh_id() const; // { return 0; };
+	double get_dest_follower_time_headway() const; // { return 0; };
 
 	/* Computation of surrogate safety measurements ----------------------- */
 
@@ -281,12 +281,12 @@ protected:
 	dynamics */
 	double consider_vehicle_dynamics(double desired_acceleration);
 	/* Updates the stopped time waiting for lane change */
-	void update_waiting_time();
+	void update_lane_change_waiting_time();
 
 	ControlManager controller;
 	/* Keeps track of stopped time waiting for lane change */
 	double lane_change_waiting_time{ 0.0 };
-	double max_lane_change_waiting_time{ 45.0 }; // [s]
+	//double max_lane_change_waiting_time{ 45.0 }; // [s]
 
 	/* Nearby vehicles ------------------------------------------------------- */
 
@@ -311,32 +311,30 @@ private:
 	virtual bool can_start_lane_change() = 0;
 	//virtual void update_other_relevant_nearby_vehicles() {};
 	//virtual void clear_other_relevant_nearby_vehicles() {};
-	virtual long create_lane_change_request() { return 0; };
+	virtual long create_lane_change_request() = 0; // { return 0; };
 	virtual void set_traffic_light_information(int traffic_light_id,
 		double distance) {};
 	//virtual void compute_lane_change_risks() {};
 	virtual double compute_accepted_lane_change_gap(
-		std::shared_ptr<NearbyVehicle> nearby_vehicle) {
+		std::shared_ptr<NearbyVehicle> nearby_vehicle) = 0;
+	/*{
 		return 0.0;
-	};
-	virtual double implement_get_time_headway_to_assisted_vehicle() const
+	};*/
+	/*virtual double implement_get_time_headway_to_assisted_vehicle() const
 	{
 		return 0;
-	};
+	};*/
 	virtual std::shared_ptr<NearbyVehicle>
-		implement_get_destination_lane_leader() const { return nullptr; };
+		implement_get_destination_lane_leader() const = 0; // { return nullptr; };
 	virtual std::shared_ptr<NearbyVehicle>
-		implement_get_destination_lane_follower() const { return nullptr; };
+		implement_get_destination_lane_follower() const = 0; //{ return nullptr; };
 	virtual std::shared_ptr<NearbyVehicle>
-		implement_get_assisted_vehicle() const { return nullptr; };
+		implement_get_assisted_vehicle() const = 0; // { return nullptr; };
 	virtual void implement_set_accepted_lane_change_risk_to_leaders(
-		double value) {};
+		double value) = 0; // {};
 	virtual void implement_set_accepted_lane_change_risk_to_follower(
-		double value) {};
-	virtual void implement_set_use_linear_lane_change_gap(long value) {};
-	/* Call nv.set_type if the ego vehicle is connected. Otherwise, does
-	nothing. */
-	//virtual void try_to_set_nearby_vehicle_type(long nv_type) {};
+		double value) = 0; //{};
+	virtual void implement_set_use_linear_lane_change_gap(long value) = 0; // {};
 	
 	/* Finds the current leader */
 	virtual void find_relevant_nearby_vehicles();

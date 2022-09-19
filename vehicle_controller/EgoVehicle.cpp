@@ -322,6 +322,20 @@ bool EgoVehicle::has_leader() const
 	return leader != nullptr;
 }
 
+double EgoVehicle::get_time_headway_to_assisted_vehicle() const
+{
+	if (has_assisted_vehicle())
+	{
+		return controller.get_gap_generation_lane_controller().
+			get_desired_time_headway();
+	}
+	/* We return a high value when there's no assisted vehicle because,
+	when a vehicle first requests assistance, it takes one simulation
+	iteration for the headway to be computed and transferred to the
+	assisted vehicle. */
+	return 3.0;
+}
+
 std::shared_ptr<NearbyVehicle> EgoVehicle::get_leader() const 
 {
 	return leader;
@@ -350,6 +364,40 @@ std::shared_ptr<NearbyVehicle> EgoVehicle::get_nearby_vehicle_by_id(
 double EgoVehicle::get_relative_velocity_to_leader() 
 {
 	return has_leader() ? leader->get_relative_velocity() : 0.0;
+}
+
+bool EgoVehicle::has_destination_lane_leader() const
+{
+	return get_destination_lane_leader() != nullptr;
+}
+bool EgoVehicle::has_destination_lane_follower() const
+{
+	return get_destination_lane_follower() != nullptr;
+}
+bool EgoVehicle::has_assisted_vehicle() const
+{
+	return get_assisted_vehicle() != nullptr;
+}
+
+long EgoVehicle::get_dest_lane_leader_id() const
+{
+	return has_destination_lane_leader() ?
+		get_destination_lane_leader()->get_id() : 0;
+}
+long EgoVehicle::get_dest_lane_follower_id() const
+{
+	return has_destination_lane_follower() ?
+		get_destination_lane_follower()->get_id() : 0;
+}
+long EgoVehicle::get_assisted_veh_id() const
+{
+	return has_assisted_vehicle() ?
+		get_assisted_vehicle()->get_id() : 0;
+}
+double EgoVehicle::get_dest_follower_time_headway() const
+{
+	return controller.get_destination_lane_controller().
+		get_follower_time_headway();
 }
 
 double EgoVehicle::compute_gap(const NearbyVehicle& nearby_vehicle) const 
@@ -626,7 +674,7 @@ std::string EgoVehicle::print_detailed_state() const
 	return state_str;
 }
 
-void EgoVehicle::update_waiting_time() 
+void EgoVehicle::update_lane_change_waiting_time() 
 {
 	if (get_velocity() < 5.0/3.6) 
 	{
@@ -664,7 +712,7 @@ long EgoVehicle::decide_lane_change_direction()
 	{
 		return desired_lane_change_direction.to_int();
 	}
-	update_waiting_time();
+	update_lane_change_waiting_time();
 	return 0;
 }
 
