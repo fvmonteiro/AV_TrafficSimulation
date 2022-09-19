@@ -10,7 +10,10 @@ public:
 
 	ConnectedAutonomousVehicle(long id, double desired_velocity,
 		double simulation_time_step, double creation_time,
-		bool verbose = false);
+		bool verbose = false) :
+		ConnectedAutonomousVehicle(id, VehicleType::connected_car,
+			desired_velocity, simulation_time_step, creation_time,
+			verbose) {};
 
 	/* The connected vehicle brake delay also depends on the other vehicle
 	type. If the other vehicle is not connected, the ego connected vehicle
@@ -33,6 +36,11 @@ public:
 		return has_assisted_vehicle() ?
 			assisted_vehicle->get_id() : 0;
 	};*/
+
+protected:
+	ConnectedAutonomousVehicle(long id, VehicleType type,
+		double desired_velocity, double simulation_time_step, 
+		double creation_time, bool verbose = false);
 
 private:
 	/* Finds the current leader, the destination lane leader 

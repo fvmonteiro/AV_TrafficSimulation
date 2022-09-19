@@ -1,10 +1,10 @@
 #include "ConnectedAutonomousVehicle.h"
 
 ConnectedAutonomousVehicle::ConnectedAutonomousVehicle(
-	long id, double desired_velocity,
+	long id, VehicleType type, double desired_velocity,
 	double simulation_time_step, double creation_time,
 	bool verbose) :
-	AutonomousVehicle(id, VehicleType::connected_car, desired_velocity,
+	AutonomousVehicle(id, type, desired_velocity,
 		true, simulation_time_step, creation_time, verbose) 
 {
 	compute_connected_safe_gap_parameters();

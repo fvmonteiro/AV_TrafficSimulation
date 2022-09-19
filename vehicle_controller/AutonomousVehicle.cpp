@@ -265,10 +265,10 @@ bool AutonomousVehicle::can_start_lane_change()
 	{
 		return get_relative_target_lane() != RelativeLane::same;
 	}
-	if (!has_lane_change_intention())  // just to avoid computations
-	{
-		return false;
-	}
+	//if (!has_lane_change_intention())  // just to avoid computations
+	//{
+	//	return false;
+	//}
 
 	double margin = 0.1;
 	if (verbose) std::clog << "Deciding lane change" << std::endl;

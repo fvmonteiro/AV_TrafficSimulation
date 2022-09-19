@@ -427,7 +427,8 @@ double EgoVehicle::compute_gap(
 	{
 		return compute_gap(*nearby_vehicle);
 	}
-	else {
+	else 
+	{
 		return MAX_DISTANCE;
 	}
 }
@@ -536,6 +537,7 @@ void EgoVehicle::update_state()
 	}
 	else 
 	{
+		update_lane_change_waiting_time();
 		state.push_back(State::intention_to_change_lanes);
 	}
 
@@ -561,7 +563,7 @@ void EgoVehicle::update_state()
 			if (verbose)
 			{
 				std::clog << "Transition from lane keeping to "
-					<< "lane changing" << std::endl;
+					<< "intention to change lanes" << std::endl;
 			}
 			//controller.start_longitudinal_adjustment(get_time());
 			break;
@@ -680,7 +682,8 @@ void EgoVehicle::update_lane_change_waiting_time()
 	{
 		lane_change_waiting_time += simulation_time_step;
 	}
-	else {
+	else
+	{
 		lane_change_waiting_time = 0.0;
 	}
 }
@@ -708,11 +711,11 @@ double EgoVehicle::consider_vehicle_dynamics(double desired_acceleration)
 
 long EgoVehicle::decide_lane_change_direction()
 {	
-	if (can_start_lane_change())
+	if (has_lane_change_intention() && can_start_lane_change())
 	{
 		return desired_lane_change_direction.to_int();
 	}
-	update_lane_change_waiting_time();
+	//update_lane_change_waiting_time();
 	return 0;
 }
 
@@ -741,9 +744,11 @@ double EgoVehicle::compute_time_headway_gap(
 }
 
 double EgoVehicle::compute_transient_gap(
-	std::shared_ptr<NearbyVehicle> nearby_vehicle) {
+	std::shared_ptr<NearbyVehicle> nearby_vehicle) 
+{
 	double transient_gap = 0.0;
-	if (nearby_vehicle != nullptr) {
+	if (nearby_vehicle != nullptr) 
+	{
 		transient_gap = controller.get_lateral_controller().
 			compute_transient_gap(*this, *nearby_vehicle, false);
 	}
@@ -759,7 +764,8 @@ double EgoVehicle::compute_ttc(const NearbyVehicle& nearby_vehicle)
 		if ego vel > leader vel 
 	underfined, 
 		if ego vel < leader vel */
-	if (nearby_vehicle.get_relative_velocity() > 0) {
+	if (nearby_vehicle.get_relative_velocity() > 0) 
+	{
 		return compute_gap(nearby_vehicle) / nearby_vehicle.get_relative_velocity();
 	}
 	return -1.0;	
@@ -773,7 +779,8 @@ double EgoVehicle::compute_drac(const NearbyVehicle& nearby_vehicle)
 	underfined,
 		if ego vel < leader vel
 	*/
-	if (nearby_vehicle.get_relative_velocity() > 0) {
+	if (nearby_vehicle.get_relative_velocity() > 0) 
+	{
 		return std::pow(nearby_vehicle.get_relative_velocity(), 2)
 			/ 2 / compute_gap(nearby_vehicle);
 	}
@@ -885,19 +892,24 @@ void EgoVehicle::set_desired_lane_change_direction()
 	routing, so it takes precedence over the latter. */
 	RelativeLane current_preferred_lane = get_preferred_relative_lane();
 	desired_lane_change_direction = RelativeLane::same;
-	if (current_preferred_lane.is_to_the_left()) {
+	if (current_preferred_lane.is_to_the_left()) 
+	{
 		desired_lane_change_direction = RelativeLane::left;
 	}
-	else if (current_preferred_lane.is_to_the_right()) {
+	else if (current_preferred_lane.is_to_the_right()) 
+	{
 		desired_lane_change_direction = RelativeLane::right;
 	}
-	else if (relative_target_lane.is_to_the_left()) {
+	else if (relative_target_lane.is_to_the_left()) 
+	{
 		desired_lane_change_direction = RelativeLane::left;
 	}
-	else if (relative_target_lane.is_to_the_right()) {
+	else if (relative_target_lane.is_to_the_right()) 
+	{
 		desired_lane_change_direction = RelativeLane::right;
 	}
-	else {
+	else
+	{
 		desired_lane_change_direction = RelativeLane::same;
 	}
 }
@@ -925,12 +937,15 @@ void EgoVehicle::write_simulation_log(std::vector<Member> members)
 }
 
 std::string EgoVehicle::write_header(
-	std::vector<EgoVehicle::Member> members, bool write_size) {
+	std::vector<EgoVehicle::Member> members, bool write_size)
+{
 	
 	std::ostringstream oss;
-	for (auto m : members) {
+	for (auto m : members)
+	{
 		oss << member_enum_to_string(m);
-		if (write_size) {
+		if (write_size)
+		{
 			oss << " (" << get_member_size(m) << ")";
 		}
 		oss << ", ";
@@ -941,7 +956,8 @@ std::string EgoVehicle::write_header(
 }
 
 std::string EgoVehicle::write_members(
-	std::vector<EgoVehicle::Member> members) {
+	std::vector<EgoVehicle::Member> members)
+{
 
 	std::ostringstream oss;
 
@@ -952,10 +968,12 @@ std::string EgoVehicle::write_members(
 	int n_samples = (int)velocity.size(); /* velocity, lane and link members 
 	are the least likely to have the wrong size */
 	std::vector<int> deleted_indices;
-	for (int i = 0; i < members.size(); i++) {
+	for (int i = 0; i < members.size(); i++) 
+	{
 		Member m = members.at(i);
 		if ((get_member_size(m) != 1) // not a scalar
-			&& (get_member_size(m) != n_samples)) {
+			&& (get_member_size(m) != n_samples))
+		{
 			oss << "Error: member " << member_enum_to_string(m)
 				<< " has " << get_member_size(m) << " samples "
 				<< "instead of the expected " << n_samples
@@ -964,13 +982,16 @@ std::string EgoVehicle::write_members(
 			deleted_indices.push_back(i);
 		}
 	}
-	for (int idx : deleted_indices) {
+	for (int idx : deleted_indices)
+	{
 		members.erase(std::next(members.begin(), idx));
 	}
 
 	// Write variables over time
-	for (int i = 0; i < n_samples; i++) {
-		for (auto m : members) {
+	for (int i = 0; i < n_samples; i++)
+	{
+		for (auto m : members)
+		{
 			switch (m)
 			{
 			case Member::creation_time:
@@ -1053,7 +1074,8 @@ std::string EgoVehicle::write_members(
 	return oss.str();
 }
 
-int EgoVehicle::get_member_size(Member member) {
+int EgoVehicle::get_member_size(Member member)
+{
 	switch (member)
 	{
 	case Member::creation_time:
@@ -1100,7 +1122,8 @@ int EgoVehicle::get_member_size(Member member) {
 	}
 }
 
-std::string EgoVehicle::member_enum_to_string(Member member) {
+std::string EgoVehicle::member_enum_to_string(Member member)
+{
 	switch (member)
 	{
 	case Member::creation_time:

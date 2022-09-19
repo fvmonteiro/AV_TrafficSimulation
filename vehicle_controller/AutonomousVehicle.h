@@ -48,8 +48,7 @@ public:
 
 protected:
 	AutonomousVehicle(long id, VehicleType type, double desired_velocity,
-		bool is_connected,
-		double simulation_time_step, double creation_time,
+		bool is_connected, double simulation_time_step, double creation_time,
 		bool verbose = false);
 
 	/* Necessary when computing lane change gaps with risk */
@@ -88,8 +87,8 @@ private:
 	double compute_desired_acceleration(
 		const std::unordered_map<int, TrafficLight>& traffic_lights) override;
 	bool give_lane_change_control_to_vissim() const override;
-	long create_lane_change_request() override { return 0; };
 	bool can_start_lane_change() override;
+	long create_lane_change_request() override { return 0; };
 	double compute_accepted_lane_change_gap(
 		std::shared_ptr<NearbyVehicle> nearby_vehicle) override;
 	/* Time-headway based gap (hv + d) minus a term based on 
