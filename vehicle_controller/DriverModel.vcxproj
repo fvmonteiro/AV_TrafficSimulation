@@ -247,6 +247,7 @@
     <ClCompile Include="ConnectedAutonomousVehicle.cpp" />
     <ClCompile Include="ControlManager.cpp" />
     <ClCompile Include="LongitudinalControllerWithTrafficLights.cpp" />
+    <ClCompile Include="Platoon.cpp" />
     <ClCompile Include="PlatoonVehicle.cpp" />
     <ClCompile Include="RelativeLane.cpp" />
     <ClCompile Include="AutonomousVehicle.cpp" />
@@ -285,6 +286,7 @@
     <ClInclude Include="ControlManager.h" />
     <ClInclude Include="EgoVehicleFactory.h" />
     <ClInclude Include="LongitudinalControllerWithTrafficLights.h" />
+    <ClInclude Include="Platoon.h" />
     <ClInclude Include="PlatoonVehicle.h" />
     <ClInclude Include="RelativeLane.h" />
     <ClInclude Include="SwitchedLongitudinalController.h" />

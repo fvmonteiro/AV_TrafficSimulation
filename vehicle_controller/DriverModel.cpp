@@ -14,20 +14,21 @@
 #include "DriverModel.h"
 #include "EgoVehicle.h"
 #include "EgoVehicleFactory.h"
+#include "Platoon.h"
 #include "SimulationLogger.h"
 #include "TrafficLight.h"
 #include "TrafficLightFileReader.h"
 
 /*==========================================================================*/
 
-const std::unordered_set<long> LOGGED_VEHICLES_IDS{ 11 };
+const std::unordered_set<long> LOGGED_VEHICLES_IDS{ 0 };
 const bool CLUELESS_DEBUGGING{ false };
 //const double DEBUGGING_START_TIME{ 249.0 };
 
 SimulationLogger simulation_logger;
 std::unordered_map<long, std::unique_ptr<EgoVehicle>> vehicles;
 std::unordered_map<int, TrafficLight> traffic_lights;
-int i, j;  // temp.; used for debugging
+std::unordered_map<int, std::shared_ptr<Platoon>> platoons;
 double simulation_time_step{ -1.0 };
 double current_time{ 0.0 };
 long current_vehicle_type{ 0 };
@@ -161,7 +162,7 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
                 return 0;
             /* Debugging: assisted vehicle */
             case UDA::assisted_veh_id:
-                return 0;
+                return 1;
             /* Debugging: other */
             case UDA::waiting_time:
                 return 0;
@@ -287,7 +288,8 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
                 set_max_lane_change_risk_to_follower(double_value);
             break;
         case UDA::use_linear_lane_change_gap:
-            vehicles[current_vehicle_id]->set_use_linear_lane_change_gap(long_value);
+            vehicles[current_vehicle_id]->set_use_linear_lane_change_gap(
+                long_value);
             break;
         default: // do nothing
             break;
@@ -403,7 +405,8 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
             long_value);*/
         return 1;
     case DRIVER_DATA_REL_TARGET_LANE        :
-        /* Apparently this is VISSIM's suggestion of target lane */
+        /* Apparently this is indicates when VISSIM considers the lane 
+        change can start. */
         vehicles[current_vehicle_id]->set_relative_target_lane(long_value);
         return 1;
     default :
@@ -448,7 +451,7 @@ DRIVERMODEL_API  int  DriverModelGetValue (long   type,
     case DRIVER_DATA_VEH_UDA :
         switch (UDA(index1))
         {
-        /* The first three are necessary */
+        /* The first ones are necessary */
         case UDA::h_to_assited_veh:
            *double_value = vehicles[current_vehicle_id]->
                get_time_headway_to_assisted_vehicle();
@@ -706,6 +709,13 @@ DRIVERMODEL_API  int  DriverModelExecuteCommand (long number)
             std::clog << "Erasing veh. " << current_vehicle_id << std::endl;
         }
         vehicles.erase(current_vehicle_id);
+        if (platoons.find(current_vehicle_id) != platoons.end())
+        {
+            if (platoons[current_vehicle_id]->is_empty())
+            {
+                platoons.erase(current_vehicle_id);
+            }
+        }
         return 1;
     case DRIVER_COMMAND_MOVE_DRIVER :
     {
@@ -721,6 +731,9 @@ DRIVERMODEL_API  int  DriverModelExecuteCommand (long number)
             std::clog << "Analyzing nearby vehicles" << std::endl;
         }
         vehicles[current_vehicle_id]->analyze_nearby_vehicles();
+
+        //vehicles[current_vehicle_id]->analyze_platoons(platoons);
+
         return 1;
     }
     default :

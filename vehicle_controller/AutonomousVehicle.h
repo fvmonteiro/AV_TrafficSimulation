@@ -96,12 +96,12 @@ private:
 	double compute_time_headway_gap_for_lane_change(
 		const NearbyVehicle& nearby_vehicle);
 	
-	/* Not being used */
-	//void compute_lane_change_risks() override;
 	std::shared_ptr<NearbyVehicle>
 		implement_get_destination_lane_leader() const override;
 	std::shared_ptr<NearbyVehicle>
 		implement_get_destination_lane_follower() const override;
+	std::shared_ptr<NearbyVehicle> implement_get_assisted_vehicle()
+		const override { return nullptr; };
 
 
 	bool has_lane_change_conflict() const;

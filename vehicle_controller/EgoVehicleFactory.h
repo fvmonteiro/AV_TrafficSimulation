@@ -33,12 +33,12 @@ public:
 				simulation_time_step, creation_time, verbose);
 		case VehicleType::traffic_light_acc_car:
 			return std::make_unique<TrafficLightACCVehicle>(id,
-				desired_velocity,
-				simulation_time_step, creation_time, verbose);
+				desired_velocity, simulation_time_step, creation_time,
+				verbose);
 		case VehicleType::traffic_light_cacc_car:
 			return std::make_unique<TrafficLightCACCVehicle>(id,
-				desired_velocity,
-				simulation_time_step, creation_time, verbose);
+				desired_velocity, simulation_time_step, creation_time,
+				verbose);
 		default:
 			std::clog << "Trying to create unknown vehicle type\n" 
 				<< "\ttime=" << creation_time

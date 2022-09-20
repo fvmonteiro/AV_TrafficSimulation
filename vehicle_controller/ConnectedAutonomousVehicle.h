@@ -10,7 +10,10 @@ public:
 
 	ConnectedAutonomousVehicle(long id, double desired_velocity,
 		double simulation_time_step, double creation_time,
-		bool verbose = false);
+		bool verbose = false) :
+		ConnectedAutonomousVehicle(id, VehicleType::connected_car,
+			desired_velocity, simulation_time_step, creation_time,
+			verbose) {};
 
 	/* The connected vehicle brake delay also depends on the other vehicle
 	type. If the other vehicle is not connected, the ego connected vehicle
@@ -25,14 +28,19 @@ public:
 		return assisted_vehicle;
 	}*/
 
-	bool has_assisted_vehicle() const;
+	//bool has_assisted_vehicle() const;
 	bool is_cooperating_to_generate_gap() const;
 
 	/* Debugging methods */
-	long get_assisted_veh_id() const override { 
+	/*long get_assisted_veh_id() const override { 
 		return has_assisted_vehicle() ?
 			assisted_vehicle->get_id() : 0;
-	};
+	};*/
+
+protected:
+	ConnectedAutonomousVehicle(long id, VehicleType type, 
+		double desired_velocity, double simulation_time_step, 
+		double creation_time, bool verbose);
 
 private:
 	/* Finds the current leader, the destination lane leader 
@@ -49,7 +57,7 @@ private:
 	//void clear_other_relevant_nearby_vehicles() override;
 	std::shared_ptr<NearbyVehicle>
 		implement_get_assisted_vehicle() const override;
-	double implement_get_time_headway_to_assisted_vehicle() const override;
+	//double implement_get_time_headway_to_assisted_vehicle() const override;
 	//void try_to_set_nearby_vehicle_type(long nv_type) override;
 	/*long try_to_get_nearby_vehicle_type(long nv_type) const override
 	{

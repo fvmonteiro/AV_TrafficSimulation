@@ -57,6 +57,29 @@ private:
 	double time_crossed_last_traffic_light{ 0.0 };
 	int next_traffic_light_id{ 0 };
 	double distance_to_next_traffic_light{ 0.0 };
+
+	/*long create_lane_change_request() override { return 0; };
+	double compute_accepted_lane_change_gap(
+		std::shared_ptr<NearbyVehicle> nearby_vehicle) override {
+		return 0.0;
+	};
+	std::shared_ptr<NearbyVehicle> implement_get_destination_lane_leader()
+		const override {
+		return nullptr;
+	};
+	std::shared_ptr<NearbyVehicle> implement_get_destination_lane_follower()
+		const override {
+		return nullptr;
+	};
+	std::shared_ptr<NearbyVehicle> implement_get_assisted_vehicle()
+		const override {
+		return nullptr;
+	};
+	void implement_set_accepted_lane_change_risk_to_leaders(
+		double value) override {};
+	void implement_set_accepted_lane_change_risk_to_follower(
+		double value) override {};
+	void implement_set_use_linear_lane_change_gap(long value) override {};*/
 };
 
 class TrafficLightCACCVehicle : public TrafficLightACCVehicle
