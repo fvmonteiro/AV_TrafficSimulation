@@ -17,15 +17,15 @@ AutonomousVehicle::AutonomousVehicle(long id, VehicleType type,
 	}
 }
 
-bool AutonomousVehicle::has_destination_lane_leader() const
-{
-	return get_destination_lane_leader() != nullptr;
-}
-
-bool AutonomousVehicle::has_destination_lane_follower() const
-{
-	return get_destination_lane_follower() != nullptr;
-}
+//bool AutonomousVehicle::has_destination_lane_leader() const
+//{
+//	return get_destination_lane_leader() != nullptr;
+//}
+//
+//bool AutonomousVehicle::has_destination_lane_follower() const
+//{
+//	return get_destination_lane_follower() != nullptr;
+//}
 
 bool AutonomousVehicle::has_lane_change_conflict() const 
 {
@@ -265,10 +265,10 @@ bool AutonomousVehicle::can_start_lane_change()
 	{
 		return get_relative_target_lane() != RelativeLane::same;
 	}
-	if (!has_lane_change_intention())  // just to avoid computations
-	{
-		return false;
-	}
+	//if (!has_lane_change_intention())  // just to avoid computations
+	//{
+	//	return false;
+	//}
 
 	double margin = 0.1;
 	if (verbose) std::clog << "Deciding lane change" << std::endl;

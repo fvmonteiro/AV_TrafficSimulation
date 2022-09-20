@@ -18,9 +18,10 @@
 ControlManager::ControlManager(const EgoVehicle& ego_vehicle,
 	bool verbose) :
 	lateral_controller{ LateralController(verbose) },
-	verbose{ verbose } {
-
-	if (verbose) {
+	verbose{ verbose } 
+{
+	if (verbose) 
+	{
 		std::clog << "Creating control manager " << std::endl;
 	}
 
@@ -112,7 +113,8 @@ void ControlManager::create_cooperative_lane_change_controller(
 SwitchedLongitudinalController::State
 	ControlManager::get_longitudinal_controller_state() const
 {
-	switch (active_longitudinal_controller) {
+	switch (active_longitudinal_controller) 
+	{
 	case ACCType::origin_lane:
 		return origin_lane_controller.get_state();
 	case ACCType::destination_lane:
@@ -155,7 +157,8 @@ double ControlManager::get_gap_error(VehicleType type) const
 
 /* ----------------------------------------------------------------------- */
 
-double ControlManager::compute_drac(double relative_velocity, double gap) {
+double ControlManager::compute_drac(double relative_velocity, double gap) 
+{
 	/* Deceleration (absolute value) to avoid collision assuming constant
 	velocities and instantaneous acceleration. DRAC is only defined when the
 	ego vehicle is faster than the leader. We some high negative value
@@ -341,7 +344,8 @@ double ControlManager::get_traffic_light_acc_acceleration(
 }
 
 void ControlManager::print_traffic_lights(const EgoVehicle& ego,
-	const std::unordered_map<int, TrafficLight>& traffic_lights) {
+	const std::unordered_map<int, TrafficLight>& traffic_lights)
+{
 	std::clog << "veh id=" << ego.get_id() << std::endl;
 	for (auto& pair : traffic_lights) std::clog << "tf id=" << pair.first <<
 		"(" << pair.second.get_id() << "), ";
@@ -358,8 +362,8 @@ void ControlManager::print_traffic_lights(const EgoVehicle& ego,
 
 bool ControlManager::get_origin_lane_desired_acceleration(
 	const EgoVehicle& ego_vehicle,
-	std::unordered_map<ACCType, double>& possible_accelerations) {
-
+	std::unordered_map<ACCType, double>& possible_accelerations)
+{
 	if (verbose) std::clog << "Origin lane controller" << std::endl;
 	possible_accelerations[ACCType::origin_lane] = 
 		origin_lane_controller.get_desired_acceleration(
@@ -371,8 +375,8 @@ bool ControlManager::get_origin_lane_desired_acceleration(
 
 bool ControlManager::get_end_of_lane_desired_acceleration(
 	const EgoVehicle& ego_vehicle,
-	std::unordered_map<ACCType, double>& possible_accelerations) {
-
+	std::unordered_map<ACCType, double>& possible_accelerations)
+{
 	bool is_active = false;
 
 	/* When the lane change direction equals the preferred relative
@@ -435,8 +439,8 @@ bool ControlManager::get_end_of_lane_desired_acceleration(
 
 bool ControlManager::get_destination_lane_desired_acceleration(
 	const AutonomousVehicle& ego_vehicle,
-	std::unordered_map<ACCType, double>& possible_accelerations) {
-
+	std::unordered_map<ACCType, double>& possible_accelerations) 
+{
 	bool is_active = false;
 	double origin_lane_reference_velocity;
 	double ego_velocity = ego_vehicle.get_velocity();
@@ -446,11 +450,13 @@ bool ControlManager::get_destination_lane_desired_acceleration(
 		== SwitchedLongitudinalController::State::vehicle_following;
 	/* Get the possible max vel at the origin lane */
 	if (origin_lane_controller.get_state()
-		== SwitchedLongitudinalController::State::vehicle_following) {
+		== SwitchedLongitudinalController::State::vehicle_following)
+	{
 		origin_lane_reference_velocity = ego_vehicle.get_leader()
 			->compute_velocity(ego_velocity);
 	}
-	else {
+	else 
+	{
 		origin_lane_reference_velocity =
 			ego_vehicle.get_desired_velocity();
 	}
@@ -463,9 +469,10 @@ bool ControlManager::get_destination_lane_desired_acceleration(
 		&& ((ego_vehicle.get_destination_lane_leader()
 			->compute_velocity(ego_velocity)
 				> origin_lane_reference_velocity - min_overtaking_rel_vel)
-			|| end_of_lane_controller_is_active)) {
-		
-		if (verbose) {
+			|| end_of_lane_controller_is_active)) 
+	{	
+		if (verbose) 
+		{
 			std::clog << "Dest. lane controller"
 				<< std::endl;
 		}
@@ -495,12 +502,14 @@ bool ControlManager::get_destination_lane_desired_acceleration(
 
 bool ControlManager::get_cooperative_desired_acceleration(
 	const ConnectedAutonomousVehicle& ego_vehicle,
-	std::unordered_map<ACCType, double>& possible_accelerations) {
-
+	std::unordered_map<ACCType, double>& possible_accelerations) 
+{
 	bool is_active = false;
 
-	if (ego_vehicle.is_cooperating_to_generate_gap()) {
-		if (verbose) {
+	if (ego_vehicle.is_cooperating_to_generate_gap()) 
+	{
+		if (verbose) 
+		{
 			std::clog << "Gap generating controller"
 				<< std::endl;
 		}
@@ -515,7 +524,8 @@ bool ControlManager::get_cooperative_desired_acceleration(
 		uses comfortable constraints, must be updated. */
 		if ((active_longitudinal_controller
 			!= ACCType::cooperative_gap_generation)
-			&& gap_generating_controller.is_outdated(ego_velocity)) {
+			&& gap_generating_controller.is_outdated(ego_velocity)) 
+		{
 			gap_generating_controller.reset_velocity_controller(
 				ego_velocity);
 		}
@@ -532,11 +542,13 @@ double ControlManager::choose_minimum_acceleration(
 	std::unordered_map<ACCType, double>& possible_accelerations)
 {
 	double desired_acceleration = 1000; // any high value
-	for (const auto& it : possible_accelerations) {
+	for (const auto& it : possible_accelerations) 
+	{
 		if (verbose) std::clog << active_ACC_to_string(it.first)
 			<< ", " << it.second << std::endl;
 
-		if (it.second < desired_acceleration) {
+		if (it.second < desired_acceleration) 
+		{
 			desired_acceleration = it.second;
 			active_longitudinal_controller = it.first;
 		}
@@ -593,25 +605,8 @@ double ControlManager::compute_desired_lane_change_gap(
 	return safe_time_headway_gap /*collision_free_gap*/ + transient_gap;
 }
 
-//double ControlManager::compute_accepted_lane_change_gap(
-//	const AutonomousVehicle& ego_vehicle, const NearbyVehicle& nearby_vehicle, 
-//	bool will_accelerate) 
-//{
-//	double accepted_time_headway_gap = get_accepted_time_headway_gap(
-//		ego_vehicle, nearby_vehicle);
-//	/* TODO: the function calls do not make much sense here.
-//	You call this method from the ego vehicle, and then call an ego vehicle
-//	method in here.*/
-//	/*double collision_free_gap = ego_vehicle.compute_exact_collision_free_gap(
-//		nearby_vehicle);*/
-//	double transient_gap = lateral_controller.compute_transient_gap(
-//		ego_vehicle, nearby_vehicle, will_accelerate);
-//
-//	return accepted_time_headway_gap /*collision_free_gap*/ + transient_gap;
-//}
-
 double ControlManager::get_desired_time_headway_gap(double ego_velocity,
-	/*bool has_lane_change_intention,*/ const NearbyVehicle& nearby_vehicle) 
+	const NearbyVehicle& nearby_vehicle) 
 {
 	double time_headway_gap = 0.0;
 	//double ego_velocity = ego_vehicle.get_velocity();
@@ -621,13 +616,13 @@ double ControlManager::get_desired_time_headway_gap(double ego_velocity,
 		{
 			time_headway_gap = 
 				origin_lane_controller.get_desired_time_headway_gap(
-				ego_velocity/*, has_lane_change_intention*/);
+				ego_velocity);
 		}
 		else 
 		{
 			time_headway_gap = 
 				destination_lane_controller.get_desired_time_headway_gap(
-				ego_velocity/*, has_lane_change_intention*/);
+				ego_velocity);
 		}
 	}
 	else

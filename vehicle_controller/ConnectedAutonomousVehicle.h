@@ -32,18 +32,18 @@ public:
 	bool is_cooperating_to_generate_gap() const;
 
 	/* Debugging methods */
-	/*long get_assisted_veh_id() const override { 
+	/*long get_assisted_veh_id() const override {
 		return has_assisted_vehicle() ?
 			assisted_vehicle->get_id() : 0;
 	};*/
 
 protected:
-	ConnectedAutonomousVehicle(long id, VehicleType type, 
-		double desired_velocity, double simulation_time_step, 
+	ConnectedAutonomousVehicle(long id, VehicleType type,
+		double desired_velocity, double simulation_time_step,
 		double creation_time, bool verbose);
 
 private:
-	/* Finds the current leader, the destination lane leader 
+	/* Finds the current leader, the destination lane leader
 	and follower (if the vehicle has lane change intention),
 	and if any nearby vehicle requested cooperation	*/
 	void find_relevant_nearby_vehicles() override;
@@ -68,7 +68,7 @@ private:
 	double compute_vehicle_following_safe_time_headway(
 		const NearbyVehicle& nearby_vehicle) const override;
 	double compute_vehicle_following_time_headway(
-		const NearbyVehicle& nearby_vehicle, 
+		const NearbyVehicle& nearby_vehicle,
 		double nv_max_lane_change_risk) const;
 	double compute_lane_changing_desired_time_headway(
 		const NearbyVehicle& nearby_vehicle) const override;
@@ -81,11 +81,11 @@ private:
 
 	void find_cooperation_requests();
 	/* Returns true if a vehicle is asking to merge in front of us and
-	[to do] modifies nearby_vehicle in place to point to the proper 
+	[to do] modifies nearby_vehicle in place to point to the proper
 	virtual leader */
 	bool check_if_is_asking_for_cooperation(
 		const NearbyVehicle& nearby_vehicle);
-	void deal_with_close_and_slow_assited_vehicle(); 
+	void deal_with_close_and_slow_assited_vehicle();
 	void compute_connected_safe_gap_parameters();
 	void update_destination_lane_follower(
 		const std::shared_ptr<NearbyVehicle>& old_follower) override;

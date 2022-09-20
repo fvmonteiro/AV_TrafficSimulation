@@ -33,7 +33,7 @@
 //	{
 //		Platoon platoon = Platoon(
 //			std::make_shared<PlatoonVehicle>(*this));
-//		bool ok = platoons.insert({ 
+//		bool ok = platoons.insert({
 //			get_id(), std::make_shared<Platoon>(platoon) }).second;
 //		if (!ok)
 //		{

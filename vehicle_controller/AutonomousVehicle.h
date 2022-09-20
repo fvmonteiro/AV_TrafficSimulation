@@ -27,12 +27,12 @@ public:
 	//	return destination_lane_follower;
 	//};
 
-	bool has_destination_lane_leader() const;
-	bool has_destination_lane_follower() const;
+	/*bool has_destination_lane_leader() const;
+	bool has_destination_lane_follower() const;*/
 
 	/* Debugging methods */
 
-	long get_dest_lane_leader_id() const override
+	/*long get_dest_lane_leader_id() const override
 	{
 		return has_destination_lane_leader() ?
 			destination_lane_leader->get_id() : 0;
@@ -44,12 +44,11 @@ public:
 	double get_dest_follower_time_headway() const override {
 		return controller.get_destination_lane_controller().
 			get_follower_time_headway();
-	};
+	};*/
 
 protected:
 	AutonomousVehicle(long id, VehicleType type, double desired_velocity,
-		bool is_connected,
-		double simulation_time_step, double creation_time,
+		bool is_connected, double simulation_time_step, double creation_time,
 		bool verbose = false);
 
 	/* Necessary when computing lane change gaps with risk */
@@ -89,6 +88,7 @@ private:
 		const std::unordered_map<int, TrafficLight>& traffic_lights) override;
 	bool give_lane_change_control_to_vissim() const override;
 	bool can_start_lane_change() override;
+	long create_lane_change_request() override { return 0; };
 	double compute_accepted_lane_change_gap(
 		std::shared_ptr<NearbyVehicle> nearby_vehicle) override;
 	/* Time-headway based gap (hv + d) minus a term based on 
@@ -103,6 +103,11 @@ private:
 	std::shared_ptr<NearbyVehicle> implement_get_assisted_vehicle()
 		const override { return nullptr; };
 
+	std::shared_ptr<NearbyVehicle>
+		implement_get_assisted_vehicle() const override
+	{
+		return nullptr;
+	};
 
 	bool has_lane_change_conflict() const;
 	bool is_lane_change_gap_safe(
@@ -148,13 +153,14 @@ private:
 	/* NOT IMPLEMENTED */
 	void update_headways_with_risk(const EgoVehicle& ego_vehicle);
 
+	double max_lane_change_waiting_time{ 60.0 }; // [s]
+
 	/* Relevant members for lane changing ------------------------------------ */
 
 	std::shared_ptr<NearbyVehicle> destination_lane_leader{ nullptr };
 	std::shared_ptr<NearbyVehicle> destination_lane_follower{ nullptr };
 	/* Emergency braking parameter during lane change */
 	double lambda_1_lane_change{ 0.0 }; // [m/s]
-
 
 	/* Risk related variables --------------------------------------------- */
 	/*The risk is an estimation of the relative velocity at collision

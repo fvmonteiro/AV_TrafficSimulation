@@ -47,7 +47,7 @@ EgoVehicle::EgoVehicle(long id, VehicleType type, double desired_velocity,
 	}
 }
 
-EgoVehicle::~EgoVehicle() 
+EgoVehicle::~EgoVehicle()
 {
 	std::vector<Member> members{
 		Member::creation_time,
@@ -71,96 +71,96 @@ EgoVehicle::~EgoVehicle()
 
 /* "Current" getters ------------------------------------------------------ */
 
-double EgoVehicle::get_time() const 
+double EgoVehicle::get_time() const
 {
 	/* At creation time, the vehicle already has a velocity */
-	return creation_time + (velocity.size() - 1) * simulation_time_step; 
+	return creation_time + (velocity.size() - 1) * simulation_time_step;
 }
-long EgoVehicle::get_lane() const 
+long EgoVehicle::get_lane() const
 {
-	return lane.back(); 
+	return lane.back();
 }
-long EgoVehicle::get_link() const 
+long EgoVehicle::get_link() const
 {
 	return link.back();
 }
-double EgoVehicle::get_lateral_position() const 
+double EgoVehicle::get_lateral_position() const
 {
 	return lateral_position.back();
 }
-RelativeLane EgoVehicle::get_preferred_relative_lane() const 
+RelativeLane EgoVehicle::get_preferred_relative_lane() const
 {
 	return preferred_relative_lane.back();
 }
-double EgoVehicle::get_velocity() const 
+double EgoVehicle::get_velocity() const
 {
-	if (velocity.empty()) /* We shouldn't need to check this condition. 
+	if (velocity.empty()) /* We shouldn't need to check this condition.
 							This is used to avoid crashing during tests.*/
-	{ 
+	{
 		return 0;
 	}
-	return velocity.back(); 
+	return velocity.back();
 }
-double EgoVehicle::get_acceleration() const 
+double EgoVehicle::get_acceleration() const
 {
-	return acceleration.back(); 
+	return acceleration.back();
 }
-double EgoVehicle::get_desired_acceleration() const 
+double EgoVehicle::get_desired_acceleration() const
 {
 	return desired_acceleration.empty()? 0: desired_acceleration.back();
 }
-double EgoVehicle::get_vissim_acceleration() const 
+double EgoVehicle::get_vissim_acceleration() const
 {
 	return vissim_acceleration.back();
 }
-RelativeLane EgoVehicle::get_active_lane_change_direction() const 
+RelativeLane EgoVehicle::get_active_lane_change_direction() const
 {
 	return active_lane_change_direction.back();
 }
 //long EgoVehicle::get_vissim_active_lane_change() const {
 //	return vissim_active_lane_change.back();
 //}
-double EgoVehicle::get_lane_end_distance() const 
+double EgoVehicle::get_lane_end_distance() const
 {
 	return lane_end_distance.back();
 }
-long EgoVehicle::get_leader_id() const 
+long EgoVehicle::get_leader_id() const
 {
 	return leader_id.back();
 }
-EgoVehicle::State EgoVehicle::get_state() const 
+EgoVehicle::State EgoVehicle::get_state() const
 {
 	return state.empty() ? State::lane_keeping : state.back();
 }
-double EgoVehicle::get_ttc() const 
+double EgoVehicle::get_ttc() const
 {
 	return ttc.back();
 }
-double EgoVehicle::get_drac() const 
+double EgoVehicle::get_drac() const
 {
 	return drac.back();
 }
-double EgoVehicle::get_collision_risk() const 
+double EgoVehicle::get_collision_risk() const
 {
 	return collision_severity_risk.back();
 }
 /* ------------------------------------------------------------------------ */
 
 /* Other getters and setters ---------------------------------------------- */
-double EgoVehicle::get_current_max_brake() const 
+double EgoVehicle::get_current_max_brake() const
 {
-	return has_lane_change_intention() ? 
+	return has_lane_change_intention() ?
 		get_lane_change_max_brake() : max_brake;
 	/*if (is_lane_changing()) return get_lane_change_max_brake();
 	return max_brake;*/
 }
 
-double EgoVehicle::get_free_flow_velocity() const 
+double EgoVehicle::get_free_flow_velocity() const
 {
 	return try_go_at_max_vel ? MAX_VELOCITY: desired_velocity;
 }
 
-double EgoVehicle::get_safe_time_headway() const 
+double EgoVehicle::get_safe_time_headway() const
 {
 	return controller.get_origin_lane_controller().
 		get_desired_time_headway();
@@ -184,8 +184,8 @@ double EgoVehicle::get_gap_variation_to(
 			<< nearby_vehicle->get_id() << "\n"
 			<< "Only have it for vehs. ";
 
-		for (auto it = gap_variation_during_lane_change.begin(); 
-			it != gap_variation_during_lane_change.end(); ++it) 
+		for (auto it = gap_variation_during_lane_change.begin();
+			it != gap_variation_during_lane_change.end(); ++it)
 		{
 			std::cout << it->first << " ,";
 		}
@@ -217,54 +217,54 @@ double EgoVehicle::get_collision_free_gap_to(
 	return -1.0;
 }
 
-void EgoVehicle::set_lane(long lane) 
+void EgoVehicle::set_lane(long lane)
 {
 	this->lane.push_back(lane);
 }
-void EgoVehicle::set_link(long link) 
+void EgoVehicle::set_link(long link)
 {
 	this->link.push_back(link);
 }
-void EgoVehicle::set_lateral_position(double lateral_position) 
+void EgoVehicle::set_lateral_position(double lateral_position)
 {
 	this->lateral_position.push_back(lateral_position);
 }
-void EgoVehicle::set_velocity(double velocity) 
+void EgoVehicle::set_velocity(double velocity)
 {
 	this->velocity.push_back(velocity);
 }
-void EgoVehicle::set_acceleration(double acceleration) 
+void EgoVehicle::set_acceleration(double acceleration)
 {
 	this->acceleration.push_back(acceleration);
 }
-void EgoVehicle::set_vissim_acceleration(double vissim_acceleration) 
+void EgoVehicle::set_vissim_acceleration(double vissim_acceleration)
 {
 	this->vissim_acceleration.push_back(vissim_acceleration);
 }
-void EgoVehicle::set_active_lane_change_direction(long direction) 
+void EgoVehicle::set_active_lane_change_direction(long direction)
 {
 	this->active_lane_change_direction.push_back(
 		RelativeLane::from_long(direction));
 }
 
-void EgoVehicle::set_preferred_relative_lane(long preferred_relative_lane) 
+void EgoVehicle::set_preferred_relative_lane(long preferred_relative_lane)
 {
 	this->preferred_relative_lane.push_back(
 		RelativeLane::from_long(preferred_relative_lane));
-	//set_desired_lane_change_direction(preferred_relative_lane);	
+	//set_desired_lane_change_direction(preferred_relative_lane);
 }
 
-void EgoVehicle::set_relative_target_lane(long target_relative_lane) 
+void EgoVehicle::set_relative_target_lane(long target_relative_lane)
 {
-	this->relative_target_lane = 
+	this->relative_target_lane =
 		RelativeLane::from_long(target_relative_lane);
 	//set_desired_lane_change_direction(target_relative_lane);
 }
 
 void EgoVehicle::set_lane_end_distance(double lane_end_distance,
-	long lane_number) 
+	long lane_number)
 {
-	if (lane_number == get_lane()) 
+	if (lane_number == get_lane())
 	{
 		this->lane_end_distance.push_back(lane_end_distance);
 	}
@@ -282,7 +282,7 @@ void EgoVehicle::set_collision_free_gap(int nv_id, double value)
 
 /* Nearby Vehicles methods ------------------------------------------------ */
 
-void EgoVehicle::clear_nearby_vehicles() 
+void EgoVehicle::clear_nearby_vehicles()
 {
 	nearby_vehicles.clear();
 	gap_variation_during_lane_change.clear();
@@ -290,19 +290,19 @@ void EgoVehicle::clear_nearby_vehicles()
 }
 
 void EgoVehicle::emplace_nearby_vehicle(long id, long relative_lane,
-	long relative_position) 
+	long relative_position)
 {
 	/*if (verbose && get_time() > 68) std::clog << "Emplacing nv id=" << id
 		<< std::endl;*/
-	std::shared_ptr<NearbyVehicle> nearby_vehicle = 
+	std::shared_ptr<NearbyVehicle> nearby_vehicle =
 		std::shared_ptr<NearbyVehicle>(new NearbyVehicle(id, relative_lane,
 		relative_position));
 	nearby_vehicles.push_back(std::move(nearby_vehicle));
 }
 
-std::shared_ptr<NearbyVehicle> EgoVehicle::peek_nearby_vehicles() const 
+std::shared_ptr<NearbyVehicle> EgoVehicle::peek_nearby_vehicles() const
 {
-	if (!nearby_vehicles.empty()) 
+	if (!nearby_vehicles.empty())
 	{
 		return nearby_vehicles.back();
 	}
@@ -319,7 +319,7 @@ void EgoVehicle::set_nearby_vehicle_type(long nv_type)
 
 
 
-bool EgoVehicle::has_leader() const 
+bool EgoVehicle::has_leader() const
 {
 	return leader != nullptr;
 }
@@ -338,21 +338,21 @@ double EgoVehicle::get_time_headway_to_assisted_vehicle() const
 	return 3.0;
 }
 
-std::shared_ptr<NearbyVehicle> EgoVehicle::get_leader() const 
+std::shared_ptr<NearbyVehicle> EgoVehicle::get_leader() const
 {
 	return leader;
 }
 
 std::shared_ptr<NearbyVehicle> EgoVehicle::get_nearby_vehicle_by_id(
-	long nv_id) const 
+	long nv_id) const
 {
-	for (std::shared_ptr<NearbyVehicle> nv : nearby_vehicles) 
+	for (std::shared_ptr<NearbyVehicle> nv : nearby_vehicles)
 	{
 		if (nv->get_id() == nv_id) return nv;
 	}
-	
-	/* If we don't find the id in the current nearby vehicle list, 
-	the vehicle is way behind us. In this case, we just create a far away 
+
+	/* If we don't find the id in the current nearby vehicle list,
+	the vehicle is way behind us. In this case, we just create a far away
 	virtual vehicle to force the ego vehicle into low vel. control mode */
 	/*std::shared_ptr<NearbyVehicle> virtual_vehicle =
 		std::shared_ptr<NearbyVehicle>(new
@@ -363,7 +363,7 @@ std::shared_ptr<NearbyVehicle> EgoVehicle::get_nearby_vehicle_by_id(
 	return nullptr;
 }
 
-double EgoVehicle::get_relative_velocity_to_leader() 
+double EgoVehicle::get_relative_velocity_to_leader()
 {
 	return has_leader() ? leader->get_relative_velocity() : 0.0;
 }
@@ -402,40 +402,40 @@ double EgoVehicle::get_dest_follower_time_headway() const
 		get_follower_time_headway();
 }
 
-double EgoVehicle::compute_gap(const NearbyVehicle& nearby_vehicle) const 
+double EgoVehicle::compute_gap(const NearbyVehicle& nearby_vehicle) const
 {
-	/* Vissim's given "distance" is the distance between both front bumpers, 
-	so we subtract the length from that. We need to check which vehicle is 
+	/* Vissim's given "distance" is the distance between both front bumpers,
+	so we subtract the length from that. We need to check which vehicle is
 	ahead to determine whose length must be subtracted. */
 	if (nearby_vehicle.get_id() <= 0) // "empty" vehicle
-	{ 
+	{
 		return MAX_DISTANCE;
 	}
-	if (nearby_vehicle.is_ahead()) 
+	if (nearby_vehicle.is_ahead())
 	{
 		return nearby_vehicle.get_distance()
 			- nearby_vehicle.get_length();
 	}
-	else 
+	else
 	{
 		return -nearby_vehicle.get_distance() - get_length();
 	}
 }
 
 double EgoVehicle::compute_gap(
-	const std::shared_ptr<NearbyVehicle> nearby_vehicle) const 
+	const std::shared_ptr<NearbyVehicle> nearby_vehicle) const
 {
-	if (nearby_vehicle != nullptr) 
+	if (nearby_vehicle != nullptr)
 	{
 		return compute_gap(*nearby_vehicle);
 	}
-	else 
+	else
 	{
 		return MAX_DISTANCE;
 	}
 }
 
-long EgoVehicle::get_lane_change_request() 
+long EgoVehicle::get_lane_change_request()
 {
 	return create_lane_change_request();
 }
@@ -448,7 +448,7 @@ void EgoVehicle::find_relevant_nearby_vehicles()
 void EgoVehicle::find_leader()
 {
 	std::shared_ptr<NearbyVehicle> old_leader = std::move(leader);
-	
+
 	for (auto& nearby_vehicle : nearby_vehicles)
 	{
 		if (check_if_is_leader(*nearby_vehicle)) leader = nearby_vehicle;
@@ -490,10 +490,10 @@ void EgoVehicle::update_leader(
 		if (old_leader == nullptr)
 		{
 			controller.activate_origin_lane_controller(get_velocity(),
-				compute_current_desired_time_headway(*leader), 
+				compute_current_desired_time_headway(*leader),
 				is_new_leader_connected);
 		}
-		else if((std::abs(new_leader_max_brake 
+		else if((std::abs(new_leader_max_brake
 			- old_leader->get_max_brake()) > 0.5)
 			|| (leader->get_type() != old_leader->get_type()))
 		{
@@ -503,7 +503,7 @@ void EgoVehicle::update_leader(
 			);
 		}
 	}
-	else 
+	else
 	{
 		leader_id.push_back(0);
 	}
@@ -528,16 +528,16 @@ double EgoVehicle::compute_vehicle_following_safe_time_headway(
 
 /* State-machine related methods ------------------------------------------ */
 
-void EgoVehicle::update_state() 
+void EgoVehicle::update_state()
 {
 	set_desired_lane_change_direction();
 
 	State old_state = get_state();
-	if (desired_lane_change_direction == RelativeLane::same) 
+	if (desired_lane_change_direction == RelativeLane::same)
 	{
 		state.push_back(State::lane_keeping);
 	}
-	else 
+	else
 	{
 		update_lane_change_waiting_time();
 		state.push_back(State::intention_to_change_lanes);
@@ -548,7 +548,7 @@ void EgoVehicle::update_state()
 	change lanes.
 	- Reset the desired velocity filter when the vehicle
 	finished a lane change */
-	if (old_state != get_state()) 
+	if (old_state != get_state())
 	{
 		lane_change_waiting_time = 0.0;
 		if (has_leader())
@@ -585,29 +585,29 @@ void EgoVehicle::update_state()
 }
 
 
-bool EgoVehicle::is_lane_changing() const 
+bool EgoVehicle::is_lane_changing() const
 {
 	return get_active_lane_change_direction() != RelativeLane::same;
 }
 
-long EgoVehicle::get_color_by_controller_state() 
+long EgoVehicle::get_color_by_controller_state()
 {
 	/* We'll assign color to vehicles based on the current longitudinal
 	controller and on whether or not the vehicle is trying to change lanes.*/
 	if (state.empty()) return orig_lane_vel_control_color;
-	
+
 	/* TODO: Rewrite code to avoid all these swicth statements.
 	Possible solution: ControlManager has a map of controllers and
 	controllers get assigned colors for their states.
 	Then we can just call controllers[active_controller].get_state_color() */
 
-	switch (controller.get_active_longitudinal_controller()) 
+	switch (controller.get_active_longitudinal_controller())
 	{
 	case ControlManager::ACCType::origin_lane:
 		switch (controller.get_longitudinal_controller_state())
 		{
 		case SwitchedLongitudinalController::State::velocity_control:
-			return try_go_at_max_vel? 
+			return try_go_at_max_vel?
 				orig_lane_max_vel_control_color : orig_lane_vel_control_color;
 		case SwitchedLongitudinalController::State::vehicle_following:
 			return orig_lane_veh_foll_color;
@@ -669,7 +669,7 @@ long EgoVehicle::get_color_by_controller_state()
 
 std::string EgoVehicle::print_detailed_state() const
 {
-	std::string state_str = 
+	std::string state_str =
 		state_to_string_map.at(get_state()) + ", "
 		+ ControlManager::active_ACC_to_string(
 			controller.get_active_longitudinal_controller()) + ", "
@@ -678,9 +678,9 @@ std::string EgoVehicle::print_detailed_state() const
 	return state_str;
 }
 
-void EgoVehicle::update_lane_change_waiting_time() 
+void EgoVehicle::update_lane_change_waiting_time()
 {
-	if (get_velocity() < 5.0/3.6) 
+	if (get_velocity() < 5.0/3.6)
 	{
 		lane_change_waiting_time += simulation_time_step;
 	}
@@ -692,10 +692,10 @@ void EgoVehicle::update_lane_change_waiting_time()
 
 /* Control related methods ------------------------------------------------ */
 
-double EgoVehicle::consider_vehicle_dynamics(double desired_acceleration) 
+double EgoVehicle::consider_vehicle_dynamics(double desired_acceleration)
 {
 	/* We assume lower level dynamics as:
-	a = u / (tau.s + 1) => tau.da/dt + a = u 
+	a = u / (tau.s + 1) => tau.da/dt + a = u
 	da/dt = 1/tau * (u - a)
 	Discrete approximation:
 	a(k+1) = a(k) + (1 - alpha)*(u(k+1) - a(k))
@@ -712,7 +712,7 @@ double EgoVehicle::consider_vehicle_dynamics(double desired_acceleration)
 }
 
 long EgoVehicle::decide_lane_change_direction()
-{	
+{
 	if (has_lane_change_intention() && can_start_lane_change())
 	{
 		return desired_lane_change_direction.to_int();
@@ -722,31 +722,31 @@ long EgoVehicle::decide_lane_change_direction()
 }
 
 double EgoVehicle::get_accepted_lane_change_gap(
-	std::shared_ptr<NearbyVehicle> nearby_vehicle) 
+	std::shared_ptr<NearbyVehicle> nearby_vehicle)
 {
 	return compute_accepted_lane_change_gap(nearby_vehicle);
 }
 
-double EgoVehicle::get_reference_gap() 
+double EgoVehicle::get_reference_gap()
 {
 	return controller.get_reference_gap(velocity.back());
 }
 
 double EgoVehicle::compute_time_headway_gap(
-	std::shared_ptr<NearbyVehicle> nearby_vehicle) 
+	std::shared_ptr<NearbyVehicle> nearby_vehicle)
 {
 	double time_headway_gap = 0.0;
-	if (nearby_vehicle != nullptr) 
+	if (nearby_vehicle != nullptr)
 	{
 		time_headway_gap = controller.get_desired_time_headway_gap(
-			get_velocity(), /*has_lane_change_intention(),*/ 
+			get_velocity(), /*has_lane_change_intention(),*/
 			*nearby_vehicle);
 	}
 	return time_headway_gap;
 }
 
 double EgoVehicle::compute_transient_gap(
-	std::shared_ptr<NearbyVehicle> nearby_vehicle) 
+	std::shared_ptr<NearbyVehicle> nearby_vehicle)
 {
 	double transient_gap = 0.0;
 	if (nearby_vehicle != nullptr)
@@ -759,21 +759,21 @@ double EgoVehicle::compute_transient_gap(
 
 /* Computation of surrogate safety measurements --------------------------- */
 
-double EgoVehicle::compute_ttc(const NearbyVehicle& nearby_vehicle) 
+double EgoVehicle::compute_ttc(const NearbyVehicle& nearby_vehicle)
 {
 	/* Time-to-collision is:
-	(leader x - leader length - ego x) / (ego vel - leader vel), 
-		if ego vel > leader vel 
-	underfined, 
+	(leader x - leader length - ego x) / (ego vel - leader vel),
+		if ego vel > leader vel
+	underfined,
 		if ego vel < leader vel */
 	if (nearby_vehicle.get_relative_velocity() > 0) 
 	{
 		return compute_gap(nearby_vehicle) / nearby_vehicle.get_relative_velocity();
 	}
-	return -1.0;	
+	return -1.0;
 }
 
-double EgoVehicle::compute_drac(const NearbyVehicle& nearby_vehicle) 
+double EgoVehicle::compute_drac(const NearbyVehicle& nearby_vehicle)
 {
 	/* Deceleration rate to avoid collision
 	(ego vel - leader vel)^2 / 2*(leader x - leader length - ego x),
@@ -791,26 +791,26 @@ double EgoVehicle::compute_drac(const NearbyVehicle& nearby_vehicle)
 
 /* Private methods -------------------------------------------------------- */
 
-void EgoVehicle::set_desired_lane_change_direction() 
+void EgoVehicle::set_desired_lane_change_direction()
 {
 	/* Both preferred_relative_lane and relative_target_lane indicate
-	desire to change lanes. The former indicates preference due to 
+	desire to change lanes. The former indicates preference due to
 	routing, so it takes precedence over the latter. */
 	RelativeLane current_preferred_lane = get_preferred_relative_lane();
 	desired_lane_change_direction = RelativeLane::same;
-	if (current_preferred_lane.is_to_the_left()) 
+	if (current_preferred_lane.is_to_the_left())
 	{
 		desired_lane_change_direction = RelativeLane::left;
 	}
-	else if (current_preferred_lane.is_to_the_right()) 
+	else if (current_preferred_lane.is_to_the_right())
 	{
 		desired_lane_change_direction = RelativeLane::right;
 	}
-	else if (relative_target_lane.is_to_the_left()) 
+	else if (relative_target_lane.is_to_the_left())
 	{
 		desired_lane_change_direction = RelativeLane::left;
 	}
-	else if (relative_target_lane.is_to_the_right()) 
+	else if (relative_target_lane.is_to_the_right())
 	{
 		desired_lane_change_direction = RelativeLane::right;
 	}
@@ -828,13 +828,13 @@ void EgoVehicle::write_simulation_log(std::vector<Member> members)
 	std::ofstream vehicle_log;
 	std::string file_name = "vehicle" + std::to_string(get_id()) + ".txt";
 	vehicle_log.open(log_path + "\\" + file_name);
-	if (vehicle_log.is_open()) 
+	if (vehicle_log.is_open())
 	{
 		vehicle_log << write_header(members, write_size);
 		vehicle_log	<< write_members(members);
 		vehicle_log.close();
 	}
-	else 
+	else
 	{
 		std::clog << "Unable to open file to write log of "
 			<< "vehicle " << get_id()
@@ -845,7 +845,7 @@ void EgoVehicle::write_simulation_log(std::vector<Member> members)
 std::string EgoVehicle::write_header(
 	std::vector<EgoVehicle::Member> members, bool write_size)
 {
-	
+
 	std::ostringstream oss;
 	for (auto m : members)
 	{
@@ -871,10 +871,10 @@ std::string EgoVehicle::write_members(
 	create vector members with different sizes. This prevents
 	the log from being written and crashes vissim. Let's avoid
 	this and just write a warning message instead.*/
-	int n_samples = (int)velocity.size(); /* velocity, lane and link members 
+	int n_samples = (int)velocity.size(); /* velocity, lane and link members
 	are the least likely to have the wrong size */
 	std::vector<int> deleted_indices;
-	for (int i = 0; i < members.size(); i++) 
+	for (int i = 0; i < members.size(); i++)
 	{
 		Member m = members.at(i);
 		if ((get_member_size(m) != 1) // not a scalar
@@ -1093,7 +1093,7 @@ std::ostream& operator<< (std::ostream& out, const EgoVehicle& vehicle)
 	out << "t=" << vehicle.get_time()
 		<< ", id=" << vehicle.get_id()
 		<< ", type=" << static_cast<int>(vehicle.get_type())
-		<< ", state=" 
+		<< ", state="
 		<< EgoVehicle::state_to_string_map.at(vehicle.get_state())
 		<< ", lane=" << vehicle.get_lane()
 		<< ", pref. lane="

@@ -153,7 +153,6 @@ public:
 	
 	/* Returns the time headway part of the desired lane change gap. */
 	double get_desired_time_headway_gap(double ego_velocity,
-		/*bool has_lane_change_intention,*/ 
 		const NearbyVehicle& nearby_vehicle);
 	/* Returns the time headway part of the accepted lane change gap. */
 	/*double get_accepted_time_headway_gap(const AutonomousVehicle& ego_vehicle,

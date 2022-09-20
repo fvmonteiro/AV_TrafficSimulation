@@ -1,10 +1,10 @@
 #include "ConnectedAutonomousVehicle.h"
 
 ConnectedAutonomousVehicle::ConnectedAutonomousVehicle(
-	long id, double desired_velocity,
+	long id, VehicleType type, double desired_velocity,
 	double simulation_time_step, double creation_time,
 	bool verbose) :
-	AutonomousVehicle(id, VehicleType::connected_car, desired_velocity,
+	AutonomousVehicle(id, type, desired_velocity,
 		true, simulation_time_step, creation_time, verbose) 
 {
 	compute_connected_safe_gap_parameters();
@@ -17,10 +17,10 @@ ConnectedAutonomousVehicle::ConnectedAutonomousVehicle(
 	}
 }
 
-bool ConnectedAutonomousVehicle::has_assisted_vehicle() const
-{
-	return assisted_vehicle != nullptr;
-}
+//bool ConnectedAutonomousVehicle::has_assisted_vehicle() const
+//{
+//	return assisted_vehicle != nullptr;
+//}
 
 bool ConnectedAutonomousVehicle::is_cooperating_to_generate_gap() const {
 	return has_assisted_vehicle();
@@ -33,15 +33,15 @@ implement_get_assisted_vehicle() const
 	return assisted_vehicle;
 }
 
-double ConnectedAutonomousVehicle::
-implement_get_time_headway_to_assisted_vehicle() const {
-	if (is_cooperating_to_generate_gap())
-	{
-		return controller.get_gap_generation_lane_controller().
-			get_desired_time_headway();
-	}
-	return 0;
-}
+//double ConnectedAutonomousVehicle::
+//implement_get_time_headway_to_assisted_vehicle() const {
+//	if (is_cooperating_to_generate_gap())
+//	{
+//		return controller.get_gap_generation_lane_controller().
+//			get_desired_time_headway();
+//	}
+//	return 0;
+//}
 
 //void ConnectedAutonomousVehicle::try_to_set_nearby_vehicle_type(long nv_type)
 //{

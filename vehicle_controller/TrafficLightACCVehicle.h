@@ -40,6 +40,8 @@ protected:
 private:
 	double compute_desired_acceleration(
 		const std::unordered_map<int, TrafficLight>& traffic_lights) override;
+
+	/* Methods we must override but aren't used by this class ------------- */
 	bool give_lane_change_control_to_vissim() const override
 	{
 		return false;
@@ -50,6 +52,32 @@ private:
 	};
 	void set_desired_lane_change_direction() override;
 	bool can_start_lane_change() override;
+	long create_lane_change_request() override { return 0; };
+	std::shared_ptr<NearbyVehicle>
+		implement_get_destination_lane_leader() const override
+	{
+		return nullptr;
+	};
+	double compute_accepted_lane_change_gap(
+		std::shared_ptr<NearbyVehicle> nearby_vehicle) override {
+		return 0.0;
+	};
+	std::shared_ptr<NearbyVehicle>
+		implement_get_destination_lane_follower() const override
+	{
+		return nullptr;
+	};
+	std::shared_ptr<NearbyVehicle>
+		implement_get_assisted_vehicle() const override
+	{
+		return nullptr;
+	};
+
+	void implement_set_accepted_lane_change_risk_to_leaders(
+		double value) override {};
+	void implement_set_accepted_lane_change_risk_to_follower(
+		double value) override {};
+	void implement_set_use_linear_lane_change_gap(long value) {};
 
 	/* Traffic lights -------------------------------------------------------- */
 	void TrafficLightACCVehicle::set_traffic_light_information(
