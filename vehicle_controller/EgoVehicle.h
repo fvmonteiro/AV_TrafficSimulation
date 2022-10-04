@@ -96,6 +96,10 @@ public:
 	/* Returns the desired velocity or the max road velocity */
 	double get_free_flow_velocity() const;
 
+	std::shared_ptr<Platoon> get_platoon() const 
+	{ 
+		return implement_get_platoon();
+	};
 	/* Getters used for debugging */
 
 	double get_safe_time_headway() const;
@@ -162,20 +166,18 @@ public:
 	void set_nearby_vehicle_type(long type);
 	/* Looks at all nearby vehicles to find the relevant ones, such
 	* as the leader. */
-	void analyze_nearby_vehicles() { find_relevant_nearby_vehicles(); };
+	void analyze_nearby_vehicles() { implement_analyze_nearby_vehicles(); };
 	/* If of PlatoonVehicle type, the vehicle decides whether to join
 	* an existing platoon or to create a new on. */
-	//void analyze_platoons(
-	//	std::unordered_map<int, std::shared_ptr<Platoon>> platoons)
-	//{
-	//	decide_platoon_to_join(platoons);
-	//};
+	void analyze_platoons(
+		std::unordered_map<int, std::shared_ptr<Platoon>>& platoons, 
+		std::shared_ptr<EgoVehicle> pointer_to_me, long* new_platoon_id)
+	{
+		implement_analyze_platoons(platoons, pointer_to_me, new_platoon_id);
+	};
 	//bool is_cutting_in(const NearbyVehicle& nearby_vehicle) const;
 	bool has_leader() const;
 	double get_time_headway_to_assisted_vehicle() const;
-	/*{
-		return implement_get_time_headway_to_assisted_vehicle();
-	};*/
 	/* Returns a nullptr if there is no leader */
 	std::shared_ptr<NearbyVehicle> get_leader() const;
 	std::shared_ptr<NearbyVehicle> get_nearby_vehicle_by_id(long nv_id) const;
@@ -198,10 +200,12 @@ public:
 	bool has_destination_lane_leader() const;
 	bool has_destination_lane_follower() const;
 	bool has_assisted_vehicle() const;
+
+	bool is_in_a_platoon() const;
+	long get_platoon_id() const;
+
 	/* Methods to debug nearby vehicles information */
 
-	/* TODO: These don't need to be virtual anymore.
-	Use the get_vehicle methods instead. */
 	long get_dest_lane_leader_id() const; // { return 0; };
 	long get_dest_lane_follower_id() const; // { return 0; };
 	long get_assisted_veh_id() const; // { return 0; };
@@ -238,6 +242,7 @@ public:
 	double get_desired_acceleration(
 		const std::unordered_map<int, TrafficLight>& traffic_lights)
 	{
+		if (verbose) std::clog << "[EgoVehicle] get_desired_acceleration" << std::endl;
 		return compute_desired_acceleration(traffic_lights);
 	};
 	long decide_lane_change_direction();
@@ -323,30 +328,34 @@ private:
 		double distance) {};
 	virtual double compute_accepted_lane_change_gap(
 		std::shared_ptr<NearbyVehicle> nearby_vehicle) = 0;
-	/*{
-		return 0.0;
-	};*/
-	/*virtual double implement_get_time_headway_to_assisted_vehicle() const
-	{
-		return 0;
-	};*/
+
 	virtual std::shared_ptr<NearbyVehicle>
-		implement_get_destination_lane_leader() const = 0; // { return nullptr; };
+		implement_get_destination_lane_leader() const = 0;
 	virtual std::shared_ptr<NearbyVehicle>
-		implement_get_destination_lane_follower() const = 0; //{ return nullptr; };
+		implement_get_destination_lane_follower() const = 0;
 	virtual std::shared_ptr<NearbyVehicle>
-		implement_get_assisted_vehicle() const = 0; // { return nullptr; };
+		implement_get_assisted_vehicle() const = 0;
 	virtual void implement_set_accepted_lane_change_risk_to_leaders(
 		double value) = 0; // {};
 	virtual void implement_set_accepted_lane_change_risk_to_follower(
 		double value) = 0; //{};
-	virtual void implement_set_use_linear_lane_change_gap(long value) = 0; // {};
+	virtual void implement_set_use_linear_lane_change_gap(long value) = 0;
+	
+	// TODO: should this be abstract?
+	virtual std::shared_ptr<Platoon> implement_get_platoon() const
+	{
+		return nullptr;
+	};
+	/*virtual std::shared_ptr<Platoon> implement_create_platoon(long platoon_id) 
+	{ return nullptr; };*/
 
 	/* Finds the current leader */
-	virtual void find_relevant_nearby_vehicles();
-	/*virtual void decide_platoon_to_join(
-		std::unordered_map<int, std::shared_ptr<Platoon>> platoons) {};*/
+	virtual void implement_analyze_nearby_vehicles();
 	virtual void set_desired_lane_change_direction();
+	virtual void implement_analyze_platoons(
+		std::unordered_map<int, std::shared_ptr<Platoon>>& platoons, 
+		std::shared_ptr<EgoVehicle> pointer_to_me,
+		long* new_platoon_id) {};
 
 	double compute_current_desired_time_headway(
 		const NearbyVehicle& nearby_vehicle) const;

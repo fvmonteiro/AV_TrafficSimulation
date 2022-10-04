@@ -1,5 +1,15 @@
 #include "TrafficLightACCVehicle.h"
 
+TrafficLightACCVehicle::TrafficLightACCVehicle(long id, 
+	double desired_velocity, double simulation_time_step,
+	double creation_time, bool verbose) :
+	TrafficLightACCVehicle(id, VehicleType::traffic_light_acc_car,
+		desired_velocity, false, simulation_time_step, creation_time,
+		verbose) 
+{
+	controller.add_traffic_lights_controller();
+}
+
 bool TrafficLightACCVehicle::has_next_traffic_light() const {
 	return next_traffic_light_id != 0;
 }

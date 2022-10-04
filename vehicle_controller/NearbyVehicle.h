@@ -47,6 +47,7 @@ public:
 	double get_max_lane_change_risk_to_follower() const {
 		return max_lane_change_risk_to_follower;
 	}
+	long get_platoon_id() const { return platoon_id; };
 
 	void set_lateral_position(double lateral_position) {
 		this->lateral_position = lateral_position;
@@ -74,6 +75,9 @@ public:
 	void set_max_lane_change_risk_to_follower(double r) {
 		this->max_lane_change_risk_to_follower = r;
 	}
+	void set_platoon_id(long platoon_id) {
+		this->platoon_id = platoon_id;
+	}
 
 	void set_type(VehicleType nv_type, VehicleType ego_type) /*override*/;
 	/* Special getters and setters */
@@ -96,6 +100,7 @@ public:
 	void copy_current_states(NearbyVehicle& nearby_vehicle);*/
 	/*void compute_safe_gap_parameters();*/
 	void read_lane_change_request(long lane_change_request);
+	bool is_in_a_platoon() const;
 
 	double estimate_desired_time_headway(double free_flow_velocity,
 		double leader_max_brake, double rho, double risk);
@@ -129,6 +134,7 @@ private:
 	ego vehicle that wants to merge in front of it.*/
 	double h_to_incoming_vehicle{ 0.0 };
 	double max_lane_change_risk_to_follower{ 0.0 };
+	long platoon_id{ -1 };
 
 	enum class Member {
 		id,

@@ -42,11 +42,12 @@ protected:
 		double desired_velocity, double simulation_time_step,
 		double creation_time, bool verbose);
 
-private:
 	/* Finds the current leader, the destination lane leader
 	and follower (if the vehicle has lane change intention),
 	and if any nearby vehicle requested cooperation	*/
-	void find_relevant_nearby_vehicles() override;
+	void implement_analyze_nearby_vehicles() override;
+
+private:
 	double compute_desired_acceleration(
 		const std::unordered_map<int, TrafficLight>& traffic_lights) override;
 	bool give_lane_change_control_to_vissim() const override

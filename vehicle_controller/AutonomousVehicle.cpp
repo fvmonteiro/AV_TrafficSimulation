@@ -9,11 +9,13 @@ AutonomousVehicle::AutonomousVehicle(long id, VehicleType type,
 		simulation_time_step, creation_time, verbose)
 {
 	compute_lane_change_gap_parameters();
-
+	controller.add_origin_lane_controllers(*this);
+	controller.add_lane_change_adjustment_controller(*this);
+	
 	if (verbose)
 	{
 		std::clog << "lambda1_lc = " << get_lambda_1_lane_change() 
-			<< std::endl;
+			<< "\n[AutonomousVehicle] constructor done" <<std::endl;
 	}
 }
 
@@ -95,7 +97,7 @@ bool AutonomousVehicle::is_leader_of_destination_lane_leader(
 		&& relative_position == 2);
 }
 
-void AutonomousVehicle::find_relevant_nearby_vehicles() 
+void AutonomousVehicle::implement_analyze_nearby_vehicles() 
 {
 	find_leader();
 	find_destination_lane_vehicles();

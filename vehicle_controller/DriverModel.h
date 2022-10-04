@@ -38,6 +38,7 @@ enum class UDA {
     max_lane_change_risk_to_leaders,
     max_lane_change_risk_to_follower,
     use_linear_lane_change_gap,
+    platoon_id,
     /* Debugging: leader */
     leader_id = 100, 
     leader_type, 

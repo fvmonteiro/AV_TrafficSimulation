@@ -42,7 +42,7 @@ public:
 
 	ControlManager() = default;
 	ControlManager(const EgoVehicle& ego_vehicle, bool verbose);
-	ControlManager(const EgoVehicle& ego_vehicle);
+	//ControlManager(const EgoVehicle& ego_vehicle);
 
 	//std::vector<State> get_states() { return states; };
 	ACCType get_active_longitudinal_controller() const {
@@ -55,6 +55,15 @@ public:
 		get_longitudinal_controller_with_traffic_lights_state();
 	//void create_destination_lane_controller(const Vehicle& ego_vehicle);
 	
+	/* Initializing controllers */
+
+	void add_origin_lane_controllers(const EgoVehicle& ego_vehicle);
+	void add_lane_change_adjustment_controller(
+		const AutonomousVehicle& ego_vehicle);
+	void add_cooperative_lane_change_controller(
+		const ConnectedAutonomousVehicle& ego_vehicle);
+	void add_traffic_lights_controller();
+
 	/* DEBUGGING FUNCTIONS --------------------------------------------------- */
 	/* These functions are used to easily read data from internal instances and 
 	methods. */
@@ -207,17 +216,6 @@ private:
 	VehicleType destination_lane_follower_type{ VehicleType::undefined };
 
 	bool verbose{ false };
-
-	/* Initializing controllers */
-
-	void create_acc_controllers(const EgoVehicle& ego_vehicle,
-		bool verbose);
-	void create_lane_change_adjustment_controller(
-		const EgoVehicle& ego_vehicle,
-		bool verbose);
-	void create_cooperative_lane_change_controller(
-		const EgoVehicle& ego_vehicle,
-		bool verbose);
 
 	/* Gets the minimum of the accelerations in the map and sets the
 	active longitudinal controller. */

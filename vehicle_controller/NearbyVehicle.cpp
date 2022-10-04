@@ -137,6 +137,11 @@ void NearbyVehicle::read_lane_change_request(long lane_change_request)
 	lane_change_request_veh_id = std::abs(lane_change_request);
 }
 
+bool NearbyVehicle::is_in_a_platoon() const
+{
+	return platoon_id != -1;
+}
+
 double NearbyVehicle::estimate_desired_time_headway(double free_flow_velocity,
 	double leader_max_brake, double rho, double risk)
 {

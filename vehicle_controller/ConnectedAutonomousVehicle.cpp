@@ -8,12 +8,12 @@ ConnectedAutonomousVehicle::ConnectedAutonomousVehicle(
 		true, simulation_time_step, creation_time, verbose) 
 {
 	compute_connected_safe_gap_parameters();
-
+	controller.add_cooperative_lane_change_controller(*this);
 	if (verbose)
 	{
 		std::clog << "lambda1_connected = " << lambda_1_connected
 			<< ", lambda1_connected_lc = " << lambda_1_lane_change_connected
-			<< std::endl;
+			<< "\n[ConnectedAutonomousVehicle] constructor done" << std::endl;
 	}
 }
 
@@ -53,10 +53,9 @@ long ConnectedAutonomousVehicle::create_lane_change_request()
 	return desired_lane_change_direction.to_int() * get_id();
 }
 
-void ConnectedAutonomousVehicle::find_relevant_nearby_vehicles()
+void ConnectedAutonomousVehicle::implement_analyze_nearby_vehicles()
 {
-	find_leader();
-	find_destination_lane_vehicles();
+	AutonomousVehicle::implement_analyze_nearby_vehicles();
 	find_cooperation_requests();
 }
 
@@ -231,6 +230,7 @@ compute_vehicle_following_gap_for_lane_change(
 double ConnectedAutonomousVehicle::compute_desired_acceleration(
 	const std::unordered_map<int, TrafficLight>& traffic_lights)
 {
+	if (verbose) std::clog << "[CAV] get_desired_acceleration" << std::endl;
 	double desired_acceleration =
 		controller.get_cav_desired_acceleration(*this);
 	return consider_vehicle_dynamics(desired_acceleration);

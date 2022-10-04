@@ -7,36 +7,37 @@
 #include "ConnectedAutonomousVehicle.h"
 #include "PlatoonVehicle.h"
 #include "TrafficLightACCVehicle.h"
+#include "Platoon.h"
 
 class EgoVehicleFactory
 {
 public:
 
-	static std::unique_ptr<EgoVehicle> create_ego_vehicle(long id, int type, 
+	static std::shared_ptr<EgoVehicle> create_ego_vehicle(long id, int type, 
 		double desired_velocity, double simulation_time_step, 
 		double creation_time, bool verbose)
 	{
 		switch (VehicleType(type))
 		{
 		case VehicleType::acc_car:
-			return std::make_unique<ACCVehicle>(id, desired_velocity, 
+			return std::make_shared<ACCVehicle>(id, desired_velocity, 
 				simulation_time_step, creation_time, verbose);
 		case VehicleType::autonomous_car:
-			return std::make_unique<AutonomousVehicle>(id, desired_velocity,
+			return std::make_shared<AutonomousVehicle>(id, desired_velocity,
 				simulation_time_step, creation_time, verbose);
 		case VehicleType::connected_car:
-			return std::make_unique<ConnectedAutonomousVehicle>(id, 
+			return std::make_shared<ConnectedAutonomousVehicle>(id,
 				desired_velocity,
 				simulation_time_step, creation_time, verbose);
 		case VehicleType::platoon_car:
-			return std::make_unique<PlatoonVehicle>(id, desired_velocity,
-				simulation_time_step, creation_time, verbose);
+			return std::make_shared<PlatoonVehicle>(id, desired_velocity,
+					simulation_time_step, creation_time, verbose);
 		case VehicleType::traffic_light_acc_car:
-			return std::make_unique<TrafficLightACCVehicle>(id,
+			return std::make_shared<TrafficLightACCVehicle>(id,
 				desired_velocity, simulation_time_step, creation_time,
 				verbose);
 		case VehicleType::traffic_light_cacc_car:
-			return std::make_unique<TrafficLightCACCVehicle>(id,
+			return std::make_shared<TrafficLightCACCVehicle>(id,
 				desired_velocity, simulation_time_step, creation_time,
 				verbose);
 		default:

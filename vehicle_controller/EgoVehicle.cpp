@@ -15,6 +15,7 @@
 
 #include "ControlManager.h"
 #include "EgoVehicle.h"
+#include "Platoon.h"
 
 EgoVehicle::EgoVehicle(long id, VehicleType type, double desired_velocity,
 	double brake_delay, bool is_lane_change_autonomous, bool is_connected,
@@ -29,10 +30,6 @@ EgoVehicle::EgoVehicle(long id, VehicleType type, double desired_velocity,
 	tau_d{ std::exp(-simulation_time_step / tau) }
 {
 	compute_safe_gap_parameters();
-	this->controller = ControlManager(*this, verbose);
-	/* The end of the lane is seen as a stopped vehicle. We set a small
-	time headway to this "vehicle" */
-	//controller.activate_end_of_lane_controller(0.5);
 
 	if (verbose)
 	{
@@ -43,8 +40,10 @@ EgoVehicle::EgoVehicle(long id, VehicleType type, double desired_velocity,
 			<< ", des. vel. = " << desired_velocity
 			<< ", lambda 1 = " << get_lambda_1()
 			<< ", lambda 0 = " << get_lambda_0()
+			<< "\nNOTE: control manager is NOT verbose."
 			<< std::endl;
 	}
+	this->controller = ControlManager(*this, false);
 }
 
 EgoVehicle::~EgoVehicle()
@@ -147,6 +146,7 @@ double EgoVehicle::get_collision_risk() const
 /* ------------------------------------------------------------------------ */
 
 /* Other getters and setters ---------------------------------------------- */
+
 double EgoVehicle::get_current_max_brake() const
 {
 	return has_lane_change_intention() ?
@@ -402,6 +402,25 @@ double EgoVehicle::get_dest_follower_time_headway() const
 		get_follower_time_headway();
 }
 
+bool EgoVehicle::is_in_a_platoon() const
+{
+	return get_platoon() != nullptr;
+}
+
+long EgoVehicle::get_platoon_id() const
+{
+	if (verbose)
+	{
+		std::clog << "in platoon? " << is_in_a_platoon();
+		if (is_in_a_platoon())
+		{
+			std::clog << "; platoon id " << get_platoon()->get_id();
+		}
+		std::clog << std::endl;
+	}
+	return is_in_a_platoon() ? get_platoon()->get_id() : -1;
+}
+
 double EgoVehicle::compute_gap(const NearbyVehicle& nearby_vehicle) const
 {
 	/* Vissim's given "distance" is the distance between both front bumpers,
@@ -440,7 +459,7 @@ long EgoVehicle::get_lane_change_request()
 	return create_lane_change_request();
 }
 
-void EgoVehicle::find_relevant_nearby_vehicles()
+void EgoVehicle::implement_analyze_nearby_vehicles()
 {
 	find_leader();
 }

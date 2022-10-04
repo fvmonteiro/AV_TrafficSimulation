@@ -51,10 +51,9 @@ protected:
 		bool is_connected, double simulation_time_step, double creation_time,
 		bool verbose = false);
 
-	/* Necessary when computing lane change gaps with risk */
-	double dest_lane_follower_lambda_0{ 0.0 };
-	/* Necessary when computing lane change gaps with risk */
-	double dest_lane_follower_lambda_1{ 0.0 };
+	/* Finds the current leader and, if the vehicle has lane change
+	intention, the destination lane leader and follower */
+	void implement_analyze_nearby_vehicles() override;
 
 	double get_lambda_1_lane_change() const { return lambda_1_lane_change; }
 	double get_accepted_risk_to_leaders() const {
@@ -63,7 +62,7 @@ protected:
 	double get_accepted_risk_to_follower() const {
 		return accepted_lane_change_risk_to_follower;
 	}
-	void find_destination_lane_vehicles();
+	
 	bool is_destination_lane_follower(
 		const NearbyVehicle& nearby_vehicle);
 	bool is_destination_lane_leader(
@@ -80,10 +79,12 @@ protected:
 	double compute_vehicle_following_gap_for_lane_change(
 		const NearbyVehicle& nearby_vehicle, double current_lambda_1) const;
 
+	/* Necessary when computing lane change gaps with risk */
+	double dest_lane_follower_lambda_0{ 0.0 };
+	/* Necessary when computing lane change gaps with risk */
+	double dest_lane_follower_lambda_1{ 0.0 };
+
 private:
-	/* Finds the current leader and, if the vehicle has lane change 
-	intention, the destination lane leader and follower */
-	void find_relevant_nearby_vehicles() override;
 	double compute_desired_acceleration(
 		const std::unordered_map<int, TrafficLight>& traffic_lights) override;
 	bool give_lane_change_control_to_vissim() const override;
@@ -103,11 +104,7 @@ private:
 	std::shared_ptr<NearbyVehicle> implement_get_assisted_vehicle()
 		const override { return nullptr; };
 
-	std::shared_ptr<NearbyVehicle>
-		implement_get_assisted_vehicle() const override
-	{
-		return nullptr;
-	};
+	void find_destination_lane_vehicles();
 
 	bool has_lane_change_conflict() const;
 	bool is_lane_change_gap_safe(

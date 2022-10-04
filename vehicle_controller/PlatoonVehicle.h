@@ -8,18 +8,27 @@ public:
 
 	PlatoonVehicle(long id, double desired_velocity,
 		double simulation_time_step, double creation_time,
-		bool verbose = false) :
-		ConnectedAutonomousVehicle(id, VehicleType::platoon_car, 
-			desired_velocity, simulation_time_step, creation_time,
-			verbose) {}
+		bool verbose);
+	~PlatoonVehicle();
 
-	/* The connected vehicle brake delay also depends on the other vehicle
-	type. If the other vehicle is not connected, the ego connected vehicle
-	behaves like an autonomous vehicle. This issue is addressed in parts
-	of the code after the ego vehicle identifies its
-	surrouding vehicles. */
+protected:
+	/* If the current leader is a platoon vehicle and 
+	merges into the platoon if yes. */
+	void implement_analyze_platoons(
+		std::unordered_map<int, std::shared_ptr<Platoon>>& platoons,
+		std::shared_ptr<EgoVehicle> pointer_to_me, 
+		long* new_platoon_id) override;
 
 private:
+
+	void create_platoon();
+	std::shared_ptr<Platoon> implement_get_platoon() const override
+	{
+		return platoon;
+	};
+
+	std::shared_ptr<Platoon> platoon{ nullptr };
+
 	//void find_relevant_nearby_vehicles() override;
 	//double compute_desired_acceleration(
 	//	const std::unordered_map<int, TrafficLight>& traffic_lights) override;

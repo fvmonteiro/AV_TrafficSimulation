@@ -8,10 +8,7 @@ public:
 
 	TrafficLightACCVehicle(long id, double desired_velocity,
 		double simulation_time_step, double creation_time,
-		bool verbose = false) :
-		EgoVehicle(id, VehicleType::traffic_light_acc_car, desired_velocity,
-			AUTONOMOUS_BRAKE_DELAY, true, false,
-			simulation_time_step, creation_time, verbose) {}
+		bool verbose);
 
 	/* The "autonomous lane change" of this vehicle is never lane changing.
 	This should be better addressed with polymorphism. */
@@ -85,29 +82,6 @@ private:
 	double time_crossed_last_traffic_light{ 0.0 };
 	int next_traffic_light_id{ 0 };
 	double distance_to_next_traffic_light{ 0.0 };
-
-	/*long create_lane_change_request() override { return 0; };
-	double compute_accepted_lane_change_gap(
-		std::shared_ptr<NearbyVehicle> nearby_vehicle) override {
-		return 0.0;
-	};
-	std::shared_ptr<NearbyVehicle> implement_get_destination_lane_leader()
-		const override {
-		return nullptr;
-	};
-	std::shared_ptr<NearbyVehicle> implement_get_destination_lane_follower()
-		const override {
-		return nullptr;
-	};
-	std::shared_ptr<NearbyVehicle> implement_get_assisted_vehicle()
-		const override {
-		return nullptr;
-	};
-	void implement_set_accepted_lane_change_risk_to_leaders(
-		double value) override {};
-	void implement_set_accepted_lane_change_risk_to_follower(
-		double value) override {};
-	void implement_set_use_linear_lane_change_gap(long value) override {};*/
 };
 
 class TrafficLightCACCVehicle : public TrafficLightACCVehicle
@@ -121,7 +95,5 @@ public:
 			desired_velocity, true, simulation_time_step, creation_time, 
 			verbose) {}
 
-	/* The "autonomous lane change" of this vehicle is never lane changing.
-	This should be better addressed with polymorphism. */
 };
 

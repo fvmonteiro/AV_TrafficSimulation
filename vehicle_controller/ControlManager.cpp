@@ -22,46 +22,15 @@ ControlManager::ControlManager(const EgoVehicle& ego_vehicle,
 {
 	if (verbose) 
 	{
-		std::clog << "Creating control manager " << std::endl;
-	}
-
-	//extract_vehicle_static_parameters(ego_vehicle);
-
-	bool is_long_control_verbose = verbose;
-
-	switch (ego_vehicle.get_type())
-	{
-	case VehicleType::acc_car:
-		create_acc_controllers(ego_vehicle, is_long_control_verbose);
-		break;
-	case VehicleType::autonomous_car:
-		create_acc_controllers(ego_vehicle, is_long_control_verbose);
-		create_lane_change_adjustment_controller(ego_vehicle,
-			is_long_control_verbose);
-		break;
-	case VehicleType::connected_car:
-		create_acc_controllers(ego_vehicle, is_long_control_verbose);
-		create_lane_change_adjustment_controller(ego_vehicle,
-			is_long_control_verbose);
-		create_cooperative_lane_change_controller(ego_vehicle,
-			is_long_control_verbose);
-		break;
-	case VehicleType::traffic_light_acc_car:
-	case VehicleType::traffic_light_cacc_car: // both get the same controller
-		with_traffic_lights_controller =
-			LongitudinalControllerWithTrafficLights(is_long_control_verbose);
-		break;
-	default:
-		break;
+		std::clog << "Creating control manager for EgoVehicle" << std::endl;
 	}
 }
 
-ControlManager::ControlManager(const EgoVehicle& ego_vehicle)
-	: ControlManager(ego_vehicle, false) {}
-
-void ControlManager::create_acc_controllers(
-	const EgoVehicle& ego_vehicle, bool verbose)
+void ControlManager::add_origin_lane_controllers(
+	const EgoVehicle& ego_vehicle)
 {
+	if (verbose) std::clog << "Creating origin lane controllers." 
+		<< std::endl;
 	origin_lane_controller = RealLongitudinalController(
 		ego_vehicle, 
 		desired_velocity_controller_gains,
@@ -83,9 +52,11 @@ void ControlManager::create_acc_controllers(
 	activate_end_of_lane_controller(time_headway_to_end_of_lane);
 }
 
-void ControlManager::create_lane_change_adjustment_controller(
-	const EgoVehicle& ego_vehicle, bool verbose)
+void ControlManager::add_lane_change_adjustment_controller(
+	const AutonomousVehicle& ego_vehicle)
 {
+	if (verbose) std::clog << "Creating lane change adjustment controller."
+		<< std::endl;
 	destination_lane_controller = VirtualLongitudinalController(
 		ego_vehicle, 
 		adjustment_velocity_controller_gains,
@@ -95,9 +66,11 @@ void ControlManager::create_lane_change_adjustment_controller(
 		verbose);
 }
 
-void ControlManager::create_cooperative_lane_change_controller(
-	const EgoVehicle& ego_vehicle, bool verbose)
+void ControlManager::add_cooperative_lane_change_controller(
+	const ConnectedAutonomousVehicle& ego_vehicle)
 {
+	if (verbose) std::clog << "Creating cooperative lane change controller."
+		<< std::endl;
 	gap_generating_controller = VirtualLongitudinalController(
 		ego_vehicle,
 		adjustment_velocity_controller_gains,
@@ -108,6 +81,12 @@ void ControlManager::create_cooperative_lane_change_controller(
 	/* the gap generating controller is only activated when there are
 	two connected vehicles, so we can set its connection here*/
 	gap_generating_controller.connect_gap_controller(true);
+}
+
+void ControlManager::add_traffic_lights_controller()
+{
+	with_traffic_lights_controller =
+		LongitudinalControllerWithTrafficLights(verbose);
 }
 
 SwitchedLongitudinalController::State

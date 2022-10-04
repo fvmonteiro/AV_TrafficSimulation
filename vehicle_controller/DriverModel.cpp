@@ -15,6 +15,7 @@
 #include "EgoVehicle.h"
 #include "EgoVehicleFactory.h"
 #include "Platoon.h"
+#include "PlatoonVehicle.h"
 #include "SimulationLogger.h"
 #include "TrafficLight.h"
 #include "TrafficLightFileReader.h"
@@ -26,9 +27,10 @@ const bool CLUELESS_DEBUGGING{ false };
 //const double DEBUGGING_START_TIME{ 249.0 };
 
 SimulationLogger simulation_logger;
-std::unordered_map<long, std::unique_ptr<EgoVehicle>> vehicles;
+std::unordered_map<long, std::shared_ptr<EgoVehicle>> vehicles;
 std::unordered_map<int, TrafficLight> traffic_lights;
 std::unordered_map<int, std::shared_ptr<Platoon>> platoons;
+long platoon_idx{ 0 };
 double simulation_time_step{ -1.0 };
 double current_time{ 0.0 };
 long current_vehicle_type{ 0 };
@@ -132,6 +134,7 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
             case UDA::max_lane_change_risk_to_leaders:
             case UDA::max_lane_change_risk_to_follower:
             case UDA::use_linear_lane_change_gap:
+            case UDA::platoon_id:
                 return 1;
             /* Debugging: leader */
             case UDA::leader_id:
@@ -357,6 +360,10 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
             vehicles[current_vehicle_id]->peek_nearby_vehicles()
                 ->set_max_lane_change_risk_to_follower(double_value);
             break;
+        case UDA::platoon_id:
+            vehicles[current_vehicle_id]->peek_nearby_vehicles()
+                ->set_platoon_id(long_value);
+            break;
         default:
             break;
         }
@@ -465,7 +472,9 @@ DRIVERMODEL_API  int  DriverModelGetValue (long   type,
             *long_value = vehicles[current_vehicle_id]->
                 is_vissim_controlling_lane_change();
             break;
-
+        case UDA::platoon_id:
+            *long_value = vehicles[current_vehicle_id]->get_platoon_id();
+            break;
         /* Debugging: leader */
         case UDA::leader_id:
             *long_value = vehicles[current_vehicle_id]->get_leader_id();
@@ -700,6 +709,19 @@ DRIVERMODEL_API  int  DriverModelExecuteCommand (long number)
                 current_vehicle_type, current_desired_velocity, 
                 simulation_time_step, current_time, verbose)
             );
+
+        /* Platoon vehicles create an empty platoon in their constructor */
+        /*if (vehicles[current_vehicle_id]->is_in_a_platoon())
+        {
+            platoon_idx++;
+            platoons[platoon_idx] =
+                vehicles[current_vehicle_id]->get_platoon();
+            platoons[platoon_idx]->set_id(platoon_idx);
+            platoons[platoon_idx]->add_leader(
+                std::dynamic_pointer_cast<PlatoonVehicle>(
+                vehicles[current_vehicle_id]));
+        }*/
+
         current_vehicle_id = 0;
         return 1;
     }
@@ -708,14 +730,17 @@ DRIVERMODEL_API  int  DriverModelExecuteCommand (long number)
         {
             std::clog << "Erasing veh. " << current_vehicle_id << std::endl;
         }
-        vehicles.erase(current_vehicle_id);
-        if (platoons.find(current_vehicle_id) != platoons.end())
+        if (vehicles[current_vehicle_id]->is_in_a_platoon())
         {
-            if (platoons[current_vehicle_id]->is_empty())
+            long current_platoon_id =
+                vehicles[current_vehicle_id]->get_platoon()->get_id();
+            vehicles[current_vehicle_id]->get_platoon()->remove_leader();
+            if (platoons[current_platoon_id]->is_empty())
             {
-                platoons.erase(current_vehicle_id);
+                platoons.erase(current_platoon_id);
             }
         }
+        vehicles.erase(current_vehicle_id);
         return 1;
     case DRIVER_COMMAND_MOVE_DRIVER :
     {
@@ -732,8 +757,15 @@ DRIVERMODEL_API  int  DriverModelExecuteCommand (long number)
         }
         vehicles[current_vehicle_id]->analyze_nearby_vehicles();
 
-        //vehicles[current_vehicle_id]->analyze_platoons(platoons);
-
+        size_t n_platoon_before = platoons.size();
+        vehicles[current_vehicle_id]->analyze_platoons(platoons, 
+            vehicles[current_vehicle_id], &platoon_idx);
+        size_t n_platoon_after = platoons.size();
+        if (n_platoon_before != n_platoon_after)
+        {
+            std::clog << "Platoons from " << n_platoon_before
+                << "to " << n_platoon_after << std::endl;
+        }
         return 1;
     }
     default :
