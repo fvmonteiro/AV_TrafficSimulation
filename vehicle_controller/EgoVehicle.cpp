@@ -1061,7 +1061,7 @@ double EgoVehicle::compute_collision_severity_risk(
 
 	double gap = compute_gap(other_vehicle);
 
-	if (verbose & (gap < gap_thresholds[3])) {
+	if (verbose && (gap < gap_thresholds[3])) {
 		std::clog << "Collision prone situation\n"
 			<< "\tgamma = " << gamma << ", gamma_t = " << gamma_threshold
 			<< "\n\tgap = " << gap << ", thresholds: ";

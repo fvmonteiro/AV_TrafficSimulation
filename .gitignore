@@ -18,9 +18,15 @@ NGSIM_original/
 post_processed_data/
 VISSIM_networks/*.txt
 VISSIM_networks/autonomous_vehicle_logs
+VISSIM_networks/*/*.txt
 
-# But I do want to keep track of simulated scenarios
-!VISSIM_networks/simulated_vehicle_inputs.csv
+# Vissim layout files
+*.layx
+# Vissim signal controller files
+*.sig
+
+# But I do want to keep track of traffic light timings
+!VISSIM_networks/traffic_lights_study/traffic_lights_study_source_times.csv
 
 ####### FOR VISUAL STUDIO C++ #######
 ### Suggested from https://github.com/github/gitignore/blob/master/VisualStudio.gitignore
