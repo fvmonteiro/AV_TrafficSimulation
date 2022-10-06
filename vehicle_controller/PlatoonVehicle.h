@@ -14,14 +14,15 @@ public:
 protected:
 	/* If the current leader is a platoon vehicle and 
 	merges into the platoon if yes. */
-	void implement_analyze_platoons(
+	bool implement_analyze_platoons(
 		std::unordered_map<int, std::shared_ptr<Platoon>>& platoons,
 		std::shared_ptr<EgoVehicle> pointer_to_me, 
-		long* new_platoon_id) override;
+		long new_platoon_id) override;
 
 private:
 
-	void create_platoon();
+	void create_platoon(long platoon_id, 
+		std::shared_ptr<PlatoonVehicle> pointer_to_me);
 	std::shared_ptr<Platoon> implement_get_platoon() const override
 	{
 		return platoon;

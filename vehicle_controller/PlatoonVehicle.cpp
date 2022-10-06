@@ -18,46 +18,32 @@ PlatoonVehicle::~PlatoonVehicle()
 	std::clog << "[PlatoonVehicle] destructor" << std::endl;
 }
 
-void PlatoonVehicle::implement_analyze_platoons(
+bool PlatoonVehicle::implement_analyze_platoons(
 	std::unordered_map<int, std::shared_ptr<Platoon>>& platoons,
-	std::shared_ptr<EgoVehicle> pointer_to_me, long* new_platoon_id)
+	std::shared_ptr<EgoVehicle> pointer_to_me, long new_platoon_id)
 {
+	bool new_platoon_created = false;
 	bool am_in_a_platoon = is_in_a_platoon();
 	bool leader_is_in_a_platoon = 
 		has_leader() && get_leader()->is_in_a_platoon();
+	bool may_join_leader_platoon =
+		leader_is_in_a_platoon && (get_leader()->get_distance() < 60);
+
 	std::shared_ptr<PlatoonVehicle> pointer_to_me_my_type =
 		std::dynamic_pointer_cast<PlatoonVehicle>(pointer_to_me);
 
-	if (!am_in_a_platoon && !leader_is_in_a_platoon)
+	if (!am_in_a_platoon && !may_join_leader_platoon)
 	{
 		// Create platoon
-
-		std::clog << "Veh id " << get_id()
-			<< ". Creating platoon id " << *new_platoon_id << std::endl;
-
-		platoon = std::make_shared<Platoon>(*new_platoon_id,
-			pointer_to_me_my_type);
-
-		std::clog << "Platoon " << platoon->get_id()
-			<< " ptr count: " << platoon.use_count()
-			<< " (before putting platoon in platoon map)"
-			<< std::endl;
-
-		platoons[*new_platoon_id] = platoon;
-
-		std::clog << "Platoon " << platoon->get_id()
-			<< " ptr count: " << platoon.use_count()
-			<< " (aftet putting platoon in platoon map)"
-			<< std::endl;
-
-		(*new_platoon_id)++;
+		/* TODO: do we want to wait for a second before creating
+		the single vehicle platoon? It could avoid creating too
+		many platoons when there are lots of lane changes */
+		create_platoon(new_platoon_id, pointer_to_me_my_type);
+		new_platoon_created = true;
 	}
-	else if (!am_in_a_platoon && leader_is_in_a_platoon)
+	else if (!am_in_a_platoon && may_join_leader_platoon)
 	{
-		// NOT TESTED YET
 		// Join the platoon of the vehicle ahead
-		/* Note: This case only happens when, at creation, the vehicle
-		 already has a leader */
 		long leader_platoon_id = get_leader()->get_platoon_id();
 
 		std::clog << "Veh id " << get_id()
@@ -72,9 +58,8 @@ void PlatoonVehicle::implement_analyze_platoons(
 			<< " # vehs: " << platoon->get_size()
 			<< " ptr count: " << platoon.use_count()
 			<< std::endl;
-
 	}
-	else if (am_in_a_platoon && leader_is_in_a_platoon)
+	else if (am_in_a_platoon && may_join_leader_platoon)
 	{
 		// Leave my platoon and join the platoon of the vehicle ahead
 		/* Open question : make my entire platoon merge or move only myself
@@ -85,8 +70,9 @@ void PlatoonVehicle::implement_analyze_platoons(
 		{
 			std::clog << "Veh id " << get_id()
 				<< " from platoon " << get_platoon_id()
-				<< ", trying to merge in platoon " << leader_platoon_id
+				<< ", joining platoon " << leader_platoon_id
 				<< std::endl;
+
 			// remove myself
 			platoon->remove_leader();
 			// add myself to platoon ahead
@@ -94,33 +80,45 @@ void PlatoonVehicle::implement_analyze_platoons(
 				pointer_to_me_my_type);
 			// update my platoon pointer
 			platoon = platoons.at(leader_platoon_id);
-
-			std::clog << "Old platoon " << platoon->get_id()
-				<< " # vehs: " << platoon->get_size()
-				<< " ptr count: " << platoon.use_count()
-				<< std::endl;
-			std::clog << "New platoon " << platoon->get_id()
-				<< " # vehs: " << platoon->get_size()
-				<< " ptr count: " << platoon.use_count()
-				<< std::endl;
-
 			// delete my old platoon if it is empty
 			if (platoons.at(old_platoon_id)->is_empty())
 			{
+				std::clog << "Old platoon is empty" << std::endl;
 				platoons.erase(old_platoon_id);
 			}
 		}
 	}
-	else // am_in_a_platoon && !leader_is_in_a_platoon
+	else // am_in_a_platoon && !may_join_leader_platoon
 	{
-		// do nothing
+		// I or my leader changed lanes, or someone cut in between us
+		bool am_the_platoon_leader =
+			platoon->get_leader_id() == get_id();
+		if (!am_the_platoon_leader)
+		{
+			std::clog << "Veh id " << get_id()
+				<< " leaving platoon " << platoon->get_id()
+				<< std::endl;
+			platoon->remove_vehicle_by_id(get_id());
+			platoon = nullptr;
+		}
 	}
+
+	return new_platoon_created;
 }
 
-void PlatoonVehicle::create_platoon()
+void PlatoonVehicle::create_platoon(long platoon_id,
+	std::shared_ptr<PlatoonVehicle> pointer_to_me)
 {
-	std::clog << "[PlatoonVehicle] create_platoon" << std::endl;
-	platoon = std::make_shared<Platoon>();
+	std::clog << "Veh id " << get_id()
+		<< ". Creating platoon id " << platoon_id << std::endl;
+
+	platoon = std::make_shared<Platoon>(platoon_id,
+		pointer_to_me);
+
+	std::clog << "Platoon " << platoon->get_id()
+		<< " ptr count: " << platoon.use_count()
+		<< " (before putting platoon in platoon map)"
+		<< std::endl;
 }
 //void PlatoonVehicle::find_relevant_nearby_vehicles()
 //{

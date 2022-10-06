@@ -622,7 +622,7 @@ long EgoVehicle::get_color_by_controller_state()
 
 	switch (controller.get_active_longitudinal_controller())
 	{
-	case ControlManager::ACCType::origin_lane:
+	case ControlManager::ALCType::origin_lane:
 		switch (controller.get_longitudinal_controller_state())
 		{
 		case SwitchedLongitudinalController::State::velocity_control:
@@ -633,7 +633,7 @@ long EgoVehicle::get_color_by_controller_state()
 		default:
 			return WHITE;
 		}
-	case ControlManager::ACCType::cooperative_gap_generation:
+	case ControlManager::ALCType::cooperative_gap_generation:
 		switch (controller.get_longitudinal_controller_state())
 		{
 		case SwitchedLongitudinalController::State::velocity_control:
@@ -643,7 +643,7 @@ long EgoVehicle::get_color_by_controller_state()
 		default:
 			return WHITE;
 		}
-	case ControlManager::ACCType::destination_lane:
+	case ControlManager::ALCType::destination_lane:
 		switch (controller.get_longitudinal_controller_state())
 		{
 		case SwitchedLongitudinalController::State::velocity_control:
@@ -653,7 +653,7 @@ long EgoVehicle::get_color_by_controller_state()
 		default:
 			return WHITE;
 		}
-	case ControlManager::ACCType::end_of_lane:
+	case ControlManager::ALCType::end_of_lane:
 		switch (controller.get_longitudinal_controller_state())
 		{
 		case SwitchedLongitudinalController::State::velocity_control:
@@ -663,7 +663,7 @@ long EgoVehicle::get_color_by_controller_state()
 		default:
 			return WHITE;
 		}
-	case ControlManager::ACCType::traffic_light_acc:
+	case ControlManager::ALCType::traffic_light_acc:
 		switch (controller.get_longitudinal_controller_with_traffic_lights_state())
 		{
 		case LongitudinalControllerWithTrafficLights::State::max_accel:
@@ -679,7 +679,7 @@ long EgoVehicle::get_color_by_controller_state()
 		default:
 			return WHITE;
 		}
-	case ControlManager::ACCType::vissim:
+	case ControlManager::ALCType::vissim:
 		return CYAN;
 	default:
 		return WHITE;

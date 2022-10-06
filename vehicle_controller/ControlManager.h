@@ -31,7 +31,8 @@ class TrafficLightACCVehicle;
 class ControlManager {
 public:
 
-	enum class ACCType {
+	/* Autonomous Longitudinal Controller Type */
+	enum class ALCType {
 		origin_lane,
 		destination_lane,
 		cooperative_gap_generation,
@@ -45,7 +46,7 @@ public:
 	//ControlManager(const EgoVehicle& ego_vehicle);
 
 	//std::vector<State> get_states() { return states; };
-	ACCType get_active_longitudinal_controller() const {
+	ALCType get_active_longitudinal_controller() const {
 		return active_longitudinal_controller;
 	}
 
@@ -132,7 +133,7 @@ public:
 	to help create a gap for an incoming vehicle, and chooses the minimum. */
 	double get_cav_desired_acceleration(
 		const ConnectedAutonomousVehicle& ego_vehicle);
-	/* TODO */
+	/* TODO description */
 	double get_traffic_light_acc_acceleration(
 		const TrafficLightACCVehicle& ego_vehicle,
 		const std::unordered_map<int, TrafficLight>& traffic_lights);
@@ -175,7 +176,7 @@ public:
 
 	/* Printing ----------------------------------------------------------- */
 	static std::string active_ACC_to_string(
-		ACCType active_longitudinal_controller);
+		ALCType active_longitudinal_controller);
 
 private:
 	/* ------------ Control Parameters ------------ */
@@ -205,7 +206,7 @@ private:
 	LateralController lateral_controller;
 	/* indicates which controller is active. Used for debugging and
 	visualization. */
-	ACCType active_longitudinal_controller{ ACCType::origin_lane }; 
+	ALCType active_longitudinal_controller{ ALCType::origin_lane }; 
 
 	double origin_lane_leader_max_brake{ 0.0 };
 	double destination_lane_leader_max_brake{ 0.0 };
@@ -220,7 +221,7 @@ private:
 	/* Gets the minimum of the accelerations in the map and sets the
 	active longitudinal controller. */
 	double choose_minimum_acceleration(
-		std::unordered_map<ACCType, double>& possible_accelerations);
+		std::unordered_map<ALCType, double>& possible_accelerations);
 
 	/* Desired accelerations --------------------- */
 
@@ -228,21 +229,21 @@ private:
 	Returns true if the computed acceleration was added to the map */
 	bool get_origin_lane_desired_acceleration(
 		const EgoVehicle& ego_vehicle,
-		std::unordered_map<ACCType, double>& possible_accelerations);
+		std::unordered_map<ALCType, double>& possible_accelerations);
 	/* Desired acceleration to wait at the end of the lane while
 	looking for an appropriate lane change gap. Without this,
 	vehicles might miss a desired exit.
 	Returns true if the computed acceleration was added to the map */
 	bool get_end_of_lane_desired_acceleration(
 		const EgoVehicle& ego_vehicle,
-		std::unordered_map<ACCType, double>& possible_accelerations);
+		std::unordered_map<ALCType, double>& possible_accelerations);
 	/* Desired acceleration to adjust to destination lane leader.
 	Returns true if the computed acceleration was added to the map */
 	bool get_destination_lane_desired_acceleration(
 		const AutonomousVehicle& ego_vehicle,
-		std::unordered_map<ACCType, double>& possible_accelerations);
+		std::unordered_map<ALCType, double>& possible_accelerations);
 	/* Returns true if the computed acceleration was added to the map */
 	bool get_cooperative_desired_acceleration(
 		const ConnectedAutonomousVehicle& ego_vehicle,
-		std::unordered_map<ACCType, double>& possible_accelerations);
+		std::unordered_map<ALCType, double>& possible_accelerations);
 };

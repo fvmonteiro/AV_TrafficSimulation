@@ -167,13 +167,13 @@ public:
 	/* Looks at all nearby vehicles to find the relevant ones, such
 	* as the leader. */
 	void analyze_nearby_vehicles() { implement_analyze_nearby_vehicles(); };
-	/* If of PlatoonVehicle type, the vehicle decides whether to join
-	* an existing platoon or to create a new on. */
-	void analyze_platoons(
+	/* Returns true if a new platoon was created. */
+	bool analyze_platoons(
 		std::unordered_map<int, std::shared_ptr<Platoon>>& platoons, 
-		std::shared_ptr<EgoVehicle> pointer_to_me, long* new_platoon_id)
+		std::shared_ptr<EgoVehicle> pointer_to_me, long new_platoon_id)
 	{
-		implement_analyze_platoons(platoons, pointer_to_me, new_platoon_id);
+		return implement_analyze_platoons(platoons, pointer_to_me, 
+			new_platoon_id);
 	};
 	//bool is_cutting_in(const NearbyVehicle& nearby_vehicle) const;
 	bool has_leader() const;
@@ -272,7 +272,8 @@ public:
 	bool is_verbose() const { return verbose; };
 
 	/* Print function */
-	friend std::ostream& operator<< (std::ostream& out, const EgoVehicle& vehicle);
+	friend std::ostream& operator<< (std::ostream& out, 
+		const EgoVehicle& vehicle);
 
 protected:
 	EgoVehicle(long id, VehicleType type, double desired_velocity,
@@ -352,10 +353,12 @@ private:
 	/* Finds the current leader */
 	virtual void implement_analyze_nearby_vehicles();
 	virtual void set_desired_lane_change_direction();
-	virtual void implement_analyze_platoons(
+	virtual bool implement_analyze_platoons(
 		std::unordered_map<int, std::shared_ptr<Platoon>>& platoons, 
 		std::shared_ptr<EgoVehicle> pointer_to_me,
-		long* new_platoon_id) {};
+		long new_platoon_id) {
+		return false;
+	};
 
 	double compute_current_desired_time_headway(
 		const NearbyVehicle& nearby_vehicle) const;

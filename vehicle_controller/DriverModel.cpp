@@ -30,7 +30,7 @@ SimulationLogger simulation_logger;
 std::unordered_map<long, std::shared_ptr<EgoVehicle>> vehicles;
 std::unordered_map<int, TrafficLight> traffic_lights;
 std::unordered_map<int, std::shared_ptr<Platoon>> platoons;
-long platoon_idx{ 0 };
+long platoon_id{ 1 };
 double simulation_time_step{ -1.0 };
 double current_time{ 0.0 };
 long current_vehicle_type{ 0 };
@@ -116,6 +116,15 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
         {
             std::clog << "t=" << current_time 
                 << ", " << vehicles.size() << " vehicles." << std::endl;
+        }
+        if (double_value != current_time)
+        {
+            std::clog << "t=" << current_time
+                << ", " << platoons.size() << " platoons" << std::endl;
+            for (auto& it : platoons)
+            {
+                std::clog << *it.second << "\n";
+            }
         }
         current_time = double_value;
         return 1;
@@ -734,7 +743,8 @@ DRIVERMODEL_API  int  DriverModelExecuteCommand (long number)
         {
             long current_platoon_id =
                 vehicles[current_vehicle_id]->get_platoon()->get_id();
-            vehicles[current_vehicle_id]->get_platoon()->remove_leader();
+            platoons[current_platoon_id]->remove_vehicle_by_id(
+                current_vehicle_id);
             if (platoons[current_platoon_id]->is_empty())
             {
                 platoons.erase(current_platoon_id);
@@ -757,14 +767,12 @@ DRIVERMODEL_API  int  DriverModelExecuteCommand (long number)
         }
         vehicles[current_vehicle_id]->analyze_nearby_vehicles();
 
-        size_t n_platoon_before = platoons.size();
-        vehicles[current_vehicle_id]->analyze_platoons(platoons, 
-            vehicles[current_vehicle_id], &platoon_idx);
-        size_t n_platoon_after = platoons.size();
-        if (n_platoon_before != n_platoon_after)
+        if (vehicles[current_vehicle_id]->analyze_platoons(platoons,
+            vehicles[current_vehicle_id], platoon_id))
         {
-            std::clog << "Platoons from " << n_platoon_before
-                << "to " << n_platoon_after << std::endl;
+            platoons[platoon_id] = 
+                vehicles[current_vehicle_id]->get_platoon();
+            platoon_id++;
         }
         return 1;
     }
