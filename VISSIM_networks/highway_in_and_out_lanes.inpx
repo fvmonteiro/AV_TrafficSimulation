@@ -999,7 +999,7 @@
 		<dischRec fromTime="0" toTime="99999" writeFile="false"/>
 		<greenTimeDistribution fromTime="0" toTime="99999" writeFile="false"/>
 		<linkResults collectData="true" fromTime="60" interval="30" perLane="false" toTime="99999"/>
-		<lnChgs filterType="ALL" fromTime="0" toTime="99999" writeFile="false"/>
+		<lnChgs filterType="ALL" fromTime="0" toTime="99999" writeFile="true"/>
 		<managedLanes writeFile="false"/>
 		<nodeRawData fromTime="0" toTime="99999" writeDatabase="false" writeFile="false"/>
 		<nodeResults collectData="false" fromTime="0" interval="99999" toTime="99999"/>
@@ -2110,40 +2110,40 @@
 		</vehicleComposition>
 		<vehicleComposition name="with_autonomous" no="2">
 			<vehCompRelFlows>
-				<vehicleCompositionRelativeFlow desSpeedDistr="120" relFlow="60" vehType="100"/>
-				<vehicleCompositionRelativeFlow desSpeedDistr="120" relFlow="40" vehType="110"/>
+				<vehicleCompositionRelativeFlow desSpeedDistr="100" relFlow="60" vehType="100"/>
+				<vehicleCompositionRelativeFlow desSpeedDistr="100" relFlow="40" vehType="110"/>
 			</vehCompRelFlows>
 		</vehicleComposition>
 		<vehicleComposition name="all_autonomous" no="3">
 			<vehCompRelFlows>
-				<vehicleCompositionRelativeFlow desSpeedDistr="120" relFlow="1" vehType="110"/>
+				<vehicleCompositionRelativeFlow desSpeedDistr="100" relFlow="1" vehType="110"/>
 			</vehCompRelFlows>
 		</vehicleComposition>
 		<vehicleComposition name="all_human" no="4">
 			<vehCompRelFlows>
-				<vehicleCompositionRelativeFlow desSpeedDistr="120" relFlow="1" vehType="100"/>
+				<vehicleCompositionRelativeFlow desSpeedDistr="100" relFlow="1" vehType="100"/>
 			</vehCompRelFlows>
 		</vehicleComposition>
 		<vehicleComposition name="with_connected" no="5">
 			<vehCompRelFlows>
-				<vehicleCompositionRelativeFlow desSpeedDistr="120" relFlow="50" vehType="100"/>
-				<vehicleCompositionRelativeFlow desSpeedDistr="120" relFlow="50" vehType="120"/>
+				<vehicleCompositionRelativeFlow desSpeedDistr="100" relFlow="50" vehType="100"/>
+				<vehicleCompositionRelativeFlow desSpeedDistr="100" relFlow="50" vehType="120"/>
 			</vehCompRelFlows>
 		</vehicleComposition>
 		<vehicleComposition name="all_connected" no="6">
 			<vehCompRelFlows>
-				<vehicleCompositionRelativeFlow desSpeedDistr="120" relFlow="1" vehType="120"/>
+				<vehicleCompositionRelativeFlow desSpeedDistr="100" relFlow="1" vehType="120"/>
 			</vehCompRelFlows>
 		</vehicleComposition>
 		<vehicleComposition name="with_ACC" no="7">
 			<vehCompRelFlows>
-				<vehicleCompositionRelativeFlow desSpeedDistr="120" relFlow="1" vehType="100"/>
-				<vehicleCompositionRelativeFlow desSpeedDistr="120" relFlow="1" vehType="105"/>
+				<vehicleCompositionRelativeFlow desSpeedDistr="100" relFlow="1" vehType="100"/>
+				<vehicleCompositionRelativeFlow desSpeedDistr="100" relFlow="1" vehType="105"/>
 			</vehCompRelFlows>
 		</vehicleComposition>
 		<vehicleComposition name="all_ACC" no="8">
 			<vehCompRelFlows>
-				<vehicleCompositionRelativeFlow desSpeedDistr="120" relFlow="1" vehType="105"/>
+				<vehicleCompositionRelativeFlow desSpeedDistr="100" relFlow="1" vehType="105"/>
 			</vehCompRelFlows>
 		</vehicleComposition>
 	</vehicleCompositions>
