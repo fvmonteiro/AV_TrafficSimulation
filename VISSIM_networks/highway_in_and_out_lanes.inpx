@@ -2004,8 +2004,6 @@
 		<timeIntervalSet no="VEHICLEINPUT">
 			<timeInts>
 				<timeInterval start="0"/>
-				<timeInterval start="60"/>
-				<timeInterval start="120"/>
 			</timeInts>
 		</timeIntervalSet>
 		<timeIntervalSet no="VEHICLEROUTESTATIC">
@@ -2150,16 +2148,12 @@
 	<vehicleInputs>
 		<vehicleInput anmFlag="false" link="2" name="in_flow" no="2">
 			<timeIntVehVols>
-				<timeIntervalVehVolume cont="false" timeInt="1 0" vehComp="3" volType="STOCHASTIC" volume="2000"/>
-				<timeIntervalVehVolume cont="true" timeInt="1 60000" vehComp="3" volType="STOCHASTIC" volume="2000"/>
-				<timeIntervalVehVolume cont="true" timeInt="1 120000" vehComp="3" volType="STOCHASTIC" volume="2000"/>
+				<timeIntervalVehVolume cont="false" timeInt="1 0" vehComp="8" volType="STOCHASTIC" volume="2000"/>
 			</timeIntVehVols>
 		</vehicleInput>
 		<vehicleInput anmFlag="false" link="4" name="main_flow" no="3">
 			<timeIntVehVols>
 				<timeIntervalVehVolume cont="false" timeInt="1 0" vehComp="2" volType="STOCHASTIC" volume="4000"/>
-				<timeIntervalVehVolume cont="true" timeInt="1 60000" vehComp="2" volType="STOCHASTIC" volume="4000"/>
-				<timeIntervalVehVolume cont="true" timeInt="1 120000" vehComp="2" volType="STOCHASTIC" volume="4000"/>
 			</timeIntVehVols>
 		</vehicleInput>
 	</vehicleInputs>
