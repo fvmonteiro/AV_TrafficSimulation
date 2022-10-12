@@ -15,6 +15,7 @@
 #include "LongitudinalController.h"
 #include "VariationLimitedFilter.h"
 #include "VelocityController.h"
+#include "TimeHeadwayGapController.h"
 
 // Forward declaration
 class NearbyVehicle;
@@ -61,6 +62,9 @@ public:
 
 
 protected:
+	VelocityController velocity_controller;
+	TimeHeadwayGapController gap_controller;
+
 	//State state{ State::uninitialized }; // event driven logic variable
 	double hysteresis_bias{ 10.0 }; // used to avoid state chattering [m]
 
@@ -72,6 +76,7 @@ protected:
 		double diff_to_velocity_reference, double gap_control_input);
 
 private:
+
 	double compute_desired_acceleration(const EgoVehicle& ego_vehicle,
 		const std::shared_ptr<NearbyVehicle> leader,
 		double velocity_reference) override;

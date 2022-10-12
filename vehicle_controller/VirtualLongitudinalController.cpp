@@ -10,8 +10,8 @@
 #include "VirtualLongitudinalController.h"
 #include "EgoVehicle.h"
 
-VirtualLongitudinalController::VirtualLongitudinalController() :
-	SwitchedLongitudinalController() {}
+//VirtualLongitudinalController::VirtualLongitudinalController() :
+//	SwitchedLongitudinalController() {}
 
 VirtualLongitudinalController::VirtualLongitudinalController(
 	const EgoVehicle& ego_vehicle,

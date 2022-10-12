@@ -16,7 +16,7 @@ class RealLongitudinalController :
 {
 
 public:
-    RealLongitudinalController();
+    RealLongitudinalController() = default;
     RealLongitudinalController(const EgoVehicle& ego_vehicle,
         VelocityControllerGains velocity_controller_gains,
         AutonomousGains autonomous_gains, ConnectedGains connected_gains,
@@ -26,11 +26,6 @@ public:
         VelocityControllerGains velocity_controller_gains,
         AutonomousGains autonomous_gains, ConnectedGains connected_gains,
         double velocity_filter_gain, double time_headway_filter_gain);
-    /* Constructor that allows changing the vehicle following
-    gains. Useful to differentiate the actual origin lane 
-    controller and the end of lane controller */
-    /*OriginLaneLongitudinalController(const EgoVehicle& ego_vehicle,
-        double kg, double kv, bool verbose);*/
 
     /* To be used ONLY when the compute_desired_acceleration method is not
     called. So far, only necessary when we allow VISSIM to take control 

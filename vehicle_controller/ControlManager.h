@@ -11,10 +11,6 @@
 #include <unordered_map>
 #include <vector>
 
-//#include "ACCVehicle.h"
-//#include "AutonomousVehicle.h"
-//#include "ConnectedAutonomousVehicle.h"
-//#include "TrafficLightACCVehicle.h"
 #include "LateralController.h"
 #include "SwitchedLongitudinalController.h"
 #include "LongitudinalControllerWithTrafficLights.h"
@@ -27,6 +23,7 @@ class ACCVehicle;
 class AutonomousVehicle;
 class ConnectedAutonomousVehicle;
 class TrafficLightACCVehicle;
+class VirdiVehicle;
 
 class ControlManager {
 public:
@@ -115,6 +112,7 @@ public:
 	/* Active ACC during lane keeping; human (vissim) control if there is
 	lane change intention*/
 	double get_acc_desired_acceleration(const ACCVehicle& ego_vehicle);
+	double get_virdi_desired_acceleration(const VirdiVehicle& ego_vehicle);
 	/* Computes ACC desired acceleration plus the acceleration during lane
 	change adjustments and lateral movement. Gives control to human (vissim)
 	if the vehicle is waiting for too long to find a gap. */
@@ -210,7 +208,12 @@ private:
 
 	/* Initializing controllers */
 
-	void create_acc_controllers(const EgoVehicle& ego_vehicle,
+	/* Creates autonomous longitudinal controllers for vehicle ahead and 
+	for the end of the lane*/
+	void create_autonomous_longitudinal_controllers(
+		const EgoVehicle& ego_vehicle, bool verbose);
+	/* Based on Talebpour and Mahmassani (2016) */
+	void create_talebpour_alc(const EgoVehicle& ego_vehicle,
 		bool verbose);
 	void create_lane_change_adjustment_controller(
 		const EgoVehicle& ego_vehicle,

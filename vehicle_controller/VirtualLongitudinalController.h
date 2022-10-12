@@ -18,7 +18,7 @@ class VirtualLongitudinalController :
 {
 public:
 
-    VirtualLongitudinalController();
+    VirtualLongitudinalController() = default;
     VirtualLongitudinalController(
         const EgoVehicle& ego_vehicle,
         VelocityControllerGains velocity_controller_gains,

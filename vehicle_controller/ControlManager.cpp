@@ -14,13 +14,14 @@
 #include "NearbyVehicle.h"
 #include "TrafficLightACCVehicle.h"
 #include "VariationLimitedFilter.h"
+#include "VirdiVehicle.h"
 
 ControlManager::ControlManager(const EgoVehicle& ego_vehicle,
 	bool verbose) :
 	lateral_controller{ LateralController(verbose) },
 	verbose{ verbose } 
 {
-	if (verbose) 
+	if (verbose)
 	{
 		std::clog << "Creating control manager " << std::endl;
 	}
@@ -32,15 +33,18 @@ ControlManager::ControlManager(const EgoVehicle& ego_vehicle,
 	switch (ego_vehicle.get_type())
 	{
 	case VehicleType::acc_car:
-		create_acc_controllers(ego_vehicle, is_long_control_verbose);
+		create_autonomous_longitudinal_controllers(
+			ego_vehicle, is_long_control_verbose);
 		break;
 	case VehicleType::autonomous_car:
-		create_acc_controllers(ego_vehicle, is_long_control_verbose);
+		create_autonomous_longitudinal_controllers(
+			ego_vehicle, is_long_control_verbose);
 		create_lane_change_adjustment_controller(ego_vehicle,
 			is_long_control_verbose);
 		break;
 	case VehicleType::connected_car:
-		create_acc_controllers(ego_vehicle, is_long_control_verbose);
+		create_autonomous_longitudinal_controllers(
+			ego_vehicle, is_long_control_verbose);
 		create_lane_change_adjustment_controller(ego_vehicle,
 			is_long_control_verbose);
 		create_cooperative_lane_change_controller(ego_vehicle,
@@ -59,7 +63,7 @@ ControlManager::ControlManager(const EgoVehicle& ego_vehicle,
 ControlManager::ControlManager(const EgoVehicle& ego_vehicle)
 	: ControlManager(ego_vehicle, false) {}
 
-void ControlManager::create_acc_controllers(
+void ControlManager::create_autonomous_longitudinal_controllers(
 	const EgoVehicle& ego_vehicle, bool verbose)
 {
 	origin_lane_controller = RealLongitudinalController(
@@ -81,6 +85,18 @@ void ControlManager::create_acc_controllers(
 	/* The end of the lane is seen as a stopped vehicle. We set some 
 	time headway to that "vehicle". */
 	activate_end_of_lane_controller(time_headway_to_end_of_lane);
+}
+
+void ControlManager::create_talebpour_alc(const EgoVehicle& ego_vehicle,
+	bool verbose)
+{
+	VelocityControllerGains vel_control_gains{1.0, 0.0, 0.0};
+	/* INCOMPLETE */
+	/*ConnectedGains veh_foll_gains{ 0.1, 0.58, 0.0, 1.0 };
+	origin_lane_controller = RealLongitudinalController(
+		ego_vehicle,
+
+	)*/
 }
 
 void ControlManager::create_lane_change_adjustment_controller(
@@ -263,6 +279,26 @@ double ControlManager::get_acc_desired_acceleration(
 	const ACCVehicle& ego_vehicle)
 {
 	if (ego_vehicle.has_lane_change_intention() || 
+		ego_vehicle.is_lane_changing())
+	{
+		return use_vissim_desired_acceleration(ego_vehicle);
+	}
+
+	std::unordered_map<ACCType, double>
+		possible_accelerations;
+	get_origin_lane_desired_acceleration(ego_vehicle,
+		possible_accelerations);
+	bool end_of_lane_controller_is_active =
+		get_end_of_lane_desired_acceleration(ego_vehicle,
+			possible_accelerations);
+
+	return choose_minimum_acceleration(possible_accelerations);
+}
+
+double ControlManager::get_virdi_desired_acceleration(
+	const VirdiVehicle& ego_vehicle)
+{
+	if (ego_vehicle.has_lane_change_intention() ||
 		ego_vehicle.is_lane_changing())
 	{
 		return use_vissim_desired_acceleration(ego_vehicle);

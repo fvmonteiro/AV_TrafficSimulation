@@ -9,8 +9,8 @@
 #include "RealLongitudinalController.h"
 #include "EgoVehicle.h"
 
-RealLongitudinalController::RealLongitudinalController() :
-	SwitchedLongitudinalController() {}
+//RealLongitudinalController::RealLongitudinalController() :
+//	SwitchedLongitudinalController() {}
 
 RealLongitudinalController::RealLongitudinalController(
 	const EgoVehicle& ego_vehicle,

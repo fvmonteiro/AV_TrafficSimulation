@@ -39,8 +39,8 @@ public:
 	static std::string state_to_string(State state);
 
 protected:
-	VelocityController velocity_controller;
-	GapController gap_controller;
+	/*VelocityController velocity_controller;
+	std::shared_ptr<GapController> gap_controller;*/
 	State state{ State::uninitialized }; // event driven logic variable
 
 private:

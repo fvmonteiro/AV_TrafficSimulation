@@ -10,6 +10,7 @@
 
 #include "EgoVehicle.h"
 #include "SwitchedLongitudinalController.h"
+#include "TimeHeadwayGapController.h"
 
 SwitchedLongitudinalController::SwitchedLongitudinalController(
 	const VelocityControllerGains& velocity_controller_gains,
@@ -20,15 +21,15 @@ SwitchedLongitudinalController::SwitchedLongitudinalController(
 	double simulation_time_step, bool verbose) :
 	autonomous_gains{ autonomous_gains },
 	connected_gains{ connected_gains },
-	verbose{ verbose } {
-
+	verbose{ verbose } 
+{
 	velocity_controller = VelocityController(simulation_time_step,
 		velocity_controller_gains, velocity_filter_gain, 
 		comfortable_acceleration, filter_brake_limit);
-	gap_controller = GapController(simulation_time_step, autonomous_gains,
-		connected_gains, velocity_filter_gain, time_headway_filter_gain,
-		comfortable_acceleration, filter_brake_limit, verbose);
-
+	gap_controller = TimeHeadwayGapController(
+			simulation_time_step, autonomous_gains, connected_gains,
+			velocity_filter_gain, time_headway_filter_gain,
+			comfortable_acceleration, filter_brake_limit, verbose);
 }
 
 void SwitchedLongitudinalController::connect_gap_controller(bool is_connected)
@@ -65,10 +66,9 @@ double SwitchedLongitudinalController::get_time_headway_gap(
 }
 
 double SwitchedLongitudinalController::get_desired_time_headway_gap(
-	double ego_velocity/*, bool has_lane_change_intention*/) 
+	double ego_velocity) 
 {
-	return gap_controller.get_desired_time_headway_gap(ego_velocity/*,
-		has_lane_change_intention*/);
+	return gap_controller.get_desired_time_headway_gap(ego_velocity);
 }
 
 double SwitchedLongitudinalController::get_desired_gap(double ego_velocity)

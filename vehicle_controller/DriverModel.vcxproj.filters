@@ -70,6 +70,18 @@
     <ClCompile Include="GapController.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="TalebpourALC.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="TimeHeadwayGapController.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="VanAremGapController.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="VirdiVehicle.cpp">
+      <Filter>Header Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ControlManager.h">
@@ -146,6 +158,18 @@
     </ClInclude>
     <ClInclude Include="GapController.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TalebpourALC.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TimeHeadwayGapController.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="VanAremGapController.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="VirdiVehicle.h">
+      <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
