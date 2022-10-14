@@ -7,23 +7,25 @@
 /*==========================================================================*/
 
 #pragma once
-#include "LongitudinalController.h"
+#include "SwitchedLongitudinalController.h"
 
 /* Longitudinal controller to follow "real" leaders, that is, vehicles
 on the same lane as the ego vehicle. */
 class RealLongitudinalController :
-    public LongitudinalController
+    public SwitchedLongitudinalController
 {
 
 public:
     RealLongitudinalController();
-    RealLongitudinalController(const VehicleParameters& ego_parameters,
+    RealLongitudinalController(const EgoVehicle& ego_vehicle,
         VelocityControllerGains velocity_controller_gains,
         AutonomousGains autonomous_gains, ConnectedGains connected_gains,
+        double velocity_filter_gain, double time_headway_filter_gain,
         bool verbose);
-    RealLongitudinalController(const VehicleParameters& ego_parameters,
+    RealLongitudinalController(const EgoVehicle& ego_vehicle,
         VelocityControllerGains velocity_controller_gains,
-        AutonomousGains autonomous_gains, ConnectedGains connected_gains);
+        AutonomousGains autonomous_gains, ConnectedGains connected_gains,
+        double velocity_filter_gain, double time_headway_filter_gain);
     /* Constructor that allows changing the vehicle following
     gains. Useful to differentiate the actual origin lane 
     controller and the end of lane controller */
@@ -36,8 +38,8 @@ public:
     void update_leader_velocity_filter(double leader_velocity);
 
     /* Determines and sets the current state of the longitudinal controller */
-    virtual void determine_controller_state(const EgoVehicle& ego_vehicle,
+    void determine_controller_state(const EgoVehicle& ego_vehicle,
         const std::shared_ptr<NearbyVehicle> leader,
-        double reference_velocity) override;
+        double reference_velocity, double gap_control_input) override;
 
 };

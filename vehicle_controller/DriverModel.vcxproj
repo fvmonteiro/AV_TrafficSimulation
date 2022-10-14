@@ -243,11 +243,19 @@
     </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="ACCVehicle.cpp" />
+    <ClCompile Include="ConnectedAutonomousVehicle.cpp" />
     <ClCompile Include="ControlManager.cpp" />
+    <ClCompile Include="LongitudinalControllerWithTrafficLights.cpp" />
+    <ClCompile Include="PlatoonVehicle.cpp" />
     <ClCompile Include="RelativeLane.cpp" />
+    <ClCompile Include="AutonomousVehicle.cpp" />
+    <ClCompile Include="SwitchedLongitudinalController.cpp" />
+    <ClCompile Include="TrafficLight.cpp" />
+    <ClCompile Include="TrafficLightACCVehicle.cpp" />
+    <ClCompile Include="TrafficLightFileReader.cpp" />
     <ClCompile Include="VirtualLongitudinalController.cpp" />
     <ClCompile Include="LateralController.cpp" />
-    <ClCompile Include="LoggedVehicle.cpp" />
     <ClCompile Include="LongitudinalController.cpp" />
     <ClCompile Include="DriverModel.cpp">
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Disabled</Optimization>
@@ -264,29 +272,36 @@
     <ClCompile Include="NearbyVehicle.cpp" />
     <ClCompile Include="RealLongitudinalController.cpp" />
     <ClCompile Include="SimulationLogger.cpp" />
-    <ClCompile Include="SSMManager.cpp" />
     <ClCompile Include="EgoVehicle.cpp" />
     <ClCompile Include="Vehicle.cpp" />
-    <ClCompile Include="VehicleFollowingController.cpp" />
+    <ClCompile Include="GapController.cpp" />
     <ClCompile Include="VelocityController.cpp" />
     <ClCompile Include="VariationLimitedFilter.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="ACCVehicle.h" />
+    <ClInclude Include="AutonomousVehicle.h" />
+    <ClInclude Include="ConnectedAutonomousVehicle.h" />
     <ClInclude Include="ControlManager.h" />
+    <ClInclude Include="EgoVehicleFactory.h" />
+    <ClInclude Include="LongitudinalControllerWithTrafficLights.h" />
+    <ClInclude Include="PlatoonVehicle.h" />
     <ClInclude Include="RelativeLane.h" />
+    <ClInclude Include="SwitchedLongitudinalController.h" />
+    <ClInclude Include="TrafficLight.h" />
+    <ClInclude Include="TrafficLightACCVehicle.h" />
+    <ClInclude Include="TrafficLightFileReader.h" />
     <ClInclude Include="VirtualLongitudinalController.h" />
     <ClInclude Include="LateralController.h" />
-    <ClInclude Include="LoggedVehicle.h" />
     <ClInclude Include="LongitudinalController.h" />
     <ClInclude Include="DriverModel.h" />
     <ClInclude Include="Constants.h" />
     <ClInclude Include="NearbyVehicle.h" />
     <ClInclude Include="RealLongitudinalController.h" />
     <ClInclude Include="SimulationLogger.h" />
-    <ClInclude Include="SSMManager.h" />
     <ClInclude Include="EgoVehicle.h" />
     <ClInclude Include="Vehicle.h" />
-    <ClInclude Include="VehicleFollowingController.h" />
+    <ClInclude Include="GapController.h" />
     <ClInclude Include="VelocityController.h" />
     <ClInclude Include="VariationLimitedFilter.h" />
   </ItemGroup>

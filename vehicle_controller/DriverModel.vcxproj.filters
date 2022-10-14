@@ -13,9 +13,6 @@
     <ClCompile Include="LateralController.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="LoggedVehicle.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="LongitudinalController.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -25,22 +22,52 @@
     <ClCompile Include="SimulationLogger.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="SSMManager.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Vehicle.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="VehicleFollowingController.cpp" />
-    <ClCompile Include="VelocityController.cpp" />
     <ClCompile Include="RealLongitudinalController.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="VirtualLongitudinalController.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="RelativeLane.cpp" />
     <ClCompile Include="VariationLimitedFilter.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="TrafficLight.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="RelativeLane.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="TrafficLightFileReader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="LongitudinalControllerWithTrafficLights.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="TrafficLightACCVehicle.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ACCVehicle.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ConnectedAutonomousVehicle.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="PlatoonVehicle.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="AutonomousVehicle.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SwitchedLongitudinalController.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="VelocityController.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="GapController.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -57,9 +84,6 @@
     <ClInclude Include="LateralController.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="LoggedVehicle.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="LongitudinalController.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -69,17 +93,12 @@
     <ClInclude Include="SimulationLogger.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="SSMManager.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Vehicle.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Constants.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="VehicleFollowingController.h" />
-    <ClInclude Include="VelocityController.h" />
     <ClInclude Include="VirtualLongitudinalController.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -90,6 +109,42 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="VariationLimitedFilter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TrafficLight.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TrafficLightFileReader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="LongitudinalControllerWithTrafficLights.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="EgoVehicleFactory.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TrafficLightACCVehicle.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ACCVehicle.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ConnectedAutonomousVehicle.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="PlatoonVehicle.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="AutonomousVehicle.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SwitchedLongitudinalController.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="VelocityController.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GapController.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -14,7 +14,7 @@
 
 class NearbyVehicle : public Vehicle{
 public:
-	//using Vehicle::set_category;
+	using Vehicle::compute_safe_gap_parameters;
 
 	NearbyVehicle() = default;
 	NearbyVehicle(long id, RelativeLane relative_lane, long relative_position);
@@ -38,9 +38,15 @@ public:
 	RelativeLane get_lane_change_direction() const { 
 		return lane_change_direction; 
 	};
+	long get_lane_change_request_veh_id() const {
+		return lane_change_request_veh_id;
+	};
 	double get_h_to_incoming_vehicle() const {
 		return h_to_incoming_vehicle;
 	};
+	double get_max_lane_change_risk_to_follower() const {
+		return max_lane_change_risk_to_follower;
+	}
 
 	void set_lateral_position(double lateral_position) {
 		this->lateral_position = lateral_position;
@@ -65,16 +71,21 @@ public:
 	void set_h_to_incoming_vehicle(double h) {
 		this->h_to_incoming_vehicle = h;
 	};
+	void set_max_lane_change_risk_to_follower(double r) {
+		this->max_lane_change_risk_to_follower = r;
+	}
 
-	void set_type(VehicleType type) /*override*/;
-
+	void set_type(VehicleType nv_type, VehicleType ego_type) /*override*/;
 	/* Special getters and setters */
 
-	double get_lambda_0() const { return lambda_0; };
-	double get_lambda_1() const { return lambda_1; };
+	//double get_lambda_0() const { return lambda_0; };
+	//double get_lambda_1() const { return lambda_1; };
 
+	bool is_connected() const;
 	double compute_velocity(double ego_velocity) const;
 	bool is_on_same_lane() const;
+	bool is_immediatly_ahead() const;
+	bool is_immediatly_behind() const;
 	bool is_ahead() const;
 	bool is_behind() const;
 	bool is_lane_changing() const override;
@@ -83,7 +94,13 @@ public:
 	bool is_requesting_to_merge_behind() const;
 	/*void fill_with_dummy_values();
 	void copy_current_states(NearbyVehicle& nearby_vehicle);*/
-	void compute_safe_gap_parameters();
+	/*void compute_safe_gap_parameters();*/
+	void read_lane_change_request(long lane_change_request);
+
+	double estimate_desired_time_headway(double free_flow_velocity,
+		double leader_max_brake, double rho, double risk);
+	double estimate_max_accepted_risk_to_incoming_vehicle(
+		double free_flow_velocity, double leader_max_brake, double rho);
 
 	std::string to_string() const;
 	friend std::ostream& operator<< (std::ostream& out, 
@@ -104,9 +121,14 @@ private:
 	double relative_velocity{ 0.0 }; // ego speed - other speed [m/s]
 	double acceleration{ 0.0 }; // [m/s^2]
 	RelativeLane lane_change_direction{ RelativeLane::same };
+	/* If the vehicle is not part of a platoon, the request_id is the 
+	same as its own id. If the vehicle is in a platoon, the request id
+	depends on the platoon's lane changing strategy. */
+	long lane_change_request_veh_id{ 0 };
 	/* The time headway the nearby vehicle wants to keep from a connected
 	ego vehicle that wants to merge in front of it.*/
 	double h_to_incoming_vehicle{ 0.0 };
+	double max_lane_change_risk_to_follower{ 0.0 };
 
 	enum class Member {
 		id,

@@ -15,8 +15,10 @@
 //	this->time_step = time_step;
 //}
 
-VariationLimitedFilter::VariationLimitedFilter(double max_variation,
-	double min_variation, double time_step, bool verbose) :
+VariationLimitedFilter::VariationLimitedFilter(double gain, 
+	double max_variation, double min_variation, 
+	double time_step, bool verbose) :
+	gain { gain },
 	max_variation_per_second{ max_variation },
 	min_variation_per_second{ -std::abs(min_variation) }, /* minimum
 	acceleration (maximum braking) is sometimes given in absolute value,
@@ -32,15 +34,16 @@ VariationLimitedFilter::VariationLimitedFilter(double max_variation,
 			<< std::endl;
 	}
 
+	compute_alpha();
 	this->max_variation_per_time_step = this->max_variation_per_second 
 		* this->time_step;
 	this->min_variation_per_time_step = this->min_variation_per_second 
 		* this->time_step;
 }
 
-VariationLimitedFilter::VariationLimitedFilter(double max_variation,
-	double min_variation, double time_step) 
-	: VariationLimitedFilter(max_variation,
+VariationLimitedFilter::VariationLimitedFilter(double gain, 
+	double max_variation, double min_variation, double time_step)
+	: VariationLimitedFilter(gain, max_variation,
 		min_variation, time_step, false) {}
 
 void VariationLimitedFilter::reset(double initial_value) {
@@ -48,17 +51,17 @@ void VariationLimitedFilter::reset(double initial_value) {
 		std::clog << "------- Filter reset. Init value = "
 			<< initial_value << " -------" << std::endl;
 	}*/
-	if (!is_initialized) {
+	if (!is_initialized) 
+	{
 		is_initialized = true;
-		compute_alpha();
 	}
 	this->current_value = initial_value;
 }
 
-void VariationLimitedFilter::set_gain(double new_gain) {
-	this->gain = new_gain;
-	compute_alpha();
-}
+//void VariationLimitedFilter::set_gain(double new_gain) {
+//	this->gain = new_gain;
+//	compute_alpha();
+//}
 
 double VariationLimitedFilter::apply_filter(double new_value) {
 	/* Filter equations:

@@ -33,8 +33,11 @@ enum class UDA {
     /* Mandatory UDAs. They must be included
     in all simulations which use this driver model */
     h_to_assited_veh = 6, 
-    lane_change_intention,
+    lane_change_request,
     give_control_to_vissim,
+    max_lane_change_risk_to_leaders,
+    max_lane_change_risk_to_follower,
+    use_linear_lane_change_gap,
     /* Debugging: leader */
     leader_id = 100, 
     leader_type, 
@@ -47,6 +50,8 @@ enum class UDA {
     transient_gap_to_ld,
     veh_following_gap_to_ld,
     safe_gap_to_dest_lane_leader,
+    delta_gap_to_ld,
+    lc_collision_free_gap_to_ld,
     /* Debugging: dest lane follower */
     dest_follower_id = 120,
     gap_to_dest_lane_follower,
@@ -54,12 +59,15 @@ enum class UDA {
     veh_following_gap_to_fd,
     safe_gap_to_dest_lane_follower,
     dest_follower_time_headway,
+    delta_gap_to_fd,
+    lc_collision_free_gap_to_fd,
     /* Debugging: assisted vehicle */
     assisted_veh_id = 130,
     /* Debugging: other stuff */
     waiting_time = 140,
     risk = 141,
     safe_time_headway = 142,
+    gap_error = 143,
 
     first = h_to_assited_veh,
 };
@@ -425,7 +433,7 @@ enum class UDA {
 /*         (will be used for NVEH_LANE_CHANGE) */
 #define  DRIVER_DATA_ACTIVE_LANE_CHANGE      804
 
-/* long:   target lange */
+/* long:   target lange                                                */
 /*         (+1 = next one left, 0 = current lane, -1 = next one right) */
 #define  DRIVER_DATA_REL_TARGET_LANE         805
            

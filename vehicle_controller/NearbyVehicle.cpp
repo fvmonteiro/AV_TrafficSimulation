@@ -8,38 +8,60 @@
 
 NearbyVehicle::NearbyVehicle(long id, RelativeLane relative_lane,
 	long relative_position) :
+	Vehicle(id),
 	relative_lane{ relative_lane },
-	relative_position{ relative_position } {
-	this->id = id;
-}
+	relative_position{ relative_position } {}
 
 NearbyVehicle::NearbyVehicle(long id, long relative_lane,
 	long relative_position) :
 	NearbyVehicle(id, RelativeLane::from_long(relative_lane),
 		relative_position) {}
 
-void NearbyVehicle::set_type(VehicleType type) {
-	/* The nearby vehicle is either identified as connected by
-	a connected ego vehicle, or it is seen as undefined.
-	Note: if we change the way of dealing with nearby vehicles and they are
-	no longer erased every time step, this function needs a little twitch 
-	to avoid re-setting the type at every time step. */
-	this->type = type;
+void NearbyVehicle::set_type(VehicleType nv_type, VehicleType ego_type)
+{
+	/* This function is only called by connected ego vehicles
+	trying to set the type of a nearby vehicle.
+	The nearby vehicle type is only set if the nearby vehicle is 
+	also connected. */
 
-	switch (this->type)
+	//VehicleType temp_veh_type = VehicleType(nv_type);
+
+	if (is_a_connected_type(ego_type) && is_a_connected_type(nv_type))
 	{
-	case VehicleType::undefined:
-		this->brake_delay = HUMAN_BRAKE_DELAY;
-		break;
-	case VehicleType::connected_car:
+		this->type = nv_type;
 		this->brake_delay = CONNECTED_BRAKE_DELAY;
-		break;
-	default:
-		std::clog << "nearby vehicle " << id <<" being set with unknown " 
-			<< "type value " << static_cast<int>(type) << std::endl;
-		this->brake_delay = HUMAN_BRAKE_DELAY;
-		break;
 	}
+	else
+	{
+		/* We assume autonomous vehicles are identifiable visually by other
+		autonomous vehicles without need for communications. 
+		Both CAVs and AVs can differentiate HDVs from all the rest. */
+		switch (nv_type)
+		{
+		case VehicleType::connected_car:
+		case VehicleType::traffic_light_cacc_car:
+		case VehicleType::autonomous_car:
+		case VehicleType::traffic_light_acc_car:
+			this->type = VehicleType::autonomous_car;
+			this->brake_delay = AUTONOMOUS_BRAKE_DELAY;
+			break;
+		default:
+			this->type = VehicleType::undefined;
+			this->brake_delay = HUMAN_BRAKE_DELAY;
+			break;
+		}
+	}
+}
+
+bool NearbyVehicle::is_connected() const 
+{
+	/* The nearby vehicle type is only set to connected if the ego vehicle
+	is also connected. So this function returns false when called by a non
+	connected vehicle. */
+
+	return (type == VehicleType::connected_car
+		|| type == VehicleType::traffic_light_cacc_car
+		|| type == VehicleType::platoon_car);
 }
 
 double NearbyVehicle::compute_velocity(double ego_velocity) const {
@@ -48,6 +70,14 @@ double NearbyVehicle::compute_velocity(double ego_velocity) const {
 
 bool NearbyVehicle::is_on_same_lane() const {
 	return get_relative_lane() == RelativeLane::same;
+}
+
+bool NearbyVehicle::is_immediatly_ahead() const {
+	return get_relative_position() == 1;
+}
+
+bool NearbyVehicle::is_immediatly_behind() const {
+	return get_relative_position() == -1;
 }
 
 bool NearbyVehicle::is_ahead() const {
@@ -63,8 +93,8 @@ bool NearbyVehicle::is_lane_changing() const {
 }
 
 bool NearbyVehicle::is_cutting_in() const {
-	if (is_ahead()
-		&& (is_lane_changing())) {
+	if (is_ahead() && (is_lane_changing())) 
+	{
 		/* The nearby vehicle must be changing lanes towards the ego vehicle
 		(that's the first part of the condition below)
 		The first condition alone could misidentify the case where a vehicle
@@ -81,28 +111,45 @@ bool NearbyVehicle::is_cutting_in() const {
 	return false;
 }
 
-bool NearbyVehicle::is_requesting_to_merge_ahead() const {
-	if (is_connected() && is_ahead() && has_lane_change_intention()
-		&& (relative_lane == desired_lane_change_direction.get_opposite())) {
-		return true;
-	}
-	return false;
+bool NearbyVehicle::is_requesting_to_merge_ahead() const 
+{
+	return is_connected() 
+		&& has_lane_change_intention()
+		&& is_immediatly_ahead()
+		&& (relative_lane == desired_lane_change_direction.get_opposite());
 }
 
-bool NearbyVehicle::is_requesting_to_merge_behind() const {
-	if (is_connected() && is_behind() && has_lane_change_intention()
+bool NearbyVehicle::is_requesting_to_merge_behind() const 
+{
+	return is_connected() 
+		&& has_lane_change_intention() 
+		&& is_behind()
 		&& (relative_lane == desired_lane_change_direction.get_opposite()
-			|| relative_lane == RelativeLane::same)) {
-		return true;
-	}
-	return false;
+			|| relative_lane == RelativeLane::same);
 }
 
-void NearbyVehicle::compute_safe_gap_parameters() {
-	lambda_0 = compute_lambda_0(max_jerk, comfortable_acceleration, 
-		max_brake, brake_delay);
-	lambda_1 = compute_lambda_1(max_jerk, comfortable_acceleration,
-		max_brake, brake_delay);
+void NearbyVehicle::read_lane_change_request(long lane_change_request) 
+{
+	/* Getting the sign of lane change request */
+	int request_sign = (lane_change_request > 0) 
+		- (lane_change_request < 0);
+	set_desired_lane_change_direction(request_sign);
+	lane_change_request_veh_id = std::abs(lane_change_request);
+}
+
+double NearbyVehicle::estimate_desired_time_headway(double free_flow_velocity,
+	double leader_max_brake, double rho, double risk)
+{
+	compute_safe_gap_parameters();
+	return compute_time_headway_with_risk(free_flow_velocity, 
+		get_max_brake(), leader_max_brake, get_lambda_1(), rho, risk);
+}
+
+double NearbyVehicle::estimate_max_accepted_risk_to_incoming_vehicle(
+	double free_flow_velocity, double leader_max_brake, double rho)
+{
+	return compute_max_risk(leader_max_brake, get_max_brake(), 
+		free_flow_velocity, rho);
 }
 
 std::string NearbyVehicle::to_string() const {
@@ -118,19 +165,19 @@ std::string NearbyVehicle::to_string() const {
 		oss << member_to_string.at(m) << "=";
 		switch (m) {
 		case Member::id:
-			oss << id;
+			oss << get_id();
 			break;
 		case Member::length:
-			oss << length;
+			oss << get_length();
 			break;
 		case Member::width:
-			oss << width;
+			oss << get_width();
 			break;
 		case Member::category:
-			oss << static_cast<int>(category);
+			oss << static_cast<int>(get_category());
 			break;
 		case Member::type:
-			oss << static_cast<int>(type);
+			oss << static_cast<int>(get_type());
 			break;
 		case Member::relative_lane:
 			oss << relative_lane.to_string();

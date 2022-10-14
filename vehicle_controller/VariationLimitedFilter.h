@@ -11,16 +11,17 @@
 class VariationLimitedFilter {
 public:
 	VariationLimitedFilter() = default;
-	VariationLimitedFilter(double max_variation, double min_variation,
+	VariationLimitedFilter(double gain, 
+		double max_variation, double min_variation,
 		double time_step, bool verbose);
-	VariationLimitedFilter(double max_variation, double min_variation, 
-		double time_step);
+	VariationLimitedFilter(double gain, 
+		double max_variation, double min_variation, double time_step);
 
 	double get_current_value() const { return current_value; };
 	bool get_is_initialized() const { return this->is_initialized; };
 		
 	void reset(double initial_value);
-	void set_gain(double new_gain);	
+	//void set_gain(double new_gain);	
 	double apply_filter(double new_value);
 
 private:
@@ -33,7 +34,7 @@ private:
 	double min_variation_per_second{ -0.0 }; // max negative variation
 	double max_variation_per_time_step{ +0.0 };
 	double min_variation_per_time_step{ -0.0 };
-	double gain{ 10.0 };
+	double gain{ 0.0 };
 	double alpha{ 0.0 }; /* constant used in the discrete approximation of
 						 the first order actuator dynamics */
 	bool verbose = false;
