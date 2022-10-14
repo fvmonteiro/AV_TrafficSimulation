@@ -18,7 +18,6 @@ class Platoon;
 
 class EgoVehicle : public Vehicle {
 public:
-	//using Vehicle::set_category;
 
 	enum class State {
 		lane_keeping,
@@ -45,8 +44,8 @@ public:
 	double get_max_jerk() const { return max_jerk; };
 	double get_brake_delay() const { return brake_delay; };
 	double get_desired_lane_angle() const { return desired_lane_angle; };
-	int get_relative_target_lane() const {
-		return relative_target_lane.to_int();
+	RelativeLane get_vissim_lane_suggestion() const {
+		return vissim_lane_suggestion;
 	};
 	long get_turning_indicator() const { return turning_indicator; };
 	double get_waiting_time() const { return lane_change_waiting_time; };
@@ -132,7 +131,9 @@ public:
 	/* Mandatory/route related lane changes */
 	void set_preferred_relative_lane(long preferred_relative_lane);
 	/* Discretionary lane changes */
-	void set_relative_target_lane(long target_relative_lane);
+	//void set_relative_target_lane(long target_relative_lane);
+	/* VISSIM lane change suggestion */
+	void set_vissim_lane_suggestion(long target_relative_lane);
 	void set_lane_end_distance(double lane_end_distance,
 		long lane_number);
 	void read_traffic_light(int traffic_light_id, double distance)
@@ -318,13 +319,10 @@ private:
 	virtual double compute_desired_acceleration(
 		const std::unordered_map<int, TrafficLight>& traffic_lights) = 0;
 	virtual bool give_lane_change_control_to_vissim() const = 0;
-	/* Decides whether the vehicle can start a
-	lane change. Returns -1 for right lane changes, +1 for left lane
-	changes and 0 for lane keeping. */
+	virtual void set_desired_lane_change_direction() = 0;
+	/* Decides whether the vehicle can start a lane change. */
 	virtual bool can_start_lane_change() = 0;
-	//virtual void update_other_relevant_nearby_vehicles() {};
-	//virtual void clear_other_relevant_nearby_vehicles() {};
-	virtual long create_lane_change_request() = 0; // { return 0; };
+	virtual long create_lane_change_request() = 0;
 	virtual void set_traffic_light_information(int traffic_light_id,
 		double distance) {};
 	virtual double compute_accepted_lane_change_gap(
@@ -337,9 +335,9 @@ private:
 	virtual std::shared_ptr<NearbyVehicle>
 		implement_get_assisted_vehicle() const = 0;
 	virtual void implement_set_accepted_lane_change_risk_to_leaders(
-		double value) = 0; // {};
+		double value) = 0;
 	virtual void implement_set_accepted_lane_change_risk_to_follower(
-		double value) = 0; //{};
+		double value) = 0;
 	virtual void implement_set_use_linear_lane_change_gap(long value) = 0;
 	
 	// TODO: should this be abstract?
@@ -347,12 +345,9 @@ private:
 	{
 		return nullptr;
 	};
-	/*virtual std::shared_ptr<Platoon> implement_create_platoon(long platoon_id) 
-	{ return nullptr; };*/
 
 	/* Finds the current leader */
 	virtual void implement_analyze_nearby_vehicles();
-	virtual void set_desired_lane_change_direction();
 	virtual bool implement_analyze_platoons(
 		std::unordered_map<int, std::shared_ptr<Platoon>>& platoons, 
 		std::shared_ptr<EgoVehicle> pointer_to_me,
@@ -435,7 +430,8 @@ private:
 	std::vector<double> lane_end_distance;
 	std::vector<State> state;
 	double desired_lane_angle{ 0.0 };
-	RelativeLane relative_target_lane{ RelativeLane::same };
+	//RelativeLane relative_target_lane{ RelativeLane::same };
+	RelativeLane vissim_lane_suggestion{ RelativeLane::same };
 	long turning_indicator{ 0 };
 
 	/* Safe lane change decision parameters ---------------------------------- */

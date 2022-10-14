@@ -20,29 +20,33 @@ protected:
 		long new_platoon_id) override;
 
 private:
-
-	void create_platoon(long platoon_id, 
-		std::shared_ptr<PlatoonVehicle> pointer_to_me);
+	void set_desired_lane_change_direction() override;
+	bool can_start_lane_change() override;
 	std::shared_ptr<Platoon> implement_get_platoon() const override
 	{
 		return platoon;
 	};
+	void create_platoon(long platoon_id,
+		std::shared_ptr<PlatoonVehicle> pointer_to_me);
+	void add_myself_to_leader_platoon(
+		std::shared_ptr<Platoon> leader_platoon,
+		std::shared_ptr<PlatoonVehicle> pointer_to_me);
+	bool is_platoon_leader();
 
 	std::shared_ptr<Platoon> platoon{ nullptr };
+	// desired velocity when not a part of the platoon
+	double alone_desired_velocity{ 0.0 };
+	/* Time the vehicle has been without a platoon.
+	As soon as the vehicle enters simulation, it may create its own platoon */
+	double alone_time{ 1.0 };
+	double max_time_looking_for_platoon{ 1.0 };
 
-	//void find_relevant_nearby_vehicles() override;
 	//double compute_desired_acceleration(
 	//	const std::unordered_map<int, TrafficLight>& traffic_lights) override;
 	//double compute_lane_changing_desired_time_headway(
 	//	const NearbyVehicle& nearby_vehicle) const override {
 	//	return -1.0;
 	//};
-	//bool give_lane_change_control_to_vissim() const override
-	//{
-	//	return false;
-	//};
-
-	//bool can_start_lane_change() override;
 
 	//long create_lane_change_request() override { return 0; };
 

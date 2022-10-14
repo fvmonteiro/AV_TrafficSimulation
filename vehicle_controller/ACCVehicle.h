@@ -26,6 +26,9 @@ private:
 	{
 		return true;
 	};
+
+	/* Follows VISSIM's recommendation */
+	void set_desired_lane_change_direction() override;
 	/* Follows VISSIM's recommendation */
 	bool can_start_lane_change() override;
 

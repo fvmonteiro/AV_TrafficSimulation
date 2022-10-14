@@ -55,8 +55,9 @@ void Platoon::add_leader(
 	std::clog << "Platoon " << id << ": adding leader with id " 
 		<< new_vehicle->get_id() << std::endl;
 	leader_idx++;
-	vehicles.insert({ leader_idx, new_vehicle });
-	vehicle_id_to_position.insert({ new_vehicle->get_id(), leader_idx });
+	add_vehicle(leader_idx, new_vehicle);
+	/*vehicles.insert({ leader_idx, new_vehicle });
+	vehicle_id_to_position.insert({ new_vehicle->get_id(), leader_idx });*/
 }
 
 void Platoon::add_last_vehicle(
@@ -64,32 +65,30 @@ void Platoon::add_last_vehicle(
 {
 	std::clog << "Platoon " << id << ": adding last veh with id "
 		<< new_vehicle->get_id() << std::endl;;
-	last_veh_idx --;
-	vehicles.insert({ last_veh_idx, new_vehicle });
-	vehicle_id_to_position.insert({ new_vehicle->get_id(), last_veh_idx});
+	last_veh_idx--;
+	add_vehicle(last_veh_idx, new_vehicle);
+	/*vehicles.insert({ last_veh_idx, new_vehicle });
+	vehicle_id_to_position.insert({ new_vehicle->get_id(), last_veh_idx});*/
 }
 
 void Platoon::remove_leader()
 {
-	std::clog << "Platoon " << id << " (" << vehicles.size()
-		<< " vehs.): removing leader.";
-	vehicle_id_to_position.erase(get_leader_id());
-	vehicles.erase(leader_idx);
-	std::clog << " New size " << vehicles.size() << " vehs." << std::endl;
-	leader_idx--;
+	remove_vehicle_by_position(leader_idx, get_leader_id());
+	//while (vehicles.find(--leader_idx) == vehicles.end())
+	//{
+	//	/* Just being sure we don't fall in an infinite loop */
+	//	if (leader_idx < last_veh_idx) return; // platoon empty!
+	//}
 }
 
 void Platoon::remove_last_vehicle()
 {
-	vehicle_id_to_position.erase(get_last_veh_id());
-	vehicles.erase(last_veh_idx);
-	last_veh_idx++;
-}
-
-void Platoon::remove_vehicle_by_position(int idx_in_platoon, long veh_id)
-{
-	vehicle_id_to_position.erase(veh_id);
-	vehicles.erase(idx_in_platoon);
+	remove_vehicle_by_position(last_veh_idx, get_last_veh_id());
+	//while (vehicles.find(++last_veh_idx) == vehicles.end())
+	//{
+	//	/* Just being sure we don't fall in an infinite loop */
+	//	if (last_veh_idx > leader_idx) return; // platoon empty!
+	//}
 }
 
 void Platoon::remove_vehicle_by_id(long veh_id)
@@ -99,10 +98,11 @@ void Platoon::remove_vehicle_by_id(long veh_id)
 	{
 		std::clog << "Platoon " << get_id() << ", removing veh "
 			<< veh_id << ", which is in position " 
-			<< vehicle_id_to_position.at(veh_id);
+			<< vehicle_id_to_position.at(veh_id) << std::endl;
 		
 		long position_to_remove = vehicle_id_to_position.at(veh_id);
-		if (position_to_remove == leader_idx)
+		remove_vehicle_by_position(position_to_remove, veh_id);
+		/*if (position_to_remove == leader_idx)
 		{
 			remove_leader();
 		}
@@ -113,7 +113,7 @@ void Platoon::remove_vehicle_by_id(long veh_id)
 		else
 		{
 			remove_vehicle_by_position(position_to_remove, veh_id);
-		}
+		}*/
 	}
 	else
 	{
@@ -121,6 +121,32 @@ void Platoon::remove_vehicle_by_id(long veh_id)
 			<< ". Trying to erase veh " << veh_id
 			<< " which is not in this platoon.\n";
 	}
+}
+
+void Platoon::set_vehicle_lane_change_gaps_safe(long veh_id, bool is_safe)
+{
+	vehicles_lane_change_gap_status[veh_id] = is_safe;
+}
+
+bool Platoon::can_vehicle_start_lane_change(long veh_id)
+{
+	switch (lane_change_strategy)
+	{
+	case Platoon::LaneChangeStrategy::none:
+		return vehicles_lane_change_gap_status[veh_id];
+		break;
+	case Platoon::LaneChangeStrategy::synchronous:
+		break;
+	case Platoon::LaneChangeStrategy::leader_first:
+		break;
+	case Platoon::LaneChangeStrategy::last_vehicle_first:
+		break;
+	case Platoon::LaneChangeStrategy::leader_first_and_invert:
+		break;
+	default:
+		break;
+	}
+	return false;
 }
 
 std::ostream& operator<< (std::ostream& out, const Platoon& platoon)
@@ -135,7 +161,45 @@ std::ostream& operator<< (std::ostream& out, const Platoon& platoon)
 				<< "), ";
 		}
 	}
+	out << "leader idx: " << platoon.leader_idx 
+		<< ", last veh idx: " << platoon.last_veh_idx;
 	return out; // return std::ostream so we can chain calls to operator<<
+}
+
+void Platoon::remove_vehicle_by_position(int idx_in_platoon, long veh_id)
+{
+	std::clog << "Removing by position."
+		<< " Erasing vehicle.";
+	vehicles.erase(idx_in_platoon);
+	std::clog << " Erasing vehicle_id_to_position.";
+	vehicle_id_to_position.erase(veh_id);
+	std::clog << " Erasing vehicle_lane_change_gap_status.";
+	vehicles_lane_change_gap_status.erase(veh_id);
+	std::clog << " All erased!\n";
+
+	/* In case the removed vehicle was the leader or the last vehicle,
+	we update the respective indices */
+	while (vehicles.find(leader_idx) == vehicles.end())
+	{
+		last_veh_idx--;
+		/* Just being sure we don't fall in an infinite loop */
+		if (leader_idx < last_veh_idx) return; // platoon empty!
+	}
+	while (vehicles.find(last_veh_idx) == vehicles.end())
+	{
+		last_veh_idx++;
+		/* Just being sure we don't fall in an infinite loop */
+		if (last_veh_idx > leader_idx) return; // platoon empty!
+	}
+
+}
+
+void Platoon::add_vehicle(int idx_in_platoon,
+	std::shared_ptr <PlatoonVehicle> new_vehicle)
+{
+	vehicles.insert({ idx_in_platoon, new_vehicle });
+	vehicle_id_to_position.insert({ new_vehicle->get_id(), idx_in_platoon });
+	vehicles_lane_change_gap_status.insert({ new_vehicle->get_id(), false });
 }
 
 //Platoon Platoon::split_platoon(int platoon_position)

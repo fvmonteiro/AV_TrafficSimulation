@@ -279,6 +279,9 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
             long_value);
         return 1;
     case DRIVER_DATA_VEH_REL_TARGET_LANE    :
+        /* This seems to only indicate the target lane of an 
+        already active (or about to be active) lane change. */
+        //vehicles[current_vehicle_id]->set_relative_target_lane(long_value);
         return 1;
     case DRIVER_DATA_VEH_INTAC_STATE        :
         return 1;
@@ -423,7 +426,7 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
     case DRIVER_DATA_REL_TARGET_LANE        :
         /* Apparently this is indicates when VISSIM considers the lane 
         change can start. */
-        vehicles[current_vehicle_id]->set_relative_target_lane(long_value);
+        vehicles[current_vehicle_id]->set_vissim_lane_suggestion(long_value);
         return 1;
     default :
         return 0;

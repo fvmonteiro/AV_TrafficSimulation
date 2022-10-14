@@ -36,7 +36,8 @@ double TrafficLightACCVehicle::compute_desired_acceleration(
 
 void TrafficLightACCVehicle::set_desired_lane_change_direction()
 {
-	desired_lane_change_direction = RelativeLane::same;
+	/* Do nothing: for now these vehicles never change lanes */
+	//desired_lane_change_direction = RelativeLane::same;
 }
 
 bool TrafficLightACCVehicle::can_start_lane_change()

@@ -1992,7 +1992,7 @@
 			</distrDataPts>
 		</powerDistribution>
 	</powerDistributions>
-	<simulation comment="" numCores="1" numRuns="2" randSeed="7" randSeedIncr="1" retroSync="false" simMode="MICRO" simPeriod="60" simRes="10" simSpeed="10" startTm="0" useAllCores="false" useMaxSimSpeed="true" volumeIncrDynAssign="0"/>
+	<simulation comment="" numCores="1" numRuns="1" randSeed="7" randSeedIncr="1" retroSync="false" simMode="MICRO" simPeriod="120" simRes="10" simSpeed="10" startTm="0" useAllCores="false" useMaxSimSpeed="true" volumeIncrDynAssign="0"/>
 	<timeDistributions>
 		<timeDistribution mean="0.5" name="0.5 s" no="1" stdDev="0" type="NORMAL"/>
 		<timeDistribution mean="0.9" name="0.9 s" no="2" stdDev="0" type="NORMAL"/>
@@ -2004,8 +2004,6 @@
 		<timeIntervalSet no="VEHICLEINPUT">
 			<timeInts>
 				<timeInterval start="0"/>
-				<timeInterval start="60"/>
-				<timeInterval start="120"/>
 			</timeInts>
 		</timeIntervalSet>
 		<timeIntervalSet no="VEHICLEROUTESTATIC">
@@ -2115,8 +2113,8 @@
 		</vehicleComposition>
 		<vehicleComposition name="with_autonomous" no="2">
 			<vehCompRelFlows>
-				<vehicleCompositionRelativeFlow desSpeedDistr="100" relFlow="60" vehType="100"/>
-				<vehicleCompositionRelativeFlow desSpeedDistr="100" relFlow="40" vehType="110"/>
+				<vehicleCompositionRelativeFlow desSpeedDistr="40" relFlow="10" vehType="100"/>
+				<vehicleCompositionRelativeFlow desSpeedDistr="100" relFlow="90" vehType="110"/>
 			</vehCompRelFlows>
 		</vehicleComposition>
 		<vehicleComposition name="all_autonomous" no="3">
@@ -2166,8 +2164,6 @@
 		<vehicleInput anmFlag="false" link="2" name="in_ramp" no="4">
 			<timeIntVehVols>
 				<timeIntervalVehVolume cont="false" timeInt="1 0" vehComp="9" volType="STOCHASTIC" volume="1000"/>
-				<timeIntervalVehVolume cont="false" timeInt="1 60000" vehComp="1" volType="STOCHASTIC" volume="0"/>
-				<timeIntervalVehVolume cont="false" timeInt="1 120000" vehComp="1" volType="STOCHASTIC" volume="0"/>
 			</timeIntVehVols>
 		</vehicleInput>
 	</vehicleInputs>

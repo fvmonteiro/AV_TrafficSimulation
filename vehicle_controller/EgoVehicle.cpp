@@ -254,9 +254,16 @@ void EgoVehicle::set_preferred_relative_lane(long preferred_relative_lane)
 	//set_desired_lane_change_direction(preferred_relative_lane);
 }
 
-void EgoVehicle::set_relative_target_lane(long target_relative_lane)
+//void EgoVehicle::set_relative_target_lane(long target_relative_lane)
+//{
+//	this->relative_target_lane =
+//		RelativeLane::from_long(target_relative_lane);
+//	//set_desired_lane_change_direction(target_relative_lane);
+//}
+
+void EgoVehicle::set_vissim_lane_suggestion(long target_relative_lane)
 {
-	this->relative_target_lane =
+	this->vissim_lane_suggestion =
 		RelativeLane::from_long(target_relative_lane);
 	//set_desired_lane_change_direction(target_relative_lane);
 }
@@ -748,7 +755,7 @@ double EgoVehicle::get_accepted_lane_change_gap(
 
 double EgoVehicle::get_reference_gap()
 {
-	return controller.get_reference_gap(velocity.back());
+	return controller.get_reference_gap(get_velocity());
 }
 
 double EgoVehicle::compute_time_headway_gap(
@@ -808,36 +815,6 @@ double EgoVehicle::compute_drac(const NearbyVehicle& nearby_vehicle)
 	return -1.0;
 }
 
-/* Private methods -------------------------------------------------------- */
-
-void EgoVehicle::set_desired_lane_change_direction()
-{
-	/* Both preferred_relative_lane and relative_target_lane indicate
-	desire to change lanes. The former indicates preference due to
-	routing, so it takes precedence over the latter. */
-	RelativeLane current_preferred_lane = get_preferred_relative_lane();
-	desired_lane_change_direction = RelativeLane::same;
-	if (current_preferred_lane.is_to_the_left())
-	{
-		desired_lane_change_direction = RelativeLane::left;
-	}
-	else if (current_preferred_lane.is_to_the_right())
-	{
-		desired_lane_change_direction = RelativeLane::right;
-	}
-	else if (relative_target_lane.is_to_the_left())
-	{
-		desired_lane_change_direction = RelativeLane::left;
-	}
-	else if (relative_target_lane.is_to_the_right())
-	{
-		desired_lane_change_direction = RelativeLane::right;
-	}
-	else
-	{
-		desired_lane_change_direction = RelativeLane::same;
-	}
-}
 
 /* Methods for printing and debugging ------------------------------------- */
 
@@ -947,7 +924,7 @@ std::string EgoVehicle::write_members(
 				oss << link[i];
 				break;
 			case Member::preferred_relative_lane:
-				oss << preferred_relative_lane[i].to_string();
+				oss << preferred_relative_lane[i];
 				break;
 			case Member::velocity:
 				oss << velocity[i];
@@ -968,7 +945,7 @@ std::string EgoVehicle::write_members(
 				oss << state_to_string_map.at(state[i]);
 				break;
 			case Member::active_lane_change_direction:
-				oss << active_lane_change_direction[i].to_string();
+				oss << active_lane_change_direction[i];
 				break;
 			/*case Member::vissim_active_lane_change_direction:
 				oss << vissim_active_lane_change[i];
@@ -1116,16 +1093,16 @@ std::ostream& operator<< (std::ostream& out, const EgoVehicle& vehicle)
 		<< EgoVehicle::state_to_string_map.at(vehicle.get_state())
 		<< ", lane=" << vehicle.get_lane()
 		<< ", pref. lane="
-		<< vehicle.get_preferred_relative_lane().to_string()
+		<< vehicle.get_preferred_relative_lane()
 		<< ", use preferred lane="
 		<< vehicle.get_vissim_use_preferred_lane()
-		<< ", target lane="
-		<< vehicle.relative_target_lane.to_string()
+		<< ", vissim suggested lane="
+		<< vehicle.vissim_lane_suggestion
 		/*<< ", vissim active lc="
 		<< RelativeLane::from_long(
 			vehicle.get_vissim_active_lane_change()).to_string()*/
 		<< ", active lc.="
-		<< vehicle.get_active_lane_change_direction().to_string()
+		<< vehicle.get_active_lane_change_direction()
 		<< ", vel=" << vehicle.get_velocity()
 		<< ", accel=" << vehicle.get_acceleration();
 

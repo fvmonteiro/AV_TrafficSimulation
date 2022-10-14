@@ -261,11 +261,39 @@ bool AutonomousVehicle::give_lane_change_control_to_vissim() const
 	return lane_change_waiting_time > max_lane_change_waiting_time;
 }
 
+void AutonomousVehicle::set_desired_lane_change_direction()
+{
+	/* Both preferred_relative_lane and vissim_lane_suggestion indicate
+	desire to change lanes. The former indicates preference due to
+	routing (mandatory), so it takes precedence over the latter. */
+	RelativeLane current_preferred_lane = get_preferred_relative_lane();
+	if (current_preferred_lane.is_to_the_left())
+	{
+		desired_lane_change_direction = RelativeLane::left;
+	}
+	else if (current_preferred_lane.is_to_the_right())
+	{
+		desired_lane_change_direction = RelativeLane::right;
+	}
+	else if (get_vissim_lane_suggestion().is_to_the_left())
+	{
+		desired_lane_change_direction = RelativeLane::left;
+	}
+	else if (get_vissim_lane_suggestion().is_to_the_right())
+	{
+		desired_lane_change_direction = RelativeLane::right;
+	}
+	else
+	{
+		desired_lane_change_direction = RelativeLane::same;
+	}
+}
+
 bool AutonomousVehicle::can_start_lane_change() 
 {
 	if (give_lane_change_control_to_vissim())
 	{
-		return get_relative_target_lane() != RelativeLane::same;
+		return get_vissim_lane_suggestion() != RelativeLane::same;
 	}
 	//if (!has_lane_change_intention())  // just to avoid computations
 	//{
@@ -273,7 +301,7 @@ bool AutonomousVehicle::can_start_lane_change()
 	//}
 
 	double margin = 0.1;
-	if (verbose) std::clog << "Deciding lane change" << std::endl;
+	//if (verbose) std::clog << "Deciding lane change" << std::endl;
 
 	bool gap_same_lane_is_safe = is_lane_change_gap_safe(get_leader());
 	bool gap_ahead_is_safe = is_lane_change_gap_safe(destination_lane_leader);
@@ -287,7 +315,7 @@ bool AutonomousVehicle::can_start_lane_change()
 			&& (destination_lane_follower->get_distance() <= -1.0));
 	bool no_conflict = !has_lane_change_conflict();
 
-	if (verbose) 
+	/*if (verbose) 
 	{
 		std::clog << "[orig lane] gap ahead is safe? " 
 			<< gap_same_lane_is_safe
@@ -295,7 +323,7 @@ bool AutonomousVehicle::can_start_lane_change()
 			<< ", [dest_lane] gap behind is safe? " << gap_behind_is_safe
 			<< ", no conflict? " << no_conflict
 			<< std::endl;
-	}
+	}*/
 
 	return gap_same_lane_is_safe && gap_ahead_is_safe
 		&& gap_behind_is_safe && no_conflict;
@@ -345,15 +373,15 @@ double AutonomousVehicle::compute_accepted_lane_change_gap(
 			*nearby_vehicle, false);
 	double accepted_gap = accepted_vehicle_following_gap 
 		+ gap_variation_during_lc;
-	if (verbose)
-	{
-		std::clog << "nv id " << nearby_vehicle->get_id()
-			<< ": delta g_lc = " << gap_variation_during_lc
-			//<< ", g_h = " << gap1
-			//<< ", g_non-linear = " << gap2
-			<< ", g_vf = " << accepted_vehicle_following_gap
-			<< "; g_lc = " << accepted_gap << std::endl;
-	}
+	//if (verbose)
+	//{
+	//	std::clog << "nv id " << nearby_vehicle->get_id()
+	//		<< ": delta g_lc = " << gap_variation_during_lc
+	//		//<< ", g_h = " << gap1
+	//		//<< ", g_non-linear = " << gap2
+	//		<< ", g_vf = " << accepted_vehicle_following_gap
+	//		<< "; g_lc = " << accepted_gap << std::endl;
+	//}
 
 	return std::max(accepted_gap, 1.0);
 }
