@@ -56,15 +56,60 @@ void VelocityController::smooth_reset(const EgoVehicle& ego_vehicle,
 double VelocityController::compute_acceleration(const EgoVehicle& ego_vehicle,
 	double velocity_reference) 
 {
-	double ego_velocity = ego_vehicle.get_velocity();
-	double ego_acceleration = ego_vehicle.get_acceleration();
 	double filtered_velocity_reference =
 		desired_velocity_filter.apply_filter(velocity_reference);
-	double velocity_error = filtered_velocity_reference - ego_velocity;
+	if (verbose)
+	{
+		std::clog << "\tv_ref=" << velocity_reference
+			<< ", filtered=" << filtered_velocity_reference
+			<< std::endl;
+	}
+	return compute_acceleration_without_filtering(ego_vehicle, 
+		filtered_velocity_reference);
+
+	//double ego_velocity = ego_vehicle.get_velocity();
+	//double ego_acceleration = ego_vehicle.get_acceleration();
+	//double velocity_error = filtered_velocity_reference - ego_velocity;
+	//double acceleration_error = -ego_acceleration;
+
+	///* We avoid integral windup by only deactivating the integral gain when the
+	//input is 'large' */
+	//double comfortable_acceleration =
+	//	ego_vehicle.get_comfortable_acceleration();
+	//error_integral += velocity_error * simulation_time_step;
+	//double desired_acceleration =
+	//	gains.kp * velocity_error
+	//	+ gains.kd * acceleration_error
+	//	+ gains.ki * error_integral;
+	//if (desired_acceleration > comfortable_acceleration / 2) 
+	//{
+	//	desired_acceleration -= gains.ki * error_integral;
+	//	reset_error_integrator();
+	//}
+
+	//if (verbose) 
+	//{
+	//	std::clog << "\tref=" << velocity_reference
+	//		<< ", filtered=" << filtered_velocity_reference
+	//		<< ", vel=" << ego_velocity
+	//		<< ", ev=" << velocity_error
+	//		<< ", ea=" << acceleration_error
+	//		<< std::endl;
+	//}
+
+	//return desired_acceleration;
+}
+
+double VelocityController::compute_acceleration_without_filtering(
+	const EgoVehicle& ego_vehicle, double velocity_reference)
+{
+	double ego_velocity = ego_vehicle.get_velocity();
+	double ego_acceleration = ego_vehicle.get_acceleration();
+	double velocity_error = velocity_reference - ego_velocity;
 	double acceleration_error = -ego_acceleration;
 
-	/* We avoid integral windup by only deactivating the integral gain when the
-	input is 'large' */
+	/* We avoid integral windup by only deactivating the integral gain when
+	the input is 'large' */
 	double comfortable_acceleration =
 		ego_vehicle.get_comfortable_acceleration();
 	error_integral += velocity_error * simulation_time_step;
@@ -72,16 +117,15 @@ double VelocityController::compute_acceleration(const EgoVehicle& ego_vehicle,
 		gains.kp * velocity_error
 		+ gains.kd * acceleration_error
 		+ gains.ki * error_integral;
-	if (desired_acceleration > comfortable_acceleration / 2) 
+	if (desired_acceleration > comfortable_acceleration / 2)
 	{
 		desired_acceleration -= gains.ki * error_integral;
 		reset_error_integrator();
 	}
 
-	if (verbose) 
+	if (verbose)
 	{
-		std::clog << "\tref=" << velocity_reference
-			<< ", filtered=" << filtered_velocity_reference
+		std::clog << "\tv_ref=" << velocity_reference
 			<< ", vel=" << ego_velocity
 			<< ", ev=" << velocity_error
 			<< ", ea=" << acceleration_error

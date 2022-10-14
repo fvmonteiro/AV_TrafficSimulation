@@ -42,6 +42,7 @@ protected:
 	/*VelocityController velocity_controller;
 	std::shared_ptr<GapController> gap_controller;*/
 	State state{ State::uninitialized }; // event driven logic variable
+	bool verbose{ false };
 
 private:
 	virtual double compute_desired_acceleration(const EgoVehicle& ego_vehicle,

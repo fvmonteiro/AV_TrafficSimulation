@@ -50,6 +50,9 @@ ControlManager::ControlManager(const EgoVehicle& ego_vehicle,
 		create_cooperative_lane_change_controller(ego_vehicle,
 			is_long_control_verbose);
 		break;
+	case VehicleType::virdi_car:
+		create_virdi_controllers(ego_vehicle, is_long_control_verbose);
+		break;
 	case VehicleType::traffic_light_acc_car:
 	case VehicleType::traffic_light_cacc_car: // both get the same controller
 		with_traffic_lights_controller =
@@ -87,16 +90,21 @@ void ControlManager::create_autonomous_longitudinal_controllers(
 	activate_end_of_lane_controller(time_headway_to_end_of_lane);
 }
 
-void ControlManager::create_talebpour_alc(const EgoVehicle& ego_vehicle,
+void ControlManager::create_virdi_controllers(const EgoVehicle& ego_vehicle,
 	bool verbose)
 {
-	VelocityControllerGains vel_control_gains{1.0, 0.0, 0.0};
-	/* INCOMPLETE */
-	/*ConnectedGains veh_foll_gains{ 0.1, 0.58, 0.0, 1.0 };
-	origin_lane_controller = RealLongitudinalController(
-		ego_vehicle,
-
-	)*/
+	double vel_control_gain = 1.0;
+	ConnectedGains veh_foll_gains = { 0.1, 0.58, 0.0, 1.0 };
+	/*std::vector<ACCType> types{ ACCType::origin_lane,
+		ACCType::destination_lane, ACCType::cooperative_gap_generation,
+		ACCType::end_of_lane };
+	for (ACCType t : types)
+	{
+		long_controllers[t] = TalebpourALC(ego_vehicle, vel_control_gain,
+			veh_foll_gains, velocity_filter_gain, verbose);
+	}*/
+	talebpour_alc = TalebpourALC(ego_vehicle, vel_control_gain,
+		veh_foll_gains, velocity_filter_gain, verbose);
 }
 
 void ControlManager::create_lane_change_adjustment_controller(
@@ -295,26 +303,6 @@ double ControlManager::get_acc_desired_acceleration(
 	return choose_minimum_acceleration(possible_accelerations);
 }
 
-double ControlManager::get_virdi_desired_acceleration(
-	const VirdiVehicle& ego_vehicle)
-{
-	if (ego_vehicle.has_lane_change_intention() ||
-		ego_vehicle.is_lane_changing())
-	{
-		return use_vissim_desired_acceleration(ego_vehicle);
-	}
-
-	std::unordered_map<ACCType, double>
-		possible_accelerations;
-	get_origin_lane_desired_acceleration(ego_vehicle,
-		possible_accelerations);
-	bool end_of_lane_controller_is_active =
-		get_end_of_lane_desired_acceleration(ego_vehicle,
-			possible_accelerations);
-
-	return choose_minimum_acceleration(possible_accelerations);
-}
-
 double ControlManager::get_av_desired_acceleration(
 	const AutonomousVehicle& ego_vehicle)
 {
@@ -351,6 +339,42 @@ double ControlManager::get_cav_desired_acceleration(
 	get_cooperative_desired_acceleration(ego_vehicle,
 		possible_accelerations);
 
+	return choose_minimum_acceleration(possible_accelerations);
+}
+
+double ControlManager::get_virdi_desired_acceleration(
+	const VirdiVehicle& ego_vehicle)
+{
+	std::unordered_map<ACCType, double>
+		possible_accelerations;
+	// The reference velocity parameter is ignored by the TalebpourALC
+	double ref_vel = 0.0; 
+	
+	if (verbose) std::clog << "Orig lane contr.\n";
+	possible_accelerations[ACCType::origin_lane] =
+		talebpour_alc.get_desired_acceleration(ego_vehicle,
+			ego_vehicle.get_leader(), ref_vel);
+	if (verbose) std::clog << "Dest lane contr.\n";
+	possible_accelerations[ACCType::destination_lane] =
+		talebpour_alc.get_desired_acceleration(ego_vehicle,
+			ego_vehicle.get_destination_lane_leader(), ref_vel);
+	if (verbose) std::clog << "Coop contr.\n";
+	possible_accelerations[ACCType::cooperative_gap_generation] =
+		talebpour_alc.get_desired_acceleration(ego_vehicle,
+			ego_vehicle.get_assisted_vehicle(), ref_vel);
+
+	if ((ego_vehicle.get_preferred_relative_lane()
+		!= ego_vehicle.get_active_lane_change_direction())
+		&& (ego_vehicle.get_lane_end_distance() > -1))
+	{
+		if (verbose) std::clog << "End of lane contr.\n";
+		NearbyVehicle virtual_vehicle =
+			create_virtual_stopped_vehicle(ego_vehicle);
+		possible_accelerations[ACCType::end_of_lane] =
+			talebpour_alc.get_desired_acceleration(ego_vehicle,
+				std::make_shared<NearbyVehicle>(virtual_vehicle), ref_vel);
+	}
+	
 	return choose_minimum_acceleration(possible_accelerations);
 }
 
@@ -428,17 +452,6 @@ bool ControlManager::get_end_of_lane_desired_acceleration(
 			std::clog << "End of lane controller"
 				<< std::endl;
 		}
-		/* We simulate a stopped vehicle at the end of
-		the lane to force the vehicle to stop before the end of
-		the lane. */
-		std::shared_ptr<NearbyVehicle> virtual_vehicle =
-			std::shared_ptr<NearbyVehicle>(new
-				NearbyVehicle(1, RelativeLane::same, 1));
-		virtual_vehicle->set_relative_velocity(
-			ego_vehicle.get_velocity());
-		virtual_vehicle->set_distance(
-			ego_vehicle.get_lane_end_distance());
-		virtual_vehicle->set_length(0.0);
 
 		SwitchedLongitudinalController::State old_state =
 			end_of_lane_controller.get_state();
@@ -449,9 +462,12 @@ bool ControlManager::get_end_of_lane_desired_acceleration(
 			end_of_lane_controller.reset_leader_velocity_filter(
 				ego_vehicle.get_velocity());
 		}
+
+		NearbyVehicle virtual_vehicle =
+				create_virtual_stopped_vehicle(ego_vehicle);
 		double desired_acceleration =
 			end_of_lane_controller.get_desired_acceleration(
-				ego_vehicle, virtual_vehicle,
+				ego_vehicle, std::make_shared<NearbyVehicle>(virtual_vehicle),
 				ego_vehicle.get_desired_velocity());
 
 		/* This controller is only active when it's at vehicle 
@@ -672,6 +688,18 @@ double ControlManager::get_desired_time_headway_gap(double ego_velocity,
 	}
 
 	return time_headway_gap;
+}
+
+NearbyVehicle ControlManager::create_virtual_stopped_vehicle(
+	const EgoVehicle& ego_vehicle)
+{
+	NearbyVehicle virtual_vehicle = NearbyVehicle(1, RelativeLane::same, 1);
+	virtual_vehicle.set_relative_velocity(
+		ego_vehicle.get_velocity());
+	virtual_vehicle.set_distance(
+		ego_vehicle.get_lane_end_distance());
+	virtual_vehicle.set_length(0.0);
+	return virtual_vehicle;
 }
 
 //double ControlManager::get_accepted_time_headway_gap(

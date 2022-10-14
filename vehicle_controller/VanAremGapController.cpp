@@ -16,6 +16,7 @@ VanAremGapController::VanAremGapController(
 	connected_gains{ connected_gains }
 {
 	set_connexion(true);
+	set_unlimited_gap_error();
 }
 
 double VanAremGapController::implement_get_desired_gap(double ego_velocity)
@@ -37,7 +38,7 @@ double VanAremGapController::compute_desired_gap(
 			* (1 / ego_vehicle.get_max_brake() - 1 / leader->get_max_brake());
 	}
 	std::vector<double> candidates{ gap_min, gap_system, gap_safe };
-	current_desired_gap = std::min(gap_min, std::min(gap_system, gap_safe));
+	current_desired_gap = std::max(gap_min, std::max(gap_system, gap_safe));
 	return current_desired_gap;
 }
 

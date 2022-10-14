@@ -97,16 +97,22 @@ bool AutonomousVehicle::is_leader_of_destination_lane_leader(
 
 void AutonomousVehicle::find_relevant_nearby_vehicles() 
 {
-	find_leader();
-	find_destination_lane_vehicles();
-}
-
-void AutonomousVehicle::find_destination_lane_vehicles()
-{
+	std::shared_ptr<NearbyVehicle> old_leader = std::move(get_leader());
 	std::shared_ptr<NearbyVehicle> old_dest_lane_follower =
 		std::move(destination_lane_follower);
 	std::shared_ptr<NearbyVehicle> old_dest_lane_leader =
 		std::move(destination_lane_leader);
+
+	find_leader();
+	find_destination_lane_vehicles();
+
+	update_leader(old_leader);
+	update_destination_lane_follower(old_dest_lane_follower);
+	update_destination_lane_leader(old_dest_lane_leader);
+}
+
+void AutonomousVehicle::find_destination_lane_vehicles()
+{
 	bool dest_lane_leader_has_leader = false;
 	for (auto& nearby_vehicle : nearby_vehicles)
 	{
@@ -126,10 +132,7 @@ void AutonomousVehicle::find_destination_lane_vehicles()
 			}
 		}
 	}
-
 	deal_with_stopped_destination_lane_leader(dest_lane_leader_has_leader);
-	update_destination_lane_follower(old_dest_lane_follower);
-	update_destination_lane_leader(old_dest_lane_leader);
 }
 
 void AutonomousVehicle::deal_with_stopped_destination_lane_leader(

@@ -42,6 +42,7 @@ protected:
 		double desired_velocity, double simulation_time_step, 
 		double creation_time, bool verbose = false);
 
+	void find_cooperation_requests();
 private:
 	/* Finds the current leader, the destination lane leader 
 	and follower (if the vehicle has lane change intention),
@@ -79,7 +80,6 @@ private:
 	double get_lambda_1(bool is_leader_connected) const;
 	double get_lambda_1_lane_change(bool is_leader_connected) const;
 
-	void find_cooperation_requests();
 	/* Returns true if a vehicle is asking to merge in front of us and
 	[to do] modifies nearby_vehicle in place to point to the proper 
 	virtual leader */

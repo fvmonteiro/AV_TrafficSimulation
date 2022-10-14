@@ -20,9 +20,9 @@ SwitchedLongitudinalController::SwitchedLongitudinalController(
 	double filter_brake_limit, double comfortable_acceleration,
 	double simulation_time_step, bool verbose) :
 	autonomous_gains{ autonomous_gains },
-	connected_gains{ connected_gains },
-	verbose{ verbose } 
+	connected_gains{ connected_gains }
 {
+	this->verbose = verbose;
 	velocity_controller = VelocityController(simulation_time_step,
 		velocity_controller_gains, velocity_filter_gain, 
 		comfortable_acceleration, filter_brake_limit);

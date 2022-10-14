@@ -55,17 +55,27 @@ long ConnectedAutonomousVehicle::create_lane_change_request()
 
 void ConnectedAutonomousVehicle::find_relevant_nearby_vehicles()
 {
+	std::shared_ptr<NearbyVehicle> old_leader = std::move(get_leader());
+	std::shared_ptr<NearbyVehicle> old_dest_lane_follower =
+		std::move(get_destination_lane_follower());
+	std::shared_ptr<NearbyVehicle> old_dest_lane_leader =
+		std::move(get_destination_lane_leader());
+	std::shared_ptr<NearbyVehicle> old_assisted_vehicle =
+		std::move(assisted_vehicle);
+
 	find_leader();
 	find_destination_lane_vehicles();
 	find_cooperation_requests();
+
+	update_leader(old_leader);
+	update_destination_lane_follower(old_dest_lane_follower);
+	update_destination_lane_leader(old_dest_lane_leader);
+	update_assisted_vehicle(old_assisted_vehicle);
 }
 
 void ConnectedAutonomousVehicle::find_cooperation_requests()
 {
 	try_go_at_max_vel = false;
-	std::shared_ptr<NearbyVehicle> old_assisted_vehicle =
-		std::move(assisted_vehicle);
-
 	for (auto& nearby_vehicle : nearby_vehicles)
 	{
 		if (check_if_is_asking_for_cooperation(*nearby_vehicle))
@@ -78,7 +88,6 @@ void ConnectedAutonomousVehicle::find_cooperation_requests()
 		}
 	}
 	deal_with_close_and_slow_assited_vehicle();
-	update_assisted_vehicle(old_assisted_vehicle);
 }
 
 void ConnectedAutonomousVehicle::deal_with_close_and_slow_assited_vehicle()

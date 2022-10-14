@@ -317,6 +317,11 @@ void EgoVehicle::set_nearby_vehicle_type(long nv_type)
 	//try_to_set_nearby_vehicle_type(nv_type);
 }
 
+void EgoVehicle::analyze_nearby_vehicles()
+{
+	find_relevant_nearby_vehicles();
+}
+
 bool EgoVehicle::has_leader() const 
 {
 	return leader != nullptr;
@@ -440,25 +445,17 @@ long EgoVehicle::get_lane_change_request()
 
 void EgoVehicle::find_relevant_nearby_vehicles()
 {
+	std::shared_ptr<NearbyVehicle> old_leader = std::move(leader);
 	find_leader();
+	update_leader(old_leader);
 }
 
 void EgoVehicle::find_leader()
 {
-	std::shared_ptr<NearbyVehicle> old_leader = std::move(leader);
-	
 	for (auto& nearby_vehicle : nearby_vehicles)
 	{
 		if (check_if_is_leader(*nearby_vehicle)) leader = nearby_vehicle;
 	}
-	update_leader(old_leader);
-
-	/*if (verbose)
-	{
-		if (has_leader()) std::clog << "Leader id=" << leader->get_id();
-		else std::clog << "No leader";
-		std::clog << std::endl;
-	}*/
 }
 
 bool EgoVehicle::check_if_is_leader(const NearbyVehicle& nearby_vehicle) const

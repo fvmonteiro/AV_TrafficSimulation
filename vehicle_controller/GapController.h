@@ -40,12 +40,17 @@ public:
 
 	double compute_desired_acceleration(const EgoVehicle& ego_vehicle, 
 		const std::shared_ptr<NearbyVehicle> leader);
+	double compute_desired_acceleration_no_filters(
+		const EgoVehicle& ego_vehicle,
+		const std::shared_ptr<NearbyVehicle> leader);
 
 	void reset_velocity_filter(double ego_velocity);
 	void update_leader_velocity_filter(double leader_velocity);
 
 protected:
 	bool verbose{ false };
+
+	void set_unlimited_gap_error();
 
 	/* Computes gap minus reference gap and upper bounds it
 	with max_gap_error. */

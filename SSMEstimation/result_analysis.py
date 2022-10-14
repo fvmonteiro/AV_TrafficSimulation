@@ -109,7 +109,8 @@ class ResultAnalyzer:
                            Dict[VehicleType, int]],
                        vehicles_per_lane: int,
                        # controlled_percentage: Union[int, List[int]],
-                       warmup_time: int = 0):
+                       sensor_number: int = 1,
+                       warmup_time: int = 10):
         """Plots averaged y over several runs with the same vehicle input 
         versus time.
         
@@ -122,8 +123,8 @@ class ResultAnalyzer:
          """
 
         data = self._load_data(y, percentages_per_vehicle_types,
-                               [vehicles_per_lane])
-        self._prepare_data_for_plotting(data, warmup_time * 60)
+                               [vehicles_per_lane], [0])
+        self._prepare_data_for_plotting(data, warmup_time * 60, sensor_number)
         relevant_data = self._ensure_data_source_is_uniform(data,
                                                             [vehicles_per_lane])
         # self.remove_deadlock_simulations(relevant_data)
@@ -149,7 +150,8 @@ class ResultAnalyzer:
         flow_data = self._load_data('flow', percentages_per_vehicle_types,
                                     vehicles_per_lane, accepted_risks)
         self._prepare_data_for_plotting(density_data, warmup_time * 60)
-        self._prepare_data_for_plotting(flow_data, warmup_time * 60)
+        self._prepare_data_for_plotting(flow_data, warmup_time * 60,
+                                        flow_sensor_number)
         intersection_columns = ['vehicles_per_lane', 'control_percentages',
                                 'simulation_number', 'time_interval',
                                 'random_seed']
@@ -157,12 +159,12 @@ class ResultAnalyzer:
 
         relevant_data = self._ensure_data_source_is_uniform(
             data, vehicles_per_lane)
-        # for control_percentage in relevant_data.control_percentages.unique():
-        #     data_to_plot = relevant_data[relevant_data['control_percentages']
-        #                                  == control_percentage]
-        #     ax = sns.scatterplot(data=data_to_plot, x='density', y='flow')
-        #     ax.set_title(control_percentage)
-        #     plt.show()
+        for control_percentage in relevant_data.control_percentages.unique():
+            data_to_plot = relevant_data[relevant_data['control_percentages']
+                                         == control_percentage]
+            ax = sns.scatterplot(data=data_to_plot, x='density', y='flow')
+            ax.set_title(control_percentage)
+            plt.show()
         sns.scatterplot(data=relevant_data, x='density', y='flow',
                         hue='control_percentages')
         plt.show()
@@ -228,7 +230,7 @@ class ResultAnalyzer:
             self, y: str, hue: str, vehicles_per_lane: List[int],
             percentages_per_vehicle_types: List[Dict[VehicleType, int]],
             accepted_risks: List[int] = None,
-            warmup_time: int = 10, kind: str = 'box'):
+            warmup_time: int = 10, sensor_number: int = 1):
         """
         Plots averaged y over several runs with the same vehicle input
         versus vehicles type as a box plot. Parameter hue controls how to
@@ -247,7 +249,7 @@ class ResultAnalyzer:
         """
         data = self._load_data(y, percentages_per_vehicle_types,
                                vehicles_per_lane, accepted_risks)
-        self._prepare_data_for_plotting(data, warmup_time * 60)
+        self._prepare_data_for_plotting(data, warmup_time * 60, sensor_number)
         relevant_data = self._ensure_data_source_is_uniform(
             data, vehicles_per_lane)
 

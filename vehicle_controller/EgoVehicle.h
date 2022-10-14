@@ -161,7 +161,7 @@ public:
 	void set_nearby_vehicle_type(long type);
 	/* Looks at all nearby vehicles to find the relevant ones, such 
 	* as the leader. */
-	void analyze_nearby_vehicles() { find_relevant_nearby_vehicles(); };
+	void analyze_nearby_vehicles();
 	//bool is_cutting_in(const NearbyVehicle& nearby_vehicle) const;
 	bool has_leader() const;
 	double get_time_headway_to_assisted_vehicle() const;
@@ -283,6 +283,9 @@ protected:
 	/* Updates the stopped time waiting for lane change */
 	void update_lane_change_waiting_time();
 
+	void find_leader();
+	void update_leader(const std::shared_ptr<NearbyVehicle>& old_leader);
+
 	ControlManager controller;
 	/* Keeps track of stopped time waiting for lane change */
 	double lane_change_waiting_time{ 0.0 };
@@ -290,7 +293,6 @@ protected:
 
 	/* Nearby vehicles ------------------------------------------------------- */
 
-	void find_leader();
 	std::vector<std::shared_ptr<NearbyVehicle>> nearby_vehicles;
 	/* Determines whether the vel control ref speed is the vehicle's
 	own desired speed or the max legal velocity. */
@@ -346,7 +348,6 @@ private:
 		const NearbyVehicle& nearby_vehicle) const = 0;
 
 	bool check_if_is_leader(const NearbyVehicle& nearby_vehicle) const;
-	void update_leader(const std::shared_ptr<NearbyVehicle>& old_leader);
 
 	/* Estimated parameters used for safe gap computations (no direct 
 	equivalent in VISSIM's simulation dynamics) --------------------------- */

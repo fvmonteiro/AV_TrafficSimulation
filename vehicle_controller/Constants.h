@@ -43,6 +43,10 @@ const double CONNECTED_BRAKE_DELAY{ 0.1 }; // [s]
 const double AUTONOMOUS_BRAKE_DELAY{ 0.2 }; // [s]
 const double HUMAN_BRAKE_DELAY{ 0.75 }; // [s]
 
+const double VIRDI_MAX_JERK{ 0.5 }; // [m/s^3]
+const double VIRDI_MAX_ACCEL{ 6.0 };// [m/s^2]
+const double VIRDI_MIN_ACCEL{ -8.0 };// [m/s^2]
+
 /* Categories set by VISSIM */
 enum class VehicleCategory {
 	undefined,

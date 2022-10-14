@@ -15,6 +15,7 @@
 #include "SwitchedLongitudinalController.h"
 #include "LongitudinalControllerWithTrafficLights.h"
 #include "RealLongitudinalController.h"
+#include "TalebpourALC.h"
 #include "VirtualLongitudinalController.h"
 #include "Vehicle.h"
 
@@ -61,13 +62,14 @@ public:
 	const RealLongitudinalController& get_origin_lane_controller() const {
 		return origin_lane_controller;
 	}
-	const VirtualLongitudinalController& get_gap_generation_lane_controller() 
+	const VirtualLongitudinalController& get_gap_generation_lane_controller()
 		const {
 		return gap_generating_controller;
 	};
 	/* Each controller should never be accessed directly by external
 	functions. */
-	const VirtualLongitudinalController& get_destination_lane_controller() const { 
+	const VirtualLongitudinalController& get_destination_lane_controller()
+		const { 
 		return destination_lane_controller; 
 	};
 	/* Each controller should never be accessed directly by external
@@ -191,6 +193,14 @@ private:
 	LongitudinalControllerWithTrafficLights
 		with_traffic_lights_controller;
 
+	/* TODO: this is messy... but let's just get it working for now */
+	/*TalebpourALC origin_lane_talebpourALC;
+	TalebpourALC end_of_lane_talebpourALC;
+	TalebpourALC destination_lane_talebpourALC;
+	TalebpourALC gap_generating_talebpourALC;
+	std::unordered_map<ACCType, TalebpourALC> long_controllers;*/
+	TalebpourALC talebpour_alc;
+
 	LateralController lateral_controller;
 	/* indicates which controller is active. Used for debugging and
 	visualization. */
@@ -212,14 +222,14 @@ private:
 	for the end of the lane*/
 	void create_autonomous_longitudinal_controllers(
 		const EgoVehicle& ego_vehicle, bool verbose);
-	/* Based on Talebpour and Mahmassani (2016) */
-	void create_talebpour_alc(const EgoVehicle& ego_vehicle,
-		bool verbose);
 	void create_lane_change_adjustment_controller(
 		const EgoVehicle& ego_vehicle,
 		bool verbose);
 	void create_cooperative_lane_change_controller(
 		const EgoVehicle& ego_vehicle,
+		bool verbose);
+	/* Based on Virdi et al. (2018) */
+	void create_virdi_controllers(const EgoVehicle& ego_vehicle,
 		bool verbose);
 
 	/* Gets the minimum of the accelerations in the map and sets the
@@ -227,6 +237,8 @@ private:
 	double choose_minimum_acceleration(
 		std::unordered_map<ACCType, double>& possible_accelerations);
 
+	NearbyVehicle create_virtual_stopped_vehicle(
+		const EgoVehicle& ego_vehicle);
 	/* Desired accelerations --------------------- */
 
 	/* Desired acceleration relative to the current lane.

@@ -247,9 +247,9 @@ def main():
     # =============== Scenario Definition =============== #
     # Options: i710, us101, in_and_out, in_and_merge,
     # platoon_lane_change, traffic_lights
-    network_name = 'in_and_out_risk_in_headway'
+    network_name = 'in_and_out_safe'
     vehicle_type = [
-        # VehicleType.ACC,
+        VehicleType.ACC,
         VehicleType.AUTONOMOUS,
         VehicleType.CONNECTED,
         # VehicleType.TRAFFIC_LIGHT_ACC,
@@ -291,11 +291,17 @@ def main():
     # all_plots_for_scenarios_with_risk(network_name, simulation_percentages,
     #                                   inputs_per_lane, accepted_risks,
     #                                   save_fig=False)
+    all_inputs = [1000, 1200, 1500, 2000]
     ra = result_analysis.ResultAnalyzer(network_name, False)
-    ra.plot_fundamental_diagram([1000, 2000], simulation_percentages,
-                                accepted_risks=[0])
-    # ra.box_plot_y_vs_vehicle_type('flow', 'vehicles_per_lane', [1000, 2000],
-    #                               simulation_percentages, [0])
+    # for i in all_inputs:
+    #     ra.plot_y_vs_time('flow', simulation_percentages, i, warmup_time=10,
+    #                       sensor_number=2)
+
+    # ra.plot_fundamental_diagram(all_inputs, simulation_percentages,
+    #                             accepted_risks=[0], flow_sensor_number=2)
+    ra.box_plot_y_vs_vehicle_type('flow', 'vehicles_per_lane', all_inputs,
+                                  simulation_percentages, [0],
+                                  sensor_number=2)
     # ra.plot_lane_change_risk_histograms_risk_as_hue('total_lane_change_risk',
     #                                                 simulation_percentages,
     #                                                 inputs_per_lane,

@@ -68,7 +68,7 @@ protected:
 	//State state{ State::uninitialized }; // event driven logic variable
 	double hysteresis_bias{ 10.0 }; // used to avoid state chattering [m]
 
-	bool verbose{ false };
+	//bool verbose{ false };
 
 	/* Computes the gap threshold to decide whether velocity or vehicle
 	following control */
