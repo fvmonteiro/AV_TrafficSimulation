@@ -182,6 +182,36 @@
 				<intObjectRef key="6"/>
 			</dataCollectionPoints>
 		</dataCollectionMeasurement>
+		<dataCollectionMeasurement name="in_main_left" no="3">
+			<dataCollectionPoints>
+				<intObjectRef key="1"/>
+			</dataCollectionPoints>
+		</dataCollectionMeasurement>
+		<dataCollectionMeasurement name="in_main_right" no="4">
+			<dataCollectionPoints>
+				<intObjectRef key="2"/>
+			</dataCollectionPoints>
+		</dataCollectionMeasurement>
+		<dataCollectionMeasurement name="in_ramp" no="5">
+			<dataCollectionPoints>
+				<intObjectRef key="3"/>
+			</dataCollectionPoints>
+		</dataCollectionMeasurement>
+		<dataCollectionMeasurement name="out_main_left" no="6">
+			<dataCollectionPoints>
+				<intObjectRef key="4"/>
+			</dataCollectionPoints>
+		</dataCollectionMeasurement>
+		<dataCollectionMeasurement name="out_main_right" no="7">
+			<dataCollectionPoints>
+				<intObjectRef key="5"/>
+			</dataCollectionPoints>
+		</dataCollectionMeasurement>
+		<dataCollectionMeasurement name="out_ramp" no="8">
+			<dataCollectionPoints>
+				<intObjectRef key="6"/>
+			</dataCollectionPoints>
+		</dataCollectionMeasurement>
 	</dataCollectionMeasurements>
 	<dataCollectionPoints>
 		<dataCollectionPoint lane="3 3" name="" no="1" pos="3"/>
@@ -991,12 +1021,12 @@
 		<areaMeasResults collectData="false" fromTime="0" interval="99999" toTime="99999"/>
 		<areaResults collectData="false" fromTime="0" interval="99999" toTime="99999"/>
 		<convergence writeFile="false"/>
-		<dataColl collectData="true" fromTime="60" interval="30" toTime="99999"/>
+		<dataColl collectData="true" fromTime="60" interval="5" toTime="99999"/>
 		<dataCollRawData fromTime="0" toTime="99999" writeFile="false"/>
 		<delays collectData="false" fromTime="0" interval="99999" toTime="99999"/>
 		<dischRec fromTime="0" toTime="99999" writeFile="false"/>
 		<greenTimeDistribution fromTime="0" toTime="99999" writeFile="false"/>
-		<linkResults collectData="true" fromTime="60" interval="30" perLane="false" toTime="99999"/>
+		<linkResults collectData="true" fromTime="60" interval="5" perLane="true" toTime="99999"/>
 		<lnChgs filterType="ALL" fromTime="0" toTime="99999" writeFile="true"/>
 		<managedLanes writeFile="false"/>
 		<nodeRawData fromTime="0" toTime="99999" writeDatabase="false" writeFile="false"/>
