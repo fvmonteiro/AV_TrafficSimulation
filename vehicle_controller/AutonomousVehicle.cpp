@@ -108,10 +108,10 @@ void AutonomousVehicle::find_destination_lane_vehicles()
 	std::shared_ptr<NearbyVehicle> old_dest_lane_leader =
 		std::move(destination_lane_leader);
 	bool dest_lane_leader_has_leader = false;
-	for (auto& nearby_vehicle : nearby_vehicles)
+	if (has_lane_change_intention())
 	{
-		if (has_lane_change_intention())
-		{
+		for (auto& nearby_vehicle : nearby_vehicles)
+		{	
 			if (is_destination_lane_follower(*nearby_vehicle))
 			{
 				destination_lane_follower = nearby_vehicle;
@@ -196,6 +196,29 @@ void AutonomousVehicle::update_destination_lane_leader(
 	}
 }
 
+bool AutonomousVehicle::merge_behind_ld() const
+{
+	if (!has_destination_lane_leader()) return false;
+
+	double origin_lane_reference_velocity;
+	double ego_velocity = get_velocity();
+
+	/* Get the possible max vel at the origin lane */
+	if (controller.is_in_free_flow_at_origin_lane())
+	{
+		origin_lane_reference_velocity =
+			get_desired_velocity();
+	}
+	else
+	{
+		origin_lane_reference_velocity = get_leader()
+			->compute_velocity(ego_velocity);
+	}
+
+	return (get_destination_lane_leader()->compute_velocity(ego_velocity)
+				> origin_lane_reference_velocity - min_overtaking_rel_vel);
+}
+
 double AutonomousVehicle::compute_lane_changing_desired_time_headway(
 	const NearbyVehicle& nearby_vehicle) const
 {
@@ -242,7 +265,7 @@ double AutonomousVehicle::estimate_nearby_vehicle_time_headway(
 	//return nearby_vehicle.estimate_desired_time_headway(get_desired_velocity(),
 	//	max_brake, get_rho(), accepted_risk);
 	return std::max(0.0, 
-		nearby_vehicle.estimate_desired_time_headway(get_desired_velocity(),
+		nearby_vehicle.estimate_desired_time_headway(MAX_VELOCITY,
 			max_brake, get_rho(), 0/*accepted_lane_change_risk_to_follower*/));
 }
 
@@ -282,7 +305,7 @@ bool AutonomousVehicle::can_start_lane_change()
 		is_lane_change_gap_safe(destination_lane_follower)
 		|| ((destination_lane_follower->
 			compute_velocity(get_velocity()) <= 1.0)
-			&& (destination_lane_follower->get_distance() <= -1.0));
+			&& (destination_lane_follower->get_distance() <= -2.0));
 	bool no_conflict = !has_lane_change_conflict();
 
 	if (verbose) 

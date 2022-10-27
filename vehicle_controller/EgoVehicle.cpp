@@ -453,6 +453,16 @@ void EgoVehicle::find_leader()
 	}
 	update_leader(old_leader);
 
+	// Doesn't work: close cut in behavior shows up as collisions
+	//if (has_leader() && compute_gap(leader) < 0
+	//	&& leader->is_on_same_lane()) // the leader can be cutting in
+	//{
+	//	std::clog << "COLLISION\n" << "\tt=" << get_time()
+	//		<< ", id=" << get_id() << ", leader id=" << get_leader_id()
+	//		<< ", gap=" << compute_gap(leader)
+	//		<< ", vissim control? " << is_vissim_controlling_lane_change()
+	//		<< std::endl;
+	//}
 	/*if (verbose)
 	{
 		if (has_leader()) std::clog << "Leader id=" << leader->get_id();
@@ -526,7 +536,7 @@ double EgoVehicle::compute_vehicle_following_safe_time_headway(
 
 /* State-machine related methods ------------------------------------------ */
 
-void EgoVehicle::update_state() 
+void EgoVehicle::update_state()
 {
 	set_desired_lane_change_direction();
 
@@ -766,7 +776,8 @@ double EgoVehicle::compute_ttc(const NearbyVehicle& nearby_vehicle)
 		if ego vel < leader vel */
 	if (nearby_vehicle.get_relative_velocity() > 0) 
 	{
-		return compute_gap(nearby_vehicle) / nearby_vehicle.get_relative_velocity();
+		return compute_gap(nearby_vehicle) 
+			/ nearby_vehicle.get_relative_velocity();
 	}
 	return -1.0;	
 }

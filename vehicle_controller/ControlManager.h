@@ -112,6 +112,8 @@ public:
 
 	void reset_origin_lane_velocity_controller(double ego_velocity);
 
+	bool is_in_free_flow_at_origin_lane() const;
+
 	/* Active ACC during lane keeping; human (vissim) control if there is
 	lane change intention*/
 	double get_acc_desired_acceleration(const ACCVehicle& ego_vehicle);
@@ -133,6 +135,7 @@ public:
 
 	double use_vissim_desired_acceleration(const EgoVehicle& ego_vehicle);
 
+	/* Computes the velocity reference when adjusting for lane change */
 	double determine_low_velocity_reference(double ego_velocity,
 		const NearbyVehicle& nearby_vehicle);
 	
@@ -171,10 +174,9 @@ public:
 private:
 	/* ------------ Control Parameters ------------ */
 
-	double min_overtaking_rel_vel{ 10.0 / 3.6 };
 	double velocity_filter_gain{ 10.0 };
 	double time_headway_filter_gain{ 0.3 };
-	AutonomousGains autonomous_real_following_gains{ 0.2, 1.0 };
+	AutonomousGains autonomous_real_following_gains{ 0.2, 0.7 };
 	AutonomousGains autonomous_virtual_following_gains{ 0.4, 1.0 };
 	ConnectedGains connected_real_following_gains{ 0.2, 2.3, 0.13, 1.3 };
 	ConnectedGains connected_virtual_following_gains{ 0.4, 2.3, 0.13, 1.3 };
@@ -223,6 +225,9 @@ private:
 	active longitudinal controller. */
 	double choose_minimum_acceleration(
 		std::unordered_map<ACCType, double>& possible_accelerations);
+
+	NearbyVehicle create_virtual_stopped_vehicle(
+		const EgoVehicle& ego_vehicle);
 
 	/* Desired accelerations --------------------- */
 
