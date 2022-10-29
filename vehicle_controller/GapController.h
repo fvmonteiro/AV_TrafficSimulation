@@ -46,10 +46,6 @@ public:
 	void set_connexion(bool is_conneced) {
 		this->is_connected = is_conneced;
 	};
-	void ask_for_smooth_start()
-	{
-		this->should_perform_smooth_start = true;
-	}
 
 	/* Returns the desired (final) time headway. */
 	double get_desired_time_headway() const;
@@ -87,14 +83,10 @@ private:
 	ConnectedGains connected_gains;
 
 	/* Other controller parameters */
-	double max_gap_error{ 10.0 }; // maximum positive gap error in meters
+	double max_gap_error{ 30.0 }; // maximum positive gap error in meters
 	double max_gap_error_connected{ 20.0 }; /* maximum positive gap 
 											error in meters */
 	bool is_connected{ false };
-	/* A smooth start means this controller will set the value of the 
-	leader velocity filter such that the current step's desired acceleration 
-	matches the previous step's desired acceleration */
-	bool should_perform_smooth_start{ false };
 
 	bool verbose{ false };
 

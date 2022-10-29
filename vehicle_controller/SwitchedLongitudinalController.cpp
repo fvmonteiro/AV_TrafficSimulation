@@ -36,11 +36,6 @@ void SwitchedLongitudinalController::connect_gap_controller(bool is_connected)
 	gap_controller.set_connexion(is_connected);
 }
 
-void SwitchedLongitudinalController::smooth_start_leader_velocity_filter()
-{
-	gap_controller.ask_for_smooth_start();
-}
-
 void SwitchedLongitudinalController::reset_leader_velocity_filter(
 	double reset_velocity)
 {
@@ -96,9 +91,12 @@ double SwitchedLongitudinalController::compute_gap_threshold(double gap,
 	input is greater or equal to kg*h*(Vf - v) > 0. */
 	double h = gap_controller.get_desired_time_headway();
 	double kg = gap_controller.get_gap_error_gain();
-	/* Line below is equivalent to the paper's equation but using 
-	only variables easily available to the code */
 	return gap + h * (diff_to_velocity_reference) - gap_control_input / kg;
+	/*double time_headway = get_safe_time_headway();
+	double kg = autonomous_gains.kg;
+	double kv = autonomous_gains.kv;
+	return time_headway * free_flow_velocity + standstill_distance
+		- 1 / kg * (kv * velocity_error);*/
 	/* Other threshold options:
 	- VISSIM's maximum gap: 250
 	- Worst-case: h*vf + d + (kv*vf)/kg = (h + kv/kg)*vf + d*/

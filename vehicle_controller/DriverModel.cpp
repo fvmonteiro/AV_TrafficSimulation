@@ -20,7 +20,7 @@
 
 /*==========================================================================*/
 
-const std::unordered_set<long> LOGGED_VEHICLES_IDS{ 0 };
+const std::unordered_set<long> LOGGED_VEHICLES_IDS{ 11 };
 const bool CLUELESS_DEBUGGING{ false };
 //const double DEBUGGING_START_TIME{ 249.0 };
 
@@ -136,16 +136,12 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
             case UDA::leader_id:
                 return 0;
             case UDA::leader_type:
-                return 0;
             case UDA::gap_to_leader:
-                return 0;
             case UDA::reference_gap:
-                return 0;
             case UDA::relative_velocity_to_leader:
                 return 0;
             /* Debugging: dest lane leader */
             case UDA::dest_leader_id:
-                return 0;
             case UDA::gap_to_dest_lane_leader:
             case UDA::transient_gap_to_ld:
             case UDA::veh_following_gap_to_ld:
@@ -155,7 +151,6 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
                 return 0;
             /* Debugging: dest lane follower */
             case UDA::dest_follower_id:
-                return 0;
             case UDA::gap_to_dest_lane_follower:
             case UDA::transient_gap_to_fd:
             case UDA::veh_following_gap_to_fd:
@@ -292,8 +287,7 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
                 set_max_lane_change_risk_to_follower(double_value);
             break;
         case UDA::use_linear_lane_change_gap:
-            vehicles[current_vehicle_id]->set_use_linear_lane_change_gap(
-                long_value);
+            vehicles[current_vehicle_id]->set_use_linear_lane_change_gap(long_value);
             break;
         default: // do nothing
             break;

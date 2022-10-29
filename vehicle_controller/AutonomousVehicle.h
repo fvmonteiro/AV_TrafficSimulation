@@ -45,7 +45,6 @@ public:
 		return controller.get_destination_lane_controller().
 			get_follower_time_headway();
 	};*/
-	bool merge_behind_ld() const;
 
 protected:
 	AutonomousVehicle(long id, VehicleType type, double desired_velocity,
@@ -154,7 +153,6 @@ private:
 	/* NOT IMPLEMENTED */
 	void update_headways_with_risk(const EgoVehicle& ego_vehicle);
 
-	double min_overtaking_rel_vel{ 10.0 / 3.6 };
 	double max_lane_change_waiting_time{ 60.0 }; // [s]
 
 	/* Relevant members for lane changing ------------------------------------ */

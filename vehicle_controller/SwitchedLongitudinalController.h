@@ -43,7 +43,6 @@ public:
 	/* ------------------ Methods related to gap control ------------------ */
 
 	void connect_gap_controller(bool is_connected);
-	void smooth_start_leader_velocity_filter();
 	void reset_leader_velocity_filter(double reset_velocity);
 	void reset_time_headway_filter(double time_headway);
 	/* Returns the desired (final) time headway. */
