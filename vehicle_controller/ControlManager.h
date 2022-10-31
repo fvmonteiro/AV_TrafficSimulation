@@ -176,7 +176,7 @@ private:
 
 	double velocity_filter_gain{ 10.0 };
 	double time_headway_filter_gain{ 0.3 };
-	AutonomousGains autonomous_real_following_gains{ 0.2, 0.7 };
+	AutonomousGains autonomous_real_following_gains{ 0.2, 1.0/*0.7*/ };
 	AutonomousGains autonomous_virtual_following_gains{ 0.4, 1.0 };
 	ConnectedGains connected_real_following_gains{ 0.2, 2.3, 0.13, 1.3 };
 	ConnectedGains connected_virtual_following_gains{ 0.4, 2.3, 0.13, 1.3 };

@@ -87,7 +87,7 @@ private:
 	ConnectedGains connected_gains;
 
 	/* Other controller parameters */
-	double max_gap_error{ 10.0 }; // maximum positive gap error in meters
+	double max_gap_error{ 30.0 }; // maximum positive gap error in meters
 	double max_gap_error_connected{ 20.0 }; /* maximum positive gap 
 											error in meters */
 	bool is_connected{ false };
