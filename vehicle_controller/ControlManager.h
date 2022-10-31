@@ -50,12 +50,12 @@ public:
 		return active_longitudinal_controller;
 	}
 
-	SwitchedLongitudinalController::State 
+	SwitchedLongitudinalController::State
 		get_longitudinal_controller_state() const;
-	LongitudinalControllerWithTrafficLights::State 
+	LongitudinalControllerWithTrafficLights::State
 		get_longitudinal_controller_with_traffic_lights_state();
 	//void create_destination_lane_controller(const Vehicle& ego_vehicle);
-	
+
 	/* Initializing controllers */
 
 	void add_origin_lane_controllers(const EgoVehicle& ego_vehicle);
@@ -66,7 +66,7 @@ public:
 	void add_traffic_lights_controller();
 
 	/* DEBUGGING FUNCTIONS --------------------------------------------------- */
-	/* These functions are used to easily read data from internal instances and 
+	/* These functions are used to easily read data from internal instances and
 	methods. */
 
 	/* Each controller should never be accessed directly by external
@@ -74,14 +74,14 @@ public:
 	const RealLongitudinalController& get_origin_lane_controller() const {
 		return origin_lane_controller;
 	}
-	const VirtualLongitudinalController& get_gap_generation_lane_controller() 
+	const VirtualLongitudinalController& get_gap_generation_lane_controller()
 		const {
 		return gap_generating_controller;
 	};
 	/* Each controller should never be accessed directly by external
 	functions. */
-	const VirtualLongitudinalController& get_destination_lane_controller() const { 
-		return destination_lane_controller; 
+	const VirtualLongitudinalController& get_destination_lane_controller() const {
+		return destination_lane_controller;
 	};
 	/* Each controller should never be accessed directly by external
 	functions. */
@@ -104,7 +104,7 @@ public:
 	and sets the time headway*/
 	void activate_origin_lane_controller(double ego_velocity,
 		double time_headway, bool is_leader_connected);
-	/* Sets a new time headway and the connectivity of the origin lane 
+	/* Sets a new time headway and the connectivity of the origin lane
 	controller */
 	void update_origin_lane_controller(double time_headway,
 		bool is_leader_connected);
@@ -115,7 +115,7 @@ public:
 		double time_headway, bool is_leader_connected);
 	/* Sets a new time headway and the connectivity of the destination lane
 	controller, and resets its velocity filter. */
-	void update_destination_lane_controller(double ego_velocity, 
+	void update_destination_lane_controller(double ego_velocity,
 		double time_headway, bool is_leader_connected);
 	void update_gap_generation_controller(double ego_velocity,
 		double time_headway);
@@ -145,22 +145,22 @@ public:
 
 	double determine_low_velocity_reference(double ego_velocity,
 		const NearbyVehicle& nearby_vehicle);
-	
-	/* Returns the reference gap used by the longitudinal 
+
+	/* Returns the reference gap used by the longitudinal
 	controller. It uses a previously defined time headway, which might
 	have been computed assuming some accepted risk. */
 	double compute_desired_lane_change_gap(const AutonomousVehicle& ego_vehicle,
 		const NearbyVehicle& nearby_vehicle, bool will_accelerate = false);
-	
-	/* Returns the accepted lane change gap, which might is different from 
-	the longitudinal controller's reference gap if the accepted risk is 
-	greater than zero. This assumes the longitudinal controller uses a 
+
+	/* Returns the accepted lane change gap, which might is different from
+	the longitudinal controller's reference gap if the accepted risk is
+	greater than zero. This assumes the longitudinal controller uses a
 	zero-risk time headway. */
 	//double compute_accepted_lane_change_gap(
 	//	const AutonomousVehicle& ego_vehicle,
-	//	const NearbyVehicle& nearby_vehicle, 
+	//	const NearbyVehicle& nearby_vehicle,
 	//	bool will_accelerate = false);
-	
+
 	/* Returns the time headway part of the desired lane change gap. */
 	double get_desired_time_headway_gap(double ego_velocity,
 		const NearbyVehicle& nearby_vehicle);
@@ -184,7 +184,7 @@ private:
 	double min_overtaking_rel_vel{ 10.0 / 3.6 };
 	double velocity_filter_gain{ 10.0 };
 	double time_headway_filter_gain{ 0.3 };
-	AutonomousGains autonomous_real_following_gains{ 0.2, 1.0 };
+	AutonomousGains autonomous_real_following_gains{ 0.2, 1.0/*0.7*/ };
 	AutonomousGains autonomous_virtual_following_gains{ 0.4, 1.0 };
 	ConnectedGains connected_real_following_gains{ 0.2, 2.3, 0.13, 1.3 };
 	ConnectedGains connected_virtual_following_gains{ 0.4, 2.3, 0.13, 1.3 };
@@ -195,7 +195,7 @@ private:
 	/* The time headway used by the end-of-lane controller */
 	double time_headway_to_end_of_lane{ 1.0 };
 	/* -------------------------------------------- */
-	
+
 	RealLongitudinalController origin_lane_controller;
 	RealLongitudinalController end_of_lane_controller;
 	VirtualLongitudinalController destination_lane_controller;
@@ -206,11 +206,11 @@ private:
 	LateralController lateral_controller;
 	/* indicates which controller is active. Used for debugging and
 	visualization. */
-	ALCType active_longitudinal_controller{ ALCType::origin_lane }; 
+	ALCType active_longitudinal_controller{ ALCType::origin_lane };
 
 	double origin_lane_leader_max_brake{ 0.0 };
 	double destination_lane_leader_max_brake{ 0.0 };
-	double destination_lane_follower_max_brake{ 0.0 }; 
+	double destination_lane_follower_max_brake{ 0.0 };
 	double assisted_vehicle_max_brake{ 0.0 };
 	VehicleType origin_lane_leader_type{ VehicleType::undefined };
 	VehicleType destination_lane_leader_type{ VehicleType::undefined };
