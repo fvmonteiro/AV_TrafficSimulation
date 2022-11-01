@@ -38,9 +38,13 @@ bool PlatoonVehicle::can_start_lane_change()
 {
 	bool individual_lane_change_is_safe =
 		AutonomousVehicle::can_start_lane_change();
-	platoon->set_vehicle_lane_change_gaps_safe(get_id(),
-		individual_lane_change_is_safe);
-	return platoon->can_vehicle_start_lane_change(get_id());
+	if (is_in_a_platoon())
+	{
+		platoon->set_vehicle_lane_change_gaps_safe(get_id(),
+			individual_lane_change_is_safe);
+		return platoon->can_vehicle_start_lane_change(get_id());
+	}
+	return individual_lane_change_is_safe;
 }
 
 bool PlatoonVehicle::implement_analyze_platoons(
@@ -124,7 +128,9 @@ bool PlatoonVehicle::implement_analyze_platoons(
 				<< " leaving platoon " << platoon->get_id()
 				<< std::endl;
 			platoon->remove_vehicle_by_id(get_id());
-			platoon = nullptr;
+			std::clog << "Vehicle removed from platoon" << std::endl;
+			platoon.reset();
+			std::clog << "Vehicle platoon set to null" << std::endl;
 			alone_time = 0.0;
 		}
 	}
