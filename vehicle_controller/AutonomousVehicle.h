@@ -15,6 +15,8 @@ public:
 			VehicleType::autonomous_car, desired_velocity, false,
 			simulation_time_step, creation_time, verbose) {} ;
 
+	bool merge_behind_ld() const;
+
 	/*double get_lambda_1_lane_change() const { return lambda_1_lane_change; };*/
 	/* Returns a nullptr if there is no leader at the destination lane */
 	//std::shared_ptr<NearbyVehicle> get_destination_lane_leader() const
@@ -45,6 +47,8 @@ public:
 		return controller.get_destination_lane_controller().
 			get_follower_time_headway();
 	};*/
+
+
 
 protected:
 	AutonomousVehicle(long id, VehicleType type, double desired_velocity,
@@ -153,6 +157,7 @@ private:
 	/* NOT IMPLEMENTED */
 	void update_headways_with_risk(const EgoVehicle& ego_vehicle);
 
+	double min_overtaking_rel_vel{ 10.0 / 3.6 };
 	double max_lane_change_waiting_time{ 60.0 }; // [s]
 
 	/* Relevant members for lane changing ------------------------------------ */

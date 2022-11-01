@@ -195,6 +195,7 @@ void ControlManager::activate_destination_lane_controller(double ego_velocity,
 void ControlManager::update_destination_lane_controller(double ego_velocity,
 	double time_headway, bool is_leader_connected)
 {
+	destination_lane_controller.smooth_start_leader_velocity_filter();
 	destination_lane_controller.set_desired_time_headway(time_headway);
 	destination_lane_controller.connect_gap_controller(is_leader_connected);
 	//destination_lane_controller.reset_leader_velocity_filter(ego_velocity);
@@ -219,6 +220,12 @@ void ControlManager::reset_origin_lane_velocity_controller(
 	//	std::clog << "Resetting orig lane ctrl vel ctrl." << std::endl;
 	//}
 	origin_lane_controller.reset_velocity_controller(ego_velocity);
+}
+
+bool ControlManager::is_in_free_flow_at_origin_lane() const
+{
+	return origin_lane_controller.get_state()
+		== SwitchedLongitudinalController::State::velocity_control;
 }
 
 double ControlManager::use_vissim_desired_acceleration(
@@ -374,14 +381,8 @@ bool ControlManager::get_end_of_lane_desired_acceleration(
 		/* We simulate a stopped vehicle at the end of
 		the lane to force the vehicle to stop before the end of
 		the lane. */
-		std::shared_ptr<NearbyVehicle> virtual_vehicle =
-			std::shared_ptr<NearbyVehicle>(new
-				NearbyVehicle(1, RelativeLane::same, 1));
-		virtual_vehicle->set_relative_velocity(
-			ego_vehicle.get_velocity());
-		virtual_vehicle->set_distance(
-			ego_vehicle.get_lane_end_distance());
-		virtual_vehicle->set_length(0.0);
+		NearbyVehicle virtual_vehicle =
+			create_virtual_stopped_vehicle(ego_vehicle);
 
 		SwitchedLongitudinalController::State old_state =
 			end_of_lane_controller.get_state();
@@ -394,7 +395,7 @@ bool ControlManager::get_end_of_lane_desired_acceleration(
 		}
 		double desired_acceleration =
 			end_of_lane_controller.get_desired_acceleration(
-				ego_vehicle, virtual_vehicle,
+				ego_vehicle, std::make_shared<NearbyVehicle>(virtual_vehicle),
 				ego_vehicle.get_desired_velocity());
 
 		/* This controller is only active when it's at vehicle 
@@ -421,34 +422,18 @@ bool ControlManager::get_destination_lane_desired_acceleration(
 	std::unordered_map<ALCType, double>& possible_accelerations) 
 {
 	bool is_active = false;
-	double origin_lane_reference_velocity;
+	//double origin_lane_reference_velocity;
 	double ego_velocity = ego_vehicle.get_velocity();
 
 	bool end_of_lane_controller_is_active = 
 		end_of_lane_controller.get_state()
 		== SwitchedLongitudinalController::State::vehicle_following;
-	/* Get the possible max vel at the origin lane */
-	if (origin_lane_controller.get_state()
-		== SwitchedLongitudinalController::State::vehicle_following)
-	{
-		origin_lane_reference_velocity = ego_vehicle.get_leader()
-			->compute_velocity(ego_velocity);
-	}
-	else 
-	{
-		origin_lane_reference_velocity =
-			ego_vehicle.get_desired_velocity();
-	}
 
-	/* We only activate if the vehicle has a destination lane
-	leader AND
-	(the velocity reference at the origin lane is lower than the one at
-	the destination lane OR the end of lane controller is active)*/
-	if (ego_vehicle.has_destination_lane_leader()
-		&& ((ego_vehicle.get_destination_lane_leader()
-			->compute_velocity(ego_velocity)
-				> origin_lane_reference_velocity - min_overtaking_rel_vel)
-			|| end_of_lane_controller_is_active)) 
+	/* We only activate if we want to merge behding ld
+	or if the end of the lane is close */
+	if (ego_vehicle.merge_behind_ld()
+		|| (ego_vehicle.has_destination_lane_leader()
+			&& end_of_lane_controller_is_active))
 	{	
 		if (verbose) 
 		{
@@ -466,7 +451,8 @@ bool ControlManager::get_destination_lane_desired_acceleration(
 		uses comfortable constraints, must be updated. */
 		if ((active_longitudinal_controller
 			!= ALCType::destination_lane)
-			&& destination_lane_controller.is_outdated(ego_velocity)) {
+			&& destination_lane_controller.is_outdated(ego_velocity))
+		{
 			destination_lane_controller.reset_velocity_controller(
 				ego_velocity);
 		}
@@ -536,6 +522,18 @@ double ControlManager::choose_minimum_acceleration(
 	if (verbose) std::clog << "des accel=" << desired_acceleration << std::endl;
 
 	return desired_acceleration;
+}
+
+NearbyVehicle ControlManager::create_virtual_stopped_vehicle(
+	const EgoVehicle& ego_vehicle)
+{
+	NearbyVehicle virtual_vehicle = NearbyVehicle(1, RelativeLane::same, 1);
+	virtual_vehicle.set_relative_velocity(
+		ego_vehicle.get_velocity());
+	virtual_vehicle.set_distance(
+		ego_vehicle.get_lane_end_distance());
+	virtual_vehicle.set_length(0.0);
+	return virtual_vehicle;
 }
 
 double ControlManager::determine_low_velocity_reference(double ego_velocity,
