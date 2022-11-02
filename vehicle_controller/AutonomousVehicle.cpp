@@ -180,7 +180,9 @@ void AutonomousVehicle::update_destination_lane_leader(
 			destination_lane_leader->is_connected();
 		if (old_leader == nullptr)
 		{
-			controller.activate_destination_lane_controller(get_velocity(),
+			double ego_vel = get_velocity();
+			controller.activate_destination_lane_controller(ego_vel,
+				destination_lane_leader->compute_velocity(ego_vel),
 				compute_lane_changing_desired_time_headway(
 					*destination_lane_leader), 
 				is_new_leader_connected);
@@ -271,12 +273,12 @@ double AutonomousVehicle::estimate_nearby_vehicle_time_headway(
 			max_brake, get_rho(), 0/*accepted_lane_change_risk_to_follower*/));
 }
 
-double AutonomousVehicle::compute_desired_acceleration(
+double AutonomousVehicle::implement_compute_desired_acceleration(
 	const std::unordered_map<int, TrafficLight>& traffic_lights)
 {
-	double desired_acceleration =
+	double a_desired_acceleration =
 		controller.get_av_desired_acceleration(*this);
-	return consider_vehicle_dynamics(desired_acceleration);
+	return consider_vehicle_dynamics(a_desired_acceleration);
 }
 
 bool AutonomousVehicle::give_lane_change_control_to_vissim() const

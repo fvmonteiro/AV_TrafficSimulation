@@ -14,8 +14,7 @@ public:
 		bool verbose);
 
 private:
-	//void create_controllers() override;
-	double compute_desired_acceleration(
+	double implement_compute_desired_acceleration(
 		const std::unordered_map<int, TrafficLight>& traffic_lights) override;
 	double compute_lane_changing_desired_time_headway(
 		const NearbyVehicle& nearby_vehicle) const override

@@ -66,7 +66,7 @@ void VirtualLongitudinalController::determine_controller_state(
 		double gap = ego_vehicle.compute_gap(leader);
 		double ego_velocity = ego_vehicle.get_velocity();
 		double gap_threshold = compute_gap_threshold(gap,
-			reference_velocity - ego_velocity, gap_control_input);
+			0/*reference_velocity - ego_velocity*/, gap_control_input);
 
 		if (state == State::vehicle_following) {
 			gap_threshold -= hysteresis_bias;

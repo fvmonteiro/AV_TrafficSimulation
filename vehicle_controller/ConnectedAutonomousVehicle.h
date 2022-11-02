@@ -48,7 +48,7 @@ protected:
 	void implement_analyze_nearby_vehicles() override;
 
 private:
-	double compute_desired_acceleration(
+	double implement_compute_desired_acceleration(
 		const std::unordered_map<int, TrafficLight>& traffic_lights) override;
 	bool give_lane_change_control_to_vissim() const override
 	{

@@ -6,15 +6,15 @@
 #include "EgoVehicle.h"
 #include "NearbyVehicle.h"
 
-GapController::GapController(double simulation_time_step, 
+GapController::GapController(double simulation_time_step,
 	const AutonomousGains& autonomous_gains,
 	const ConnectedGains& connected_gains,
 	double velocity_filter_gain, double time_headway_filter_gain,
 	double comfortable_acceleration, double filter_brake_limit,
 	bool verbose)
-	: autonomous_gains{ autonomous_gains }, 
+	: autonomous_gains{ autonomous_gains },
 	connected_gains{ connected_gains },
-	velocity_filter{ VariationLimitedFilter(velocity_filter_gain, 
+	velocity_filter{ VariationLimitedFilter(velocity_filter_gain,
 		comfortable_acceleration, filter_brake_limit,
 		simulation_time_step) },
 	time_headway_filter { VariationLimitedFilter(time_headway_filter_gain,
@@ -26,9 +26,9 @@ GapController::GapController(double simulation_time_step,
 	const ConnectedGains& connected_gains,
 	double velocity_filter_gain, double time_headway_filter_gain,
 	double comfortable_acceleration, double filter_brake_limit)
-	: GapController(simulation_time_step, autonomous_gains, 
+	: GapController(simulation_time_step, autonomous_gains,
 		connected_gains, velocity_filter_gain, time_headway_filter_gain,
-		comfortable_acceleration, filter_brake_limit, 
+		comfortable_acceleration, filter_brake_limit,
 		false) {}
 
 double GapController::get_desired_time_headway() const
@@ -98,14 +98,14 @@ double GapController::compute_acceleration_error(
 }
 
 double GapController::compute_desired_acceleration(
-	const EgoVehicle& ego_vehicle, 
+	const EgoVehicle& ego_vehicle,
 	const std::shared_ptr<NearbyVehicle> leader)
 {
 	if (leader == nullptr)
 	{
 		return ego_vehicle.get_comfortable_acceleration();
 	}
-	
+
 	double ego_velocity = ego_vehicle.get_velocity();
 	double gap = ego_vehicle.compute_gap(leader);
 	double gap_reference = compute_desired_gap(ego_velocity);
@@ -120,21 +120,22 @@ double GapController::compute_desired_acceleration(
 	double desired_acceleration;
 	if (is_connected)
 	{
-		desired_acceleration = compute_connected_input(gap_error, 
-			velocity_error, ego_vehicle.get_acceleration(), 
+		desired_acceleration = compute_connected_input(gap_error,
+			velocity_error, ego_vehicle.get_acceleration(),
 			leader->get_acceleration());
 	}
 	else
 	{
-		desired_acceleration = compute_autonomous_input(gap_error, 
+		desired_acceleration = compute_autonomous_input(gap_error,
 			velocity_error);
 	}
 
-	if (should_perform_smooth_start)
+	if (should_perform_smooth_start) // TODO: not being used [Nov 1, 2022]
 	{
+		should_perform_smooth_start = false;
+
 		if (verbose) std::clog << "\t[Gap controller]"
 			<< " restarting leader vel filter.\n";
-		should_perform_smooth_start = false;
 		double current_accel = ego_vehicle.get_acceleration();
 		double reset_vel;
 		/* [Oct 26, 22] Playing safe for now: we only use the "smooth"
@@ -150,6 +151,14 @@ double GapController::compute_desired_acceleration(
 			/* Be careful with the line below if we move it out of
 			this condition */
 			reset_vel = std::max(smooth_vel, velocity_reference);
+
+			if (verbose)
+			{
+				std::clog << "accel=" << current_accel
+					<< "des. accel=" << desired_acceleration
+					<< std::endl;
+			}
+
 		}
 		else
 		{
@@ -178,13 +187,13 @@ double GapController::compute_desired_acceleration(
 double GapController::compute_autonomous_input(
 	double gap_error, double velocity_error)
 {
-	return autonomous_gains.kg * gap_error 
+	return autonomous_gains.kg * gap_error
 		+ autonomous_gains.kv * velocity_error;
 }
 
 double GapController::compute_connected_input(
 	double gap_error, double velocity_error, double ego_acceleration,
-	double leader_acceleration) 
+	double leader_acceleration)
 {
 	double gap_error_derivative = estimate_gap_error_derivative(
 		velocity_error, ego_acceleration);
@@ -196,9 +205,9 @@ double GapController::compute_connected_input(
 			<< ", ea=" << acceleration_error;
 	}
 
-	return connected_gains.kg * gap_error 
+	return connected_gains.kg * gap_error
 		+ connected_gains.kv * velocity_error
-		+ connected_gains.kgd * gap_error_derivative 
+		+ connected_gains.kgd * gap_error_derivative
 		+ connected_gains.ka * acceleration_error;
 }
 
@@ -212,7 +221,7 @@ void GapController::reset_time_headway_filter(double time_headway)
 }
 
 void GapController::reset_velocity_filter(
-	double ego_velocity) 
+	double ego_velocity)
 {
 	velocity_filter.reset(ego_velocity);
 }

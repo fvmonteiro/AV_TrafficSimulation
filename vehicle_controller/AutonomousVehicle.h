@@ -3,7 +3,7 @@
 #include "EgoVehicle.h"
 
 /* Vehicle with autonomous longitudinal control during lane keeping and
-during adjustments for lane changing. The lane change intention still 
+during adjustments for lane changing. The lane change intention still
 comes from VISSIM, but the vehicle decides when it is safe enough to start */
 class AutonomousVehicle : public EgoVehicle
 {
@@ -68,7 +68,7 @@ protected:
 	double get_accepted_risk_to_follower() const {
 		return accepted_lane_change_risk_to_follower;
 	}
-	
+
 	bool is_destination_lane_follower(
 		const NearbyVehicle& nearby_vehicle);
 	bool is_destination_lane_leader(
@@ -91,7 +91,10 @@ protected:
 	double dest_lane_follower_lambda_1{ 0.0 };
 
 private:
-	double compute_desired_acceleration(
+	/* Finds the current leader and, if the vehicle has lane change
+	intention, the destination lane leader and follower */
+	void find_relevant_nearby_vehicles() override;
+	double implement_compute_desired_acceleration(
 		const std::unordered_map<int, TrafficLight>& traffic_lights) override;
 	//void set_desired_lane_change_direction() override;
 	bool give_lane_change_control_to_vissim() const override;
@@ -99,11 +102,11 @@ private:
 	long create_lane_change_request() override { return 0; };
 	double compute_accepted_lane_change_gap(
 		std::shared_ptr<NearbyVehicle> nearby_vehicle) override;
-	/* Time-headway based gap (hv + d) minus a term based on 
+	/* Time-headway based gap (hv + d) minus a term based on
 	accepted risk */
 	double compute_time_headway_gap_for_lane_change(
 		const NearbyVehicle& nearby_vehicle);
-	
+
 	std::shared_ptr<NearbyVehicle>
 		implement_get_destination_lane_leader() const override;
 	std::shared_ptr<NearbyVehicle>
@@ -150,8 +153,8 @@ private:
 	double compute_intermediate_risk_to_leader(double lambda_1,
 		double lane_change_lambda_1, double max_brake_no_lane_change,
 		double leader_max_brake);
-	/* Maximum possible accepted risk during vehicle following that keeps 
-	the time headway positive. 
+	/* Maximum possible accepted risk during vehicle following that keeps
+	the time headway positive.
 	This is the same max risk as for gap generation */
 	//double compute_max_vehicle_following_risk(double leader_max_brake);
 	/* NOT IMPLEMENTED */
@@ -171,11 +174,11 @@ private:
 	/*The risk is an estimation of the relative velocity at collision
 	time under worst case scenario. */
 
-	/* Defines if the lane change acceptance decision is based on the 
-	exact risk computation or on the risk estimation based on the time 
+	/* Defines if the lane change acceptance decision is based on the
+	exact risk computation or on the risk estimation based on the time
 	headway */
 	bool use_linear_lane_change_gap{ false };
-	/* Stores the time when the vehicle started trying to 
+	/* Stores the time when the vehicle started trying to
 	change lanes */
 	//double lane_change_timer_start{ 0.0 }; // [s]
 	double accepted_lane_change_risk_to_leaders{ 0.0 }; // [m/s]
@@ -186,6 +189,6 @@ private:
 	//double max_risk_to_leader{ 0.0 }; // [m/s]
 	/* Risk at which the lane change headway becomes equal to the
 	vehicle following headway. */
-	//double intermediate_risk_to_leader{ 0.0 }; // [m/s] 
+	//double intermediate_risk_to_leader{ 0.0 }; // [m/s]
 	//double max_risk_to_follower{ 0.0 }; // [m/s]
 };

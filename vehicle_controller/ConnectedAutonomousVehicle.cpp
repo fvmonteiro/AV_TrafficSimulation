@@ -5,7 +5,7 @@ ConnectedAutonomousVehicle::ConnectedAutonomousVehicle(
 	double simulation_time_step, double creation_time,
 	bool verbose) :
 	AutonomousVehicle(id, type, desired_velocity,
-		true, simulation_time_step, creation_time, verbose) 
+		true, simulation_time_step, creation_time, verbose)
 {
 	compute_connected_safe_gap_parameters();
 	controller.add_cooperative_lane_change_controller(*this);
@@ -99,7 +99,7 @@ void ConnectedAutonomousVehicle::update_destination_lane_follower(
 {
 	if (has_destination_lane_follower())
 	{
-		std::shared_ptr<NearbyVehicle>& dest_lane_follower = 
+		std::shared_ptr<NearbyVehicle>& dest_lane_follower =
 			get_destination_lane_follower();
 		controller.update_destination_lane_follower_time_headway(
 			dest_lane_follower->get_h_to_incoming_vehicle());
@@ -151,7 +151,7 @@ double ConnectedAutonomousVehicle::get_lambda_1_lane_change(
 	bool is_leader_connected) const
 {
 	return is_leader_connected ?
-		lambda_1_lane_change_connected 
+		lambda_1_lane_change_connected
 		: AutonomousVehicle::get_lambda_1_lane_change();
 }
 
@@ -197,7 +197,7 @@ compute_vehicle_following_time_headway(
 double ConnectedAutonomousVehicle::compute_lane_changing_desired_time_headway(
 	const NearbyVehicle& nearby_vehicle) const
 {
-	double current_lambda_1 = 
+	double current_lambda_1 =
 		get_lambda_1_lane_change(nearby_vehicle.is_connected());
 	double h_lc = compute_time_headway_with_risk(get_desired_velocity(),
 		get_lane_change_max_brake(), nearby_vehicle.get_max_brake(),
@@ -221,19 +221,19 @@ double ConnectedAutonomousVehicle::
 compute_vehicle_following_gap_for_lane_change(
 	const NearbyVehicle& nearby_vehicle) const
 {
-	double current_lambda_1 = 
+	double current_lambda_1 =
 		get_lambda_1_lane_change(nearby_vehicle.is_connected());
 	return AutonomousVehicle::compute_vehicle_following_gap_for_lane_change(
 		nearby_vehicle, current_lambda_1);
 }
 
-double ConnectedAutonomousVehicle::compute_desired_acceleration(
+double ConnectedAutonomousVehicle::implement_compute_desired_acceleration(
 	const std::unordered_map<int, TrafficLight>& traffic_lights)
 {
 	if (verbose) std::clog << "[CAV] get_desired_acceleration" << std::endl;
 	double desired_acceleration =
 		controller.get_cav_desired_acceleration(*this);
-	return consider_vehicle_dynamics(desired_acceleration);
+	return consider_vehicle_dynamics(a_desired_acceleration);
 }
 
 bool ConnectedAutonomousVehicle::check_if_is_asking_for_cooperation(
@@ -243,12 +243,12 @@ bool ConnectedAutonomousVehicle::check_if_is_asking_for_cooperation(
 	{
 		long lane_change_request_veh_id =
 			nearby_vehicle.get_lane_change_request_veh_id();
-		if (lane_change_request_veh_id == nearby_vehicle.get_id()) 
+		if (lane_change_request_veh_id == nearby_vehicle.get_id())
 		{
 			/* The nearby veh is requesting a gap for itself */
 			// do nothing
 		}
-		else 
+		else
 		{
 			/* The nearby veh is requesting a gap for someone
 			else in its platoon */

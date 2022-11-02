@@ -95,8 +95,8 @@ public:
 	/* Returns the desired velocity or the max road velocity */
 	double get_free_flow_velocity() const;
 
-	std::shared_ptr<Platoon> get_platoon() const 
-	{ 
+	std::shared_ptr<Platoon> get_platoon() const
+	{
 		return implement_get_platoon();
 	};
 	/* Getters used for debugging */
@@ -170,10 +170,10 @@ public:
 	void analyze_nearby_vehicles() { implement_analyze_nearby_vehicles(); };
 	/* Returns true if a new platoon was created. */
 	bool analyze_platoons(
-		std::unordered_map<int, std::shared_ptr<Platoon>>& platoons, 
+		std::unordered_map<int, std::shared_ptr<Platoon>>& platoons,
 		std::shared_ptr<EgoVehicle> pointer_to_me, long new_platoon_id)
 	{
-		return implement_analyze_platoons(platoons, pointer_to_me, 
+		return implement_analyze_platoons(platoons, pointer_to_me,
 			new_platoon_id);
 	};
 	//bool is_cutting_in(const NearbyVehicle& nearby_vehicle) const;
@@ -240,11 +240,11 @@ public:
 
 	/* Control related methods ----------------------------------------------- */
 
-	double get_desired_acceleration(
+	void compute_desired_acceleration(
 		const std::unordered_map<int, TrafficLight>& traffic_lights)
 	{
-		if (verbose) std::clog << "[EgoVehicle] get_desired_acceleration" << std::endl;
-		return compute_desired_acceleration(traffic_lights);
+		this->desired_acceleration =
+			implement_compute_desired_acceleration(traffic_lights);
 	};
 	long decide_lane_change_direction();
 	//RelativeLane get_lane_change_direction();
@@ -273,7 +273,7 @@ public:
 	bool is_verbose() const { return verbose; };
 
 	/* Print function */
-	friend std::ostream& operator<< (std::ostream& out, 
+	friend std::ostream& operator<< (std::ostream& out,
 		const EgoVehicle& vehicle);
 
 protected:
@@ -294,7 +294,7 @@ protected:
 	/* Takes the desired acceleration given by the controller and
 	returns the feasible acceleration given the approximated low level
 	dynamics */
-	double consider_vehicle_dynamics(double desired_acceleration);
+	double consider_vehicle_dynamics(double unfiltered_acceleration);
 	/* Updates the stopped time waiting for lane change */
 	void update_lane_change_waiting_time();
 
@@ -316,7 +316,7 @@ protected:
 						  vehicle */
 private:
 	/* Computes the longitudinal controller input */
-	virtual double compute_desired_acceleration(
+	virtual double implement_compute_desired_acceleration(
 		const std::unordered_map<int, TrafficLight>& traffic_lights) = 0;
 	virtual bool give_lane_change_control_to_vissim() const = 0;
 	virtual void set_desired_lane_change_direction() = 0;
@@ -339,7 +339,7 @@ private:
 	virtual void implement_set_accepted_lane_change_risk_to_follower(
 		double value) = 0;
 	virtual void implement_set_use_linear_lane_change_gap(long value) = 0;
-	
+
 	// TODO: should this be abstract?
 	virtual std::shared_ptr<Platoon> implement_get_platoon() const
 	{
@@ -349,7 +349,7 @@ private:
 	/* Finds the current leader */
 	virtual void implement_analyze_nearby_vehicles();
 	virtual bool implement_analyze_platoons(
-		std::unordered_map<int, std::shared_ptr<Platoon>>& platoons, 
+		std::unordered_map<int, std::shared_ptr<Platoon>>& platoons,
 		std::shared_ptr<EgoVehicle> pointer_to_me,
 		long new_platoon_id) {
 		return false;
@@ -415,7 +415,7 @@ private:
 	std::vector<double> lateral_position;
 	std::vector<double> velocity;
 	std::vector<double> acceleration;
-	std::vector<double> desired_acceleration;
+	double desired_acceleration{ 0.0 };
 	/* VISSIM suggested acceleration */
 	std::vector<double> vissim_acceleration;
 	/* +1 = to the left, 0 = none, -1 = to the right */
