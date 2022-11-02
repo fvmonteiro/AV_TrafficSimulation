@@ -85,7 +85,7 @@ private:
 	/* Finds the current leader and, if the vehicle has lane change 
 	intention, the destination lane leader and follower */
 	void find_relevant_nearby_vehicles() override;
-	double compute_desired_acceleration(
+	double implement_compute_desired_acceleration(
 		const std::unordered_map<int, TrafficLight>& traffic_lights) override;
 	bool give_lane_change_control_to_vissim() const override;
 	bool can_start_lane_change() override;

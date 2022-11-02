@@ -16,12 +16,12 @@ void TrafficLightACCVehicle::set_traffic_light_information(
 	distance_to_next_traffic_light = distance;
 }
 
-double TrafficLightACCVehicle::compute_desired_acceleration(
+double TrafficLightACCVehicle::implement_compute_desired_acceleration(
 	const std::unordered_map<int, TrafficLight>& traffic_lights)
 {
-	double desired_acceleration =
+	double a_desired_acceleration =
 		controller.get_traffic_light_acc_acceleration(*this, traffic_lights);
-	return desired_acceleration;
+	return a_desired_acceleration;
 }
 
 void TrafficLightACCVehicle::set_desired_lane_change_direction()

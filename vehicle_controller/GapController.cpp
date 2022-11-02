@@ -130,11 +130,12 @@ double GapController::compute_desired_acceleration(
 			velocity_error);
 	}
 
-	if (should_perform_smooth_start)
+	if (should_perform_smooth_start) // TODO: not being used [Nov 1, 2022]
 	{
+		should_perform_smooth_start = false;
+
 		if (verbose) std::clog << "\t[Gap controller]"
 			<< " restarting leader vel filter.\n";
-		should_perform_smooth_start = false;
 		double current_accel = ego_vehicle.get_acceleration();
 		double reset_vel;
 		/* [Oct 26, 22] Playing safe for now: we only use the "smooth"
@@ -150,6 +151,14 @@ double GapController::compute_desired_acceleration(
 			/* Be careful with the line below if we move it out of 
 			this condition */
 			reset_vel = std::max(smooth_vel, velocity_reference);
+
+			if (verbose)
+			{
+				std::clog << "accel=" << current_accel
+					<< "des. accel=" << desired_acceleration
+					<< std::endl;
+			}
+
 		}
 		else
 		{
@@ -157,8 +166,7 @@ double GapController::compute_desired_acceleration(
 		}
 		velocity_filter.reset(reset_vel);
 		/* And we recompute the desired acceleration */
-		/* TODO just call return here once tests are done */
-		desired_acceleration = compute_desired_acceleration(
+		return compute_desired_acceleration(
 			ego_vehicle, leader);
 	}
 

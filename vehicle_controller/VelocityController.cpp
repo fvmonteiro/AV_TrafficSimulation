@@ -31,11 +31,11 @@ void VelocityController::smooth_reset(const EgoVehicle& ego_vehicle,
 {
 	double ego_velocity = ego_vehicle.get_velocity();
 	/* The smooth velocity leads the vel. controller to output a
-	desired acceleration close to the desired acceleration in
+	desired acceleration close to the (desired?) acceleration in
 	the previous step. */
 	double smooth_velocity = 
-		(ego_vehicle.get_desired_acceleration()
-		- gains.kd * ego_vehicle.get_acceleration()) 
+		(ego_vehicle.get_acceleration()
+		+ gains.kd * ego_vehicle.get_acceleration()) 
 		/ gains.kp + ego_velocity;
 	/* We use the smooth velocity only when that helps the vehicle
 	achieve the velocity reference faster. This happens either when:

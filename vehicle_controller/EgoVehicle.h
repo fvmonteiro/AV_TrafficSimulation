@@ -227,10 +227,11 @@ public:
 
 	/* Control related methods ----------------------------------------------- */
 
-	double get_desired_acceleration(
+	void compute_desired_acceleration(
 		const std::unordered_map<int, TrafficLight>& traffic_lights)
 	{
-		return compute_desired_acceleration(traffic_lights);
+		this->desired_acceleration =
+			implement_compute_desired_acceleration(traffic_lights);
 	};
 	long decide_lane_change_direction();
 	//RelativeLane get_lane_change_direction();
@@ -279,7 +280,7 @@ protected:
 	/* Takes the desired acceleration given by the controller and
 	returns the feasible acceleration given the approximated low level
 	dynamics */
-	double consider_vehicle_dynamics(double desired_acceleration);
+	double consider_vehicle_dynamics(double unfiltered_acceleration);
 	/* Updates the stopped time waiting for lane change */
 	void update_lane_change_waiting_time();
 
@@ -302,7 +303,7 @@ protected:
 						  vehicle */
 private:
 	/* Computes the longitudinal controller input */
-	virtual double compute_desired_acceleration(
+	virtual double implement_compute_desired_acceleration(
 		const std::unordered_map<int, TrafficLight>& traffic_lights) = 0;
 	virtual bool give_lane_change_control_to_vissim() const = 0;
 	/* Decides whether the vehicle can start a
@@ -400,7 +401,7 @@ private:
 	std::vector<double> lateral_position;
 	std::vector<double> velocity;
 	std::vector<double> acceleration;
-	std::vector<double> desired_acceleration;
+	double desired_acceleration{ 0.0 };
 	/* VISSIM suggested acceleration */
 	std::vector<double> vissim_acceleration;
 	/* +1 = to the left, 0 = none, -1 = to the right */

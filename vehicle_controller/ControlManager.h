@@ -102,6 +102,7 @@ public:
 	/* Resets the destination lane controller's velocity and time headway filters
 	and sets the time headway*/
 	void activate_destination_lane_controller(double ego_velocity,
+		double leader_velocity,
 		double time_headway, bool is_leader_connected);
 	/* Sets a new time headway and the connectivity of the destination lane
 	controller, and resets its velocity filter. */

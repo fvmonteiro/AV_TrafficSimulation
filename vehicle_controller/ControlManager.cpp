@@ -204,9 +204,11 @@ void ControlManager::update_destination_lane_follower_time_headway(
 }
 
 void ControlManager::activate_destination_lane_controller(double ego_velocity,
+	double leader_velocity,
 	double time_headway, bool is_leader_connected)
 {
-	destination_lane_controller.smooth_start_leader_velocity_filter();
+	//destination_lane_controller.smooth_start_leader_velocity_filter();
+	destination_lane_controller.reset_leader_velocity_filter(leader_velocity);
 	/* NOTE: include 'if (time_headway_filter.get_is_initialized())' ? 
 	And force initial value to be the non-lane-changing one? */
 	destination_lane_controller.reset_time_headway_filter(time_headway);
@@ -465,6 +467,11 @@ bool ControlManager::get_destination_lane_desired_acceleration(
 		double ego_velocity = ego_vehicle.get_velocity();
 		double reference_velocity = determine_low_velocity_reference(
 			ego_velocity, *dest_lane_leader);
+
+		if (verbose)
+		{
+			std::clog << "low ref vel=" << reference_velocity << std::endl;
+		}
 
 		/* If the ego vehicle is braking hard due to conditions on
 		the current lane, the destination lane controller, which

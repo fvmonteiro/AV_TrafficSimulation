@@ -107,7 +107,7 @@ double EgoVehicle::get_acceleration() const
 }
 double EgoVehicle::get_desired_acceleration() const 
 {
-	return desired_acceleration.empty()? 0: desired_acceleration.back();
+	return desired_acceleration;
 }
 double EgoVehicle::get_vissim_acceleration() const 
 {
@@ -700,7 +700,7 @@ void EgoVehicle::update_lane_change_waiting_time()
 
 /* Control related methods ------------------------------------------------ */
 
-double EgoVehicle::consider_vehicle_dynamics(double desired_acceleration) 
+double EgoVehicle::consider_vehicle_dynamics(double unfiltered_acceleration) 
 {
 	/* We assume lower level dynamics as:
 	a = u / (tau.s + 1) => tau.da/dt + a = u 
@@ -711,9 +711,9 @@ double EgoVehicle::consider_vehicle_dynamics(double desired_acceleration)
 
 	double current_acceleration = get_acceleration();
 	double filtered_acceleration = current_acceleration + (1 - tau_d)
-		* (desired_acceleration - current_acceleration);
+		* (unfiltered_acceleration - current_acceleration);
 	if (verbose) std::clog << "[in veh. object] des. accel="
-		<< desired_acceleration
+		<< unfiltered_acceleration
 		<< ", filtered accel.=" << filtered_acceleration
 		<< std::endl;;
 	return filtered_acceleration;
@@ -1041,9 +1041,9 @@ std::string EgoVehicle::write_members(
 			case Member::acceleration:
 				oss << acceleration[i];
 				break;
-			case Member::desired_acceleration:
-				oss << desired_acceleration[i];
-				break;
+			//case Member::desired_acceleration:
+			//	oss << desired_acceleration[i];
+			//	break;
 			case Member::vissim_acceleration:
 				oss << vissim_acceleration[i];
 				break;
@@ -1109,7 +1109,7 @@ int EgoVehicle::get_member_size(Member member)
 	case Member::acceleration:
 		return (int)acceleration.size();
 	case Member::desired_acceleration:
-		return (int)desired_acceleration.size();
+		return 1; // (int)desired_acceleration.size();
 	case Member::vissim_acceleration:
 		return (int)vissim_acceleration.size();
 	case Member::leader_id:

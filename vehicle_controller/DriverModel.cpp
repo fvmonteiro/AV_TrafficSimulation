@@ -402,6 +402,9 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
             double_value);
         return 1;
     case DRIVER_DATA_DESIRED_LANE_ANGLE     :
+        /* This value is saved for debugging purposes since we usually set
+        DRIVER_DATA_SIMPLE_LANECHANGE to 1 and return 0 when calling
+        get data for DRIVER_DATA_DESIRED_LANE_ANGLE*/
         vehicles[current_vehicle_id]->set_desired_lane_angle(double_value);
         return 1;
     case DRIVER_DATA_ACTIVE_LANE_CHANGE     :
@@ -624,18 +627,21 @@ DRIVERMODEL_API  int  DriverModelGetValue (long   type,
             std::clog << "deciding acceleration for veh. "
                 << vehicles[current_vehicle_id]->get_id() << std::endl;
         }
-        *double_value = 
-            vehicles[current_vehicle_id]->get_desired_acceleration(
+        vehicles[current_vehicle_id]->compute_desired_acceleration(
             traffic_lights);
+        *double_value = vehicles[current_vehicle_id]->get_desired_acceleration();
+            
         if (CLUELESS_DEBUGGING) {
             std::clog << "decided acceleration for veh. "
                 << vehicles[current_vehicle_id]->get_id() << std::endl;
         }
         return 1;
     case DRIVER_DATA_DESIRED_LANE_ANGLE :
-        *double_value = 
-            vehicles[current_vehicle_id]->get_desired_lane_angle();
-        return 1;
+        /* Since we set DRIVER_DATA_SIMPLE_LANECHANGE to 1, we don't
+        need to pass any values here. */
+        /**double_value = 
+            vehicles[current_vehicle_id]->get_desired_lane_angle();*/
+        return 0;
     case DRIVER_DATA_ACTIVE_LANE_CHANGE :
         if (CLUELESS_DEBUGGING) {
             std::clog << "deciding lane change for veh. "
@@ -660,7 +666,7 @@ DRIVERMODEL_API  int  DriverModelGetValue (long   type,
         call of DriverModelGetValue (DRIVER_DATA_SIMPLE_LANECHANGE) */
         /**long_value = 
             vehicles[current_vehicle_id]->get_relative_target_lane();*/
-        return 1;
+        return 0;
     case DRIVER_DATA_SIMPLE_LANECHANGE :
         *long_value = 1;
         return 1;

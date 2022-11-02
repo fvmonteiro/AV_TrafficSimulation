@@ -228,12 +228,12 @@ compute_vehicle_following_gap_for_lane_change(
 		nearby_vehicle, current_lambda_1);
 }
 
-double ConnectedAutonomousVehicle::compute_desired_acceleration(
+double ConnectedAutonomousVehicle::implement_compute_desired_acceleration(
 	const std::unordered_map<int, TrafficLight>& traffic_lights)
 {
-	double desired_acceleration =
+	double a_desired_acceleration =
 		controller.get_cav_desired_acceleration(*this);
-	return consider_vehicle_dynamics(desired_acceleration);
+	return consider_vehicle_dynamics(a_desired_acceleration);
 }
 
 bool ConnectedAutonomousVehicle::check_if_is_asking_for_cooperation(

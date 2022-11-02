@@ -47,7 +47,7 @@ private:
 	and follower (if the vehicle has lane change intention),
 	and if any nearby vehicle requested cooperation	*/
 	void find_relevant_nearby_vehicles() override;
-	double compute_desired_acceleration(
+	double implement_compute_desired_acceleration(
 		const std::unordered_map<int, TrafficLight>& traffic_lights) override;
 	bool give_lane_change_control_to_vissim() const override
 	{

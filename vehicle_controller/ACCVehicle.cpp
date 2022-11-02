@@ -1,11 +1,11 @@
 #include "ACCVehicle.h"
 
-double ACCVehicle::compute_desired_acceleration(
+double ACCVehicle::implement_compute_desired_acceleration(
 	const std::unordered_map<int, TrafficLight>& traffic_lights)
 {
-	double desired_acceleration =
+	double a_desired_acceleration =
 		controller.get_acc_desired_acceleration(*this);
-	return consider_vehicle_dynamics(desired_acceleration);
+	return consider_vehicle_dynamics(a_desired_acceleration);
 }
 
 //double ACCVehicle::compute_lane_changing_desired_time_headway(
