@@ -12,13 +12,14 @@ public:
 	~PlatoonVehicle();
 
 protected:
-	/* If the current leader is a platoon vehicle and 
-	merges into the platoon if yes. */
+
+	void implement_analyze_nearby_vehicles() override;
+	
+	/* Returns true if the vehicle creates a platoon for itself. */
 	bool implement_analyze_platoons(
 		std::unordered_map<int, std::shared_ptr<Platoon>>& platoons,
 		std::shared_ptr<EgoVehicle> pointer_to_me, 
 		long new_platoon_id) override;
-
 private:
 	void set_desired_lane_change_direction() override;
 	bool can_start_lane_change() override;

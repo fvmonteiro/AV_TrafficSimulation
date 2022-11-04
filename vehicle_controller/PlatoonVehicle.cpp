@@ -21,7 +21,7 @@ PlatoonVehicle::~PlatoonVehicle()
 
 void PlatoonVehicle::set_desired_lane_change_direction()
 {
-	if (!is_in_a_platoon() || is_platoon_leader()
+	if (is_platoon_leader()
 		|| (platoon->get_lane_change_strategy() 
 			== Platoon::LaneChangeStrategy::none))
 	{
@@ -45,6 +45,19 @@ bool PlatoonVehicle::can_start_lane_change()
 		return platoon->can_vehicle_start_lane_change(get_id());
 	}
 	return individual_lane_change_is_safe;
+}
+
+void PlatoonVehicle::implement_analyze_nearby_vehicles()
+{
+	// Find leader, dest lane leader and follower, and assisted vehicle
+	if (is_platoon_leader())
+	{
+		find_leader();
+	}
+	else
+	{
+		set_leader_by_id()
+	}
 }
 
 bool PlatoonVehicle::implement_analyze_platoons(
@@ -79,18 +92,8 @@ bool PlatoonVehicle::implement_analyze_platoons(
 	{
 		// Join the platoon of the vehicle ahead
 		long leader_platoon_id = get_leader()->get_platoon_id();
-
-		std::clog << "Veh id " << get_id()
-			<< ". I didn't have a platoon and now am joining " 
-			<< leader_platoon_id << std::endl;
-
 		add_myself_to_leader_platoon(platoons.at(leader_platoon_id),
 			pointer_to_me_my_type);
-
-		std::clog << "Platoon " << platoon->get_id()
-			<< " # vehs: " << platoon->get_size()
-			<< " ptr count: " << platoon.use_count()
-			<< std::endl;
 	}
 	else if (am_in_a_platoon && may_join_leader_platoon)
 	{
@@ -101,11 +104,6 @@ bool PlatoonVehicle::implement_analyze_platoons(
 		long leader_platoon_id = get_leader()->get_platoon_id();
 		if (old_platoon_id != leader_platoon_id)
 		{
-			std::clog << "Veh id " << get_id()
-				<< " from platoon " << get_platoon_id()
-				<< ", joining platoon " << leader_platoon_id
-				<< std::endl;
-
 			// remove myself
 			platoon->remove_vehicle_by_id(get_id());
 			// add myself to leader platoon
@@ -114,24 +112,17 @@ bool PlatoonVehicle::implement_analyze_platoons(
 			// delete my old platoon if it is empty
 			if (platoons.at(old_platoon_id)->is_empty())
 			{
-				std::clog << "Old platoon is empty" << std::endl;
+				//std::clog << "Old platoon is empty" << std::endl;
 				platoons.erase(old_platoon_id);
 			}
 		}
 	}
 	else // am_in_a_platoon && !may_join_leader_platoon
 	{
-		if (!is_platoon_leader())
+		if (platoon->can_vehicle_leave_platoon(get_id()))
 		{
-			// I or my leader changed lanes, or someone cut in between us
-			std::clog << "Veh id " << get_id()
-				<< " leaving platoon " << platoon->get_id()
-				<< std::endl;
 			platoon->remove_vehicle_by_id(get_id());
-			std::clog << "Vehicle removed from platoon" << std::endl;
 			platoon.reset();
-			std::clog << "Vehicle platoon set to null" << std::endl;
-			alone_time = 0.0;
 		}
 	}
 

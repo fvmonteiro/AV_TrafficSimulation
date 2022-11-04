@@ -53,6 +53,8 @@ public:
 		return vissim_use_preferred_lane;
 	};
 	bool get_is_connected() const { return is_connected; };
+	int get_lane_change_direction() const {
+		return lane_change_direction.to_int(); };
 	/* Proportional maximum expected relative speed */
 	//double get_rho() const { return rho; };
 
@@ -80,6 +82,7 @@ public:
 	double get_acceleration() const;
 	double get_desired_acceleration() const;
 	double get_vissim_acceleration() const;
+	/* Returns the active lane change direction given by VISSIM */
 	RelativeLane get_active_lane_change_direction() const;
 	//long get_vissim_active_lane_change() const;
 	double get_lane_end_distance() const;
@@ -126,6 +129,7 @@ public:
 	void set_velocity(double velocity);
 	void set_acceleration(double acceleration);
 	void set_vissim_acceleration(double vissim_acceleration);
+	/* Sets the active lane change direction given by VISSIM */
 	void set_active_lane_change_direction(long direction);
 	/*void set_vissim_active_lane_change(int active_lane_change);*/
 	/* Mandatory/route related lane changes */
@@ -246,7 +250,7 @@ public:
 		this->desired_acceleration =
 			implement_compute_desired_acceleration(traffic_lights);
 	};
-	long decide_lane_change_direction();
+	void decide_lane_change_direction();
 	//RelativeLane get_lane_change_direction();
 
 	double get_accepted_lane_change_gap(
@@ -304,6 +308,7 @@ protected:
 
 	/* Nearby vehicles ------------------------------------------------------- */
 
+	void set_leader_by_id(long new_leader_id);
 	void find_leader();
 	std::vector<std::shared_ptr<NearbyVehicle>> nearby_vehicles;
 	/* Determines whether the vel control ref speed is the vehicle's
@@ -418,7 +423,11 @@ private:
 	double desired_acceleration{ 0.0 };
 	/* VISSIM suggested acceleration */
 	std::vector<double> vissim_acceleration;
-	/* +1 = to the left, 0 = none, -1 = to the right */
+	/* Value of lane change determined by internal algorithm
+	+1 = to the left, 0 = none, -1 = to the right */
+	RelativeLane lane_change_direction{ RelativeLane::same };
+	/* Value of active lane change in VISSIM:
+	+1 = to the left, 0 = none, -1 = to the right */
 	std::vector<RelativeLane> active_lane_change_direction;
 	/* VISSIM suggested active lane change */
 	//std::vector<long> vissim_active_lane_change;

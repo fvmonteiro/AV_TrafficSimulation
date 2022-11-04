@@ -23,6 +23,7 @@
 /*==========================================================================*/
 
 const std::unordered_set<long> LOGGED_VEHICLES_IDS{ 0 };
+const int LOGGED_PLATOON_ID{ 3 };
 const bool CLUELESS_DEBUGGING{ false };
 //const double DEBUGGING_START_TIME{ 249.0 };
 
@@ -641,18 +642,19 @@ DRIVERMODEL_API  int  DriverModelGetValue (long   type,
         *long_value = 1;
         return 1;
     case DRIVER_DATA_DESIRED_ACCELERATION :
-        if (CLUELESS_DEBUGGING) {
+        /*if (CLUELESS_DEBUGGING) {
             std::clog << "deciding acceleration for veh. "
                 << vehicles[current_vehicle_id]->get_id() << std::endl;
         }
         vehicles[current_vehicle_id]->compute_desired_acceleration(
-            traffic_lights);
-        *double_value = vehicles[current_vehicle_id]->get_desired_acceleration();
+            traffic_lights);*/
+        *double_value = vehicles[current_vehicle_id]
+            ->get_desired_acceleration();
             
-        if (CLUELESS_DEBUGGING) {
+        /*if (CLUELESS_DEBUGGING) {
             std::clog << "decided acceleration for veh. "
                 << vehicles[current_vehicle_id]->get_id() << std::endl;
-        }
+        }*/
         return 1;
     case DRIVER_DATA_DESIRED_LANE_ANGLE :
         /* Since we set DRIVER_DATA_SIMPLE_LANECHANGE to 1, we don't
@@ -661,17 +663,17 @@ DRIVERMODEL_API  int  DriverModelGetValue (long   type,
             vehicles[current_vehicle_id]->get_desired_lane_angle();*/
         return 0;
     case DRIVER_DATA_ACTIVE_LANE_CHANGE :
-        if (CLUELESS_DEBUGGING) {
+        /*if (CLUELESS_DEBUGGING) {
             std::clog << "deciding lane change for veh. "
                 << vehicles[current_vehicle_id]->get_id() << std::endl;
         }
-        *long_value = 
-            vehicles[current_vehicle_id]->decide_lane_change_direction();
-        if (CLUELESS_DEBUGGING) {
+        vehicles[current_vehicle_id]->decide_lane_change_direction();*/
+        *long_value = vehicles[current_vehicle_id]->get_lane_change_direction();
+        /*if (CLUELESS_DEBUGGING) {
             std::clog << "decided lane change " << *long_value
                 << " for veh. " 
                 << vehicles[current_vehicle_id]->get_id() << std::endl;
-        }
+        }*/
 
         if (vehicles[current_vehicle_id]->is_verbose()) 
         {
@@ -728,18 +730,6 @@ DRIVERMODEL_API  int  DriverModelExecuteCommand (long number)
                 simulation_time_step, current_time, verbose)
             );
 
-        /* Platoon vehicles create an empty platoon in their constructor */
-        /*if (vehicles[current_vehicle_id]->is_in_a_platoon())
-        {
-            platoon_idx++;
-            platoons[platoon_idx] =
-                vehicles[current_vehicle_id]->get_platoon();
-            platoons[platoon_idx]->set_id(platoon_idx);
-            platoons[platoon_idx]->add_leader(
-                std::dynamic_pointer_cast<PlatoonVehicle>(
-                vehicles[current_vehicle_id]));
-        }*/
-
         current_vehicle_id = 0;
         return 1;
     }
@@ -765,8 +755,10 @@ DRIVERMODEL_API  int  DriverModelExecuteCommand (long number)
     {
         /* This is executed after all the set commands and before
         any get command. */
-        if (CLUELESS_DEBUGGING) {
-            std::clog << "Updating states" << std::endl;
+        if (CLUELESS_DEBUGGING) 
+        {
+            std::clog << "Veh " << current_vehicle_id
+                <<"\nUpdating states" << std::endl;
         }
         vehicles[current_vehicle_id]->update_state();
         
@@ -782,6 +774,24 @@ DRIVERMODEL_API  int  DriverModelExecuteCommand (long number)
             platoons[platoon_id] = 
                 vehicles[current_vehicle_id]->get_platoon();
             platoon_id++;
+        }
+
+        if (CLUELESS_DEBUGGING) 
+        {
+            std::clog << "Deciding acceleration" << std::endl;
+        }
+        vehicles[current_vehicle_id]->compute_desired_acceleration(
+            traffic_lights);
+
+        if (CLUELESS_DEBUGGING) 
+        {
+            std::clog << "Deciding lane change" << std::endl;
+        }
+        vehicles[current_vehicle_id]->decide_lane_change_direction();
+        
+        if (CLUELESS_DEBUGGING) 
+        {
+            std::clog << "Command 'Move Driver' done." << std::endl;
         }
         return 1;
     }

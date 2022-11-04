@@ -93,7 +93,7 @@ protected:
 private:
 	/* Finds the current leader and, if the vehicle has lane change
 	intention, the destination lane leader and follower */
-	void find_relevant_nearby_vehicles() override;
+	//void find_relevant_nearby_vehicles() override;
 	double implement_compute_desired_acceleration(
 		const std::unordered_map<int, TrafficLight>& traffic_lights) override;
 	//void set_desired_lane_change_direction() override;

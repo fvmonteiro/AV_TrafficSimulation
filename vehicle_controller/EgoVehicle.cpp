@@ -471,8 +471,16 @@ void EgoVehicle::implement_analyze_nearby_vehicles()
 	find_leader();
 }
 
+void EgoVehicle::set_leader_by_id(long new_leader_id)
+{
+	std::shared_ptr<NearbyVehicle> old_leader = std::move(leader);
+	leader = get_nearby_vehicle_by_id(new_leader_id);
+	update_leader(old_leader);
+}
+
 void EgoVehicle::find_leader()
 {
+	// Note: this makes the leader = nullptr
 	std::shared_ptr<NearbyVehicle> old_leader = std::move(leader);
 
 	for (auto& nearby_vehicle : nearby_vehicles)
@@ -737,14 +745,17 @@ double EgoVehicle::consider_vehicle_dynamics(double unfiltered_acceleration)
 	return filtered_acceleration;
 }
 
-long EgoVehicle::decide_lane_change_direction()
+void EgoVehicle::decide_lane_change_direction()
 {
 	if (has_lane_change_intention() && can_start_lane_change())
 	{
-		return desired_lane_change_direction.to_int();
+		lane_change_direction = desired_lane_change_direction;
 	}
-	//update_lane_change_waiting_time();
-	return 0;
+	else
+	{
+		//update_lane_change_waiting_time();
+		lane_change_direction = RelativeLane::same;
+	}
 }
 
 double EgoVehicle::get_accepted_lane_change_gap(
