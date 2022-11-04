@@ -1,6 +1,6 @@
 #include "ACCVehicle.h"
 
-double ACCVehicle::compute_desired_acceleration(
+double ACCVehicle::implement_compute_desired_acceleration(
 	const std::unordered_map<int, TrafficLight>& traffic_lights)
 {
 	double desired_acceleration =

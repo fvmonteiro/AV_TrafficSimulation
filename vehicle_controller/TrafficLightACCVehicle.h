@@ -38,7 +38,7 @@ protected:
 			simulation_time_step, creation_time, verbose) {}
 
 private:
-	double compute_desired_acceleration(
+	double implement_compute_desired_acceleration(
 		const std::unordered_map<int, TrafficLight>& traffic_lights) override;
 
 	/* Methods we must override but aren't used by this class ------------- */

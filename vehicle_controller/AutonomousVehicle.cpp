@@ -269,7 +269,7 @@ double AutonomousVehicle::estimate_nearby_vehicle_time_headway(
 			max_brake, get_rho(), 0/*accepted_lane_change_risk_to_follower*/));
 }
 
-double AutonomousVehicle::compute_desired_acceleration(
+double AutonomousVehicle::implement_compute_desired_acceleration(
 	const std::unordered_map<int, TrafficLight>& traffic_lights)
 {
 	double desired_acceleration =

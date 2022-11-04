@@ -719,14 +719,16 @@ double EgoVehicle::consider_vehicle_dynamics(double desired_acceleration)
 	return filtered_acceleration;
 }
 
-long EgoVehicle::decide_lane_change_direction()
+void EgoVehicle::decide_lane_change_direction()
 {	
 	if (has_lane_change_intention() && can_start_lane_change())
 	{
-		return desired_lane_change_direction.to_int();
+		lane_change_direction = desired_lane_change_direction;
 	}
-	//update_lane_change_waiting_time();
-	return 0;
+	else 
+	{
+		lane_change_direction = RelativeLane::same;
+	}
 }
 
 double EgoVehicle::get_accepted_lane_change_gap(

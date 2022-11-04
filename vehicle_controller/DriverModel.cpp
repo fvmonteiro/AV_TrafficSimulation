@@ -620,34 +620,16 @@ DRIVERMODEL_API  int  DriverModelGetValue (long   type,
         *long_value = 1;
         return 1;
     case DRIVER_DATA_DESIRED_ACCELERATION :
-        if (CLUELESS_DEBUGGING) {
-            std::clog << "deciding acceleration for veh. "
-                << vehicles[current_vehicle_id]->get_id() << std::endl;
-        }
-        *double_value = 
-            vehicles[current_vehicle_id]->get_desired_acceleration(
-            traffic_lights);
-        if (CLUELESS_DEBUGGING) {
-            std::clog << "decided acceleration for veh. "
-                << vehicles[current_vehicle_id]->get_id() << std::endl;
-        }
+        *double_value = vehicles[current_vehicle_id]
+            ->get_desired_acceleration();
         return 1;
     case DRIVER_DATA_DESIRED_LANE_ANGLE :
         *double_value = 
             vehicles[current_vehicle_id]->get_desired_lane_angle();
         return 1;
     case DRIVER_DATA_ACTIVE_LANE_CHANGE :
-        if (CLUELESS_DEBUGGING) {
-            std::clog << "deciding lane change for veh. "
-                << vehicles[current_vehicle_id]->get_id() << std::endl;
-        }
         *long_value = 
-            vehicles[current_vehicle_id]->decide_lane_change_direction();
-        if (CLUELESS_DEBUGGING) {
-            std::clog << "decided lane change " << *long_value
-                << " for veh. " 
-                << vehicles[current_vehicle_id]->get_id() << std::endl;
-        }
+            vehicles[current_vehicle_id]->get_lane_change_direction();
 
         if (vehicles[current_vehicle_id]->is_verbose()) 
         {
@@ -718,7 +700,8 @@ DRIVERMODEL_API  int  DriverModelExecuteCommand (long number)
         /* This is executed after all the set commands and before
         any get command. */
         if (CLUELESS_DEBUGGING) {
-            std::clog << "Updating states" << std::endl;
+            std::clog << "Veh: " << current_vehicle_id
+                << "\nUpdating states" << std::endl;
         }
         vehicles[current_vehicle_id]->update_state();
         
@@ -727,6 +710,22 @@ DRIVERMODEL_API  int  DriverModelExecuteCommand (long number)
             std::clog << "Analyzing nearby vehicles" << std::endl;
         }
         vehicles[current_vehicle_id]->analyze_nearby_vehicles();
+
+        if (CLUELESS_DEBUGGING) {
+            std::clog << "Deciding acceleration\n";
+        }
+        vehicles[current_vehicle_id]->compute_desired_acceleration(
+            traffic_lights);
+
+        if (CLUELESS_DEBUGGING) {
+            std::clog << "Deciding lane change\n";
+        }
+        vehicles[current_vehicle_id]->decide_lane_change_direction();
+
+        if (CLUELESS_DEBUGGING) {
+            std::clog << "All movement decisions made\n";
+        }
+
         return 1;
     }
     default :

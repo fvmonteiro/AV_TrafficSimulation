@@ -228,7 +228,7 @@ compute_vehicle_following_gap_for_lane_change(
 		nearby_vehicle, current_lambda_1);
 }
 
-double ConnectedAutonomousVehicle::compute_desired_acceleration(
+double ConnectedAutonomousVehicle::implement_compute_desired_acceleration(
 	const std::unordered_map<int, TrafficLight>& traffic_lights)
 {
 	double desired_acceleration =

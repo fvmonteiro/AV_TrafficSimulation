@@ -81,6 +81,10 @@ public:
 	double get_desired_acceleration() const;
 	double get_vissim_acceleration() const;
 	RelativeLane get_active_lane_change_direction() const;
+	/* Our internal lane change decision */
+	int get_lane_change_direction() const {
+		return lane_change_direction.to_int();
+	}
 	//long get_vissim_active_lane_change() const;
 	double get_lane_end_distance() const;
 	long get_leader_id() const;
@@ -227,12 +231,13 @@ public:
 
 	/* Control related methods ----------------------------------------------- */
 
-	double get_desired_acceleration(
+	void compute_desired_acceleration(
 		const std::unordered_map<int, TrafficLight>& traffic_lights)
 	{
-		return compute_desired_acceleration(traffic_lights);
+		double a = implement_compute_desired_acceleration(traffic_lights);
+		desired_acceleration.push_back(a);
 	};
-	long decide_lane_change_direction();
+	void decide_lane_change_direction();
 	//RelativeLane get_lane_change_direction();
 
 	double get_accepted_lane_change_gap(
@@ -302,7 +307,7 @@ protected:
 						  vehicle */
 private:
 	/* Computes the longitudinal controller input */
-	virtual double compute_desired_acceleration(
+	virtual double implement_compute_desired_acceleration(
 		const std::unordered_map<int, TrafficLight>& traffic_lights) = 0;
 	virtual bool give_lane_change_control_to_vissim() const = 0;
 	/* Decides whether the vehicle can start a
@@ -403,7 +408,11 @@ private:
 	std::vector<double> desired_acceleration;
 	/* VISSIM suggested acceleration */
 	std::vector<double> vissim_acceleration;
-	/* +1 = to the left, 0 = none, -1 = to the right */
+	/* Value determined internally
+	+1 = to the left, 0 = none, -1 = to the right */
+	RelativeLane lane_change_direction{ RelativeLane::same };
+	/* Value is read from VISSIM
+	+1 = to the left, 0 = none, -1 = to the right */
 	std::vector<RelativeLane> active_lane_change_direction;
 	/* VISSIM suggested active lane change */
 	//std::vector<long> vissim_active_lane_change;
