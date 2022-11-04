@@ -81,8 +81,11 @@ public:
 	double get_desired_acceleration() const;
 	double get_vissim_acceleration() const;
 	RelativeLane get_active_lane_change_direction() const;
+	RelativeLane get_lane_change_direction() const {
+		return lane_change_direction;
+	}
 	/* Our internal lane change decision */
-	int get_lane_change_direction() const {
+	int get_lane_change_direction_to_int() const {
 		return lane_change_direction.to_int();
 	}
 	//long get_vissim_active_lane_change() const;

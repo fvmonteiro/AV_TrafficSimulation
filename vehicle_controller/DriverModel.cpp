@@ -20,7 +20,7 @@
 
 /*==========================================================================*/
 
-const std::unordered_set<long> LOGGED_VEHICLES_IDS{ 0 };
+const std::unordered_set<long> LOGGED_VEHICLES_IDS{ 31 };
 const bool CLUELESS_DEBUGGING{ false };
 //const double DEBUGGING_START_TIME{ 249.0 };
 
@@ -629,13 +629,7 @@ DRIVERMODEL_API  int  DriverModelGetValue (long   type,
         return 1;
     case DRIVER_DATA_ACTIVE_LANE_CHANGE :
         *long_value = 
-            vehicles[current_vehicle_id]->get_lane_change_direction();
-
-        if (vehicles[current_vehicle_id]->is_verbose()) 
-        {
-            std::clog << *vehicles[current_vehicle_id] << std::endl;
-        }
-        
+            vehicles[current_vehicle_id]->get_lane_change_direction_to_int();        
         return 1;
     case DRIVER_DATA_REL_TARGET_LANE :
         /* This is used by Vissim only if *long_value was set to 0 in the 
@@ -701,7 +695,7 @@ DRIVERMODEL_API  int  DriverModelExecuteCommand (long number)
         any get command. */
         if (CLUELESS_DEBUGGING) {
             std::clog << "Veh: " << current_vehicle_id
-                << "\nUpdating states" << std::endl;
+                << "\nUpdating states\n";
         }
         vehicles[current_vehicle_id]->update_state();
         
@@ -712,18 +706,23 @@ DRIVERMODEL_API  int  DriverModelExecuteCommand (long number)
         vehicles[current_vehicle_id]->analyze_nearby_vehicles();
 
         if (CLUELESS_DEBUGGING) {
+            std::clog << "Deciding lane change\n";
+        }
+        vehicles[current_vehicle_id]->decide_lane_change_direction();
+
+        if (CLUELESS_DEBUGGING) {
             std::clog << "Deciding acceleration\n";
         }
         vehicles[current_vehicle_id]->compute_desired_acceleration(
             traffic_lights);
 
         if (CLUELESS_DEBUGGING) {
-            std::clog << "Deciding lane change\n";
-        }
-        vehicles[current_vehicle_id]->decide_lane_change_direction();
-
-        if (CLUELESS_DEBUGGING) {
             std::clog << "All movement decisions made\n";
+        }
+
+        if (vehicles[current_vehicle_id]->is_verbose())
+        {
+            std::clog << *vehicles[current_vehicle_id] << std::endl;
         }
 
         return 1;

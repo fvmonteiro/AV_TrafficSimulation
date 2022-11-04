@@ -1195,27 +1195,29 @@ EgoVehicle::state_to_string_map = {
 	{ State::intention_to_change_lanes, "intention to LC" },
 };
 
-std::ostream& operator<< (std::ostream& out, const EgoVehicle& vehicle)
+std::ostream& operator<< (std::ostream& out, const EgoVehicle& ego_vehicle)
 {
-	out << "t=" << vehicle.get_time()
-		<< ", id=" << vehicle.get_id()
-		<< ", type=" << static_cast<int>(vehicle.get_type())
-		<< ", state=" 
-		<< EgoVehicle::state_to_string_map.at(vehicle.get_state())
-		<< ", lane=" << vehicle.get_lane()
+	out << "t=" << ego_vehicle.get_time()
+		<< ", id=" << ego_vehicle.get_id()
+		<< ", type=" << static_cast<int>(ego_vehicle.get_type())
+		<< ", state="
+		<< EgoVehicle::state_to_string_map.at(ego_vehicle.get_state())
+		<< ", lane=" << ego_vehicle.get_lane()
 		<< ", pref. lane="
-		<< vehicle.get_preferred_relative_lane().to_string()
+		<< ego_vehicle.get_preferred_relative_lane().to_string()
 		<< ", use preferred lane="
-		<< vehicle.get_vissim_use_preferred_lane()
+		<< ego_vehicle.get_vissim_use_preferred_lane()
 		<< ", target lane="
-		<< vehicle.relative_target_lane.to_string()
+		<< ego_vehicle.relative_target_lane.to_string()
 		/*<< ", vissim active lc="
 		<< RelativeLane::from_long(
 			vehicle.get_vissim_active_lane_change()).to_string()*/
-		<< ", active lc.="
-		<< vehicle.get_active_lane_change_direction().to_string()
-		<< ", vel=" << vehicle.get_velocity()
-		<< ", accel=" << vehicle.get_acceleration();
+		<< ", des lc=" << ego_vehicle.get_lane_change_direction().to_string()
+		<< ", active lc="
+		<< ego_vehicle.get_active_lane_change_direction().to_string()
+		<< ", vel=" << ego_vehicle.get_velocity()
+		<< ", des accel=" << ego_vehicle.get_desired_acceleration()
+		<< ", accel=" << ego_vehicle.get_acceleration();
 
 	return out; // return std::ostream so we can chain calls to operator<<
 }

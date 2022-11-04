@@ -27,7 +27,7 @@ ControlManager::ControlManager(const EgoVehicle& ego_vehicle,
 
 	//extract_vehicle_static_parameters(ego_vehicle);
 
-	bool is_long_control_verbose = verbose;
+	bool is_long_control_verbose = false; // verbose;
 
 	switch (ego_vehicle.get_type())
 	{
@@ -389,8 +389,18 @@ bool ControlManager::get_end_of_lane_desired_acceleration(
 	/* When the lane change direction equals the preferred relative
 	lane, it means the vehicle is moving into the destination lane.
 	At this point, we don't want to use this controller anymore. */
-	if ((ego_vehicle.get_preferred_relative_lane()
-		!= ego_vehicle.get_active_lane_change_direction())
+	bool is_lane_changing = ego_vehicle.get_preferred_relative_lane()
+		== ego_vehicle.get_active_lane_change_direction();
+	bool is_about_to_start_lane_change = false;
+		/*ego_vehicle.get_preferred_relative_lane()
+		== ego_vehicle.get_lane_change_direction();*/
+	if (verbose)
+	{
+		is_about_to_start_lane_change =
+			ego_vehicle.get_preferred_relative_lane()
+			== ego_vehicle.get_lane_change_direction();
+	}
+	if (!is_lane_changing && !is_about_to_start_lane_change
 		&& (ego_vehicle.get_lane_end_distance() > -1)) 
 		// -1 because end of lane dist can get small negative values
 	{
