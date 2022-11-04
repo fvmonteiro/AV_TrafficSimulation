@@ -33,24 +33,24 @@ public:
 	double get_sampling_interval() const { return simulation_time_step; };
 	long get_color() const { return color; };
 	double get_desired_velocity() const { return desired_velocity; };
-	double get_comfortable_acceleration() const { 
+	double get_comfortable_acceleration() const {
 		return comfortable_acceleration;
 	};
 	/* Returns max_brake/2 */
-	double get_lane_change_max_brake() const { 
+	double get_lane_change_max_brake() const {
 		return max_brake / 2;
 	};
 	double get_comfortable_brake() const { return comfortable_brake; };
 	double get_max_jerk() const { return max_jerk; };
 	double get_brake_delay() const { return brake_delay; };
 	double get_desired_lane_angle() const { return desired_lane_angle; };
-	int get_relative_target_lane() const { 
+	int get_relative_target_lane() const {
 		return relative_target_lane.to_int();
 	};
 	long get_turning_indicator() const { return turning_indicator; };
 	double get_waiting_time() const { return lane_change_waiting_time; };
-	long get_vissim_use_preferred_lane() const { 
-		return vissim_use_preferred_lane; 
+	long get_vissim_use_preferred_lane() const {
+		return vissim_use_preferred_lane;
 	};
 	bool get_is_connected() const { return is_connected; };
 	/* Proportional maximum expected relative speed */
@@ -70,7 +70,7 @@ public:
 	};
 
 	/* Getters of most recent values ----------------------------------------- */
-	
+
 	double get_time() const;
 	long get_lane() const;
 	long get_link() const;
@@ -81,6 +81,13 @@ public:
 	double get_desired_acceleration() const;
 	double get_vissim_acceleration() const;
 	RelativeLane get_active_lane_change_direction() const;
+	RelativeLane get_lane_change_direction() const {
+		return lane_change_direction;
+	}
+	/* Our internal lane change decision */
+	int get_lane_change_direction_to_int() const {
+		return lane_change_direction.to_int();
+	}
 	//long get_vissim_active_lane_change() const;
 	double get_lane_end_distance() const;
 	long get_leader_id() const;
@@ -150,7 +157,7 @@ public:
 
 	/* Clears the vector of pointers and the individually named pointers */
 	void clear_nearby_vehicles();
-	/* Creates an instance of nearby vehicle and populates it with 
+	/* Creates an instance of nearby vehicle and populates it with
 	the given data. */
 	void emplace_nearby_vehicle(long id, long relative_lane,
 		long relative_position);
@@ -159,7 +166,7 @@ public:
 	/* Sets the nearby vehicle if both the ego and nearby vehicles are connected.
 	Otherwise, set the type as unknown. */
 	void set_nearby_vehicle_type(long type);
-	/* Looks at all nearby vehicles to find the relevant ones, such 
+	/* Looks at all nearby vehicles to find the relevant ones, such
 	* as the leader. */
 	void analyze_nearby_vehicles() { find_relevant_nearby_vehicles(); };
 	//bool is_cutting_in(const NearbyVehicle& nearby_vehicle) const;
@@ -183,7 +190,7 @@ public:
 	double get_relative_velocity_to_leader();
 	/* The lane change request is an int whose absolute value equals the
 	vehicle's id. The signal of the lane change request indicates whether
-	it is a right (-1) or left (+1) lane change. Only connected vehicles 
+	it is a right (-1) or left (+1) lane change. Only connected vehicles
 	can create a lane change request*/
 	long get_lane_change_request();
 
@@ -192,7 +199,7 @@ public:
 	bool has_assisted_vehicle() const;
 	/* Methods to debug nearby vehicles information */
 
-	/* TODO: These don't need to be virtual anymore. 
+	/* TODO: These don't need to be virtual anymore.
 	Use the get_vehicle methods instead. */
 	long get_dest_lane_leader_id() const; // { return 0; };
 	long get_dest_lane_follower_id() const; // { return 0; };
@@ -233,7 +240,7 @@ public:
 		this->desired_acceleration =
 			implement_compute_desired_acceleration(traffic_lights);
 	};
-	long decide_lane_change_direction();
+	void decide_lane_change_direction();
 	//RelativeLane get_lane_change_direction();
 
 	double get_accepted_lane_change_gap(
@@ -250,7 +257,7 @@ public:
 	if the other vehicle is behind. */
 	double compute_time_headway_gap(
 		std::shared_ptr<NearbyVehicle> nearby_vehicle);
-	/* Returns the transient lane changing gap between ego vehicle 
+	/* Returns the transient lane changing gap between ego vehicle
 	and other. */
 	double compute_transient_gap(
 		std::shared_ptr<NearbyVehicle> nearby_vehicle);
@@ -266,7 +273,7 @@ protected:
 	EgoVehicle(long id, VehicleType type, double desired_velocity,
 		double brake_delay, bool is_lane_change_autonomous, bool is_connected,
 		double simulation_time_step, double creation_time, bool verbose);
-	
+
 	virtual double compute_vehicle_following_safe_time_headway(
 		const NearbyVehicle& nearby_vehicle) const;
 
@@ -336,11 +343,11 @@ private:
 	virtual void implement_set_accepted_lane_change_risk_to_follower(
 		double value) = 0; //{};
 	virtual void implement_set_use_linear_lane_change_gap(long value) = 0; // {};
-	
+
 	/* Finds the current leader */
 	virtual void find_relevant_nearby_vehicles();
 	virtual void set_desired_lane_change_direction();
-	
+
 	double compute_current_desired_time_headway(
 		const NearbyVehicle& nearby_vehicle) const;
 	virtual double compute_lane_changing_desired_time_headway(
@@ -349,9 +356,9 @@ private:
 	bool check_if_is_leader(const NearbyVehicle& nearby_vehicle) const;
 	void update_leader(const std::shared_ptr<NearbyVehicle>& old_leader);
 
-	/* Estimated parameters used for safe gap computations (no direct 
+	/* Estimated parameters used for safe gap computations (no direct
 	equivalent in VISSIM's simulation dynamics) --------------------------- */
-	
+
 	double tau{ ACTUATOR_CONSTANT }; // actuator constant [s].
 	double rho{ 0.2 }; // proportional maximum expected relative speed
 	/* constant used in the discrete approximation of
@@ -365,7 +372,7 @@ private:
 	/* Colors for easy visualization in VISSIM ------------------------------- */
 
 	/* Highway with lane changes scenario
-	General rule: bright colors represent vel control, 
+	General rule: bright colors represent vel control,
 	darker colors represent vehicle following. */
 	color_t orig_lane_vel_control_color{ GREEN };
 	color_t orig_lane_veh_foll_color{ DARK_GREEN };
@@ -388,7 +395,7 @@ private:
 	double creation_time{ 0.0 };
 	double simulation_time_step{ 0.1 };
 	long color{ 0 };
-	double desired_velocity{ 0 }; /* from VISSIM's desired 
+	double desired_velocity{ 0 }; /* from VISSIM's desired
 								  velocity distribution */
 	std::vector<long> lane;
 	std::vector<long> link;
@@ -404,7 +411,11 @@ private:
 	double desired_acceleration{ 0.0 };
 	/* VISSIM suggested acceleration */
 	std::vector<double> vissim_acceleration;
-	/* +1 = to the left, 0 = none, -1 = to the right */
+	/* Value determined internally
+	+1 = to the left, 0 = none, -1 = to the right */
+	RelativeLane lane_change_direction{ RelativeLane::same };
+	/* Value is read from VISSIM
+	+1 = to the left, 0 = none, -1 = to the right */
 	std::vector<RelativeLane> active_lane_change_direction;
 	/* VISSIM suggested active lane change */
 	//std::vector<long> vissim_active_lane_change;
@@ -422,7 +433,7 @@ private:
 	/* Safe lane change decision parameters ---------------------------------- */
 	/* Variables are only needed if we want to be able to see values in VISSIM.
 	Otherwise there is no need to save these values.
-	[May 6, 2022] Not being used. The choice is to keep measuring safety based 
+	[May 6, 2022] Not being used. The choice is to keep measuring safety based
 	only on the time headway */
 
 	std::unordered_map<int, double> gap_variation_during_lane_change;
@@ -432,9 +443,9 @@ private:
 
 	std::vector<double> ttc; // time-to-collision
 	std::vector<double> drac; // deceleration rate to avoid collision
-	std::vector<double> collision_severity_risk; /* delta vel. at collision 
+	std::vector<double> collision_severity_risk; /* delta vel. at collision
 												 in worst case scenario */
-	
+
 	/* For printing and debugging purporses ------------------------------- */
 	static const std::unordered_map<State, std::string> state_to_string_map;
 
