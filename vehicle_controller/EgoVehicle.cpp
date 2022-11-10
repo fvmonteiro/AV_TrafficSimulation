@@ -721,11 +721,15 @@ double EgoVehicle::consider_vehicle_dynamics(double unfiltered_acceleration)
 
 void EgoVehicle::decide_lane_change_direction()
 {	
-	if (has_lane_change_intention() && can_start_lane_change())
+	if (is_lane_changing())
+	{
+		lane_change_direction = get_active_lane_change_direction();
+	}
+	else if (has_lane_change_intention() && can_start_lane_change())
 	{
 		lane_change_direction = desired_lane_change_direction;
 	}
-	else 
+	else
 	{
 		lane_change_direction = RelativeLane::same;
 	}
