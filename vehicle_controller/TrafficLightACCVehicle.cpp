@@ -30,7 +30,7 @@ double TrafficLightACCVehicle::implement_compute_desired_acceleration(
 	const std::unordered_map<int, TrafficLight>& traffic_lights)
 {
 	double a_desired_acceleration =
-		controller.get_traffic_light_acc_acceleration(*this, traffic_lights);
+		controller.get_desired_acceleration(*this, traffic_lights);
 	return a_desired_acceleration;
 }
 

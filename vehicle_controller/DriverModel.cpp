@@ -22,8 +22,8 @@
 
 /*==========================================================================*/
 
-const std::unordered_set<long> LOGGED_VEHICLES_IDS{ 0 };
-const int LOGGED_PLATOON_ID{ 3 };
+const std::unordered_set<long> LOGGED_VEHICLES_IDS{ 2 };
+const int LOGGED_PLATOON_ID{ 0 };
 const bool CLUELESS_DEBUGGING{ false };
 //const double DEBUGGING_START_TIME{ 249.0 };
 
@@ -109,17 +109,10 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
         }
         return 1;
     case DRIVER_DATA_TIME                   :
-        /*if (double_value > DEBUGGING_START_TIME)
-        {
-            CLUELESS_DEBUGGING = true;
-        }*/
         if (CLUELESS_DEBUGGING && (double_value != current_time))
         {
-            std::clog << "t=" << current_time 
-                << ", " << vehicles.size() << " vehicles." << std::endl;
-        }
-        if (double_value != current_time)
-        {
+            /*std::clog << "t=" << current_time 
+                << ", " << vehicles.size() << " vehicles." << std::endl;*/
             std::clog << "t=" << current_time
                 << ", " << platoons.size() << " platoons" << std::endl;
             for (auto& it : platoons)
@@ -148,7 +141,7 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
                 return 1;
             /* Debugging: leader */
             case UDA::leader_id:
-                return 0;
+                return 1;
             case UDA::leader_type:
             case UDA::gap_to_leader:
             case UDA::reference_gap:
@@ -382,6 +375,8 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
         }
         return 1;
     case DRIVER_DATA_NO_OF_LANES            :
+        vehicles[current_vehicle_id]->set_number_of_lanes(long_value);
+        return 1;
     case DRIVER_DATA_LANE_WIDTH             :
         return 1;
     case DRIVER_DATA_LANE_END_DISTANCE      :
@@ -642,19 +637,8 @@ DRIVERMODEL_API  int  DriverModelGetValue (long   type,
         *long_value = 1;
         return 1;
     case DRIVER_DATA_DESIRED_ACCELERATION :
-        /*if (CLUELESS_DEBUGGING) {
-            std::clog << "deciding acceleration for veh. "
-                << vehicles[current_vehicle_id]->get_id() << std::endl;
-        }
-        vehicles[current_vehicle_id]->compute_desired_acceleration(
-            traffic_lights);*/
         *double_value = vehicles[current_vehicle_id]
             ->get_desired_acceleration();
-            
-        /*if (CLUELESS_DEBUGGING) {
-            std::clog << "decided acceleration for veh. "
-                << vehicles[current_vehicle_id]->get_id() << std::endl;
-        }*/
         return 1;
     case DRIVER_DATA_DESIRED_LANE_ANGLE :
         /* Since we set DRIVER_DATA_SIMPLE_LANECHANGE to 1, we don't
@@ -663,22 +647,7 @@ DRIVERMODEL_API  int  DriverModelGetValue (long   type,
             vehicles[current_vehicle_id]->get_desired_lane_angle();*/
         return 0;
     case DRIVER_DATA_ACTIVE_LANE_CHANGE :
-        /*if (CLUELESS_DEBUGGING) {
-            std::clog << "deciding lane change for veh. "
-                << vehicles[current_vehicle_id]->get_id() << std::endl;
-        }
-        vehicles[current_vehicle_id]->decide_lane_change_direction();*/
         *long_value = vehicles[current_vehicle_id]->get_lane_change_direction();
-        /*if (CLUELESS_DEBUGGING) {
-            std::clog << "decided lane change " << *long_value
-                << " for veh. " 
-                << vehicles[current_vehicle_id]->get_id() << std::endl;
-        }*/
-
-        if (vehicles[current_vehicle_id]->is_verbose()) 
-        {
-            std::clog << *vehicles[current_vehicle_id] << std::endl;
-        }
         
         return 1;
     case DRIVER_DATA_REL_TARGET_LANE :
@@ -773,8 +742,18 @@ DRIVERMODEL_API  int  DriverModelExecuteCommand (long number)
         {
             platoons[platoon_id] = 
                 vehicles[current_vehicle_id]->get_platoon();
+            if (platoon_id == LOGGED_PLATOON_ID)
+            {
+                platoons[platoon_id]->set_verbose(true);
+            }
             platoon_id++;
         }
+
+        if (CLUELESS_DEBUGGING)
+        {
+            std::clog << "Deciding lane change" << std::endl;
+        }
+        vehicles[current_vehicle_id]->decide_lane_change_direction();
 
         if (CLUELESS_DEBUGGING) 
         {
@@ -782,17 +761,17 @@ DRIVERMODEL_API  int  DriverModelExecuteCommand (long number)
         }
         vehicles[current_vehicle_id]->compute_desired_acceleration(
             traffic_lights);
-
-        if (CLUELESS_DEBUGGING) 
-        {
-            std::clog << "Deciding lane change" << std::endl;
-        }
-        vehicles[current_vehicle_id]->decide_lane_change_direction();
         
         if (CLUELESS_DEBUGGING) 
         {
             std::clog << "Command 'Move Driver' done." << std::endl;
         }
+
+        if (vehicles[current_vehicle_id]->is_verbose())
+        {
+            std::clog << *vehicles[current_vehicle_id] << std::endl;
+        }
+
         return 1;
     }
     default :

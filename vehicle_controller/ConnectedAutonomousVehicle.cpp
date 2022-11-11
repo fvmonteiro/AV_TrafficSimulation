@@ -12,7 +12,7 @@ ConnectedAutonomousVehicle::ConnectedAutonomousVehicle(
 	if (verbose)
 	{
 		std::clog << "lambda1_connected = " << lambda_1_connected
-			<< ", lambda1_connected_lc = " << lambda_1_lane_change_connected
+			<< ", lambda1_lc_platoon = " << lambda_1_lane_change_connected
 			<< "\n[ConnectedAutonomousVehicle] constructor done" << std::endl;
 	}
 }
@@ -55,7 +55,9 @@ long ConnectedAutonomousVehicle::create_lane_change_request()
 
 void ConnectedAutonomousVehicle::implement_analyze_nearby_vehicles()
 {
-	AutonomousVehicle::implement_analyze_nearby_vehicles();
+	//AutonomousVehicle::implement_analyze_nearby_vehicles();
+	find_leader();
+	find_destination_lane_vehicles();
 	find_cooperation_requests();
 }
 
@@ -232,7 +234,7 @@ double ConnectedAutonomousVehicle::implement_compute_desired_acceleration(
 {
 	if (verbose) std::clog << "[CAV] get_desired_acceleration" << std::endl;
 	double a_desired_acceleration =
-		controller.get_cav_desired_acceleration(*this);
+		controller.get_desired_acceleration(*this);
 	return consider_vehicle_dynamics(a_desired_acceleration);
 }
 

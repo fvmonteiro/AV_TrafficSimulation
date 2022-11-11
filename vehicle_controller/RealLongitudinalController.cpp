@@ -75,14 +75,15 @@ void RealLongitudinalController::determine_controller_state(
 		double leader_velocity = leader->compute_velocity(ego_velocity);
 		double gap_threshold = compute_gap_threshold(gap,
 			reference_velocity - ego_velocity, gap_control_input);
-
 		if (state == State::vehicle_following) 
 		{
 			gap_threshold += hysteresis_bias;
 		}
 
-		if ((gap < gap_threshold)
-			&& (leader_velocity < reference_velocity)) 
+		bool is_gap_small = gap < gap_threshold;
+		bool is_leader_too_fast =
+			leader_velocity > (reference_velocity + reference_velocity_margin);
+		if (is_gap_small && !is_leader_too_fast)
 		{
 			state = State::vehicle_following;
 		}

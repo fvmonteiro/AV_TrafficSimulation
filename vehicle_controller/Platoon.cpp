@@ -37,7 +37,7 @@ long Platoon::get_last_veh_id() const
 
 long Platoon::get_preceding_vehicle_id(long veh_id) const
 {
-	double veh_position = vehicle_id_to_position.at(veh_id);
+	int veh_position = vehicle_id_to_position.at(veh_id);
 	while (vehicles.find(++veh_position) == vehicles.end())
 	{
 		if (veh_position > leader_idx) return 0;
@@ -109,7 +109,7 @@ bool Platoon::can_vehicle_start_lane_change(long veh_id)
 	case Platoon::LaneChangeStrategy::none:
 		return vehicles_lane_change_gap_status[veh_id];
 	case Platoon::LaneChangeStrategy::synchronous:
-		return vehicles_lane_change_gap_status[veh_id];
+		return can_start_synchronous_lane_change();
 	case Platoon::LaneChangeStrategy::leader_first:
 		break;
 	case Platoon::LaneChangeStrategy::last_vehicle_first:

@@ -44,8 +44,13 @@ protected:
 
 	/* Finds the current leader, the destination lane leader
 	and follower (if the vehicle has lane change intention),
-	and if any nearby vehicle requested cooperation	*/
+	and if any nearby vehicle requested cooperation	
+	TODO [Nov 10, 2022] Make private? */
 	void implement_analyze_nearby_vehicles() override;
+	void find_cooperation_requests();
+
+	double get_lambda_1(bool is_leader_connected) const;
+	double get_lambda_1_lane_change(bool is_leader_connected) const;
 
 private:
 	double implement_compute_desired_acceleration(
@@ -77,10 +82,6 @@ private:
 		const NearbyVehicle& nearby_vehicle) const override;
 	long create_lane_change_request() override;
 
-	double get_lambda_1(bool is_leader_connected) const;
-	double get_lambda_1_lane_change(bool is_leader_connected) const;
-
-	void find_cooperation_requests();
 	/* Returns true if a vehicle is asking to merge in front of us and
 	[to do] modifies nearby_vehicle in place to point to the proper
 	virtual leader */

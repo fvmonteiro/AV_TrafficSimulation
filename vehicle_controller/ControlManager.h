@@ -27,6 +27,7 @@ class ACCVehicle;
 class AutonomousVehicle;
 class ConnectedAutonomousVehicle;
 class TrafficLightACCVehicle;
+class PlatoonVehicle;
 
 class ControlManager {
 public:
@@ -127,17 +128,20 @@ public:
 
 	/* Active ACC during lane keeping; human (vissim) control if there is
 	lane change intention*/
-	double get_acc_desired_acceleration(const ACCVehicle& ego_vehicle);
+	double get_desired_acceleration(const ACCVehicle& acc_vehicle);
 	/* Computes ACC desired acceleration plus the acceleration during lane
 	change adjustments and lateral movement. Gives control to human (vissim)
 	if the vehicle is waiting for too long to find a gap. */
-	double get_av_desired_acceleration(const AutonomousVehicle& ego_vehicle);
+	double get_desired_acceleration(const AutonomousVehicle& 
+		autonomous_vehicle);
 	/* Computes the AV desired acceleration plus the cooperative acceleration
 	to help create a gap for an incoming vehicle, and chooses the minimum. */
-	double get_cav_desired_acceleration(
-		const ConnectedAutonomousVehicle& ego_vehicle);
+	double get_desired_acceleration(
+		const ConnectedAutonomousVehicle& cav);
+	double get_desired_acceleration(
+		const PlatoonVehicle& platoon_vehicle);
 	/* TODO description */
-	double get_traffic_light_acc_acceleration(
+	double get_desired_acceleration(
 		const TrafficLightACCVehicle& ego_vehicle,
 		const std::unordered_map<int, TrafficLight>& traffic_lights);
 
@@ -205,6 +209,7 @@ private:
 	VirtualLongitudinalController gap_generating_controller;
 	LongitudinalControllerWithTrafficLights
 		with_traffic_lights_controller;
+	RealLongitudinalController in_platoon_controller;
 
 	LateralController lateral_controller;
 	/* indicates which controller is active. Used for debugging and
@@ -220,6 +225,7 @@ private:
 	VehicleType destination_lane_follower_type{ VehicleType::undefined };
 
 	bool verbose{ false };
+	bool long_controllers_verbose{ false };
 
 	/* Gets the minimum of the accelerations in the map and sets the
 	active longitudinal controller. */

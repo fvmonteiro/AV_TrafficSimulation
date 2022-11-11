@@ -30,7 +30,8 @@ EgoVehicle::EgoVehicle(long id, VehicleType type, double desired_velocity,
 	tau_d{ std::exp(-simulation_time_step / tau) }
 {
 	compute_safe_gap_parameters();
-
+	bool verbose_control_manager = verbose;
+	
 	if (verbose)
 	{
 		std::clog << "Creating vehicle " << get_id()
@@ -39,11 +40,15 @@ EgoVehicle::EgoVehicle(long id, VehicleType type, double desired_velocity,
 			<< ", type " << static_cast<int>(get_type())
 			<< ", des. vel. = " << desired_velocity
 			<< ", lambda 1 = " << get_lambda_1()
-			<< ", lambda 0 = " << get_lambda_0()
-			<< "\nNOTE: control manager is NOT verbose."
-			<< std::endl;
+			<< ", lambda 0 = " << get_lambda_0();
+			if (!verbose_control_manager)
+			{
+				std::clog << "\nNOTE: control manager is NOT verbose.";
+			}
+			std::clog << std::endl;
 	}
-	this->controller = ControlManager(*this, false);
+
+	this->controller = ControlManager(*this, verbose_control_manager);
 }
 
 EgoVehicle::~EgoVehicle()
@@ -258,7 +263,6 @@ void EgoVehicle::set_preferred_relative_lane(long preferred_relative_lane)
 //{
 //	this->relative_target_lane =
 //		RelativeLane::from_long(target_relative_lane);
-//	//set_desired_lane_change_direction(target_relative_lane);
 //}
 
 void EgoVehicle::set_vissim_lane_suggestion(long target_relative_lane)
@@ -416,15 +420,6 @@ bool EgoVehicle::is_in_a_platoon() const
 
 long EgoVehicle::get_platoon_id() const
 {
-	if (verbose)
-	{
-		std::clog << "in platoon? " << is_in_a_platoon();
-		if (is_in_a_platoon())
-		{
-			std::clog << "; platoon id " << get_platoon()->get_id();
-		}
-		std::clog << std::endl;
-	}
 	return is_in_a_platoon() ? get_platoon()->get_id() : -1;
 }
 
@@ -471,6 +466,7 @@ void EgoVehicle::implement_analyze_nearby_vehicles()
 	find_leader();
 }
 
+// TODO [Nov 10, 2022]: still not sure this will be needed
 void EgoVehicle::set_leader_by_id(long new_leader_id)
 {
 	std::shared_ptr<NearbyVehicle> old_leader = std::move(leader);
@@ -747,7 +743,11 @@ double EgoVehicle::consider_vehicle_dynamics(double unfiltered_acceleration)
 
 void EgoVehicle::decide_lane_change_direction()
 {
-	if (has_lane_change_intention() && can_start_lane_change())
+	if (is_lane_changing())
+	{
+		lane_change_direction = get_active_lane_change_direction();
+	}
+	else if (has_lane_change_intention() && can_start_lane_change())
 	{
 		lane_change_direction = desired_lane_change_direction;
 	}
@@ -1105,13 +1105,12 @@ std::ostream& operator<< (std::ostream& out, const EgoVehicle& vehicle)
 		<< ", lane=" << vehicle.get_lane()
 		<< ", pref. lane="
 		<< vehicle.get_preferred_relative_lane()
-		<< ", use preferred lane="
-		<< vehicle.get_vissim_use_preferred_lane()
+		/*<< ", use preferred lane="
+		<< vehicle.get_vissim_use_preferred_lane()*/
 		<< ", vissim suggested lane="
 		<< vehicle.vissim_lane_suggestion
-		/*<< ", vissim active lc="
-		<< RelativeLane::from_long(
-			vehicle.get_vissim_active_lane_change()).to_string()*/
+		<< ", des. rel. lane="
+		<< vehicle.get_desired_lane_change_direction()
 		<< ", active lc.="
 		<< vehicle.get_active_lane_change_direction()
 		<< ", vel=" << vehicle.get_velocity()

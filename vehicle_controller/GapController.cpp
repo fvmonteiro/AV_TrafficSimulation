@@ -117,6 +117,18 @@ double GapController::compute_desired_acceleration(
 	double velocity_error = compute_velocity_error(
 		ego_velocity, filtered_velocity_reference);
 
+	if (verbose)
+	{
+		std::clog << "\t[Gap controller]\n\t"
+			<< "leader id = " << leader->get_id()
+			<< ", h = " << get_current_time_headway()
+			<< ", eg=" << gap - gap_reference
+			<< ", sat(eg)=" << gap_error
+			<< ", ev=" << velocity_error
+			<< ", vl=" << velocity_reference
+			<< ", vl_hat=" << filtered_velocity_reference;
+	}
+
 	double desired_acceleration;
 	if (is_connected)
 	{
@@ -130,56 +142,45 @@ double GapController::compute_desired_acceleration(
 			velocity_error);
 	}
 
-	if (should_perform_smooth_start) // TODO: not being used [Nov 1, 2022]
-	{
-		should_perform_smooth_start = false;
-
-		if (verbose) std::clog << "\t[Gap controller]"
-			<< " restarting leader vel filter.\n";
-		double current_accel = ego_vehicle.get_acceleration();
-		double reset_vel;
-		/* [Oct 26, 22] Playing safe for now: we only use the "smooth"
-		reset velocity if that helps braking. */
-		if ((current_accel < 0) && (velocity_reference < ego_velocity))
-		{
-			/* Set the filtered leader velocity to a value that yields
-			the desired acceleration of the previous step */
-			double vel_gain = is_connected ?
-				connected_gains.kv : autonomous_gains.kv;
-			double smooth_vel = (current_accel - desired_acceleration)
-				/ vel_gain + ego_velocity;
-			/* Be careful with the line below if we move it out of
-			this condition */
-			reset_vel = std::max(smooth_vel, velocity_reference);
-
-			if (verbose)
-			{
-				std::clog << "accel=" << current_accel
-					<< "des. accel=" << desired_acceleration
-					<< std::endl;
-			}
-
-		}
-		else
-		{
-			reset_vel = ego_velocity;
-		}
-		velocity_filter.reset(reset_vel);
-		return compute_desired_acceleration(ego_vehicle, leader);
-	}
-
 	if (verbose)
 	{
-		std::clog << "\t[Gap controller]\n\t"
-			<< "leader id = " << leader->get_id()
-			<< ", h = " << get_current_time_headway()
-			<< ", eg=" << gap - gap_reference
-			<< ", sat(eg)=" << gap_error
-			<< ", ev=" << velocity_error
-			<< ", vl=" << velocity_reference
-			<< ", vl_hat=" << filtered_velocity_reference
-			<< " => a_d=" << desired_acceleration << std::endl;
+		std::clog << " => a_d=" << desired_acceleration << std::endl;
 	}
+
+	//if (should_perform_smooth_start) // TODO: not being used [Nov 1, 2022]
+	//{
+	//	should_perform_smooth_start = false;
+	//	if (verbose) std::clog << "\t[Gap controller]"
+	//		<< " restarting leader vel filter.\n";
+	//	double current_accel = ego_vehicle.get_acceleration();
+	//	double reset_vel;
+	//	/* [Oct 26, 22] Playing safe for now: we only use the "smooth"
+	//	reset velocity if that helps braking. */
+	//	if ((current_accel < 0) && (velocity_reference < ego_velocity))
+	//	{
+	//		/* Set the filtered leader velocity to a value that yields
+	//		the desired acceleration of the previous step */
+	//		double vel_gain = is_connected ?
+	//			connected_gains.kv : autonomous_gains.kv;
+	//		double smooth_vel = (current_accel - desired_acceleration)
+	//			/ vel_gain + ego_velocity;
+	//		/* Be careful with the line below if we move it out of
+	//		this condition */
+	//		reset_vel = std::max(smooth_vel, velocity_reference);
+	//		if (verbose)
+	//		{
+	//			std::clog << "accel=" << current_accel
+	//				<< "des. accel=" << desired_acceleration
+	//				<< std::endl;
+	//		}
+	//	}
+	//	else
+	//	{
+	//		reset_vel = ego_velocity;
+	//	}
+	//	velocity_filter.reset(reset_vel);
+	//	return compute_desired_acceleration(ego_vehicle, leader);
+	//}
 
 	return desired_acceleration;
 }

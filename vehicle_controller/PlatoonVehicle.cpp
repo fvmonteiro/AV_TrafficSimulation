@@ -10,27 +10,98 @@ PlatoonVehicle::PlatoonVehicle(long id, double desired_velocity,
 		verbose),
 	alone_desired_velocity{ desired_velocity }
 {
-	std::clog << "[PlatoonVehicle] constructor" << std::endl;
-	//create_platoon();
+	compute_platoon_safe_gap_parameters();
+	if (verbose)
+	{
+		std::clog << "lambda1_platoon = " << lambda_1_platoon
+			<< ", lambda1_lc_platoon = " << lambda_1_lane_change_platoon
+			<< "\n[PlatoonVehicle] constructor done" << std::endl;
+	}
 }
 
 PlatoonVehicle::~PlatoonVehicle()
 {
-	std::clog << "[PlatoonVehicle] destructor" << std::endl;
+	if (verbose) std::clog << "[PlatoonVehicle] destructor" << std::endl;
+}
+
+bool PlatoonVehicle::is_platoon_leader() const
+{
+	return is_in_a_platoon() ? platoon->get_leader_id() == get_id() : true;
+}
+
+double PlatoonVehicle::implement_compute_desired_acceleration(
+	const std::unordered_map<int, TrafficLight>& traffic_lights)
+{
+	double a_desired_acceleration =
+		controller.get_desired_acceleration(*this);
+	return consider_vehicle_dynamics(a_desired_acceleration);
+}
+
+double PlatoonVehicle::compute_vehicle_following_safe_time_headway(
+	const NearbyVehicle& nearby_vehicle) const
+{
+	double current_lambda_1;
+	double rho;
+	if (nearby_vehicle.get_type() == VehicleType::platoon_car)
+	{
+		if (verbose) std::clog << "Leader identified as platoon veh.\n";
+		current_lambda_1 = lambda_1_platoon;
+		rho = in_platoon_rho;
+	}
+	else
+	{
+		current_lambda_1 = ConnectedAutonomousVehicle::get_lambda_1(
+			nearby_vehicle.is_connected());
+		rho = get_rho();
+	}
+
+	return compute_time_headway_with_risk(get_desired_velocity(),
+		get_max_brake(), nearby_vehicle.get_max_brake(),
+		current_lambda_1, rho, 0);
+}
+
+double PlatoonVehicle::compute_lane_changing_desired_time_headway(
+	const NearbyVehicle& nearby_vehicle) const
+{
+	double current_lambda_1;
+	double rho;
+	if (nearby_vehicle.get_type() == VehicleType::platoon_car)
+	{
+		current_lambda_1 = lambda_1_lane_change_platoon;
+		rho = in_platoon_rho;
+	}
+	else
+	{
+		current_lambda_1 = ConnectedAutonomousVehicle::
+			get_lambda_1_lane_change(nearby_vehicle.is_connected());
+		rho = get_rho();
+	}
+	double h_lc = compute_time_headway_with_risk(get_desired_velocity(),
+		get_lane_change_max_brake(), nearby_vehicle.get_max_brake(),
+		current_lambda_1, rho, 0);
+	return h_lc;
 }
 
 void PlatoonVehicle::set_desired_lane_change_direction()
 {
-	if (is_platoon_leader()
-		|| (platoon->get_lane_change_strategy() 
-			== Platoon::LaneChangeStrategy::none))
+	//if (is_platoon_leader()
+	//	|| (platoon->get_lane_change_strategy() 
+	//		== Platoon::LaneChangeStrategy::none))
+	//{
+	//	AutonomousVehicle::set_desired_lane_change_direction();
+	//}
+	//else
+	//{
+	//	desired_lane_change_direction = platoon->
+	//		get_platoon_leader()->get_desired_lane_change_direction();
+	//}
+	if ((get_link() == MAIN_LINK_NUMBER) && (get_lane() == 1))
 	{
-		AutonomousVehicle::set_desired_lane_change_direction();
+		desired_lane_change_direction = RelativeLane::left;
 	}
 	else
 	{
-		desired_lane_change_direction = platoon->
-			get_platoon_leader()->get_desired_lane_change_direction();
+		desired_lane_change_direction = RelativeLane::same;
 	}
 }
 
@@ -53,11 +124,13 @@ void PlatoonVehicle::implement_analyze_nearby_vehicles()
 	if (is_platoon_leader())
 	{
 		find_leader();
+		//find_cooperation_requests();
 	}
 	else
 	{
-		set_leader_by_id()
+		set_leader_by_id(platoon->get_preceding_vehicle_id(get_id()));
 	}
+	find_destination_lane_vehicles();
 }
 
 bool PlatoonVehicle::implement_analyze_platoons(
@@ -132,16 +205,14 @@ bool PlatoonVehicle::implement_analyze_platoons(
 void PlatoonVehicle::create_platoon(long platoon_id,
 	std::shared_ptr<PlatoonVehicle> pointer_to_me)
 {
-	std::clog << "Veh id " << get_id()
-		<< ". Creating platoon id " << platoon_id << std::endl;
+	if (verbose)
+	{
+		std::clog << "Veh id " << get_id()
+			<< ". Creating platoon id " << platoon_id << std::endl;
+	}
 
 	platoon = std::make_shared<Platoon>(platoon_id,
 		pointer_to_me);
-
-	std::clog << "Platoon " << platoon->get_id()
-		<< " ptr count: " << platoon.use_count()
-		<< " (before putting platoon in platoon map)"
-		<< std::endl;
 }
 
 void PlatoonVehicle::add_myself_to_leader_platoon(
@@ -163,20 +234,15 @@ void PlatoonVehicle::add_myself_to_leader_platoon(
 	alone_time = 0.0;
 }
 
-bool PlatoonVehicle::is_platoon_leader()
+void PlatoonVehicle::compute_platoon_safe_gap_parameters()
 {
-	return is_in_a_platoon() ? platoon->get_leader_id() == get_id() : true;
+	lambda_0_platoon =
+		compute_lambda_0(max_jerk, in_platoon_comf_accel,
+			max_brake, CONNECTED_BRAKE_DELAY);
+	lambda_1_platoon =
+		compute_lambda_1(max_jerk, in_platoon_comf_accel,
+			max_brake, CONNECTED_BRAKE_DELAY);
+	lambda_1_lane_change_platoon =
+		compute_lambda_1(max_jerk, in_platoon_comf_accel,
+			get_lane_change_max_brake(), CONNECTED_BRAKE_DELAY);
 }
-
-//double PlatoonVehicle::compute_desired_acceleration(
-//	const std::unordered_map<int, TrafficLight>& traffic_lights)
-//{
-//	double desired_acceleration = get_vissim_acceleration();
-//		//controller.get_cav_desired_acceleration(*this);
-//	return consider_vehicle_dynamics(desired_acceleration);
-//}
-
-//bool PlatoonVehicle::can_start_lane_change()
-//{
-//	return false;
-//}

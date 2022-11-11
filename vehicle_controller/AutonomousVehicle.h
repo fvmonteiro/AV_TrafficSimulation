@@ -56,7 +56,8 @@ protected:
 		bool verbose = false);
 
 	/* Finds the current leader and, if the vehicle has lane change
-	intention, the destination lane leader and follower */
+	intention, the destination lane leader and follower 
+	TODO [Nov 10, 2022] Make private?*/
 	void implement_analyze_nearby_vehicles() override;
 	void set_desired_lane_change_direction() override;
 	bool can_start_lane_change() override;
@@ -69,6 +70,7 @@ protected:
 		return accepted_lane_change_risk_to_follower;
 	}
 
+	void find_destination_lane_vehicles();
 	bool is_destination_lane_follower(
 		const NearbyVehicle& nearby_vehicle);
 	bool is_destination_lane_leader(
@@ -113,8 +115,6 @@ private:
 		implement_get_destination_lane_follower() const override;
 	std::shared_ptr<NearbyVehicle> implement_get_assisted_vehicle()
 		const override { return nullptr; };
-
-	void find_destination_lane_vehicles();
 
 	bool has_lane_change_conflict() const;
 	bool is_lane_change_gap_safe(

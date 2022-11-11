@@ -43,6 +43,8 @@ const double CONNECTED_BRAKE_DELAY{ 0.1 }; // [s]
 const double AUTONOMOUS_BRAKE_DELAY{ 0.2 }; // [s]
 const double HUMAN_BRAKE_DELAY{ 0.75 }; // [s]
 
+const long MAIN_LINK_NUMBER{ 3 };
+
 /* Categories set by VISSIM */
 enum class VehicleCategory {
 	undefined,

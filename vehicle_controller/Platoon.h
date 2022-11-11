@@ -20,6 +20,8 @@ public:
 
 	Platoon() = default;
 	/*Platoon(long id) : id{ id } {};*/
+	Platoon(long id, std::shared_ptr<PlatoonVehicle> leader) :
+		Platoon(id, leader, false) {};
 	Platoon(long id, std::shared_ptr<PlatoonVehicle> leader,
 		bool verbose);
 	~Platoon();
@@ -31,7 +33,10 @@ public:
 	long get_preceding_vehicle_id(long veh_id) const;
 	size_t get_size() const { return vehicles.size(); };
 	LaneChangeStrategy get_lane_change_strategy() const {
-		return lane_change_strategy; };
+		return lane_change_strategy;
+	};
+
+	void set_verbose(bool verbose) { this->verbose = verbose; };
 
 	bool is_empty() const;
 	void add_leader(std::shared_ptr<PlatoonVehicle> new_vehicle);
@@ -40,7 +45,6 @@ public:
 
 	void set_vehicle_lane_change_gaps_safe(long veh_id, bool is_safe);
 	bool can_vehicle_start_lane_change(long veh_id);
-	bool can_start_synchronous_lane_change();
 	bool can_vehicle_leave_platoon(long veh_id);
 
 
@@ -66,5 +70,7 @@ private:
 	void remove_vehicle_by_position(int idx_in_platoon, long veh_id);
 	void add_vehicle(int idx_in_platoon, 
 		std::shared_ptr <PlatoonVehicle> new_vehicle);
+
+	bool can_start_synchronous_lane_change();
 };
 

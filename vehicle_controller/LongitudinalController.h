@@ -10,6 +10,7 @@
 
 #include <memory>
 #include <unordered_map>
+#include <string>
 
 #include "GapController.h"
 #include "VelocityController.h"

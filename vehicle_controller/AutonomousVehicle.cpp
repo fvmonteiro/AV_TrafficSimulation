@@ -277,7 +277,7 @@ double AutonomousVehicle::implement_compute_desired_acceleration(
 	const std::unordered_map<int, TrafficLight>& traffic_lights)
 {
 	double a_desired_acceleration =
-		controller.get_av_desired_acceleration(*this);
+		controller.get_desired_acceleration(*this);
 	return consider_vehicle_dynamics(a_desired_acceleration);
 }
 
@@ -340,7 +340,7 @@ bool AutonomousVehicle::can_start_lane_change()
 			&& (destination_lane_follower->get_distance() <= -2.0));
 	bool no_conflict = !has_lane_change_conflict();
 
-	/*if (verbose) 
+	if (verbose) 
 	{
 		std::clog << "[orig lane] gap ahead is safe? " 
 			<< gap_same_lane_is_safe
@@ -348,7 +348,7 @@ bool AutonomousVehicle::can_start_lane_change()
 			<< ", [dest_lane] gap behind is safe? " << gap_behind_is_safe
 			<< ", no conflict? " << no_conflict
 			<< std::endl;
-	}*/
+	}
 
 	return gap_same_lane_is_safe && gap_ahead_is_safe
 		&& gap_behind_is_safe && no_conflict;
