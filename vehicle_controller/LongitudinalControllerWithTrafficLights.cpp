@@ -2,7 +2,7 @@
 
 #include "EgoVehicle.h"
 #include "LongitudinalControllerWithTrafficLights.h"
-#include "TrafficLightACCVehicle.h"
+#include "TrafficLightALCVehicle.h"
 
 LongitudinalControllerWithTrafficLights::
 LongitudinalControllerWithTrafficLights(bool verbose):
@@ -75,7 +75,7 @@ bool LongitudinalControllerWithTrafficLights
 }
 
 bool LongitudinalControllerWithTrafficLights
-::compute_traffic_light_input(const TrafficLightACCVehicle& ego_vehicle,
+::compute_traffic_light_input(const TrafficLightALCVehicle& ego_vehicle,
 	const std::unordered_map<int, TrafficLight>& traffic_lights,
 	std::unordered_map<State, double>& possible_accelerations)
 {
@@ -180,7 +180,7 @@ std::string LongitudinalControllerWithTrafficLights::mode_to_string(
 
 void LongitudinalControllerWithTrafficLights
 ::compute_traffic_light_input_parameters(
-	const TrafficLightACCVehicle& ego_vehicle,
+	const TrafficLightALCVehicle& ego_vehicle,
 	const std::unordered_map<int, TrafficLight>& traffic_lights)
 {
 	int next_traffic_light_id = ego_vehicle.get_next_traffic_light_id();
@@ -199,7 +199,7 @@ void LongitudinalControllerWithTrafficLights
 }
 
 double LongitudinalControllerWithTrafficLights::
-compute_transient_safe_set(const TrafficLightACCVehicle& ego_vehicle,
+compute_transient_safe_set(const TrafficLightALCVehicle& ego_vehicle,
 	const std::unordered_map<int, TrafficLight>& traffic_lights)
 {
 	int next_traffic_light_id = ego_vehicle.get_next_traffic_light_id();
@@ -256,7 +256,7 @@ compute_gap_error_to_next_traffic_light(double distance_to_traffic_light,
 
 double LongitudinalControllerWithTrafficLights::
 compute_transient_safe_set_amber_light(
-	const TrafficLightACCVehicle& ego_vehicle,
+	const TrafficLightALCVehicle& ego_vehicle,
 	const std::unordered_map<int, TrafficLight>& traffic_lights)
 {
 	int next_traffic_light_id = ego_vehicle.get_next_traffic_light_id();
@@ -324,7 +324,7 @@ compute_transient_safe_set_amber_light(
 
 double LongitudinalControllerWithTrafficLights::
 compute_transient_safe_set_all_space(
-	const TrafficLightACCVehicle& ego_vehicle,
+	const TrafficLightALCVehicle& ego_vehicle,
 	const std::unordered_map<int, TrafficLight>& traffic_lights)
 {
 	int next_traffic_light_id = ego_vehicle.get_next_traffic_light_id();

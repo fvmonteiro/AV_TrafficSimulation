@@ -275,7 +275,7 @@ double AutonomousVehicle::implement_compute_desired_acceleration(
 	const std::unordered_map<int, TrafficLight>& traffic_lights)
 {
 	double a_desired_acceleration =
-		controller.get_av_desired_acceleration(*this);
+		controller.get_desired_acceleration(*this);
 	return consider_vehicle_dynamics(a_desired_acceleration);
 }
 

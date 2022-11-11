@@ -15,36 +15,6 @@ public:
 			VehicleType::autonomous_car, desired_velocity, false,
 			simulation_time_step, creation_time, verbose) {} ;
 
-	/*double get_lambda_1_lane_change() const { return lambda_1_lane_change; };*/
-	/* Returns a nullptr if there is no leader at the destination lane */
-	//std::shared_ptr<NearbyVehicle> get_destination_lane_leader() const
-	//{
-	//	return destination_lane_leader;
-	//};
-	///* Returns a nullptr if there is no follower at the destination lane */
-	//std::shared_ptr<NearbyVehicle> get_destination_lane_follower() const
-	//{
-	//	return destination_lane_follower;
-	//};
-
-	/*bool has_destination_lane_leader() const;
-	bool has_destination_lane_follower() const;*/
-
-	/* Debugging methods */
-
-	/*long get_dest_lane_leader_id() const override
-	{
-		return has_destination_lane_leader() ?
-			destination_lane_leader->get_id() : 0;
-	};
-	long get_dest_lane_follower_id() const override {
-		return has_destination_lane_follower() ?
-			destination_lane_follower->get_id() : 0;
-	};
-	double get_dest_follower_time_headway() const override {
-		return controller.get_destination_lane_controller().
-			get_follower_time_headway();
-	};*/
 	bool merge_behind_ld() const;
 
 protected:
@@ -123,8 +93,6 @@ private:
 
 	virtual void update_destination_lane_follower(
 		const std::shared_ptr<NearbyVehicle>& old_follower);
-	/*double compute_current_desired_time_headway(
-		const NearbyVehicle& nearby_vehicle) override;*/
 	double compute_lane_changing_desired_time_headway(
 		const NearbyVehicle& nearby_vehicle) const override;
 	double estimate_nearby_vehicle_time_headway(

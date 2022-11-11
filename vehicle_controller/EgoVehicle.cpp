@@ -9,7 +9,6 @@
 #include <iomanip>
 #include <iostream>
 #include <fstream>
-#include <set>  // temporary
 #include <string>
 #include <sstream>
 
@@ -30,9 +29,6 @@ EgoVehicle::EgoVehicle(long id, VehicleType type, double desired_velocity,
 {
 	compute_safe_gap_parameters();
 	this->controller = ControlManager(*this, verbose);
-	/* The end of the lane is seen as a stopped vehicle. We set a small
-	time headway to this "vehicle" */
-	//controller.activate_end_of_lane_controller(0.5);
 
 	if (verbose)
 	{
@@ -117,9 +113,6 @@ RelativeLane EgoVehicle::get_active_lane_change_direction() const
 {
 	return active_lane_change_direction.back();
 }
-//long EgoVehicle::get_vissim_active_lane_change() const {
-//	return vissim_active_lane_change.back();
-//}
 double EgoVehicle::get_lane_end_distance() const 
 {
 	return lane_end_distance.back();
@@ -151,8 +144,6 @@ double EgoVehicle::get_current_max_brake() const
 {
 	return has_lane_change_intention() ? 
 		get_lane_change_max_brake() : max_brake;
-	/*if (is_lane_changing()) return get_lane_change_max_brake();
-	return max_brake;*/
 }
 
 double EgoVehicle::get_free_flow_velocity() const 
@@ -251,14 +242,12 @@ void EgoVehicle::set_preferred_relative_lane(long preferred_relative_lane)
 {
 	this->preferred_relative_lane.push_back(
 		RelativeLane::from_long(preferred_relative_lane));
-	//set_desired_lane_change_direction(preferred_relative_lane);	
 }
 
 void EgoVehicle::set_relative_target_lane(long target_relative_lane) 
 {
 	this->relative_target_lane = 
 		RelativeLane::from_long(target_relative_lane);
-	//set_desired_lane_change_direction(target_relative_lane);
 }
 
 void EgoVehicle::set_lane_end_distance(double lane_end_distance,
@@ -292,8 +281,6 @@ void EgoVehicle::clear_nearby_vehicles()
 void EgoVehicle::emplace_nearby_vehicle(long id, long relative_lane,
 	long relative_position) 
 {
-	/*if (verbose && get_time() > 68) std::clog << "Emplacing nv id=" << id
-		<< std::endl;*/
 	std::shared_ptr<NearbyVehicle> nearby_vehicle = 
 		std::shared_ptr<NearbyVehicle>(new NearbyVehicle(id, relative_lane,
 		relative_position));
@@ -314,7 +301,6 @@ std::shared_ptr<NearbyVehicle> EgoVehicle::peek_nearby_vehicles() const
 void EgoVehicle::set_nearby_vehicle_type(long nv_type) 
 {
 	peek_nearby_vehicles()->set_type(VehicleType(nv_type), type);
-	//try_to_set_nearby_vehicle_type(nv_type);
 }
 
 bool EgoVehicle::has_leader() const 
@@ -348,16 +334,6 @@ std::shared_ptr<NearbyVehicle> EgoVehicle::get_nearby_vehicle_by_id(
 	{
 		if (nv->get_id() == nv_id) return nv;
 	}
-	
-	/* If we don't find the id in the current nearby vehicle list, 
-	the vehicle is way behind us. In this case, we just create a far away 
-	virtual vehicle to force the ego vehicle into low vel. control mode */
-	/*std::shared_ptr<NearbyVehicle> virtual_vehicle =
-		std::shared_ptr<NearbyVehicle>(new
-			NearbyVehicle(nv_id, RelativeLane::same, -3));
-	virtual_vehicle->set_relative_velocity(
-		nv_vel);
-	virtual_vehicle->set_distance();*/
 	return nullptr;
 }
 
@@ -452,23 +428,6 @@ void EgoVehicle::find_leader()
 		if (check_if_is_leader(*nearby_vehicle)) leader = nearby_vehicle;
 	}
 	update_leader(old_leader);
-
-	// Doesn't work: close cut in behavior shows up as collisions
-	//if (has_leader() && compute_gap(leader) < 0
-	//	&& leader->is_on_same_lane()) // the leader can be cutting in
-	//{
-	//	std::clog << "COLLISION\n" << "\tt=" << get_time()
-	//		<< ", id=" << get_id() << ", leader id=" << get_leader_id()
-	//		<< ", gap=" << compute_gap(leader)
-	//		<< ", vissim control? " << is_vissim_controlling_lane_change()
-	//		<< std::endl;
-	//}
-	/*if (verbose)
-	{
-		if (has_leader()) std::clog << "Leader id=" << leader->get_id();
-		else std::clog << "No leader";
-		std::clog << std::endl;
-	}*/
 }
 
 bool EgoVehicle::check_if_is_leader(const NearbyVehicle& nearby_vehicle) const
@@ -480,7 +439,6 @@ bool EgoVehicle::check_if_is_leader(const NearbyVehicle& nearby_vehicle) const
 		if (!has_leader()
 			|| (nearby_vehicle.get_distance() < leader->get_distance()))
 		{
-			//leader = nearby_vehicle;
 			return true;
 		}
 	}
@@ -899,8 +857,6 @@ double EgoVehicle::compute_drac(const NearbyVehicle& nearby_vehicle)
 //	}
 //	return 0.0;
 //}
-
-/* Private methods -------------------------------------------------------- */
 
 void EgoVehicle::set_desired_lane_change_direction() 
 {

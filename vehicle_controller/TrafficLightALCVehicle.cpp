@@ -1,10 +1,10 @@
-#include "TrafficLightACCVehicle.h"
+#include "TrafficLightALCVehicle.h"
 
-bool TrafficLightACCVehicle::has_next_traffic_light() const {
+bool TrafficLightALCVehicle::has_next_traffic_light() const {
 	return next_traffic_light_id != 0;
 }
 
-void TrafficLightACCVehicle::set_traffic_light_information(
+void TrafficLightALCVehicle::set_traffic_light_information(
 	int traffic_light_id, double distance)
 {
 	if (has_next_traffic_light()
@@ -16,20 +16,20 @@ void TrafficLightACCVehicle::set_traffic_light_information(
 	distance_to_next_traffic_light = distance;
 }
 
-double TrafficLightACCVehicle::implement_compute_desired_acceleration(
+double TrafficLightALCVehicle::implement_compute_desired_acceleration(
 	const std::unordered_map<int, TrafficLight>& traffic_lights)
 {
 	double a_desired_acceleration =
-		controller.get_traffic_light_acc_acceleration(*this, traffic_lights);
+		controller.get_traffic_desired_acceleration(*this, traffic_lights);
 	return a_desired_acceleration;
 }
 
-void TrafficLightACCVehicle::set_desired_lane_change_direction()
+void TrafficLightALCVehicle::set_desired_lane_change_direction()
 {
 	desired_lane_change_direction = RelativeLane::same;
 }
 
-bool TrafficLightACCVehicle::can_start_lane_change()
+bool TrafficLightALCVehicle::can_start_lane_change()
 {
 	return false;
 }

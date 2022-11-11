@@ -6,7 +6,7 @@
 #include "AutonomousVehicle.h"
 #include "ConnectedAutonomousVehicle.h"
 #include "PlatoonVehicle.h"
-#include "TrafficLightACCVehicle.h"
+#include "TrafficLightALCVehicle.h"
 
 class EgoVehicleFactory
 {
@@ -32,11 +32,11 @@ public:
 			return std::make_unique<PlatoonVehicle>(id, desired_velocity,
 				simulation_time_step, creation_time, verbose);
 		case VehicleType::traffic_light_acc_car:
-			return std::make_unique<TrafficLightACCVehicle>(id,
+			return std::make_unique<TrafficLightALCVehicle>(id,
 				desired_velocity,
 				simulation_time_step, creation_time, verbose);
 		case VehicleType::traffic_light_cacc_car:
-			return std::make_unique<TrafficLightCACCVehicle>(id,
+			return std::make_unique<TrafficLightCALCVehicle>(id,
 				desired_velocity,
 				simulation_time_step, creation_time, verbose);
 		default:

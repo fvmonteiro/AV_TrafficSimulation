@@ -12,7 +12,7 @@
 #include "ControlManager.h"
 #include "EgoVehicle.h"
 #include "NearbyVehicle.h"
-#include "TrafficLightACCVehicle.h"
+#include "TrafficLightALCVehicle.h"
 #include "VariationLimitedFilter.h"
 
 ControlManager::ControlManager(const EgoVehicle& ego_vehicle,
@@ -268,67 +268,67 @@ double ControlManager::use_vissim_desired_acceleration(
 	return ego_vehicle.get_vissim_acceleration();
 }
 
-double ControlManager::get_acc_desired_acceleration(
-	const ACCVehicle& ego_vehicle)
+double ControlManager::get_desired_acceleration(
+	const ACCVehicle& acc_vehicle)
 {
-	if (ego_vehicle.has_lane_change_intention() || 
-		ego_vehicle.is_lane_changing())
+	if (acc_vehicle.has_lane_change_intention() || 
+		acc_vehicle.is_lane_changing())
 	{
-		return use_vissim_desired_acceleration(ego_vehicle);
+		return use_vissim_desired_acceleration(acc_vehicle);
 	}
 
 	std::unordered_map<ACCType, double>
 		possible_accelerations;
-	get_origin_lane_desired_acceleration(ego_vehicle,
+	get_origin_lane_desired_acceleration(acc_vehicle,
 		possible_accelerations);
 	bool end_of_lane_controller_is_active =
-		get_end_of_lane_desired_acceleration(ego_vehicle,
+		get_end_of_lane_desired_acceleration(acc_vehicle,
 			possible_accelerations);
 
 	return choose_minimum_acceleration(possible_accelerations);
 }
 
-double ControlManager::get_av_desired_acceleration(
-	const AutonomousVehicle& ego_vehicle)
+double ControlManager::get_desired_acceleration(
+	const AutonomousVehicle& autonomous_vehicle)
 {
-	if (ego_vehicle.is_vissim_controlling_lane_change()
-		&& (ego_vehicle.has_lane_change_intention() 
-			|| ego_vehicle.is_lane_changing()))
+	if (autonomous_vehicle.is_vissim_controlling_lane_change()
+		&& (autonomous_vehicle.has_lane_change_intention() 
+			|| autonomous_vehicle.is_lane_changing()))
 	{
-		return use_vissim_desired_acceleration(ego_vehicle);
+		return use_vissim_desired_acceleration(autonomous_vehicle);
 	}
 
 	std::unordered_map<ACCType, double>
 		possible_accelerations;
-	get_origin_lane_desired_acceleration(ego_vehicle,
+	get_origin_lane_desired_acceleration(autonomous_vehicle,
 		possible_accelerations);
-	get_end_of_lane_desired_acceleration(ego_vehicle,
+	get_end_of_lane_desired_acceleration(autonomous_vehicle,
 		possible_accelerations);
-	get_destination_lane_desired_acceleration(ego_vehicle,
+	get_destination_lane_desired_acceleration(autonomous_vehicle,
 		possible_accelerations);
 
 	return choose_minimum_acceleration(possible_accelerations);
 }
 
-double ControlManager::get_cav_desired_acceleration(
-	const ConnectedAutonomousVehicle& ego_vehicle)
+double ControlManager::get_desired_acceleration(
+	const ConnectedAutonomousVehicle& cav)
 {
 	std::unordered_map<ACCType, double>
 		possible_accelerations;
-	get_origin_lane_desired_acceleration(ego_vehicle,
+	get_origin_lane_desired_acceleration(cav,
 		possible_accelerations);
-	get_end_of_lane_desired_acceleration(ego_vehicle,
+	get_end_of_lane_desired_acceleration(cav,
 		possible_accelerations);
-	get_destination_lane_desired_acceleration(ego_vehicle,
+	get_destination_lane_desired_acceleration(cav,
 		possible_accelerations);
-	get_cooperative_desired_acceleration(ego_vehicle,
+	get_cooperative_desired_acceleration(cav,
 		possible_accelerations);
 
 	return choose_minimum_acceleration(possible_accelerations);
 }
 
-double ControlManager::get_traffic_light_acc_acceleration(
-	const TrafficLightACCVehicle& ego_vehicle,
+double ControlManager::get_traffic_desired_acceleration(
+	const TrafficLightALCVehicle& tl_alc_vehicle,
 	const std::unordered_map<int, TrafficLight>& traffic_lights)
 {
 	if (verbose) std::clog << "Inside get traffic_light_acc_acceleration\n";
@@ -338,16 +338,16 @@ double ControlManager::get_traffic_light_acc_acceleration(
 
 	with_traffic_lights_controller.get_nominal_input(possible_accelerations);
 	with_traffic_lights_controller.compute_vehicle_following_input(
-		ego_vehicle, possible_accelerations);
+		tl_alc_vehicle, possible_accelerations);
 	with_traffic_lights_controller.compute_velocity_control_input(
-		ego_vehicle, possible_accelerations);
+		tl_alc_vehicle, possible_accelerations);
 	with_traffic_lights_controller.compute_traffic_light_input(
-		ego_vehicle, traffic_lights, possible_accelerations);
+		tl_alc_vehicle, traffic_lights, possible_accelerations);
 
 	active_longitudinal_controller = ACCType::traffic_light_acc;
 
 	double ret = with_traffic_lights_controller.
-		choose_acceleration(ego_vehicle, possible_accelerations);
+		choose_acceleration(tl_alc_vehicle, possible_accelerations);
 
 	return ret;
 }

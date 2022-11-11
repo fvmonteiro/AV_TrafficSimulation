@@ -11,10 +11,6 @@
 #include <unordered_map>
 #include <vector>
 
-//#include "ACCVehicle.h"
-//#include "AutonomousVehicle.h"
-//#include "ConnectedAutonomousVehicle.h"
-//#include "TrafficLightACCVehicle.h"
 #include "LateralController.h"
 #include "SwitchedLongitudinalController.h"
 #include "LongitudinalControllerWithTrafficLights.h"
@@ -26,7 +22,7 @@ class EgoVehicle;
 class ACCVehicle;
 class AutonomousVehicle;
 class ConnectedAutonomousVehicle;
-class TrafficLightACCVehicle;
+class TrafficLightALCVehicle;
 
 class ControlManager {
 public:
@@ -117,18 +113,19 @@ public:
 
 	/* Active ACC during lane keeping; human (vissim) control if there is
 	lane change intention*/
-	double get_acc_desired_acceleration(const ACCVehicle& ego_vehicle);
+	double get_desired_acceleration(const ACCVehicle& acc_vehicle);
 	/* Computes ACC desired acceleration plus the acceleration during lane
 	change adjustments and lateral movement. Gives control to human (vissim)
 	if the vehicle is waiting for too long to find a gap. */
-	double get_av_desired_acceleration(const AutonomousVehicle& ego_vehicle);
+	double get_desired_acceleration(
+		const AutonomousVehicle& autonomous_vehicle);
 	/* Computes the AV desired acceleration plus the cooperative acceleration
 	to help create a gap for an incoming vehicle, and chooses the minimum. */
-	double get_cav_desired_acceleration(
-		const ConnectedAutonomousVehicle& ego_vehicle);
+	double get_desired_acceleration(
+		const ConnectedAutonomousVehicle& cav);
 	/* TODO */
-	double get_traffic_light_acc_acceleration(
-		const TrafficLightACCVehicle& ego_vehicle,
+	double get_traffic_desired_acceleration(
+		const TrafficLightALCVehicle& tl_alc_vehicle,
 		const std::unordered_map<int, TrafficLight>& traffic_lights);
 
 	void print_traffic_lights(const EgoVehicle& ego,

@@ -2,11 +2,11 @@
 
 #include "EgoVehicle.h"
 
-class TrafficLightACCVehicle : public EgoVehicle
+class TrafficLightALCVehicle : public EgoVehicle
 {
 public:
 
-	TrafficLightACCVehicle(long id, double desired_velocity,
+	TrafficLightALCVehicle(long id, double desired_velocity,
 		double simulation_time_step, double creation_time,
 		bool verbose = false) :
 		EgoVehicle(id, VehicleType::traffic_light_acc_car, desired_velocity,
@@ -29,7 +29,7 @@ public:
 	bool has_next_traffic_light() const;
 
 protected:
-	TrafficLightACCVehicle(long id, VehicleType type,
+	TrafficLightALCVehicle(long id, VehicleType type,
 		double desired_velocity, bool is_connected, 
 		double simulation_time_step,
 		double creation_time, bool verbose = false) :
@@ -80,21 +80,21 @@ private:
 	void implement_set_use_linear_lane_change_gap(long value) {};
 
 	/* Traffic lights -------------------------------------------------------- */
-	void TrafficLightACCVehicle::set_traffic_light_information(
+	void TrafficLightALCVehicle::set_traffic_light_information(
 		int traffic_light_id, double distance) override;
 	double time_crossed_last_traffic_light{ 0.0 };
 	int next_traffic_light_id{ 0 };
 	double distance_to_next_traffic_light{ 0.0 };
 };
 
-class TrafficLightCACCVehicle : public TrafficLightACCVehicle
+class TrafficLightCALCVehicle : public TrafficLightALCVehicle
 {
 public:
 
-	TrafficLightCACCVehicle(long id, double desired_velocity,
+	TrafficLightCALCVehicle(long id, double desired_velocity,
 		double simulation_time_step, double creation_time,
 		bool verbose = false) :
-		TrafficLightACCVehicle(id, VehicleType::traffic_light_cacc_car,
+		TrafficLightALCVehicle(id, VehicleType::traffic_light_cacc_car,
 			desired_velocity, true, simulation_time_step, creation_time, 
 			verbose) {}
 

@@ -252,7 +252,7 @@
     <ClCompile Include="AutonomousVehicle.cpp" />
     <ClCompile Include="SwitchedLongitudinalController.cpp" />
     <ClCompile Include="TrafficLight.cpp" />
-    <ClCompile Include="TrafficLightACCVehicle.cpp" />
+    <ClCompile Include="TrafficLightALCVehicle.cpp" />
     <ClCompile Include="TrafficLightFileReader.cpp" />
     <ClCompile Include="VirtualLongitudinalController.cpp" />
     <ClCompile Include="LateralController.cpp" />
@@ -289,7 +289,7 @@
     <ClInclude Include="RelativeLane.h" />
     <ClInclude Include="SwitchedLongitudinalController.h" />
     <ClInclude Include="TrafficLight.h" />
-    <ClInclude Include="TrafficLightACCVehicle.h" />
+    <ClInclude Include="TrafficLightALCVehicle.h" />
     <ClInclude Include="TrafficLightFileReader.h" />
     <ClInclude Include="VirtualLongitudinalController.h" />
     <ClInclude Include="LateralController.h" />
