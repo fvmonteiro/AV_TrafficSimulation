@@ -7,6 +7,7 @@ ACCVehicle::ACCVehicle(long id, double desired_velocity,
 		AUTONOMOUS_BRAKE_DELAY, false, false,
 		simulation_time_step, creation_time, verbose)
 {
+	controller.add_vissim_controller();
 	controller.add_origin_lane_controllers(*this);
 	if (verbose)
 	{

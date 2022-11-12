@@ -26,7 +26,8 @@ class ConnectedAutonomousVehicle;
 class TrafficLightALCVehicle;
 class PlatoonVehicle;
 
-class ControlManager {
+class ControlManager 
+{
 public:
 
 	/* Autonomous Longitudinal Controller Type */
@@ -57,7 +58,7 @@ public:
 	//void create_destination_lane_controller(const Vehicle& ego_vehicle);
 
 	/* Initializing controllers */
-
+	void add_vissim_controller();
 	void add_origin_lane_controllers(const EgoVehicle& ego_vehicle);
 	void add_lane_change_adjustment_controller(
 		const AutonomousVehicle& ego_vehicle);
@@ -267,18 +268,7 @@ private:
 	VehicleType destination_lane_follower_type{ VehicleType::undefined };
 
 	bool verbose{ false };
-  bool long_controllers_verbose{ false };
-
-	/* Initializing controllers */
-	void create_vissim_controller();
-	void create_acc_controllers(const EgoVehicle& ego_vehicle,
-		bool verbose);
-	void create_lane_change_adjustment_controller(
-		const EgoVehicle& ego_vehicle,
-		bool verbose);
-	void create_cooperative_lane_change_controller(
-		const EgoVehicle& ego_vehicle,
-		bool verbose);
+    bool long_controllers_verbose{ false };
 
 	std::unique_ptr<LongitudinalController>
 		get_active_long_controller() const;

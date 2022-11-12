@@ -28,7 +28,7 @@ ControlManager::ControlManager(const EgoVehicle& ego_vehicle,
 	}
 }
 
-void ControlManager::create_vissim_controller()
+void ControlManager::add_vissim_controller()
 {
 	vissim_controller = VissimLongitudinalController(
 		vissim_colors);
@@ -95,7 +95,7 @@ void ControlManager::add_traffic_lights_controller()
 {
 	with_traffic_lights_controller =
 		LongitudinalControllerWithTrafficLights(tl_alc_colors,
-			is_long_control_verbose);
+			long_controllers_verbose);
 	active_longitudinal_controller_type = ALCType::traffic_light_alc;
 }
 
@@ -369,7 +369,7 @@ double ControlManager::get_desired_acceleration(
 }
 
 double ControlManager::get_desired_acceleration(
-	const TrafficLightACCVehicle& tl_alc_vehicle,
+	const TrafficLightALCVehicle& tl_alc_vehicle,
 	const std::unordered_map<int, TrafficLight>& traffic_lights)
 {
 	if (verbose) std::clog << "Inside get traffic_light_acc_acceleration\n";

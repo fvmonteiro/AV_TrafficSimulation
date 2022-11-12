@@ -907,11 +907,11 @@ void EgoVehicle::set_desired_lane_change_direction()
 	{
 		desired_lane_change_direction = RelativeLane::right;
 	}
-	else if (relative_target_lane.is_to_the_left())
+	else if (vissim_lane_suggestion.is_to_the_left())
 	{
 		desired_lane_change_direction = RelativeLane::left;
 	}
-	else if (relative_target_lane.is_to_the_right())
+	else if (vissim_lane_suggestion.is_to_the_right())
 	{
 		desired_lane_change_direction = RelativeLane::right;
 	}
@@ -1201,8 +1201,8 @@ std::ostream& operator<< (std::ostream& out, const EgoVehicle& ego_vehicle)
 		<< ego_vehicle.get_preferred_relative_lane().to_string()
 		<< ", use preferred lane="
 		<< ego_vehicle.get_vissim_use_preferred_lane()
-		<< ", target lane="
-		<< ego_vehicle.relative_target_lane.to_string()
+		<< ", vissim suggestion="
+		<< ego_vehicle.vissim_lane_suggestion.to_string()
 		/*<< ", vissim active lc="
 		<< RelativeLane::from_long(
 			vehicle.get_vissim_active_lane_change()).to_string()*/

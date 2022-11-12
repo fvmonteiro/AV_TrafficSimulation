@@ -9,6 +9,7 @@ AutonomousVehicle::AutonomousVehicle(long id, VehicleType type,
 		simulation_time_step, creation_time, verbose)
 {
 	compute_lane_change_gap_parameters();
+	controller.add_vissim_controller();
 	controller.add_origin_lane_controllers(*this);
 	controller.add_lane_change_adjustment_controller(*this);
 	
