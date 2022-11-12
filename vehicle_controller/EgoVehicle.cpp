@@ -9,7 +9,6 @@
 #include <iomanip>
 #include <iostream>
 #include <fstream>
-#include <set>  // temporary
 #include <string>
 #include <sstream>
 
@@ -31,7 +30,7 @@ EgoVehicle::EgoVehicle(long id, VehicleType type, double desired_velocity,
 {
 	compute_safe_gap_parameters();
 	bool verbose_control_manager = verbose;
-	
+
 	if (verbose)
 	{
 		std::clog << "Creating vehicle " << get_id()
@@ -121,9 +120,6 @@ RelativeLane EgoVehicle::get_active_lane_change_direction() const
 {
 	return active_lane_change_direction.back();
 }
-//long EgoVehicle::get_vissim_active_lane_change() const {
-//	return vissim_active_lane_change.back();
-//}
 double EgoVehicle::get_lane_end_distance() const
 {
 	return lane_end_distance.back();
@@ -156,8 +152,6 @@ double EgoVehicle::get_current_max_brake() const
 {
 	return has_lane_change_intention() ?
 		get_lane_change_max_brake() : max_brake;
-	/*if (is_lane_changing()) return get_lane_change_max_brake();
-	return max_brake;*/
 }
 
 double EgoVehicle::get_free_flow_velocity() const
@@ -256,7 +250,6 @@ void EgoVehicle::set_preferred_relative_lane(long preferred_relative_lane)
 {
 	this->preferred_relative_lane.push_back(
 		RelativeLane::from_long(preferred_relative_lane));
-	//set_desired_lane_change_direction(preferred_relative_lane);
 }
 
 //void EgoVehicle::set_relative_target_lane(long target_relative_lane)
@@ -269,7 +262,6 @@ void EgoVehicle::set_vissim_lane_suggestion(long target_relative_lane)
 {
 	this->vissim_lane_suggestion =
 		RelativeLane::from_long(target_relative_lane);
-	//set_desired_lane_change_direction(target_relative_lane);
 }
 
 void EgoVehicle::set_lane_end_distance(double lane_end_distance,
@@ -303,10 +295,8 @@ void EgoVehicle::clear_nearby_vehicles()
 void EgoVehicle::emplace_nearby_vehicle(long id, long relative_lane,
 	long relative_position)
 {
-	/*if (verbose && get_time() > 68) std::clog << "Emplacing nv id=" << id
-		<< std::endl;*/
 	std::shared_ptr<NearbyVehicle> nearby_vehicle =
-		std::shared_ptr<NearbyVehicle>(new NearbyVehicle(id, relative_lane,
+		std::make_shared<NearbyVehicle>(NearbyVehicle(id, relative_lane,
 		relative_position));
 	nearby_vehicles.push_back(std::move(nearby_vehicle));
 }
@@ -325,7 +315,6 @@ std::shared_ptr<NearbyVehicle> EgoVehicle::peek_nearby_vehicles() const
 void EgoVehicle::set_nearby_vehicle_type(long nv_type)
 {
 	peek_nearby_vehicles()->set_type(VehicleType(nv_type), type);
-	//try_to_set_nearby_vehicle_type(nv_type);
 }
 
 
@@ -361,16 +350,6 @@ std::shared_ptr<NearbyVehicle> EgoVehicle::get_nearby_vehicle_by_id(
 	{
 		if (nv->get_id() == nv_id) return nv;
 	}
-
-	/* If we don't find the id in the current nearby vehicle list,
-	the vehicle is way behind us. In this case, we just create a far away
-	virtual vehicle to force the ego vehicle into low vel. control mode */
-	/*std::shared_ptr<NearbyVehicle> virtual_vehicle =
-		std::shared_ptr<NearbyVehicle>(new
-			NearbyVehicle(nv_id, RelativeLane::same, -3));
-	virtual_vehicle->set_relative_velocity(
-		nv_vel);
-	virtual_vehicle->set_distance();*/
 	return nullptr;
 }
 
@@ -484,13 +463,6 @@ void EgoVehicle::find_leader()
 		if (check_if_is_leader(*nearby_vehicle)) leader = nearby_vehicle;
 	}
 	update_leader(old_leader);
-
-	/*if (verbose)
-	{
-		if (has_leader()) std::clog << "Leader id=" << leader->get_id();
-		else std::clog << "No leader";
-		std::clog << std::endl;
-	}*/
 }
 
 bool EgoVehicle::check_if_is_leader(const NearbyVehicle& nearby_vehicle) const
@@ -502,7 +474,6 @@ bool EgoVehicle::check_if_is_leader(const NearbyVehicle& nearby_vehicle) const
 		if (!has_leader()
 			|| (nearby_vehicle.get_distance() < leader->get_distance()))
 		{
-			//leader = nearby_vehicle;
 			return true;
 		}
 	}
@@ -624,14 +595,13 @@ long EgoVehicle::get_color_by_controller_state()
 {
 	/* We'll assign color to vehicles based on the current longitudinal
 	controller and on whether or not the vehicle is trying to change lanes.*/
-	if (state.empty()) return orig_lane_vel_control_color;
+	if (state.empty()) return WHITE;
 
-	/* TODO: Rewrite code to avoid all these swicth statements.
-	Possible solution: ControlManager has a map of controllers and
-	controllers get assigned colors for their states.
-	Then we can just call controllers[active_controller].get_state_color() */
+	/* TODO: still missing color for VISSIM and for max_vel */
+	return controller.get_longitudinal_controller_color();
 
-	switch (controller.get_active_longitudinal_controller())
+	/* OLD SWITCH [Nov 11, 2022] */
+	/*switch (controller.get_active_alc_type())
 	{
 	case ControlManager::ALCType::origin_lane:
 		switch (controller.get_longitudinal_controller_state())
@@ -675,7 +645,7 @@ long EgoVehicle::get_color_by_controller_state()
 			return WHITE;
 		}
 	case ControlManager::ALCType::traffic_light_acc:
-		switch (controller.get_longitudinal_controller_with_traffic_lights_state())
+		switch (controller.get_longitudinal_controller_state())
 		{
 		case LongitudinalControllerWithTrafficLights::State::max_accel:
 			return max_accel_color;
@@ -694,15 +664,15 @@ long EgoVehicle::get_color_by_controller_state()
 		return CYAN;
 	default:
 		return WHITE;
-	}
+	}*/
 }
 
 std::string EgoVehicle::print_detailed_state() const
 {
 	std::string state_str =
 		state_to_string_map.at(get_state()) + ", "
-		+ ControlManager::active_ACC_to_string(
-			controller.get_active_longitudinal_controller()) + ", "
+		+ ControlManager::ALC_type_to_string(
+			controller.get_active_alc_type()) + ", "
 		+ SwitchedLongitudinalController::state_to_string(
 			controller.get_longitudinal_controller_state());
 	return state_str;
@@ -826,6 +796,130 @@ double EgoVehicle::compute_drac(const NearbyVehicle& nearby_vehicle)
 	return -1.0;
 }
 
+/* TODO: move to autonomous vehicle class */
+//double EgoVehicle::compute_collision_severity_risk(
+//	const NearbyVehicle& nearby_vehicle) const
+//{
+//	double current_max_brake = get_current_max_brake();
+//	/* TODO: must change to get the appropriate lambda 1 */
+//	double current_lambda_1 = get_lambda_1();
+//
+//	double jerk_delay = (comfortable_acceleration + current_max_brake) / max_jerk;
+//	double ego_vel = get_velocity();
+//
+//	double leader_max_brake = nearby_vehicle.get_max_brake();
+//	double relative_vel = nearby_vehicle.get_relative_velocity();
+//	double leader_vel = nearby_vehicle.compute_velocity(ego_vel);
+//
+//	double gamma = leader_max_brake / current_max_brake;
+//	double gamma_threshold = leader_vel / (ego_vel + current_lambda_1);
+//
+//	std::vector<double> gap_thresholds(4);
+//	gap_thresholds[0] = brake_delay
+//		* (brake_delay * (comfortable_acceleration + leader_max_brake) / 2
+//			+ relative_vel);
+//	gap_thresholds[1] = (brake_delay + jerk_delay)
+//		* (current_lambda_1 + relative_vel
+//			- (brake_delay + jerk_delay)
+//			* (current_max_brake - leader_max_brake) / 2)
+//		+ get_lambda_0();
+//	gap_thresholds[2] = leader_vel / leader_max_brake
+//		* (current_lambda_1 + relative_vel
+//			- leader_vel / leader_max_brake
+//			* (current_max_brake - leader_max_brake) / 2)
+//		+ get_lambda_0();
+//	gap_thresholds[3] = compute_collision_free_gap(nearby_vehicle);
+//
+//	double gap = compute_gap(nearby_vehicle);
+//
+//	if (verbose && (gap < gap_thresholds[3])) {
+//		std::clog << "Collision prone situation\n"
+//			<< "\tgamma = " << gamma << ", gamma_t = " << gamma_threshold
+//			<< "\n\tgap = " << gap << ", thresholds: ";
+//		for (double g : gap_thresholds) {
+//			std::clog << g << ", ";
+//		}
+//		std::clog << std::endl;
+//	}
+//
+//	double result = 0;
+//	if (gap < gap_thresholds[0]) {
+//		result = std::pow(relative_vel, 2)
+//			+ 2 * (comfortable_acceleration + leader_max_brake) * gap;
+//	}
+//	else if (gap < gap_thresholds[1]) {
+//		/* The solution for this case requires solving a 3rd degree equation.
+//		To avoid that, we will approximate it as the mean of the previous
+//		and following case. We will also record how often this case
+//		happens to see if it's important to properly code the solution. */
+//		result = std::pow(relative_vel, 2)
+//			+ 2 * (comfortable_acceleration + leader_max_brake) * gap;
+//		result += std::pow(relative_vel + current_lambda_1, 2)
+//			+ 2 * (leader_max_brake - current_max_brake)
+//			* (gap - get_lambda_0());
+//		result /= 2;
+//		std::clog << "t=" << get_time()
+//			<< ", id=" << get_id()
+//			<< ", collision severity complicated case"
+//			<< std::endl;
+//	}
+//	else if (((gamma >= gamma_threshold) && (gap < gap_thresholds[2]))
+//		|| (gamma < gamma_threshold) && (gap < gap_thresholds[3])) {
+//		result = std::pow(relative_vel + current_lambda_1, 2)
+//			+ 2 * (leader_max_brake - current_max_brake)
+//			* (gap - get_lambda_0());
+//	}
+//	else if ((gamma >= gamma_threshold) && (gap < gap_thresholds[3])) {
+//		result = std::pow(ego_vel + current_lambda_1, 2)
+//			- 2 * current_max_brake
+//			* (std::pow(leader_vel, 2) / 2 / leader_max_brake
+//				+ gap - get_lambda_0());
+//	}
+//	result = std::sqrt(result);
+//
+//	if (verbose) {
+//		std::clog << "\trisk = " << result << std::endl;
+//	}
+//
+//	return result;
+//}
+
+//double EgoVehicle::compute_collision_severity_risk_to_leader()
+//{
+//	if (has_leader()) {
+//		return compute_collision_severity_risk(*get_leader());
+//	}
+//	return 0.0;
+//}
+
+void EgoVehicle::set_desired_lane_change_direction()
+{
+	/* Both preferred_relative_lane and relative_target_lane indicate
+	desire to change lanes. The former indicates preference due to
+	routing, so it takes precedence over the latter. */
+	RelativeLane current_preferred_lane = get_preferred_relative_lane();
+	desired_lane_change_direction = RelativeLane::same;
+	if (current_preferred_lane.is_to_the_left())
+	{
+		desired_lane_change_direction = RelativeLane::left;
+	}
+	else if (current_preferred_lane.is_to_the_right())
+	{
+		desired_lane_change_direction = RelativeLane::right;
+	}
+	else if (relative_target_lane.is_to_the_left())
+	{
+		desired_lane_change_direction = RelativeLane::left;
+	}
+	else if (relative_target_lane.is_to_the_right())
+	{
+		desired_lane_change_direction = RelativeLane::right;
+	}
+	else
+	{
+		desired_lane_change_direction = RelativeLane::same;
+	}
+}
 
 /* Methods for printing and debugging ------------------------------------- */
 
@@ -1095,26 +1189,29 @@ EgoVehicle::state_to_string_map = {
 	{ State::intention_to_change_lanes, "intention to LC" },
 };
 
-std::ostream& operator<< (std::ostream& out, const EgoVehicle& vehicle)
+std::ostream& operator<< (std::ostream& out, const EgoVehicle& ego_vehicle)
 {
-	out << "t=" << vehicle.get_time()
-		<< ", id=" << vehicle.get_id()
-		<< ", type=" << static_cast<int>(vehicle.get_type())
+	out << "t=" << ego_vehicle.get_time()
+		<< ", id=" << ego_vehicle.get_id()
+		<< ", type=" << static_cast<int>(ego_vehicle.get_type())
 		<< ", state="
-		<< EgoVehicle::state_to_string_map.at(vehicle.get_state())
-		<< ", lane=" << vehicle.get_lane()
+		<< EgoVehicle::state_to_string_map.at(ego_vehicle.get_state())
+		<< ", lane=" << ego_vehicle.get_lane()
 		<< ", pref. lane="
-		<< vehicle.get_preferred_relative_lane()
-		/*<< ", use preferred lane="
-		<< vehicle.get_vissim_use_preferred_lane()*/
-		<< ", vissim suggested lane="
-		<< vehicle.vissim_lane_suggestion
-		<< ", des. rel. lane="
-		<< vehicle.get_desired_lane_change_direction()
-		<< ", active lc.="
-		<< vehicle.get_active_lane_change_direction()
-		<< ", vel=" << vehicle.get_velocity()
-		<< ", accel=" << vehicle.get_acceleration();
+		<< ego_vehicle.get_preferred_relative_lane().to_string()
+		<< ", use preferred lane="
+		<< ego_vehicle.get_vissim_use_preferred_lane()
+		<< ", target lane="
+		<< ego_vehicle.relative_target_lane.to_string()
+		/*<< ", vissim active lc="
+		<< RelativeLane::from_long(
+			vehicle.get_vissim_active_lane_change()).to_string()*/
+		<< ", des lc=" << ego_vehicle.get_lane_change_direction().to_string()
+		<< ", active lc="
+		<< ego_vehicle.get_active_lane_change_direction().to_string()
+		<< ", vel=" << ego_vehicle.get_velocity()
+		<< ", des accel=" << ego_vehicle.get_desired_acceleration()
+		<< ", accel=" << ego_vehicle.get_acceleration();
 
 	return out; // return std::ostream so we can chain calls to operator<<
 }

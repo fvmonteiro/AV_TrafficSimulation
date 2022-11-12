@@ -40,9 +40,9 @@ double current_desired_velocity{ 0 };
 
 /*==========================================================================*/
 
-/*VISSIM's interface documentation does not mention this function, but it 
+/*VISSIM's interface documentation does not mention this function, but it
 seems to initiate and finish communication between the simulator and the DLL.
-We can use it to initialize and destruct objects related to each simulation 
+We can use it to initialize and destruct objects related to each simulation
 run.*/
 BOOL APIENTRY DllMain (HANDLE  hModule,
                        DWORD   ul_reason_for_call,
@@ -82,7 +82,7 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
     /* <*string_value> (object and value selection depending on <type>).    */
     /* Return value is 1 on success, otherwise 0.                           */
 
-    /* Note that we can check the order in which each case is accessed at the 
+    /* Note that we can check the order in which each case is accessed at the
     API documentation. */
 
     switch (type) {
@@ -111,7 +111,7 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
     case DRIVER_DATA_TIME                   :
         if (CLUELESS_DEBUGGING && (double_value != current_time))
         {
-            /*std::clog << "t=" << current_time 
+            /*std::clog << "t=" << current_time
                 << ", " << vehicles.size() << " vehicles." << std::endl;*/
             std::clog << "t=" << current_time
                 << ", " << platoons.size() << " platoons" << std::endl;
@@ -125,14 +125,14 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
     case DRIVER_DATA_USE_UDA                :
         /* must return 1 for desired values of index1 if UDA values
         are to be sent from/to Vissim */
-        if (index1 >= static_cast<int>(UDA::first)) 
-        { 
+        if (index1 >= static_cast<int>(UDA::first))
+        {
             UDA uda = UDA(index1);
-            switch (uda) 
+            switch (uda)
             {
             /* The first UDAs are necessary */
             case UDA::h_to_assited_veh:
-            case UDA::lane_change_request: 
+            case UDA::lane_change_request:
             case UDA::give_control_to_vissim:
             case UDA::max_lane_change_risk_to_leaders:
             case UDA::max_lane_change_risk_to_follower:
@@ -192,7 +192,7 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
         }
 
         current_vehicle_id = long_value;
-        if (vehicles.find(current_vehicle_id) != vehicles.end()) 
+        if (vehicles.find(current_vehicle_id) != vehicles.end())
         {
             vehicles[current_vehicle_id]->clear_nearby_vehicles();
         }
@@ -273,7 +273,7 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
             long_value);
         return 1;
     case DRIVER_DATA_VEH_REL_TARGET_LANE    :
-        /* This seems to only indicate the target lane of an 
+        /* This seems to only indicate the target lane of an
         already active (or about to be active) lane change. */
         //vehicles[current_vehicle_id]->set_relative_target_lane(long_value);
         return 1;
@@ -286,7 +286,7 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
     case DRIVER_DATA_VEH_INTAC_HEADWAY      :
         return 1;
     case DRIVER_DATA_VEH_UDA                :
-        switch (UDA(index1)) 
+        switch (UDA(index1))
         {
         case UDA::max_lane_change_risk_to_leaders:
             vehicles[current_vehicle_id]->
@@ -305,7 +305,7 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
         }
         return 1;
     case DRIVER_DATA_NVEH_ID                :
-        if (long_value > 0) 
+        if (long_value > 0)
         {
             vehicles[current_vehicle_id]->emplace_nearby_vehicle(
                 long_value, index1, index2);
@@ -394,7 +394,7 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
             index1, double_value);
         return 1;
     case DRIVER_DATA_SIGNAL_STATE           :
-        /* This is called once for each signal head at the start of 
+        /* This is called once for each signal head at the start of
         every simulation step. And then once again for each vehicle. */
         traffic_lights[index1].set_current_state(long_value);
         return 1;
@@ -423,7 +423,7 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
             long_value);*/
         return 1;
     case DRIVER_DATA_REL_TARGET_LANE        :
-        /* Apparently this is indicates when VISSIM considers the lane 
+        /* Apparently this is indicates when VISSIM considers the lane
         change can start. */
         vehicles[current_vehicle_id]->set_vissim_lane_suggestion(long_value);
         return 1;
@@ -643,34 +643,34 @@ DRIVERMODEL_API  int  DriverModelGetValue (long   type,
     case DRIVER_DATA_DESIRED_LANE_ANGLE :
         /* Since we set DRIVER_DATA_SIMPLE_LANECHANGE to 1, we don't
         need to pass any values here. */
-        /**double_value = 
+        /**double_value =
             vehicles[current_vehicle_id]->get_desired_lane_angle();*/
         return 0;
     case DRIVER_DATA_ACTIVE_LANE_CHANGE :
-        *long_value = vehicles[current_vehicle_id]->get_lane_change_direction();
-        
+        *long_value =
+            vehicles[current_vehicle_id]->get_lane_change_direction_to_int();
         return 1;
     case DRIVER_DATA_REL_TARGET_LANE :
-        /* This is used by Vissim only if *long_value was set to 0 in the 
+        /* This is used by Vissim only if *long_value was set to 0 in the
         call of DriverModelGetValue (DRIVER_DATA_SIMPLE_LANECHANGE) */
-        /**long_value = 
+        /**long_value =
             vehicles[current_vehicle_id]->get_relative_target_lane();*/
         return 0;
     case DRIVER_DATA_SIMPLE_LANECHANGE :
         *long_value = 1;
         return 1;
     case DRIVER_DATA_USE_INTERNAL_MODEL:
-        *long_value = 0; /* must be set to 0 if external model is to be 
+        *long_value = 0; /* must be set to 0 if external model is to be
                         applied */
         return 1;
     case DRIVER_DATA_WANTS_ALL_NVEHS:
-        *long_value = 0; /* must be set to 1 if data for more than 2 nearby 
-                        vehicles per lane and upstream/downstream is to be 
+        *long_value = 0; /* must be set to 1 if data for more than 2 nearby
+                        vehicles per lane and upstream/downstream is to be
                         passed from Vissim */
         return 1;
     case DRIVER_DATA_ALLOW_MULTITHREADING:
         *long_value = 0; /* must be set to 1 to allow a simulation run to be
-                        started with multiple cores used in the simulation 
+                        started with multiple cores used in the simulation
                         parameters */
         return 1;
     default:
@@ -694,8 +694,8 @@ DRIVERMODEL_API  int  DriverModelExecuteCommand (long number)
         if (LOGGED_VEHICLES_IDS.find(current_vehicle_id)
             != LOGGED_VEHICLES_IDS.end()) verbose = true;
         vehicles[current_vehicle_id] = std::move(
-            EgoVehicleFactory::create_ego_vehicle(current_vehicle_id, 
-                current_vehicle_type, current_desired_velocity, 
+            EgoVehicleFactory::create_ego_vehicle(current_vehicle_id,
+                current_vehicle_type, current_desired_velocity,
                 simulation_time_step, current_time, verbose)
             );
 
@@ -724,13 +724,12 @@ DRIVERMODEL_API  int  DriverModelExecuteCommand (long number)
     {
         /* This is executed after all the set commands and before
         any get command. */
-        if (CLUELESS_DEBUGGING) 
-        {
-            std::clog << "Veh " << current_vehicle_id
-                <<"\nUpdating states" << std::endl;
+        if (CLUELESS_DEBUGGING) {
+            std::clog << "Veh: " << current_vehicle_id
+                << "\nUpdating states\n";
         }
         vehicles[current_vehicle_id]->update_state();
-        
+
         if (CLUELESS_DEBUGGING)
         {
             std::clog << "Analyzing nearby vehicles" << std::endl;
@@ -740,7 +739,7 @@ DRIVERMODEL_API  int  DriverModelExecuteCommand (long number)
         if (vehicles[current_vehicle_id]->analyze_platoons(platoons,
             vehicles[current_vehicle_id], platoon_id))
         {
-            platoons[platoon_id] = 
+            platoons[platoon_id] =
                 vehicles[current_vehicle_id]->get_platoon();
             if (platoon_id == LOGGED_PLATOON_ID)
             {
@@ -755,14 +754,14 @@ DRIVERMODEL_API  int  DriverModelExecuteCommand (long number)
         }
         vehicles[current_vehicle_id]->decide_lane_change_direction();
 
-        if (CLUELESS_DEBUGGING) 
+        if (CLUELESS_DEBUGGING)
         {
             std::clog << "Deciding acceleration" << std::endl;
         }
         vehicles[current_vehicle_id]->compute_desired_acceleration(
             traffic_lights);
-        
-        if (CLUELESS_DEBUGGING) 
+
+        if (CLUELESS_DEBUGGING)
         {
             std::clog << "Command 'Move Driver' done." << std::endl;
         }

@@ -253,7 +253,7 @@
     <ClCompile Include="AutonomousVehicle.cpp" />
     <ClCompile Include="SwitchedLongitudinalController.cpp" />
     <ClCompile Include="TrafficLight.cpp" />
-    <ClCompile Include="TrafficLightACCVehicle.cpp" />
+    <ClCompile Include="TrafficLightALCVehicle.cpp" />
     <ClCompile Include="TrafficLightFileReader.cpp" />
     <ClCompile Include="VirtualLongitudinalController.cpp" />
     <ClCompile Include="LateralController.cpp" />
@@ -278,6 +278,7 @@
     <ClCompile Include="GapController.cpp" />
     <ClCompile Include="VelocityController.cpp" />
     <ClCompile Include="VariationLimitedFilter.cpp" />
+    <ClCompile Include="VissimLongitudinalController.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ACCVehicle.h" />
@@ -291,7 +292,7 @@
     <ClInclude Include="RelativeLane.h" />
     <ClInclude Include="SwitchedLongitudinalController.h" />
     <ClInclude Include="TrafficLight.h" />
-    <ClInclude Include="TrafficLightACCVehicle.h" />
+    <ClInclude Include="TrafficLightALCVehicle.h" />
     <ClInclude Include="TrafficLightFileReader.h" />
     <ClInclude Include="VirtualLongitudinalController.h" />
     <ClInclude Include="LateralController.h" />
@@ -306,6 +307,7 @@
     <ClInclude Include="GapController.h" />
     <ClInclude Include="VelocityController.h" />
     <ClInclude Include="VariationLimitedFilter.h" />
+    <ClInclude Include="VissimLongitudinalController.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

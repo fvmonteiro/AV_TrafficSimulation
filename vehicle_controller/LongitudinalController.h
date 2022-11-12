@@ -9,9 +9,11 @@
 #pragma once
 
 #include <memory>
+#include <string>
 #include <unordered_map>
 #include <string>
 
+#include "Constants.h"
 #include "GapController.h"
 #include "VelocityController.h"
 
@@ -25,14 +27,17 @@ public:
 		uninitialized,
 		velocity_control,
 		vehicle_following,
-		//traffic_light,
-		//max_accel,
-		//too_close
+		traffic_light,
+		comf_accel,
+		too_close,
 	};
 
-	State get_state() const { return state; };
+	LongitudinalController() = default;
 
-	double get_desired_acceleration(const EgoVehicle& ego_vehicle,
+	State get_state() const { return state; };
+	color_t get_state_color() const;
+
+	double compute_desired_acceleration(const EgoVehicle& ego_vehicle,
 		const std::shared_ptr<NearbyVehicle> leader,
 		double velocity_reference);
 
@@ -40,14 +45,17 @@ public:
 	static std::string state_to_string(State state);
 
 protected:
+	LongitudinalController(std::unordered_map<State, color_t>
+		state_to_color_map);
 	VelocityController velocity_controller;
 	GapController gap_controller;
 	State state{ State::uninitialized }; // event driven logic variable
 
 private:
-	virtual double compute_desired_acceleration(const EgoVehicle& ego_vehicle,
+	virtual double implement_compute_desired_acceleration(
+		const EgoVehicle& ego_vehicle,
 		const std::shared_ptr<NearbyVehicle> leader,
 		double velocity_reference) = 0;
-
+	std::unordered_map<State, color_t> state_to_color_map;
 	static const std::unordered_map<State, std::string> state_to_string_map;
 };

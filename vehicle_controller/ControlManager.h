@@ -11,22 +11,19 @@
 #include <unordered_map>
 #include <vector>
 
-//#include "ACCVehicle.h"
-//#include "AutonomousVehicle.h"
-//#include "ConnectedAutonomousVehicle.h"
-//#include "TrafficLightACCVehicle.h"
 #include "LateralController.h"
 #include "SwitchedLongitudinalController.h"
 #include "LongitudinalControllerWithTrafficLights.h"
 #include "RealLongitudinalController.h"
-#include "VirtualLongitudinalController.h"
 #include "Vehicle.h"
+#include "VirtualLongitudinalController.h"
+#include "VissimLongitudinalController.h"
 
 class EgoVehicle;
 class ACCVehicle;
 class AutonomousVehicle;
 class ConnectedAutonomousVehicle;
-class TrafficLightACCVehicle;
+class TrafficLightALCVehicle;
 class PlatoonVehicle;
 
 class ControlManager {
@@ -39,7 +36,7 @@ public:
 		cooperative_gap_generation,
 		end_of_lane,
 		vissim,
-		traffic_light_acc
+		traffic_light_alc
 	};
 
 	ControlManager() = default;
@@ -47,14 +44,16 @@ public:
 	//ControlManager(const EgoVehicle& ego_vehicle);
 
 	//std::vector<State> get_states() { return states; };
-	ALCType get_active_longitudinal_controller() const {
-		return active_longitudinal_controller;
+	ALCType get_active_alc_type() const {
+		return active_longitudinal_controller_type;
 	}
 
-	SwitchedLongitudinalController::State
+	color_t get_longitudinal_controller_color() const;
+
+	LongitudinalController::State
 		get_longitudinal_controller_state() const;
-	LongitudinalControllerWithTrafficLights::State
-		get_longitudinal_controller_with_traffic_lights_state();
+	/*LongitudinalControllerWithTrafficLights::State
+		get_longitudinal_controller_with_traffic_lights_state();*/
 	//void create_destination_lane_controller(const Vehicle& ego_vehicle);
 
 	/* Initializing controllers */
@@ -132,7 +131,7 @@ public:
 	/* Computes ACC desired acceleration plus the acceleration during lane
 	change adjustments and lateral movement. Gives control to human (vissim)
 	if the vehicle is waiting for too long to find a gap. */
-	double get_desired_acceleration(const AutonomousVehicle& 
+	double get_desired_acceleration(const AutonomousVehicle&
 		autonomous_vehicle);
 	/* Computes the AV desired acceleration plus the cooperative acceleration
 	to help create a gap for an incoming vehicle, and chooses the minimum. */
@@ -142,13 +141,11 @@ public:
 		const PlatoonVehicle& platoon_vehicle);
 	/* TODO description */
 	double get_desired_acceleration(
-		const TrafficLightACCVehicle& ego_vehicle,
+		const TrafficLightALCVehicle& ego_vehicle,
 		const std::unordered_map<int, TrafficLight>& traffic_lights);
 
 	void print_traffic_lights(const EgoVehicle& ego,
 		const std::unordered_map<int, TrafficLight>& traffic_lights);
-
-	double use_vissim_desired_acceleration(const EgoVehicle& ego_vehicle);
 
 	/* Computes the velocity reference when adjusting for lane change */
 	double determine_low_velocity_reference(double ego_velocity,
@@ -183,7 +180,7 @@ public:
 
 
 	/* Printing ----------------------------------------------------------- */
-	static std::string active_ACC_to_string(
+	static std::string ALC_type_to_string(
 		ALCType active_longitudinal_controller);
 
 private:
@@ -201,8 +198,53 @@ private:
 		1, 0.1, 0.03 };
 	/* The time headway used by the end-of-lane controller */
 	double time_headway_to_end_of_lane{ 1.0 };
+
+	/* Colors to make debugging visually easier
+	General rule: bright colors represent vel control,
+	darker colors represent vehicle following. */
+	std::unordered_map<LongitudinalController::State, color_t>
+		vissim_colors =
+	{
+		{LongitudinalController::State::uninitialized, CYAN}
+	};
+	std::unordered_map<LongitudinalController::State, color_t>
+		orig_lane_colors =
+	{
+		{ LongitudinalController::State::velocity_control, GREEN },
+		{ LongitudinalController::State::vehicle_following, DARK_GREEN },
+	};
+	// TODO: must be used!!
+	color_t orig_lane_max_vel_control_color{ BLUE_GREEN };
+	std::unordered_map<LongitudinalController::State, color_t>
+		end_of_lane_colors =
+	{
+		{ LongitudinalController::State::velocity_control, MAGENTA },
+		{ LongitudinalController::State::vehicle_following, DARK_MAGENTA },
+	};
+	std::unordered_map<LongitudinalController::State, color_t>
+		dest_lane_colors =
+	{
+		{ LongitudinalController::State::velocity_control, LIGHT_BLUE },
+		{ LongitudinalController::State::vehicle_following, BLUE },
+	};
+	std::unordered_map<LongitudinalController::State, color_t>
+		gap_generation_colors =
+	{
+		{ LongitudinalController::State::velocity_control, YELLOW },
+		{ LongitudinalController::State::vehicle_following, DARK_YELLOW },
+	};
+	std::unordered_map<LongitudinalController::State, color_t>
+		tl_alc_colors =
+	{
+		{ LongitudinalController::State::comf_accel, BLUE_GREEN },
+		{ LongitudinalController::State::velocity_control, GREEN },
+		{ LongitudinalController::State::vehicle_following, DARK_GREEN },
+		{ LongitudinalController::State::traffic_light, YELLOW},
+		{ LongitudinalController::State::too_close, RED },
+	};
 	/* -------------------------------------------- */
 
+	VissimLongitudinalController vissim_controller;
 	RealLongitudinalController origin_lane_controller;
 	RealLongitudinalController end_of_lane_controller;
 	VirtualLongitudinalController destination_lane_controller;
@@ -214,7 +256,7 @@ private:
 	LateralController lateral_controller;
 	/* indicates which controller is active. Used for debugging and
 	visualization. */
-	ALCType active_longitudinal_controller{ ALCType::origin_lane };
+	ALCType active_longitudinal_controller_type{ ALCType::origin_lane };
 
 	double origin_lane_leader_max_brake{ 0.0 };
 	double destination_lane_leader_max_brake{ 0.0 };
@@ -225,8 +267,21 @@ private:
 	VehicleType destination_lane_follower_type{ VehicleType::undefined };
 
 	bool verbose{ false };
-	bool long_controllers_verbose{ false };
+  bool long_controllers_verbose{ false };
 
+	/* Initializing controllers */
+	void create_vissim_controller();
+	void create_acc_controllers(const EgoVehicle& ego_vehicle,
+		bool verbose);
+	void create_lane_change_adjustment_controller(
+		const EgoVehicle& ego_vehicle,
+		bool verbose);
+	void create_cooperative_lane_change_controller(
+		const EgoVehicle& ego_vehicle,
+		bool verbose);
+
+	std::unique_ptr<LongitudinalController>
+		get_active_long_controller() const;
 	/* Gets the minimum of the accelerations in the map and sets the
 	active longitudinal controller. */
 	double choose_minimum_acceleration(
@@ -236,6 +291,8 @@ private:
 		const EgoVehicle& ego_vehicle);
 	/* Desired accelerations --------------------- */
 
+	/* VISSIM's suggested acceleration */
+	double get_vissim_desired_acceleration(const EgoVehicle& ego_vehicle);
 	/* Desired acceleration relative to the current lane.
 	Returns true if the computed acceleration was added to the map */
 	bool get_origin_lane_desired_acceleration(

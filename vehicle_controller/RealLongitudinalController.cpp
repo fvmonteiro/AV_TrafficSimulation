@@ -17,12 +17,14 @@ RealLongitudinalController::RealLongitudinalController(
 	VelocityControllerGains velocity_controller_gains,
 	AutonomousGains autonomous_gains, ConnectedGains connected_gains,
 	double velocity_filter_gain, double time_headway_filter_gain,
+	std::unordered_map<State, color_t> state_to_color_map,
 	bool verbose) :
 	SwitchedLongitudinalController(velocity_controller_gains,
 		autonomous_gains, connected_gains, velocity_filter_gain, 
 		time_headway_filter_gain, ego_vehicle.get_max_brake(), 
 		ego_vehicle.get_comfortable_acceleration(),
-		ego_vehicle.get_sampling_interval(), verbose)
+		ego_vehicle.get_sampling_interval(), 
+		state_to_color_map, verbose)
 {
 	if (verbose) 
 	{
@@ -30,20 +32,15 @@ RealLongitudinalController::RealLongitudinalController(
 	}
 }
 
-RealLongitudinalController::RealLongitudinalController(
-	const EgoVehicle& ego_vehicle,
-	VelocityControllerGains velocity_controller_gains,
-	AutonomousGains autonomous_gains, ConnectedGains connected_gains,
-	double velocity_filter_gain, double time_headway_filter_gain) :
-	RealLongitudinalController(ego_vehicle,
-		velocity_controller_gains, autonomous_gains, connected_gains,
-		velocity_filter_gain, time_headway_filter_gain, false) {}
+//RealLongitudinalController::RealLongitudinalController(
+//	const EgoVehicle& ego_vehicle,
+//	VelocityControllerGains velocity_controller_gains,
+//	AutonomousGains autonomous_gains, ConnectedGains connected_gains,
+//	double velocity_filter_gain, double time_headway_filter_gain) :
+//	RealLongitudinalController(ego_vehicle,
+//		velocity_controller_gains, autonomous_gains, connected_gains,
+//		velocity_filter_gain, time_headway_filter_gain, false) {}
 
-//OriginLaneLongitudinalController::OriginLaneLongitudinalController(
-//	const EgoVehicle& ego_vehicle, double kg, double kv, bool verbose)
-//	: OriginLaneLongitudinalController(ego_vehicle, verbose) {
-//	set_vehicle_following_gains(kg, kv);
-//}
 
 void RealLongitudinalController::update_leader_velocity_filter(
 	double leader_velocity) 

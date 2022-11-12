@@ -21,21 +21,7 @@ public:
 	of the code after the ego vehicle identifies its
 	surrouding vehicles. */
 
-	/* Returns a nullptr if the ego is no vehicle being assisted
-	(for gap generation) */
-	/*std::shared_ptr<NearbyVehicle> get_assisted_vehicle() const
-	{
-		return assisted_vehicle;
-	}*/
-
-	//bool has_assisted_vehicle() const;
 	bool is_cooperating_to_generate_gap() const;
-
-	/* Debugging methods */
-	/*long get_assisted_veh_id() const override {
-		return has_assisted_vehicle() ?
-			assisted_vehicle->get_id() : 0;
-	};*/
 
 protected:
 	ConnectedAutonomousVehicle(long id, VehicleType type,
@@ -44,13 +30,15 @@ protected:
 
 	/* Finds the current leader, the destination lane leader
 	and follower (if the vehicle has lane change intention),
-	and if any nearby vehicle requested cooperation	
+	and if any nearby vehicle requested cooperation
 	TODO [Nov 10, 2022] Make private? */
 	void implement_analyze_nearby_vehicles() override;
 	void find_cooperation_requests();
 
 	double get_lambda_1(bool is_leader_connected) const;
 	double get_lambda_1_lane_change(bool is_leader_connected) const;
+
+	void find_cooperation_requests();
 
 private:
 	double implement_compute_desired_acceleration(
@@ -59,18 +47,8 @@ private:
 	{
 		return false;
 	};
-	//void save_other_relevant_nearby_vehicle_ids() override;
-	//void clear_other_relevant_nearby_vehicles() override;
 	std::shared_ptr<NearbyVehicle>
 		implement_get_assisted_vehicle() const override;
-	//double implement_get_time_headway_to_assisted_vehicle() const override;
-	//void try_to_set_nearby_vehicle_type(long nv_type) override;
-	/*long try_to_get_nearby_vehicle_type(long nv_type) const override
-	{
-		return nv_type;
-	};*/
-	/*double compute_current_desired_time_headway(
-		const NearbyVehicle& nearby_vehicle) override;*/
 	double compute_vehicle_following_safe_time_headway(
 		const NearbyVehicle& nearby_vehicle) const override;
 	double compute_vehicle_following_time_headway(
