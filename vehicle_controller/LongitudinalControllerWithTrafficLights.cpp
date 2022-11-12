@@ -5,27 +5,63 @@
 #include "TrafficLightALCVehicle.h"
 
 LongitudinalControllerWithTrafficLights::
-LongitudinalControllerWithTrafficLights(bool verbose):
-verbose {verbose} {
+LongitudinalControllerWithTrafficLights(
+	std::unordered_map<State, color_t> state_to_color_map,
+	bool verbose):
+	LongitudinalController(state_to_color_map),
+	verbose {verbose} {
 	if (verbose)
 	{
 		std::clog << "Creating traffic-light acc controller" << std::endl;
 	}
 }
 
-bool LongitudinalControllerWithTrafficLights
-::compute_vehicle_following_input(const EgoVehicle& ego_vehicle,
-	std::unordered_map<State, double>& possible_accelerations)
+double LongitudinalControllerWithTrafficLights::
+implement_compute_desired_acceleration(
+	const EgoVehicle& ego_vehicle,
+	const std::shared_ptr<NearbyVehicle> leader,
+	double velocity_reference)
 {
-	if (!ego_vehicle.has_leader()) return false;
-	
-	std::shared_ptr<NearbyVehicle> leader = ego_vehicle.get_leader();
+	std::unordered_map<State, double>
+		possible_accelerations;
+
+	possible_accelerations[State::comf_accel] = 
+		get_nominal_input(ego_vehicle);
+	possible_accelerations[State::velocity_control] =
+		compute_velocity_control_input(ego_vehicle, velocity_reference);
+	if (ego_vehicle.has_leader())
+	{
+		possible_accelerations[State::vehicle_following] =
+			compute_vehicle_following_input(ego_vehicle,
+				ego_vehicle.get_leader());
+	}
+	if (ego_vehicle.has_next_traffic_light())
+	{
+		possible_accelerations[State::traffic_light] = 
+			compute_traffic_light_input(ego_vehicle);
+	}
+
+	return choose_acceleration(ego_vehicle, possible_accelerations);
+}
+
+double LongitudinalControllerWithTrafficLights::get_nominal_input(
+	const EgoVehicle& ego_vehicle)
+{
+	return ego_vehicle.get_comfortable_acceleration();
+}
+
+double LongitudinalControllerWithTrafficLights
+::compute_vehicle_following_input(const EgoVehicle& ego_vehicle,
+	const std::shared_ptr<NearbyVehicle> leader)
+{	
+	//std::shared_ptr<NearbyVehicle> leader = ego_vehicle.get_leader();
 	double gap = ego_vehicle.compute_gap(leader);
 	double ego_vel = ego_vehicle.get_velocity();
 	double rel_vel = leader->get_relative_velocity();
 	double leader_vel = leader->compute_velocity(ego_vel);
 	double safe_gap = time_headway * ego_vel + standstill_distance
-		+ (std::pow(ego_vel, 2) - std::pow(leader_vel, 2)) / 2 / comfortable_braking;
+		+ (std::pow(ego_vel, 2) - std::pow(leader_vel, 2)) 
+		/ 2 / comfortable_braking;
 	gap_error = gap - safe_gap;
 	//double gap_error = gap - safe_gap;
 
@@ -41,65 +77,52 @@ bool LongitudinalControllerWithTrafficLights
 	//		<< ", is connected? " << leader->is_connected()
 	//		<< std::endl;
 	//}
-
+	double desired_acceleration;
 	if (ego_vehicle.get_is_connected() && leader->is_connected())
 	{
 		//if (verbose) std::clog << "connected" << std::endl;
-		possible_accelerations[State::vehicle_following] =
+		desired_acceleration =
 			(-rel_vel + veh_foll_gain * gap_error + connected_extra_term)
 			* comfortable_braking / (comfortable_braking + ego_vel);
 	}
 	else
 	{
 		//if (verbose) std::clog << "not connected" << std::endl;
-		possible_accelerations[State::vehicle_following] =
+		desired_acceleration =
 			(-rel_vel + veh_foll_gain * gap_error)
 			/ (time_headway + ego_vel / comfortable_braking);
 	}
-	return true;
+	return desired_acceleration;
 }
 
-bool LongitudinalControllerWithTrafficLights
+double LongitudinalControllerWithTrafficLights
 ::compute_velocity_control_input(const EgoVehicle& ego_vehicle,
-	std::unordered_map<State, double>& possible_accelerations)
+	double velocity_reference)
 {
-	double desired_vel = ego_vehicle.get_desired_velocity();
-
-	//double desired_vel = max_speed;
+	//double desired_vel = ego_vehicle.get_desired_velocity();
 
 	double ego_vel = ego_vehicle.get_velocity();
-	double vel_error = desired_vel - ego_vel;
-	possible_accelerations[State::velocity_control] = 
-		vel_control_gain * (vel_error);
-	return true;
+	double vel_error = velocity_reference - ego_vel;
+	return vel_control_gain * (vel_error);
 }
 
-bool LongitudinalControllerWithTrafficLights
-::compute_traffic_light_input(const TrafficLightALCVehicle& ego_vehicle,
-	const std::unordered_map<int, TrafficLight>& traffic_lights,
-	std::unordered_map<State, double>& possible_accelerations)
+double LongitudinalControllerWithTrafficLights
+::compute_traffic_light_input(const EgoVehicle& ego_vehicle)
 {
-	if (!ego_vehicle.has_next_traffic_light()) return false;
+	// Check is made before calling the function
+	//if (!ego_vehicle.has_next_traffic_light()) return false;
 
 	double ego_vel = ego_vehicle.get_velocity();
-	compute_traffic_light_input_parameters(ego_vehicle, traffic_lights);
+	// Computation must be done somewhere before calling this function
+	//compute_traffic_light_input_parameters(ego_vehicle, traffic_lights);
 
 	if (verbose) std::clog << "beta=" << beta
 		<< ", dht=" << dht << ", Vf=" << ego_vel << ", h3=" << h3
 		<< std::endl;
 
-	possible_accelerations[State::traffic_light] = 
-		//(dht - ego_vel + h3) / beta;
-		comfortable_braking / (beta * comfortable_braking + ego_vel)
+	//return (dht - ego_vel + h3) / beta;
+	return	comfortable_braking / (beta * comfortable_braking + ego_vel)
 		* (dht - ego_vel + h3);
-	return true;
-}
-
-double LongitudinalControllerWithTrafficLights::get_nominal_input(
-	std::unordered_map<State, double>& possible_accelerations)
-{
-	possible_accelerations[State::max_accel] = max_accel;
-	return true;
 }
 
 double LongitudinalControllerWithTrafficLights::choose_minimum_acceleration(
@@ -110,13 +133,13 @@ double LongitudinalControllerWithTrafficLights::choose_minimum_acceleration(
 	double desired_acceleration = 1000; // any high value
 	for (const auto& it : possible_accelerations)
 	{
-		if (verbose) std::clog << mode_to_string(it.first)
+		if (verbose) std::clog << state_to_string(it.first)
 			<< "=" << it.second << ", ";
 
 		if (it.second < desired_acceleration)
 		{
 			desired_acceleration = it.second;
-			active_mode = it.first;
+			state = it.first;
 		}
 	}
 
@@ -152,29 +175,9 @@ double LongitudinalControllerWithTrafficLights::choose_acceleration(
 	}
 	else
 	{
-		active_mode = State::too_close;
+		state = State::too_close;
 		return std::max(min_from_inputs,
 			-ego_vehicle.get_max_brake());
-	}
-}
-
-std::string LongitudinalControllerWithTrafficLights::mode_to_string(
-	State active_mode)
-{
-	switch (active_mode)
-	{
-	case LongitudinalControllerWithTrafficLights::State::vehicle_following:
-		return "vehicle following";
-	case LongitudinalControllerWithTrafficLights::State::velocity_control:
-		return "velocity control";
-	case LongitudinalControllerWithTrafficLights::State::traffic_light:
-		return "traffic light";
-	case LongitudinalControllerWithTrafficLights::State::max_accel:
-		return "nominal (max accel)";
-		break;
-	default:
-		return "unknown mode";
-		break;
 	}
 }
 

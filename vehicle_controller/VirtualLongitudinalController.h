@@ -24,12 +24,13 @@ public:
         VelocityControllerGains velocity_controller_gains,
         AutonomousGains autonomous_gains, ConnectedGains connected_gains,
         double velocity_filter_gain, double time_headway_filter_gain,
+        std::unordered_map<State, color_t> state_to_color_map,
         bool verbose);
-    VirtualLongitudinalController(
-        const EgoVehicle& ego_vehicle,
-        VelocityControllerGains velocity_controller_gains,
-        AutonomousGains autonomous_gains, ConnectedGains connected_gains,
-        double velocity_filter_gain, double time_headway_filter_gain);
+    //VirtualLongitudinalController(
+    //    const EgoVehicle& ego_vehicle,
+    //    VelocityControllerGains velocity_controller_gains,
+    //    AutonomousGains autonomous_gains, ConnectedGains connected_gains,
+    //    double velocity_filter_gain, double time_headway_filter_gain);
 
     double get_follower_time_headway() const {
         return follower_time_headway;

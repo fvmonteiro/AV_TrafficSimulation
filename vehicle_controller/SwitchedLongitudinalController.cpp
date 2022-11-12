@@ -17,7 +17,10 @@ SwitchedLongitudinalController::SwitchedLongitudinalController(
 	const ConnectedGains& connected_gains,
 	double velocity_filter_gain, double time_headway_filter_gain,
 	double filter_brake_limit, double comfortable_acceleration,
-	double simulation_time_step, bool verbose) :
+	double simulation_time_step,
+	std::unordered_map<State, color_t> state_to_color_map,
+	bool verbose) :
+	LongitudinalController(state_to_color_map),
 	autonomous_gains{ autonomous_gains },
 	connected_gains{ connected_gains },
 	verbose{ verbose } {
@@ -28,7 +31,6 @@ SwitchedLongitudinalController::SwitchedLongitudinalController(
 	gap_controller = GapController(simulation_time_step, autonomous_gains,
 		connected_gains, velocity_filter_gain, time_headway_filter_gain,
 		comfortable_acceleration, filter_brake_limit, verbose);
-
 }
 
 void SwitchedLongitudinalController::connect_gap_controller(bool is_connected)
@@ -104,7 +106,7 @@ double SwitchedLongitudinalController::compute_gap_threshold(double gap,
 	- Worst-case: h*vf + d + (kv*vf)/kg = (h + kv/kg)*vf + d*/
 }
 
-double SwitchedLongitudinalController::compute_desired_acceleration(
+double SwitchedLongitudinalController::implement_compute_desired_acceleration(
 	const EgoVehicle& ego_vehicle,
 	const std::shared_ptr<NearbyVehicle> leader,
 	double velocity_reference) 

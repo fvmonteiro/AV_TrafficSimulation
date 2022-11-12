@@ -18,13 +18,15 @@ VirtualLongitudinalController::VirtualLongitudinalController(
 	VelocityControllerGains velocity_controller_gains,
 	AutonomousGains autonomous_gains, ConnectedGains connected_gains,
 	double velocity_filter_gain, double time_headway_filter_gain,
+	std::unordered_map<State, color_t> state_to_color_map,
 	bool verbose) :
 	SwitchedLongitudinalController(velocity_controller_gains,
 		autonomous_gains, connected_gains,
 		velocity_filter_gain, time_headway_filter_gain,
 		ego_vehicle.get_comfortable_brake(), 
 		ego_vehicle.get_comfortable_acceleration(),
-		ego_vehicle.get_sampling_interval(), verbose) 
+		ego_vehicle.get_sampling_interval(), 
+		state_to_color_map, verbose) 
 {
 	if (verbose) 
 	{
@@ -32,14 +34,14 @@ VirtualLongitudinalController::VirtualLongitudinalController(
 	}
 }
 
-VirtualLongitudinalController::VirtualLongitudinalController(
-	const EgoVehicle& ego_vehicle,
-	VelocityControllerGains velocity_controller_gains,
-	AutonomousGains autonomous_gains, ConnectedGains connected_gains,
-	double velocity_filter_gain, double time_headway_filter_gain) :
-	VirtualLongitudinalController(ego_vehicle,
-		velocity_controller_gains, autonomous_gains, connected_gains,
-		velocity_filter_gain, time_headway_filter_gain, false) {}
+//VirtualLongitudinalController::VirtualLongitudinalController(
+//	const EgoVehicle& ego_vehicle,
+//	VelocityControllerGains velocity_controller_gains,
+//	AutonomousGains autonomous_gains, ConnectedGains connected_gains,
+//	double velocity_filter_gain, double time_headway_filter_gain) :
+//	VirtualLongitudinalController(ego_vehicle,
+//		velocity_controller_gains, autonomous_gains, connected_gains,
+//		velocity_filter_gain, time_headway_filter_gain, false) {}
 
 void VirtualLongitudinalController::determine_controller_state(
 	const EgoVehicle& ego_vehicle, 

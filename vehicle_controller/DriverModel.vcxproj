@@ -277,6 +277,7 @@
     <ClCompile Include="GapController.cpp" />
     <ClCompile Include="VelocityController.cpp" />
     <ClCompile Include="VariationLimitedFilter.cpp" />
+    <ClCompile Include="VissimLongitudinalController.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ACCVehicle.h" />
@@ -304,6 +305,7 @@
     <ClInclude Include="GapController.h" />
     <ClInclude Include="VelocityController.h" />
     <ClInclude Include="VariationLimitedFilter.h" />
+    <ClInclude Include="VissimLongitudinalController.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

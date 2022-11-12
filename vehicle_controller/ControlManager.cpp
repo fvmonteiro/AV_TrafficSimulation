@@ -32,9 +32,11 @@ ControlManager::ControlManager(const EgoVehicle& ego_vehicle,
 	switch (ego_vehicle.get_type())
 	{
 	case VehicleType::acc_car:
+		create_vissim_controller();
 		create_acc_controllers(ego_vehicle, is_long_control_verbose);
 		break;
 	case VehicleType::autonomous_car:
+		create_vissim_controller();
 		create_acc_controllers(ego_vehicle, is_long_control_verbose);
 		create_lane_change_adjustment_controller(ego_vehicle,
 			is_long_control_verbose);
@@ -49,7 +51,9 @@ ControlManager::ControlManager(const EgoVehicle& ego_vehicle,
 	case VehicleType::traffic_light_acc_car:
 	case VehicleType::traffic_light_cacc_car: // both get the same controller
 		with_traffic_lights_controller =
-			LongitudinalControllerWithTrafficLights(is_long_control_verbose);
+			LongitudinalControllerWithTrafficLights(tl_alc_colors,
+				is_long_control_verbose);
+		active_longitudinal_controller_type = ALCType::traffic_light_alc;
 		break;
 	default:
 		break;
@@ -58,6 +62,13 @@ ControlManager::ControlManager(const EgoVehicle& ego_vehicle,
 
 ControlManager::ControlManager(const EgoVehicle& ego_vehicle)
 	: ControlManager(ego_vehicle, false) {}
+
+
+void ControlManager::create_vissim_controller()
+{
+	vissim_controller = VissimLongitudinalController(
+		vissim_colors);
+}
 
 void ControlManager::create_acc_controllers(
 	const EgoVehicle& ego_vehicle, bool verbose)
@@ -68,7 +79,7 @@ void ControlManager::create_acc_controllers(
 		autonomous_real_following_gains, 
 		connected_real_following_gains,
 		velocity_filter_gain, time_headway_filter_gain,
-		verbose);
+		orig_lane_colors, verbose);
 	/* Note: the end of lane controller could have special vel control gains
 	but we want to see how the ego vehicle responds to a stopped vehicle. */
 	end_of_lane_controller = RealLongitudinalController(
@@ -77,7 +88,7 @@ void ControlManager::create_acc_controllers(
 		autonomous_real_following_gains,
 		connected_real_following_gains,
 		velocity_filter_gain, time_headway_filter_gain,
-		verbose);
+		end_of_lane_colors, verbose);
 	/* The end of the lane is seen as a stopped vehicle. We set some 
 	time headway to that "vehicle". */
 	activate_end_of_lane_controller(time_headway_to_end_of_lane);
@@ -92,7 +103,7 @@ void ControlManager::create_lane_change_adjustment_controller(
 		autonomous_virtual_following_gains,
 		connected_virtual_following_gains,
 		velocity_filter_gain, time_headway_filter_gain,
-		verbose);
+		dest_lane_colors, verbose);
 }
 
 void ControlManager::create_cooperative_lane_change_controller(
@@ -104,36 +115,67 @@ void ControlManager::create_cooperative_lane_change_controller(
 		autonomous_virtual_following_gains,
 		connected_virtual_following_gains,
 		velocity_filter_gain, time_headway_filter_gain,
-		verbose);
+		gap_generation_colors, verbose);
 	/* the gap generating controller is only activated when there are
 	two connected vehicles, so we can set its connection here*/
 	gap_generating_controller.connect_gap_controller(true);
 }
 
-SwitchedLongitudinalController::State
-	ControlManager::get_longitudinal_controller_state() const
+color_t ControlManager::get_longitudinal_controller_color() const
 {
-	switch (active_longitudinal_controller) 
+	std::unique_ptr<LongitudinalController> active_long_controller =
+		get_active_long_controller();
+	if (active_long_controller != nullptr)
 	{
-	case ACCType::origin_lane:
-		return origin_lane_controller.get_state();
-	case ACCType::destination_lane:
-		return destination_lane_controller.get_state();
-	case ACCType::cooperative_gap_generation:
-		return gap_generating_controller.get_state();
-	case ACCType::end_of_lane:
-		return end_of_lane_controller.get_state();
-	case ACCType::vissim:
-		return SwitchedLongitudinalController::State::uninitialized;
-	default:
-		return SwitchedLongitudinalController::State::uninitialized;
+		return active_long_controller->get_state_color();
+	}
+	else
+	{
+		return WHITE;
 	}
 }
 
-LongitudinalControllerWithTrafficLights::State
-	ControlManager::get_longitudinal_controller_with_traffic_lights_state()
+LongitudinalController::State
+	ControlManager::get_longitudinal_controller_state() const
 {
-	return with_traffic_lights_controller.get_state();
+	std::unique_ptr<LongitudinalController> active_long_controller =
+		get_active_long_controller();
+	if (active_long_controller != nullptr)
+	{
+		return active_long_controller->get_state();
+	}
+	else
+	{
+		return LongitudinalController::State::uninitialized;
+	}
+}
+
+std::unique_ptr<LongitudinalController> 
+ControlManager::get_active_long_controller() const
+{
+	switch (active_longitudinal_controller_type)
+	{
+	case ALCType::origin_lane:
+		return std::make_unique<RealLongitudinalController>(
+			origin_lane_controller);
+	case ALCType::destination_lane:
+		return std::make_unique< VirtualLongitudinalController>(
+			destination_lane_controller);
+	case ALCType::cooperative_gap_generation:
+		return std::make_unique< VirtualLongitudinalController>(
+			gap_generating_controller);
+	case ALCType::end_of_lane:
+		return std::make_unique<RealLongitudinalController>(
+			end_of_lane_controller);
+	case ALCType::traffic_light_alc:
+		return std::make_unique<LongitudinalControllerWithTrafficLights>(
+			with_traffic_lights_controller);
+	case ALCType::vissim:
+		return std::make_unique<VissimLongitudinalController>(
+			vissim_controller);
+	default:
+		return nullptr;
+	}
 }
 
 /* DEBUGGING FUNCTIONS --------------------------------------------------- */
@@ -251,7 +293,7 @@ bool ControlManager::is_in_free_flow_at_origin_lane() const
 		== SwitchedLongitudinalController::State::velocity_control;
 }
 
-double ControlManager::use_vissim_desired_acceleration(
+double ControlManager::get_vissim_desired_acceleration(
 	const EgoVehicle& ego_vehicle) 
 {
 	/* We need to ensure the velocity filter keeps active
@@ -264,8 +306,9 @@ double ControlManager::use_vissim_desired_acceleration(
 				ego_vehicle.get_velocity()));
 	}
 
-	active_longitudinal_controller = ACCType::vissim;
-	return ego_vehicle.get_vissim_acceleration();
+	active_longitudinal_controller_type = ALCType::vissim;
+	return vissim_controller.compute_desired_acceleration(
+		ego_vehicle, nullptr, 0);
 }
 
 double ControlManager::get_desired_acceleration(
@@ -274,16 +317,15 @@ double ControlManager::get_desired_acceleration(
 	if (acc_vehicle.has_lane_change_intention() || 
 		acc_vehicle.is_lane_changing())
 	{
-		return use_vissim_desired_acceleration(acc_vehicle);
+		return get_vissim_desired_acceleration(acc_vehicle);
 	}
 
-	std::unordered_map<ACCType, double>
+	std::unordered_map<ALCType, double>
 		possible_accelerations;
 	get_origin_lane_desired_acceleration(acc_vehicle,
 		possible_accelerations);
-	bool end_of_lane_controller_is_active =
-		get_end_of_lane_desired_acceleration(acc_vehicle,
-			possible_accelerations);
+	get_end_of_lane_desired_acceleration(acc_vehicle,
+		possible_accelerations);
 
 	return choose_minimum_acceleration(possible_accelerations);
 }
@@ -295,10 +337,10 @@ double ControlManager::get_desired_acceleration(
 		&& (autonomous_vehicle.has_lane_change_intention() 
 			|| autonomous_vehicle.is_lane_changing()))
 	{
-		return use_vissim_desired_acceleration(autonomous_vehicle);
+		return get_vissim_desired_acceleration(autonomous_vehicle);
 	}
 
-	std::unordered_map<ACCType, double>
+	std::unordered_map<ALCType, double>
 		possible_accelerations;
 	get_origin_lane_desired_acceleration(autonomous_vehicle,
 		possible_accelerations);
@@ -313,7 +355,7 @@ double ControlManager::get_desired_acceleration(
 double ControlManager::get_desired_acceleration(
 	const ConnectedAutonomousVehicle& cav)
 {
-	std::unordered_map<ACCType, double>
+	std::unordered_map<ALCType, double>
 		possible_accelerations;
 	get_origin_lane_desired_acceleration(cav,
 		possible_accelerations);
@@ -327,29 +369,21 @@ double ControlManager::get_desired_acceleration(
 	return choose_minimum_acceleration(possible_accelerations);
 }
 
-double ControlManager::get_traffic_desired_acceleration(
+double ControlManager::get_desired_acceleration(
 	const TrafficLightALCVehicle& tl_alc_vehicle,
 	const std::unordered_map<int, TrafficLight>& traffic_lights)
 {
 	if (verbose) std::clog << "Inside get traffic_light_acc_acceleration\n";
 
-	std::unordered_map<LongitudinalControllerWithTrafficLights::State, double>
-		possible_accelerations;
-
-	with_traffic_lights_controller.get_nominal_input(possible_accelerations);
-	with_traffic_lights_controller.compute_vehicle_following_input(
-		tl_alc_vehicle, possible_accelerations);
-	with_traffic_lights_controller.compute_velocity_control_input(
-		tl_alc_vehicle, possible_accelerations);
-	with_traffic_lights_controller.compute_traffic_light_input(
-		tl_alc_vehicle, traffic_lights, possible_accelerations);
-
-	active_longitudinal_controller = ACCType::traffic_light_acc;
-
-	double ret = with_traffic_lights_controller.
-		choose_acceleration(tl_alc_vehicle, possible_accelerations);
-
-	return ret;
+	active_longitudinal_controller_type = ALCType::traffic_light_alc;
+	if (tl_alc_vehicle.has_next_traffic_light())
+	{
+		with_traffic_lights_controller.compute_traffic_light_input_parameters(
+			tl_alc_vehicle, traffic_lights);
+	}
+	
+	return with_traffic_lights_controller.compute_desired_acceleration(
+		tl_alc_vehicle, nullptr, tl_alc_vehicle.get_desired_velocity());
 }
 
 void ControlManager::print_traffic_lights(const EgoVehicle& ego,
@@ -359,23 +393,15 @@ void ControlManager::print_traffic_lights(const EgoVehicle& ego,
 	for (auto& pair : traffic_lights) std::clog << "tf id=" << pair.first <<
 		"(" << pair.second.get_id() << "), ";
 	std::clog << std::endl;
-
-	if (verbose) std::clog << "Inside placeholder function\n"
-		<< "Getting nominal input" << std::endl;
-
-	std::unordered_map<LongitudinalControllerWithTrafficLights::State, double>
-		possible_accelerations;
-
-	with_traffic_lights_controller.get_nominal_input(possible_accelerations);
 }
 
 bool ControlManager::get_origin_lane_desired_acceleration(
 	const EgoVehicle& ego_vehicle,
-	std::unordered_map<ACCType, double>& possible_accelerations)
+	std::unordered_map<ALCType, double>& possible_accelerations)
 {
 	if (verbose) std::clog << "Origin lane controller" << std::endl;
-	possible_accelerations[ACCType::origin_lane] = 
-		origin_lane_controller.get_desired_acceleration(
+	possible_accelerations[ALCType::origin_lane] = 
+		origin_lane_controller.compute_desired_acceleration(
 		ego_vehicle, ego_vehicle.get_leader(),
 		ego_vehicle.get_free_flow_velocity());
 
@@ -384,7 +410,7 @@ bool ControlManager::get_origin_lane_desired_acceleration(
 
 bool ControlManager::get_end_of_lane_desired_acceleration(
 	const EgoVehicle& ego_vehicle,
-	std::unordered_map<ACCType, double>& possible_accelerations)
+	std::unordered_map<ALCType, double>& possible_accelerations)
 {
 	bool is_active = false;
 
@@ -421,7 +447,7 @@ bool ControlManager::get_end_of_lane_desired_acceleration(
 				ego_vehicle.get_velocity());
 		}
 		double desired_acceleration =
-			end_of_lane_controller.get_desired_acceleration(
+			end_of_lane_controller.compute_desired_acceleration(
 				ego_vehicle, std::make_shared<NearbyVehicle>(virtual_vehicle),
 				ego_vehicle.get_desired_velocity());
 
@@ -436,7 +462,7 @@ bool ControlManager::get_end_of_lane_desired_acceleration(
 					<< LongitudinalController::state_to_string(old_state)
 					<< std::endl;
 			}
-			possible_accelerations[ACCType::end_of_lane] = 
+			possible_accelerations[ALCType::end_of_lane] = 
 				desired_acceleration;
 			is_active = true;
 		}
@@ -446,7 +472,7 @@ bool ControlManager::get_end_of_lane_desired_acceleration(
 
 bool ControlManager::get_destination_lane_desired_acceleration(
 	const AutonomousVehicle& ego_vehicle,
-	std::unordered_map<ACCType, double>& possible_accelerations) 
+	std::unordered_map<ALCType, double>& possible_accelerations) 
 {
 	bool is_active = false;
 	double ego_velocity = ego_vehicle.get_velocity();
@@ -480,16 +506,16 @@ bool ControlManager::get_destination_lane_desired_acceleration(
 		/* If the ego vehicle is braking hard due to conditions on
 		the current lane, the destination lane controller, which
 		uses comfortable constraints, must be updated. */
-		if ((active_longitudinal_controller
-			!= ACCType::destination_lane)
+		if ((active_longitudinal_controller_type
+			!= ALCType::destination_lane)
 			&& destination_lane_controller.is_outdated(ego_velocity)) 
 		{
 			destination_lane_controller.reset_velocity_controller(
 				ego_velocity);
 		}
 
-		possible_accelerations[ACCType::destination_lane] =
-			destination_lane_controller.get_desired_acceleration(
+		possible_accelerations[ALCType::destination_lane] =
+			destination_lane_controller.compute_desired_acceleration(
 				ego_vehicle, dest_lane_leader, reference_velocity);
 		is_active = true;
 	}
@@ -498,7 +524,7 @@ bool ControlManager::get_destination_lane_desired_acceleration(
 
 bool ControlManager::get_cooperative_desired_acceleration(
 	const ConnectedAutonomousVehicle& ego_vehicle,
-	std::unordered_map<ACCType, double>& possible_accelerations) 
+	std::unordered_map<ALCType, double>& possible_accelerations) 
 {
 	bool is_active = false;
 
@@ -518,16 +544,16 @@ bool ControlManager::get_cooperative_desired_acceleration(
 		/* If the ego vehicle is braking hard due to conditions on
 		the current lane, the gap generating controller, which
 		uses comfortable constraints, must be updated. */
-		if ((active_longitudinal_controller
-			!= ACCType::cooperative_gap_generation)
+		if ((active_longitudinal_controller_type
+			!= ALCType::cooperative_gap_generation)
 			&& gap_generating_controller.is_outdated(ego_velocity)) 
 		{
 			gap_generating_controller.reset_velocity_controller(
 				ego_velocity);
 		}
 			
-		possible_accelerations[ACCType::cooperative_gap_generation] =
-			gap_generating_controller.get_desired_acceleration(
+		possible_accelerations[ALCType::cooperative_gap_generation] =
+			gap_generating_controller.compute_desired_acceleration(
 				ego_vehicle, assisted_vehicle, reference_velocity);
 		is_active = true;
 	}
@@ -535,18 +561,18 @@ bool ControlManager::get_cooperative_desired_acceleration(
 }
 
 double ControlManager::choose_minimum_acceleration(
-	std::unordered_map<ACCType, double>& possible_accelerations)
+	std::unordered_map<ALCType, double>& possible_accelerations)
 {
 	double desired_acceleration = 1000; // any high value
 	for (const auto& it : possible_accelerations) 
 	{
-		if (verbose) std::clog << active_ACC_to_string(it.first)
+		if (verbose) std::clog << ALC_type_to_string(it.first)
 			<< ", " << it.second << std::endl;
 
 		if (it.second < desired_acceleration) 
 		{
 			desired_acceleration = it.second;
-			active_longitudinal_controller = it.first;
+			active_longitudinal_controller_type = it.first;
 		}
 	}
 
@@ -691,20 +717,22 @@ double ControlManager::get_gap_variation_during_lane_change(
 		ego_vehicle, nearby_vehicle, will_accelerate);
 }
 
-std::string ControlManager::active_ACC_to_string(
-	ACCType active_longitudinal_controller) 
+std::string ControlManager::ALC_type_to_string(
+	ALCType active_longitudinal_controller) 
 {
 	switch (active_longitudinal_controller)
 	{
-	case ACCType::origin_lane:
+	case ALCType::origin_lane:
 		return "origin lane controller";
-	case ACCType::destination_lane:
+	case ALCType::destination_lane:
 		return "destination lane controller";
-	case ACCType::cooperative_gap_generation:
+	case ALCType::cooperative_gap_generation:
 		return "gap generation controller";
-	case ACCType::end_of_lane:
+	case ALCType::end_of_lane:
 		return "end-of-lane controller";
-	case ACCType::vissim:
+	case ALCType::traffic_light_alc:
+		return "traffic light alc";
+	case ALCType::vissim:
 		return "vissim controller";
 	default:
 		return "unknown active longitudinal controller";

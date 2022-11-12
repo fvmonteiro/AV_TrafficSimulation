@@ -33,7 +33,9 @@ public:
 		const ConnectedGains& connected_gains,
 		double velocity_filter_gain, double time_headway_filter_gain,
 		double filter_brake_limit, double comfortable_acceleration,
-		double simulation_time_step, bool verbose);
+		double simulation_time_step,
+		std::unordered_map<State, color_t> state_to_color_map,
+		bool verbose);
 
 	
 	/* --------------- Methods related to velocity control ---------------- */
@@ -73,7 +75,7 @@ protected:
 		double diff_to_velocity_reference, double gap_control_input);
 
 private:
-	double compute_desired_acceleration(const EgoVehicle& ego_vehicle,
+	double implement_compute_desired_acceleration(const EgoVehicle& ego_vehicle,
 		const std::shared_ptr<NearbyVehicle> leader,
 		double velocity_reference) override;
 

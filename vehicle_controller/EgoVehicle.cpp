@@ -282,7 +282,7 @@ void EgoVehicle::emplace_nearby_vehicle(long id, long relative_lane,
 	long relative_position) 
 {
 	std::shared_ptr<NearbyVehicle> nearby_vehicle = 
-		std::shared_ptr<NearbyVehicle>(new NearbyVehicle(id, relative_lane,
+		std::make_shared<NearbyVehicle>(NearbyVehicle(id, relative_lane,
 		relative_position));
 	nearby_vehicles.push_back(std::move(nearby_vehicle));
 }
@@ -560,16 +560,15 @@ long EgoVehicle::get_color_by_controller_state()
 {
 	/* We'll assign color to vehicles based on the current longitudinal
 	controller and on whether or not the vehicle is trying to change lanes.*/
-	if (state.empty()) return orig_lane_vel_control_color;
+	if (state.empty()) return WHITE;
 	
-	/* TODO: Rewrite code to avoid all these swicth statements.
-	Possible solution: ControlManager has a map of controllers and
-	controllers get assigned colors for their states.
-	Then we can just call controllers[active_controller].get_state_color() */
+	/* TODO: still missing color for VISSIM and for max_vel */
+	return controller.get_longitudinal_controller_color();
 
-	switch (controller.get_active_longitudinal_controller()) 
+	/* OLD SWITCH [Nov 11, 2022] */
+	/*switch (controller.get_active_alc_type()) 
 	{
-	case ControlManager::ACCType::origin_lane:
+	case ControlManager::ALCType::origin_lane:
 		switch (controller.get_longitudinal_controller_state())
 		{
 		case SwitchedLongitudinalController::State::velocity_control:
@@ -580,7 +579,7 @@ long EgoVehicle::get_color_by_controller_state()
 		default:
 			return WHITE;
 		}
-	case ControlManager::ACCType::cooperative_gap_generation:
+	case ControlManager::ALCType::cooperative_gap_generation:
 		switch (controller.get_longitudinal_controller_state())
 		{
 		case SwitchedLongitudinalController::State::velocity_control:
@@ -590,7 +589,7 @@ long EgoVehicle::get_color_by_controller_state()
 		default:
 			return WHITE;
 		}
-	case ControlManager::ACCType::destination_lane:
+	case ControlManager::ALCType::destination_lane:
 		switch (controller.get_longitudinal_controller_state())
 		{
 		case SwitchedLongitudinalController::State::velocity_control:
@@ -600,7 +599,7 @@ long EgoVehicle::get_color_by_controller_state()
 		default:
 			return WHITE;
 		}
-	case ControlManager::ACCType::end_of_lane:
+	case ControlManager::ALCType::end_of_lane:
 		switch (controller.get_longitudinal_controller_state())
 		{
 		case SwitchedLongitudinalController::State::velocity_control:
@@ -610,8 +609,8 @@ long EgoVehicle::get_color_by_controller_state()
 		default:
 			return WHITE;
 		}
-	case ControlManager::ACCType::traffic_light_acc:
-		switch (controller.get_longitudinal_controller_with_traffic_lights_state())
+	case ControlManager::ALCType::traffic_light_acc:
+		switch (controller.get_longitudinal_controller_state())
 		{
 		case LongitudinalControllerWithTrafficLights::State::max_accel:
 			return max_accel_color;
@@ -626,19 +625,19 @@ long EgoVehicle::get_color_by_controller_state()
 		default:
 			return WHITE;
 		}
-	case ControlManager::ACCType::vissim:
+	case ControlManager::ALCType::vissim:
 		return CYAN;
 	default:
 		return WHITE;
-	}
+	}*/
 }
 
 std::string EgoVehicle::print_detailed_state() const
 {
 	std::string state_str = 
 		state_to_string_map.at(get_state()) + ", "
-		+ ControlManager::active_ACC_to_string(
-			controller.get_active_longitudinal_controller()) + ", "
+		+ ControlManager::ALC_type_to_string(
+			controller.get_active_alc_type()) + ", "
 		+ SwitchedLongitudinalController::state_to_string(
 			controller.get_longitudinal_controller_state());
 	return state_str;

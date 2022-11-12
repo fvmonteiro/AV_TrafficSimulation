@@ -26,8 +26,6 @@ public:
 		return distance_to_next_traffic_light;
 	};
 
-	bool has_next_traffic_light() const;
-
 protected:
 	TrafficLightALCVehicle(long id, VehicleType type,
 		double desired_velocity, bool is_connected, 
@@ -40,7 +38,7 @@ protected:
 private:
 	double implement_compute_desired_acceleration(
 		const std::unordered_map<int, TrafficLight>& traffic_lights) override;
-
+	bool implement_has_next_traffic_light() const override;
 	/* Methods we must override but aren't used by this class ------------- */
 	bool give_lane_change_control_to_vissim() const override
 	{
