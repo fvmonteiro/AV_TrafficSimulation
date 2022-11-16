@@ -3,7 +3,7 @@
 
 VissimLongitudinalController::VissimLongitudinalController(
 	std::unordered_map<State, color_t> state_to_color_map)
-	: LongitudinalController(state_to_color_map) {}
+	: LongitudinalController(state_to_color_map, false) {}
 
 double VissimLongitudinalController::implement_compute_desired_acceleration(
 	const EgoVehicle& ego_vehicle,

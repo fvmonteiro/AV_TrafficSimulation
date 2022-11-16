@@ -21,10 +21,10 @@ ControlManager::ControlManager(const EgoVehicle& ego_vehicle,
 	lateral_controller{ LateralController(verbose) },
 	verbose{ verbose }
 {
-	long_controllers_verbose = verbose;
+	long_controllers_verbose = false;
 	if (verbose)
 	{
-		std::clog << "Creating control manager for EgoVehicle" << std::endl;
+		std::clog << "Creating control manager" << std::endl;
 	}
 }
 
@@ -61,12 +61,12 @@ void ControlManager::add_origin_lane_controllers(
 }
 
 void ControlManager::add_lane_change_adjustment_controller(
-	const AutonomousVehicle& ego_vehicle)
+	const AutonomousVehicle& autonomous_vehicle)
 {
 	if (verbose) std::clog << "Creating lane change adjustment controller."
 		<< std::endl;
 	destination_lane_controller = VirtualLongitudinalController(
-		ego_vehicle,
+		autonomous_vehicle,
 		adjustment_velocity_controller_gains,
 		autonomous_virtual_following_gains,
 		connected_virtual_following_gains,
@@ -75,12 +75,12 @@ void ControlManager::add_lane_change_adjustment_controller(
 }
 
 void ControlManager::add_cooperative_lane_change_controller(
-	const ConnectedAutonomousVehicle& ego_vehicle)
+	const ConnectedAutonomousVehicle& cav)
 {
 	if (verbose) std::clog << "Creating cooperative lane change controller."
 		<< std::endl;
 	gap_generating_controller = VirtualLongitudinalController(
-		ego_vehicle,
+		cav,
 		adjustment_velocity_controller_gains,
 		autonomous_virtual_following_gains,
 		connected_virtual_following_gains,
@@ -97,6 +97,19 @@ void ControlManager::add_traffic_lights_controller()
 		LongitudinalControllerWithTrafficLights(tl_alc_colors,
 			long_controllers_verbose);
 	active_longitudinal_controller_type = ALCType::traffic_light_alc;
+}
+
+void ControlManager::add_in_platoon_controller(
+	const PlatoonVehicle& platoon_vehicle)
+{
+	in_platoon_controller = RealLongitudinalController(
+		platoon_vehicle,
+		desired_velocity_controller_gains,
+		autonomous_real_following_gains,
+		platoon_following_gains,
+		velocity_filter_gain, time_headway_filter_gain,
+		in_platoon_colors, long_controllers_verbose
+	);
 }
 
 color_t ControlManager::get_longitudinal_controller_color() const
@@ -189,12 +202,6 @@ double ControlManager::compute_drac(double relative_velocity, double gap)
 	return -100;
 }
 
-void ControlManager::activate_end_of_lane_controller(double time_headway)
-{
-	end_of_lane_controller.reset_time_headway_filter(time_headway);
-	end_of_lane_controller.set_desired_time_headway(time_headway);
-}
-
 void ControlManager::activate_origin_lane_controller(double ego_velocity,
 	double time_headway, bool is_leader_connected)
 {
@@ -205,22 +212,10 @@ void ControlManager::activate_origin_lane_controller(double ego_velocity,
 	update_origin_lane_controller(time_headway, is_leader_connected);
 }
 
-void ControlManager::update_origin_lane_controller(
-	double time_headway, bool is_leader_connected)
+void ControlManager::activate_end_of_lane_controller(double time_headway)
 {
-	if (verbose)
-	{
-		std::clog << "Setting orig lane ctrl h_r = "
-			<< time_headway << std::endl;
-	}
-	origin_lane_controller.set_desired_time_headway(time_headway);
-	origin_lane_controller.connect_gap_controller(is_leader_connected);
-}
-
-void ControlManager::update_destination_lane_follower_time_headway(
-	double time_headway)
-{
-	destination_lane_controller.set_follower_time_headway(time_headway);
+	end_of_lane_controller.reset_time_headway_filter(time_headway);
+	end_of_lane_controller.set_desired_time_headway(time_headway);
 }
 
 void ControlManager::activate_destination_lane_controller(double ego_velocity,
@@ -236,6 +231,26 @@ void ControlManager::activate_destination_lane_controller(double ego_velocity,
 		is_leader_connected);
 }
 
+//void ControlManager::activate_in_platoon_controller(double ego_velocity,
+//	double time_headway)
+//{
+//	in_platoon_controller.reset_leader_velocity_filter(ego_velocity);
+//	in_platoon_controller.reset_time_headway_filter(time_headway);
+//	in_platoon_controller.set_desired_time_headway(time_headway);
+//}
+
+void ControlManager::update_origin_lane_controller(
+	double time_headway, bool is_leader_connected)
+{
+	if (verbose)
+	{
+		std::clog << "Setting orig lane ctrl h_r = "
+			<< time_headway << std::endl;
+	}
+	origin_lane_controller.set_desired_time_headway(time_headway);
+	origin_lane_controller.connect_gap_controller(is_leader_connected);
+}
+
 void ControlManager::update_destination_lane_controller(double ego_velocity,
 	double time_headway, bool is_leader_connected)
 {
@@ -243,6 +258,12 @@ void ControlManager::update_destination_lane_controller(double ego_velocity,
 	destination_lane_controller.set_desired_time_headway(time_headway);
 	destination_lane_controller.connect_gap_controller(is_leader_connected);
 	//destination_lane_controller.reset_leader_velocity_filter(ego_velocity);
+}
+
+void ControlManager::update_destination_lane_follower_time_headway(
+	double time_headway)
+{
+	destination_lane_controller.set_follower_time_headway(time_headway);
 }
 
 void ControlManager::update_gap_generation_controller(double ego_velocity,

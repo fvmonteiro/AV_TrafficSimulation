@@ -36,7 +36,6 @@ private:
 	double gap_error{ 0.0 };  // [m] "gap error" considering relative velocity
 	double beta{ 4.0 }; // 2.0, desired_vel / comfortable_braking + 1
 	double h3{ 0.0 }, dht{ 0.0 }, dhx{ 0.0 };
-	bool verbose{ false };
 
 	double implement_compute_desired_acceleration(
 		const EgoVehicle& ego_vehicle,

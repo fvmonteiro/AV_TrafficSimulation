@@ -3,10 +3,11 @@
 #include "NearbyVehicle.h"
 
 LongitudinalController::LongitudinalController(
-	std::unordered_map<State, color_t> state_to_color_map) :
-	state_to_color_map(state_to_color_map) 
+	std::unordered_map<State, color_t> state_to_color_map,
+	bool verbose) :
+	state_to_color_map(state_to_color_map), verbose{ verbose }
 {
-	state_to_color_map.insert({ State::uninitialized, WHITE });
+	this->state_to_color_map.insert({ State::uninitialized, WHITE });
 }
 
 color_t LongitudinalController::get_state_color() const

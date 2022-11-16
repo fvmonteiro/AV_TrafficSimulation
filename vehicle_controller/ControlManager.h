@@ -61,10 +61,11 @@ public:
 	void add_vissim_controller();
 	void add_origin_lane_controllers(const EgoVehicle& ego_vehicle);
 	void add_lane_change_adjustment_controller(
-		const AutonomousVehicle& ego_vehicle);
+		const AutonomousVehicle& autonomous_vehicle);
 	void add_cooperative_lane_change_controller(
-		const ConnectedAutonomousVehicle& ego_vehicle);
+		const ConnectedAutonomousVehicle& cav);
 	void add_traffic_lights_controller();
+	void add_in_platoon_controller(const PlatoonVehicle& platoon_vehicle);
 
 	/* DEBUGGING FUNCTIONS --------------------------------------------------- */
 	/* These functions are used to easily read data from internal instances and
@@ -94,31 +95,30 @@ public:
 
 	/* ----------------------------------------------------------------------- */
 
-	/* Extracts and stores the static vehicle parameters */
-	//void extract_vehicle_static_parameters(const EgoVehicle& ego_vehicle);
-
 	/* Computes the deceleration rate to avoid collision */
 	double compute_drac(double relative_velocity, double gap);
 
-	void activate_end_of_lane_controller(double time_headway);
 	/* Resets the origin lane controller's velocity and time headway filters
 	and sets the time headway*/
 	void activate_origin_lane_controller(double ego_velocity,
 		double time_headway, bool is_leader_connected);
+	void activate_end_of_lane_controller(double time_headway);
 	/* Sets a new time headway and the connectivity of the origin lane
 	controller */
-	void update_origin_lane_controller(double time_headway,
-		bool is_leader_connected);
-	void update_destination_lane_follower_time_headway(double time_headway);
 	/* Resets the destination lane controller's velocity and time headway filters
 	and sets the time headway*/
 	void activate_destination_lane_controller(double ego_velocity,
 		double leader_velocity,
 		double time_headway, bool is_leader_connected);
+	//void activate_in_platoon_controller(double ego_velocity,
+	//	double time_headway);
+	void update_origin_lane_controller(double time_headway,
+		bool is_leader_connected);
 	/* Sets a new time headway and the connectivity of the destination lane
 	controller, and resets its velocity filter. */
 	void update_destination_lane_controller(double ego_velocity,
 		double time_headway, bool is_leader_connected);
+	void update_destination_lane_follower_time_headway(double time_headway);
 	void update_gap_generation_controller(double ego_velocity,
 		double time_headway);
 
@@ -193,6 +193,7 @@ private:
 	AutonomousGains autonomous_virtual_following_gains{ 0.4, 1.0 };
 	ConnectedGains connected_real_following_gains{ 0.2, 2.3, 0.13, 1.3 };
 	ConnectedGains connected_virtual_following_gains{ 0.4, 2.3, 0.13, 1.3 };
+	ConnectedGains platoon_following_gains{ 0.2, 2.3, 0.13, 1.3 };
 	VelocityControllerGains desired_velocity_controller_gains{
 		0.5, 0.1, 0.03 };
 	VelocityControllerGains adjustment_velocity_controller_gains{
@@ -214,7 +215,7 @@ private:
 		{ LongitudinalController::State::velocity_control, GREEN },
 		{ LongitudinalController::State::vehicle_following, DARK_GREEN },
 	};
-	// TODO: must be used!!
+	/* TODO [Nov 11, 2022]: still missing implementation */
 	color_t orig_lane_max_vel_control_color{ BLUE_GREEN };
 	std::unordered_map<LongitudinalController::State, color_t>
 		end_of_lane_colors =
@@ -242,6 +243,12 @@ private:
 		{ LongitudinalController::State::vehicle_following, DARK_GREEN },
 		{ LongitudinalController::State::traffic_light, YELLOW},
 		{ LongitudinalController::State::too_close, RED },
+	};
+	std::unordered_map<LongitudinalController::State, color_t>
+		in_platoon_colors =
+	{
+		{ LongitudinalController::State::velocity_control, LIGHT_GRAY },
+		{ LongitudinalController::State::vehicle_following, GRAY},
 	};
 	/* -------------------------------------------- */
 

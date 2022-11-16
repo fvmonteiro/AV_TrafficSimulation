@@ -29,7 +29,7 @@ EgoVehicle::EgoVehicle(long id, VehicleType type, double desired_velocity,
 	tau_d{ std::exp(-simulation_time_step / tau) }
 {
 	compute_safe_gap_parameters();
-	bool verbose_control_manager = verbose;
+	bool verbose_control_manager = false;
 
 	if (verbose)
 	{
@@ -445,9 +445,9 @@ void EgoVehicle::implement_analyze_nearby_vehicles()
 	find_leader();
 }
 
-// TODO [Nov 10, 2022]: still not sure this will be needed
 void EgoVehicle::set_leader_by_id(long new_leader_id)
 {
+	// Note: this makes the leader = nullptr
 	std::shared_ptr<NearbyVehicle> old_leader = std::move(leader);
 	leader = get_nearby_vehicle_by_id(new_leader_id);
 	update_leader(old_leader);
@@ -513,7 +513,7 @@ void EgoVehicle::update_leader(
 double EgoVehicle::compute_current_desired_time_headway(
 	const NearbyVehicle& nearby_vehicle) const
 {
-	if (has_lane_change_intention())
+	if (has_lane_change_intention() || is_lane_changing())
 	{
 		return compute_lane_changing_desired_time_headway(nearby_vehicle);
 	}
@@ -534,14 +534,19 @@ void EgoVehicle::update_state()
 	set_desired_lane_change_direction();
 
 	State old_state = get_state();
-	if (desired_lane_change_direction == RelativeLane::same)
+	
+	if (is_lane_changing())
+	{
+		state.push_back(State::lane_changing);
+	}
+	else if (desired_lane_change_direction == RelativeLane::same)
 	{
 		state.push_back(State::lane_keeping);
 	}
 	else
 	{
 		update_lane_change_waiting_time();
-		state.push_back(State::intention_to_change_lanes);
+		state.push_back(State::adjusting_for_lane_change);
 	}
 
 	/* State change:
@@ -551,33 +556,35 @@ void EgoVehicle::update_state()
 	finished a lane change */
 	if (old_state != get_state())
 	{
+		if (verbose)
+		{
+			std::clog << "Veh " << get_id()
+				<<" Transition from "
+				<< state_to_string_map.at(old_state) << " to "
+				<< state_to_string_map.at(get_state()) << "\n";
+		}
+
 		lane_change_waiting_time = 0.0;
 		if (has_leader())
 		{
+			/* TODO: we don't need to run this in the transition from 
+			"adjusting for lane change" to "lane changing". But it's 
+			simpler code like this. */
 			controller.update_origin_lane_controller(
 				compute_current_desired_time_headway(*get_leader()),
-				get_leader()->is_connected()
-			);
+				get_leader()->is_connected());
 		}
 
 		switch (get_state())
 		{
-		case State::intention_to_change_lanes:
-			if (verbose)
-			{
-				std::clog << "Transition from lane keeping to "
-					<< "intention to change lanes" << std::endl;
-			}
-			//controller.start_longitudinal_adjustment(get_time());
-			break;
 		case State::lane_keeping:
-			if (verbose)
-			{
-				std::clog << "Transition from lane changing to "
-					<< "lane keeping" << std::endl;
-			}
 			controller.reset_origin_lane_velocity_controller(
 				get_velocity());
+			break;
+		case State::adjusting_for_lane_change:
+			//controller.start_longitudinal_adjustment(get_time());
+			break;
+		case State::lane_changing:
 			break;
 		default:
 			break;
@@ -597,74 +604,8 @@ long EgoVehicle::get_color_by_controller_state()
 	controller and on whether or not the vehicle is trying to change lanes.*/
 	if (state.empty()) return WHITE;
 
-	/* TODO: still missing color for VISSIM and for max_vel */
+	/* TODO [Nov 11, 2022]: still missing color for VISSIM and for max_vel */
 	return controller.get_longitudinal_controller_color();
-
-	/* OLD SWITCH [Nov 11, 2022] */
-	/*switch (controller.get_active_alc_type())
-	{
-	case ControlManager::ALCType::origin_lane:
-		switch (controller.get_longitudinal_controller_state())
-		{
-		case SwitchedLongitudinalController::State::velocity_control:
-			return try_go_at_max_vel?
-				orig_lane_max_vel_control_color : orig_lane_vel_control_color;
-		case SwitchedLongitudinalController::State::vehicle_following:
-			return orig_lane_veh_foll_color;
-		default:
-			return WHITE;
-		}
-	case ControlManager::ALCType::cooperative_gap_generation:
-		switch (controller.get_longitudinal_controller_state())
-		{
-		case SwitchedLongitudinalController::State::velocity_control:
-			return gap_generation_vel_control_color;
-		case SwitchedLongitudinalController::State::vehicle_following:
-			return gap_generation_veh_foll_color;
-		default:
-			return WHITE;
-		}
-	case ControlManager::ALCType::destination_lane:
-		switch (controller.get_longitudinal_controller_state())
-		{
-		case SwitchedLongitudinalController::State::velocity_control:
-			return dest_lane_vel_control_color;
-		case SwitchedLongitudinalController::State::vehicle_following:
-			return dest_lane_veh_foll_color;
-		default:
-			return WHITE;
-		}
-	case ControlManager::ALCType::end_of_lane:
-		switch (controller.get_longitudinal_controller_state())
-		{
-		case SwitchedLongitudinalController::State::velocity_control:
-			return end_of_lane_vel_control_color;
-		case SwitchedLongitudinalController::State::vehicle_following:
-			return end_of_lane_veh_foll_color;
-		default:
-			return WHITE;
-		}
-	case ControlManager::ALCType::traffic_light_acc:
-		switch (controller.get_longitudinal_controller_state())
-		{
-		case LongitudinalControllerWithTrafficLights::State::max_accel:
-			return max_accel_color;
-		case LongitudinalControllerWithTrafficLights::State::vehicle_following:
-			return veh_foll_color;
-		case LongitudinalControllerWithTrafficLights::State::velocity_control:
-			return vel_control_color;
-		case LongitudinalControllerWithTrafficLights::State::traffic_light:
-			return traffic_light_color;
-		case LongitudinalControllerWithTrafficLights::State::too_close:
-			return too_close_color;
-		default:
-			return WHITE;
-		}
-	case ControlManager::ALCType::vissim:
-		return CYAN;
-	default:
-		return WHITE;
-	}*/
 }
 
 std::string EgoVehicle::print_detailed_state() const
@@ -1186,7 +1127,8 @@ std::string EgoVehicle::member_enum_to_string(Member member)
 const std::unordered_map<EgoVehicle::State, std::string>
 EgoVehicle::state_to_string_map = {
 	{ State::lane_keeping, "lane keeping" },
-	{ State::intention_to_change_lanes, "intention to LC" },
+	{ State::adjusting_for_lane_change, "adjusting for LC" },
+	{ State::lane_changing, "lane changing" },
 };
 
 std::ostream& operator<< (std::ostream& out, const EgoVehicle& ego_vehicle)
@@ -1198,17 +1140,17 @@ std::ostream& operator<< (std::ostream& out, const EgoVehicle& ego_vehicle)
 		<< EgoVehicle::state_to_string_map.at(ego_vehicle.get_state())
 		<< ", lane=" << ego_vehicle.get_lane()
 		<< ", pref. lane="
-		<< ego_vehicle.get_preferred_relative_lane().to_string()
-		<< ", use preferred lane="
-		<< ego_vehicle.get_vissim_use_preferred_lane()
+		<< ego_vehicle.get_preferred_relative_lane()
+		//<< ", use preferred lane="
+		//<< ego_vehicle.get_vissim_use_preferred_lane()
 		<< ", vissim suggestion="
-		<< ego_vehicle.vissim_lane_suggestion.to_string()
+		<< ego_vehicle.vissim_lane_suggestion
 		/*<< ", vissim active lc="
 		<< RelativeLane::from_long(
 			vehicle.get_vissim_active_lane_change()).to_string()*/
-		<< ", des lc=" << ego_vehicle.get_lane_change_direction().to_string()
+		<< ", des lc=" << ego_vehicle.get_desired_lane_change_direction()
 		<< ", active lc="
-		<< ego_vehicle.get_active_lane_change_direction().to_string()
+		<< ego_vehicle.get_active_lane_change_direction()
 		<< ", vel=" << ego_vehicle.get_velocity()
 		<< ", des accel=" << ego_vehicle.get_desired_acceleration()
 		<< ", accel=" << ego_vehicle.get_acceleration();

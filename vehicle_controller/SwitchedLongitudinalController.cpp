@@ -20,11 +20,10 @@ SwitchedLongitudinalController::SwitchedLongitudinalController(
 	double simulation_time_step,
 	std::unordered_map<State, color_t> state_to_color_map,
 	bool verbose) :
-	LongitudinalController(state_to_color_map),
-	autonomous_gains{ autonomous_gains },
-	connected_gains{ connected_gains },
-	verbose{ verbose } {
-
+	LongitudinalController(state_to_color_map, verbose)
+	/*autonomous_gains{ autonomous_gains },
+	connected_gains{ connected_gains }*/
+{
 	velocity_controller = VelocityController(simulation_time_step,
 		velocity_controller_gains, velocity_filter_gain, 
 		comfortable_acceleration, filter_brake_limit);

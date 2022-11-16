@@ -8,8 +8,8 @@ LongitudinalControllerWithTrafficLights::
 LongitudinalControllerWithTrafficLights(
 	std::unordered_map<State, color_t> state_to_color_map,
 	bool verbose):
-	LongitudinalController(state_to_color_map),
-	verbose {verbose} {
+	LongitudinalController(state_to_color_map, verbose)
+{
 	if (verbose)
 	{
 		std::clog << "Creating traffic-light acc controller" << std::endl;

@@ -18,6 +18,7 @@ const color_t BLUE = ARGB(255, 0, 0, 255);
 const color_t YELLOW = ARGB(255, 255, 255, 0);
 const color_t MAGENTA = ARGB(255, 255, 0, 255);
 const color_t CYAN = ARGB(255, 0, 255, 255);
+const color_t GRAY = ARGB(255, 128, 128, 128);
 
 const color_t DARK_RED = ARGB(255, 128, 0, 0);
 const color_t DARK_GREEN = ARGB(255, 0, 128, 0);
@@ -25,8 +26,10 @@ const color_t DARK_BLUE = ARGB(255, 0, 0, 128);
 const color_t DARK_YELLOW = ARGB(255, 196, 196, 0);
 const color_t DARK_MAGENTA = ARGB(255, 128, 0, 128); // PURPLE
 const color_t DARK_CYAN = ARGB(255, 0, 128, 128);
+const color_t DARK_GRAY = ARGB(255, 64, 64, 64);
 
 const color_t LIGHT_BLUE = ARGB(255, 0, 196, 255);
+const color_t LIGHT_GRAY = ARGB(255, 192, 192, 192);
 const color_t BLUE_GREEN = ARGB(255, 0, 128, 128);
 
 const double MAX_DISTANCE = 300.0; // [m]

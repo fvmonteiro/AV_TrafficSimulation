@@ -68,8 +68,6 @@ protected:
 	double hysteresis_bias{ 10.0 }; // used to avoid state chattering [m]
 	double reference_velocity_margin{ 1.0 }; // [m/s]
 
-	bool verbose{ false };
-
 	/* Computes the gap threshold to decide whether velocity or vehicle
 	following control */
 	double compute_gap_threshold(double gap, 
@@ -90,8 +88,8 @@ private:
 
 	/* Vehicle following and velocity control gains
 	(computed in Matlab. Should be computed here?) */
-	AutonomousGains autonomous_gains;
-	ConnectedGains connected_gains;
+	/*AutonomousGains autonomous_gains;
+	ConnectedGains connected_gains;*/
 
 };
 

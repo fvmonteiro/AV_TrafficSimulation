@@ -24,7 +24,8 @@ public:
 	enum class State 
 	{
 		lane_keeping,
-		intention_to_change_lanes,
+		adjusting_for_lane_change,
+		lane_changing,
 	};
 
 	/* Constructors ---------------------------------------------------------- */
@@ -325,7 +326,6 @@ protected:
 
 	/* Nearby vehicles ------------------------------------------------------- */
 
-	// TODO [Nov 10, 2022]: still not sure this will be needed
 	void set_leader_by_id(long new_leader_id);
 	void find_leader();
 	std::vector<std::shared_ptr<NearbyVehicle>> nearby_vehicles;
