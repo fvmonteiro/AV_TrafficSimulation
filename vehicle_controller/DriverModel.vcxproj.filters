@@ -46,9 +46,6 @@
     <ClCompile Include="LongitudinalControllerWithTrafficLights.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="TrafficLightACCVehicle.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="ACCVehicle.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -73,6 +70,16 @@
     <ClCompile Include="Platoon.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="TrafficLightALCVehicle.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="VissimLongitudinalController.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="InPlatoonLongitudinalController.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="PlatoonLaneChangeStrategy.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ControlManager.h">
@@ -126,9 +133,6 @@
     <ClInclude Include="EgoVehicleFactory.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="TrafficLightACCVehicle.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="ACCVehicle.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -153,6 +157,16 @@
     <ClInclude Include="Platoon.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="TrafficLightALCVehicle.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="VissimLongitudinalController.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="InPlatoonLongitudinalController.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="PlatoonLaneChangeStrategy.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Header Files">

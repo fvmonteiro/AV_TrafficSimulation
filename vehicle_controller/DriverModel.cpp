@@ -31,12 +31,13 @@ SimulationLogger simulation_logger;
 std::unordered_map<long, std::shared_ptr<EgoVehicle>> vehicles;
 std::unordered_map<int, TrafficLight> traffic_lights;
 std::unordered_map<int, std::shared_ptr<Platoon>> platoons;
-long platoon_id{ 1 };
 double simulation_time_step{ -1.0 };
 double current_time{ 0.0 };
 long current_vehicle_type{ 0 };
 long current_vehicle_id{ 0 };
 double current_desired_velocity{ 0 };
+long platoon_id{ 1 };
+int platoon_lc_strategy{ 0 };
 
 /*==========================================================================*/
 
@@ -138,6 +139,7 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
             case UDA::max_lane_change_risk_to_follower:
             case UDA::use_linear_lane_change_gap:
             case UDA::platoon_id:
+            case UDA::platoon_strategy:
                 return 1;
             /* Debugging: leader */
             case UDA::leader_id:
@@ -299,6 +301,9 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
         case UDA::use_linear_lane_change_gap:
             vehicles[current_vehicle_id]->set_use_linear_lane_change_gap(
                 long_value);
+            break;
+        case UDA::platoon_strategy:
+            platoon_lc_strategy = long_value;
             break;
         default: // do nothing
             break;
@@ -741,6 +746,7 @@ DRIVERMODEL_API  int  DriverModelExecuteCommand (long number)
         {
             platoons[platoon_id] =
                 vehicles[current_vehicle_id]->get_platoon();
+            platoons[platoon_id]->set_strategy(platoon_lc_strategy);
             if (platoon_id == LOGGED_PLATOON_ID)
             {
                 platoons[platoon_id]->set_verbose(true);

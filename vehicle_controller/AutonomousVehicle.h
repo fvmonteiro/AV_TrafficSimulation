@@ -38,6 +38,9 @@ protected:
 	}
 
 	void find_destination_lane_vehicles();
+	void set_destination_lane_leader_by_id(long new_leader_id);
+	void set_destination_lane_follower_by_id(
+		long new_follower_id);
 	bool is_destination_lane_follower(
 		const NearbyVehicle& nearby_vehicle);
 	bool is_destination_lane_leader(

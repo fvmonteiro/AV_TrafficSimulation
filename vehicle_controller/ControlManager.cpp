@@ -150,7 +150,7 @@ ControlManager::get_active_long_controller() const
 		return std::make_unique<RealLongitudinalController>(
 			origin_lane_controller);
 	case ALCType::destination_lane:
-		return std::make_unique< VirtualLongitudinalController>(
+		return std::make_unique<VirtualLongitudinalController>(
 			destination_lane_controller);
 	case ALCType::cooperative_gap_generation:
 		return std::make_unique< VirtualLongitudinalController>(

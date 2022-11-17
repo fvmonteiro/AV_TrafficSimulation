@@ -69,6 +69,25 @@ bool AutonomousVehicle::has_lane_change_conflict() const
 	return false;
 }
 
+void AutonomousVehicle::set_destination_lane_leader_by_id(long new_leader_id)
+{
+	// Note: this makes the destination_lane_leader = nullptr
+	std::shared_ptr<NearbyVehicle> old_dest_lane_leader = 
+		std::move(destination_lane_leader);
+	destination_lane_leader = get_nearby_vehicle_by_id(new_leader_id);
+	update_destination_lane_leader(old_dest_lane_leader);
+}
+
+void AutonomousVehicle::set_destination_lane_follower_by_id(
+	long new_follower_id)
+{
+	// Note: this makes the destination_lane_leader = nullptr
+	std::shared_ptr<NearbyVehicle> old_dest_lane_foll =
+		std::move(destination_lane_follower);
+	destination_lane_follower = get_nearby_vehicle_by_id(new_follower_id);
+	update_destination_lane_follower(old_dest_lane_foll);
+}
+
 bool AutonomousVehicle::is_destination_lane_follower(
 	const NearbyVehicle& nearby_vehicle)
 {

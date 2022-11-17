@@ -1,6 +1,7 @@
 
 #include "PlatoonVehicle.h"
 #include "Platoon.h"
+#include "PlatoonLaneChangeStrategy.h"
 
 PlatoonVehicle::PlatoonVehicle(long id, double desired_velocity,
 	double simulation_time_step, double creation_time,
@@ -11,6 +12,7 @@ PlatoonVehicle::PlatoonVehicle(long id, double desired_velocity,
 	alone_desired_velocity{ desired_velocity }
 {
 	compute_platoon_safe_gap_parameters();
+	//controller.add_in_platoon_controller(*this);
 	if (verbose)
 	{
 		std::clog << "lambda1_platoon = " << lambda_1_platoon
@@ -95,13 +97,21 @@ void PlatoonVehicle::set_desired_lane_change_direction()
 	//	desired_lane_change_direction = platoon->
 	//		get_platoon_leader()->get_desired_lane_change_direction();
 	//}
-	if ((get_link() == MAIN_LINK_NUMBER) && (get_lane() == 1))
+	bool should_change_lane = (get_link() == MAIN_LINK_NUMBER)
+		&& (get_lane() == 1);
+	std::shared_ptr<Platoon> platoon = get_platoon();
+	if (platoon == nullptr)
 	{
-		desired_lane_change_direction = RelativeLane::left;
+		desired_lane_change_direction = should_change_lane ?
+			RelativeLane::left : RelativeLane::same;
 	}
 	else
 	{
-		desired_lane_change_direction = RelativeLane::same;
+		long my_id = get_id();
+		platoon->set_vehicle_lane_change_state(*this, should_change_lane);
+		desired_lane_change_direction = 
+			platoon->can_vehicle_start_longitudinal_adjustment(my_id)?
+			RelativeLane::left : RelativeLane::same;
 	}
 }
 
@@ -111,9 +121,9 @@ bool PlatoonVehicle::can_start_lane_change()
 		AutonomousVehicle::can_start_lane_change();
 	if (is_in_a_platoon())
 	{
-		platoon->set_vehicle_lane_change_gaps_safe(get_id(),
+		platoon->set_vehicle_lane_change_gap_status(get_id(),
 			individual_lane_change_is_safe);
-		return platoon->can_vehicle_start_lane_change(get_id());
+		return platoon->can_vehicle_start_lane_change(*this);
 	}
 	return individual_lane_change_is_safe;
 }
@@ -126,7 +136,7 @@ void PlatoonVehicle::implement_analyze_nearby_vehicles()
 		find_leader();
 		//find_cooperation_requests();
 	}
-	else
+	else // vehicle is part of a platoon
 	{
 		set_leader_by_id(platoon->get_preceding_vehicle_id(get_id()));
 	}
@@ -171,8 +181,6 @@ bool PlatoonVehicle::implement_analyze_platoons(
 	else if (am_in_a_platoon && may_join_leader_platoon)
 	{
 		// Leave my platoon and join the platoon of the vehicle ahead
-		/* Open question : make my entire platoon merge or move only myself
-		 to the platoon ahead? */
 		long old_platoon_id = get_platoon_id();
 		long leader_platoon_id = get_leader()->get_platoon_id();
 		if (old_platoon_id != leader_platoon_id)
@@ -185,7 +193,6 @@ bool PlatoonVehicle::implement_analyze_platoons(
 			// delete my old platoon if it is empty
 			if (platoons.at(old_platoon_id)->is_empty())
 			{
-				//std::clog << "Old platoon is empty" << std::endl;
 				platoons.erase(old_platoon_id);
 			}
 		}
