@@ -115,10 +115,10 @@ void PlatoonVehicle::set_desired_lane_change_direction()
 	}
 }
 
-bool PlatoonVehicle::can_start_lane_change()
+bool PlatoonVehicle::implement_can_start_lane_change()
 {
 	bool individual_lane_change_is_safe =
-		AutonomousVehicle::can_start_lane_change();
+		AutonomousVehicle::implement_can_start_lane_change();
 	if (is_in_a_platoon())
 	{
 		platoon->set_vehicle_lane_change_gap_status(get_id(),

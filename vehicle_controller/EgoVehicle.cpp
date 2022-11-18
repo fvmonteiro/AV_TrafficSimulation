@@ -617,14 +617,6 @@ void EgoVehicle::update_lane_change_waiting_time()
 	}
 	else
 	{
-		if (verbose)
-		{
-			std::clog << "Veh " << get_id()
-				<<" Transition from "
-				<< state_to_string_map.at(old_state) << " to "
-				<< state_to_string_map.at(get_state()) << "\n";
-		}
-
 		lane_change_waiting_time = 0.0;
 	}
 }
@@ -1198,8 +1190,8 @@ std::ostream& operator<< (std::ostream& out, const EgoVehicle& ego_vehicle)
 		<< ego_vehicle.get_preferred_relative_lane()
 		//<< ", use preferred lane="
 		//<< ego_vehicle.get_vissim_use_preferred_lane()
-		<< ", target lane="
-		<< ego_vehicle.relative_target_lane
+		<< ", vissim suggested lane="
+		<< ego_vehicle.get_vissim_lane_suggestion()
 		/*<< ", vissim active lc="
 		<< RelativeLane::from_long(
 			vehicle.get_vissim_active_lane_change()).to_string()*/

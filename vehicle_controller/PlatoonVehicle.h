@@ -34,7 +34,7 @@ private:
 	/* SCENARIO SPECIFIC: the platoon vehicles always start at the in ramp, 
 	and they try to change lanes as soon as they enter the highway */
 	void set_desired_lane_change_direction() override;
-	bool can_start_lane_change() override;
+	bool implement_can_start_lane_change() override;
 	std::shared_ptr<Platoon> implement_get_platoon() const override
 	{
 		return platoon;
