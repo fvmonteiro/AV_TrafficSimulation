@@ -46,7 +46,7 @@ private:
 		return -1.0;
 	};
 	void set_desired_lane_change_direction() override;
-	bool can_start_lane_change() override;
+	bool implement_can_start_lane_change() override;
 	long create_lane_change_request() override { return 0; };
 	std::shared_ptr<NearbyVehicle>
 		implement_get_destination_lane_leader() const override

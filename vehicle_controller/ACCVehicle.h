@@ -29,7 +29,7 @@ private:
 	/* Follows VISSIM's recommendation */
 	void set_desired_lane_change_direction() override;
 	/* Follows VISSIM's recommendation */
-	bool can_start_lane_change() override;
+	bool implement_can_start_lane_change() override;
 
 	long create_lane_change_request() override { return 0; };
 	double compute_accepted_lane_change_gap(

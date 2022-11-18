@@ -31,12 +31,7 @@ double ACCVehicle::implement_compute_desired_acceleration(
 //		get_lambda_1(), get_rho(), 0);
 //}
 
-void ACCVehicle::set_desired_lane_change_direction()
-{
-	desired_lane_change_direction = get_vissim_lane_suggestion();
-}
-
-bool ACCVehicle::can_start_lane_change()
+bool ACCVehicle::implement_can_start_lane_change()
 {
 	return get_vissim_lane_suggestion() != RelativeLane::same;
 }

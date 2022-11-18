@@ -754,11 +754,11 @@ DRIVERMODEL_API  int  DriverModelExecuteCommand (long number)
             platoon_id++;
         }
 
-        if (CLUELESS_DEBUGGING)
+        /*if (CLUELESS_DEBUGGING)
         {
             std::clog << "Deciding lane change" << std::endl;
         }
-        vehicles[current_vehicle_id]->decide_lane_change_direction();
+        vehicles[current_vehicle_id]->decide_lane_change_direction();*/
 
         if (CLUELESS_DEBUGGING)
         {
