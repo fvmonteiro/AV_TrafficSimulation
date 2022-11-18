@@ -58,7 +58,7 @@ private:
 	double implement_compute_desired_acceleration(
 		const std::unordered_map<int, TrafficLight>& traffic_lights) override;
 	bool give_lane_change_control_to_vissim() const override;
-	bool can_start_lane_change() override;
+	bool implement_can_start_lane_change() override;
 	long create_lane_change_request() override { return 0; };
 	double compute_accepted_lane_change_gap(
 		std::shared_ptr<NearbyVehicle> nearby_vehicle) override;

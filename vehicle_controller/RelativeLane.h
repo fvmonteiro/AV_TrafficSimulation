@@ -4,6 +4,7 @@ https://stackoverflow.com/questions/21295935/can-a-c-enum-class-have-methods*/
 
 #pragma once
 
+#include <iostream>
 #include <string>
 
 class RelativeLane
@@ -73,6 +74,13 @@ public:
 		default:
 			return "unknown relative lane";
 		}
+	}
+
+	friend std::ostream& operator<< (std::ostream& out, 
+		const RelativeLane& relative_lane)
+	{
+		out << relative_lane.to_string();
+		return out; // return std::ostream so we can chain calls to operator<<
 	}
 
 private:

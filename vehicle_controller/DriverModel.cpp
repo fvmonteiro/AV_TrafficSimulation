@@ -20,7 +20,7 @@
 
 /*==========================================================================*/
 
-const std::unordered_set<long> LOGGED_VEHICLES_IDS{ 31 };
+const std::unordered_set<long> LOGGED_VEHICLES_IDS{ 15 };
 const bool CLUELESS_DEBUGGING{ false };
 //const double DEBUGGING_START_TIME{ 249.0 };
 
@@ -710,10 +710,10 @@ DRIVERMODEL_API  int  DriverModelExecuteCommand (long number)
         }
         vehicles[current_vehicle_id]->analyze_nearby_vehicles();
 
-        if (CLUELESS_DEBUGGING) {
+        /*if (CLUELESS_DEBUGGING) {
             std::clog << "Deciding lane change\n";
-        }
-        vehicles[current_vehicle_id]->decide_lane_change_direction();
+        }*/
+        //vehicles[current_vehicle_id]->decide_lane_change_direction();
 
         if (CLUELESS_DEBUGGING) {
             std::clog << "Deciding acceleration\n";

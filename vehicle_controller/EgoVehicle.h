@@ -13,16 +13,16 @@
 #include "NearbyVehicle.h"
 #include "TrafficLight.h"
 #include "Vehicle.h"
-
+#include "VehicleState.h"
 
 class EgoVehicle : public Vehicle {
 public:
 	//using Vehicle::set_category;
 
-	enum class State {
-		lane_keeping,
-		intention_to_change_lanes,
-	};
+	//enum class State {
+	//	lane_keeping,
+	//	intention_to_change_lanes,
+	//};
 
 	/* Constructors ---------------------------------------------------------- */
 	EgoVehicle() = default;
@@ -68,6 +68,10 @@ public:
 	void set_vissim_use_preferred_lane(long value) {
 		this->vissim_use_preferred_lane = value;
 	};
+	void set_lane_change_direction(RelativeLane relative_lane)
+	{
+		this->lane_change_direction = relative_lane;
+	}
 
 	/* Getters of most recent values ----------------------------------------- */
 
@@ -91,7 +95,8 @@ public:
 	//long get_vissim_active_lane_change() const;
 	double get_lane_end_distance() const;
 	long get_leader_id() const;
-	State get_state() const;
+
+	//State get_state_implementation_v1() const;
 	double get_ttc() const;
 	double get_drac() const;
 	/* delta vel. at collision under the worst case scenario*/
@@ -218,29 +223,29 @@ public:
 	/* State-machine related methods ----------------------------------------- */
 
 	void update_state();
+	void set_state(std::unique_ptr<VehicleState> new_state);
 	//bool has_lane_change_intention() const;
 	bool is_lane_changing() const override;
 	//State get_previous_state() const;
 	/* Returns the color equivalent to the current state as a long */
 	long get_color_by_controller_state();
-	std::string print_detailed_state() const;
+	//std::string print_detailed_state() const;
 	/* If the lane change decision is autonomous, but the vehicle takes
 	too long to find a suitable gap, we may want to give control to VISSM */
 	bool is_vissim_controlling_lane_change() const
 	{
 		return give_lane_change_control_to_vissim();
 	};
+	/* Updates the stopped time waiting for lane change */
+	void update_lane_change_waiting_time();
+	void reset_lane_change_waiting_time();
+	bool can_start_lane_change();
 
 	/* Control related methods ----------------------------------------------- */
 
 	void compute_desired_acceleration(
-		const std::unordered_map<int, TrafficLight>& traffic_lights)
-	{
-		this->desired_acceleration =
-			implement_compute_desired_acceleration(traffic_lights);
-	};
+		const std::unordered_map<int, TrafficLight>& traffic_lights);
 	void decide_lane_change_direction();
-	//RelativeLane get_lane_change_direction();
 
 	double get_accepted_lane_change_gap(
 		std::shared_ptr<NearbyVehicle> nearby_vehicle);
@@ -251,6 +256,10 @@ public:
 
 	/* Returns the current reference gap to the leader */
 	double get_reference_gap();
+	/* Computes the desired time headway based on lane change intention 
+	TODO [Nov 17]: double check if it needs to be public*/
+	double compute_current_desired_time_headway(
+		const NearbyVehicle& nearby_vehicle) const;
 	/* Returns the time headway gap from the ego to the other vehicle
 	if the ego vehicle is behind and from the other to the ego vehicle
 	if the other vehicle is behind. */
@@ -260,13 +269,15 @@ public:
 	and other. */
 	double compute_transient_gap(
 		std::shared_ptr<NearbyVehicle> nearby_vehicle);
-
+	void update_origin_lane_controller();
+	void reset_origin_lane_velocity_controller();
 
 	/* Methods for logging --------------------------------------------------- */
 	bool is_verbose() const { return verbose; };
 
 	/* Print function */
-	friend std::ostream& operator<< (std::ostream& out, const EgoVehicle& vehicle);
+	friend std::ostream& operator<< (std::ostream& out, 
+		const EgoVehicle& vehicle);
 
 protected:
 	EgoVehicle(long id, VehicleType type, double desired_velocity,
@@ -287,8 +298,6 @@ protected:
 	returns the feasible acceleration given the approximated low level
 	dynamics */
 	double consider_vehicle_dynamics(double unfiltered_acceleration);
-	/* Updates the stopped time waiting for lane change */
-	void update_lane_change_waiting_time();
 
 	ControlManager controller;
 	/* Keeps track of stopped time waiting for lane change */
@@ -315,7 +324,7 @@ private:
 	/* Decides whether the vehicle can start a
 	lane change. Returns -1 for right lane changes, +1 for left lane
 	changes and 0 for lane keeping. */
-	virtual bool can_start_lane_change() = 0;
+	virtual bool implement_can_start_lane_change() = 0;
 	virtual long create_lane_change_request() = 0;
 	virtual void set_traffic_light_information(int traffic_light_id,
 		double distance) {};
@@ -339,8 +348,6 @@ private:
 	virtual void find_relevant_nearby_vehicles();
 	virtual void set_desired_lane_change_direction();
 
-	double compute_current_desired_time_headway(
-		const NearbyVehicle& nearby_vehicle) const;
 	virtual double compute_lane_changing_desired_time_headway(
 		const NearbyVehicle& nearby_vehicle) const = 0;
 
@@ -414,7 +421,8 @@ private:
 	/* Distance to the end of the lane. Used to avoid missing exits in case
 	vehicle couldn't lane change earlier. */
 	std::vector<double> lane_end_distance;
-	std::vector<State> state;
+	//std::vector<State> state_implementation_v1;
+	std::unique_ptr<VehicleState> state{ nullptr };
 	double desired_lane_angle{ 0.0 };
 	RelativeLane relative_target_lane{ RelativeLane::same };
 	long turning_indicator{ 0 };
@@ -436,7 +444,7 @@ private:
 												 in worst case scenario */
 
 	/* For printing and debugging purporses ------------------------------- */
-	static const std::unordered_map<State, std::string> state_to_string_map;
+	//static const std::unordered_map<State, std::string> state_to_string_map;
 
 	std::string log_path = "autonomous_vehicle_logs";
 	enum class Member {

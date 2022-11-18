@@ -16,7 +16,7 @@ double ACCVehicle::implement_compute_desired_acceleration(
 //		get_lambda_1(), get_rho(), 0);
 //}
 
-bool ACCVehicle::can_start_lane_change()
+bool ACCVehicle::implement_can_start_lane_change()
 {
 	return get_relative_target_lane() != RelativeLane::same;
 }

@@ -29,7 +29,7 @@ private:
 		return true;
 	};
 	/* Follows VISSIM's recommendation */
-	bool can_start_lane_change() override;
+	bool implement_can_start_lane_change() override;
 
 	long create_lane_change_request() override { return 0; };
 	double compute_accepted_lane_change_gap(

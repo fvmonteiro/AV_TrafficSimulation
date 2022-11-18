@@ -284,7 +284,7 @@ bool AutonomousVehicle::give_lane_change_control_to_vissim() const
 	return lane_change_waiting_time > max_lane_change_waiting_time;
 }
 
-bool AutonomousVehicle::can_start_lane_change() 
+bool AutonomousVehicle::implement_can_start_lane_change() 
 {
 	if (give_lane_change_control_to_vissim())
 	{

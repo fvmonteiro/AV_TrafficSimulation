@@ -29,7 +29,7 @@ void TrafficLightALCVehicle::set_desired_lane_change_direction()
 	desired_lane_change_direction = RelativeLane::same;
 }
 
-bool TrafficLightALCVehicle::can_start_lane_change()
+bool TrafficLightALCVehicle::implement_can_start_lane_change()
 {
 	return false;
 }
