@@ -47,35 +47,42 @@ long Platoon::get_preceding_vehicle_id(long veh_id) const
 	return preceding_vehicle != nullptr ? preceding_vehicle->get_id() : 0;
 }
 
-PlatoonLaneChangeStrategy::LaneChangeState Platoon::get_lane_change_state(
-	long veh_id) const
-{
-	return vehicles_lane_change_states.at(veh_id);
-}
+//std::shared_ptr<PlatoonVehicle> Platoon::get_preceding_vehicle(
+//	const PlatoonVehicle& platoon_vehicle) const
+//{
+//	return get_preceding_vehicle(platoon_vehicle.get_id());
+//}
+
+//PlatoonLaneChangeStrategy::LaneChangeState Platoon::get_lane_change_state(
+//	long veh_id) const
+//{
+//	return vehicles_lane_change_states.at(veh_id);
+//}
 
 void Platoon::set_strategy(int strategy_number)
 {
-	Strategy strategy = Strategy(strategy_number);
-	switch (strategy)
+	switch (Strategy(strategy_number))
 	{
 	case Platoon::no_strategy:
 		lane_change_strategy = std::make_unique<NoStrategy>();
 		break;
 	case Platoon::synchronous_strategy:
-		lane_change_strategy = std::make_unique<SynchronousStrategy>();;
+		lane_change_strategy = std::make_unique<SynchronousStrategy>();
 		break;
-	case Platoon::leader_first_strategy:
-		lane_change_strategy = std::make_unique<LeaderFirstStrategy>();;
-		break;
-	case Platoon::last_vehicle_first_strategy:
+	/*case Platoon::leader_first_strategy:
+		lane_change_strategy = std::make_unique<LeaderFirstStrategy>();
+		break;*/
+	/*case Platoon::last_vehicle_first_strategy:
 		break;
 	case Platoon::leader_first_invert_strategy:
-		break;
+		break;*/
 	default:
+		std::clog << "ERROR: Platoon lane change strategy not coded\n";
+		lane_change_strategy = std::make_unique<NoStrategy>();
 		break;
 	}
-	std::clog << "ERROR: Platoon lane change strategy not coded\n";
-	lane_change_strategy = std::make_unique<NoStrategy>();
+	lane_change_strategy->set_platoon(this);
+	lane_change_strategy->set_state_of_all_vehicles();
 }
 
 void Platoon::add_leader(
@@ -125,24 +132,37 @@ void Platoon::remove_vehicle_by_id(long veh_id)
 	}
 }
 
-void Platoon::set_vehicle_lane_change_state(PlatoonVehicle& platoon_vehicle, 
-	bool should_change_lane)
-{
-	lane_change_strategy->update_vehicle_lane_change_state(
-		platoon_vehicle, should_change_lane, vehicles_lane_change_states);
-}
+//bool Platoon::check_all_vehicles_lane_change_gaps()
+//{
+//	for (auto& v : vehicles)
+//	{
+//		if (!v.second->get_lane_change_gaps_safety().is_lane_change_safe()) 
+//		{
+//			std::clog << "veh " << v.second->get_id() << " gaps not safe\n";
+//			return false;
+//		}
+//	}
+//	return true;
+//}
 
-void Platoon::set_vehicle_lane_change_gap_status(long veh_id, bool is_safe)
-{
-	vehicles_lane_change_gap_status[veh_id] = is_safe;
-}
+//void Platoon::set_vehicle_lane_change_state(PlatoonVehicle& platoon_vehicle, 
+//	bool should_change_lane)
+//{
+//	lane_change_strategy->update_vehicle_lane_change_state(
+//		platoon_vehicle, should_change_lane, vehicles_lane_change_states);
+//}
 
-bool Platoon::can_vehicle_start_lane_change(
-	const PlatoonVehicle& platoon_vehicle)
-{
-	return lane_change_strategy->can_vehicle_start_lane_change(
-		platoon_vehicle, vehicles_lane_change_gap_status);
-}
+//void Platoon::set_vehicle_lane_change_gap_status(long veh_id, bool is_safe)
+//{
+//	vehicles_lane_change_gap_status[veh_id] = is_safe;
+//}
+
+//bool Platoon::can_vehicle_start_lane_change(
+//	const PlatoonVehicle& platoon_vehicle)
+//{
+//	return lane_change_strategy->can_vehicle_start_lane_change(
+//		platoon_vehicle, vehicles_lane_change_gap_status);
+//}
 
 std::shared_ptr<PlatoonVehicle> Platoon::get_vehicle_by_id(long veh_id) const
 {
@@ -157,14 +177,25 @@ std::shared_ptr<PlatoonVehicle> Platoon::get_vehicle_by_id(long veh_id) const
 
 void Platoon::remove_vehicle_by_position(int idx_in_platoon, long veh_id)
 {
-	if (vehicles.erase(idx_in_platoon) == 0)
+	try
+	{
+		/* [Nov 18, 22] Should the new state assignment be managed by 
+		the vehicle instead? And should it be based on the current state? */
+		vehicles.at(idx_in_platoon)->set_state(
+			std::make_unique<SingleVehicleLaneKeepingState>());
+		vehicles.erase(idx_in_platoon);
+	}
+	catch (const std::out_of_range&)
+	{
 		std::clog << "Vehicle not found in vehicles map\n";
+	}
+
 	if (vehicle_id_to_position.erase(veh_id) == 0)
 		std::clog << "Veh id not found in vehicle_id_to_position\n";
-	if (vehicles_lane_change_gap_status.erase(veh_id) == 0)
-		std::clog << "Veh id not found in vehicles_lane_change_gap_status\n";
-	if (vehicles_lane_change_states.erase(veh_id) == 0)
-		std::clog << "Veh id not found in vehicles_lane_change_states\n";
+	/*if (vehicles_lane_change_gap_status.erase(veh_id) == 0)
+		std::clog << "Veh id not found in vehicles_lane_change_gap_status\n";*/
+	//if (vehicles_lane_change_states.erase(veh_id) == 0)
+	//	std::clog << "Veh id not found in vehicles_lane_change_states\n";
 
 	/* In case the removed vehicle was the leader or the last vehicle,
 	we update the respective indices */
@@ -191,9 +222,14 @@ void Platoon::add_vehicle(int idx_in_platoon,
 	long veh_id = new_vehicle->get_id();
 	vehicles.insert({ idx_in_platoon, new_vehicle });
 	vehicle_id_to_position.insert({veh_id , idx_in_platoon });
-	vehicles_lane_change_gap_status.insert({ veh_id, false });
-	vehicles_lane_change_states.insert({ veh_id, 
-		PlatoonLaneChangeStrategy::LaneChangeState::lane_keeping });
+	//vehicles_lane_change_gap_status.insert({ veh_id, false });
+	if (lane_change_strategy != nullptr)
+	{
+		new_vehicle->set_state(
+			lane_change_strategy->get_new_lane_keeping_state());
+	}
+	/*vehicles_lane_change_states.insert({ veh_id, 
+		PlatoonLaneChangeStrategy::LaneChangeState::lane_keeping });*/
 }
 
 std::shared_ptr<PlatoonVehicle> Platoon::get_preceding_vehicle(
@@ -216,11 +252,11 @@ bool Platoon::can_vehicle_leave_platoon(long veh_id) const
 	return lane_change_strategy->can_vehicle_leave_platoon(veh_id);
 }
 
-bool Platoon::can_vehicle_start_longitudinal_adjustment(long veh_id) const
-{
-	return vehicles_lane_change_states.at(veh_id) 
-		== PlatoonLaneChangeStrategy::LaneChangeState::long_adjustment;
-}
+//bool Platoon::can_vehicle_start_longitudinal_adjustment(long veh_id) const
+//{
+//	return vehicles_lane_change_states.at(veh_id) 
+//		== PlatoonLaneChangeStrategy::LaneChangeState::long_adjustment;
+//}
 
 bool Platoon::has_a_vehicle_cut_in_the_platoon(
 	const PlatoonVehicle& platoon_vehicle) const

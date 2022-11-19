@@ -86,20 +86,11 @@ double PlatoonVehicle::compute_lane_changing_desired_time_headway(
 
 void PlatoonVehicle::set_desired_lane_change_direction()
 {
-	//if (is_platoon_leader()
-	//	|| (platoon->get_lane_change_strategy() 
-	//		== Platoon::LaneChangeStrategy::none))
-	//{
-	//	AutonomousVehicle::set_desired_lane_change_direction();
-	//}
-	//else
-	//{
-	//	desired_lane_change_direction = platoon->
-	//		get_platoon_leader()->get_desired_lane_change_direction();
-	//}
 	bool should_change_lane = (get_link() == MAIN_LINK_NUMBER)
 		&& (get_lane() == 1);
-	std::shared_ptr<Platoon> platoon = get_platoon();
+	desired_lane_change_direction = should_change_lane ?
+		RelativeLane::left : RelativeLane::same;
+	/*std::shared_ptr<Platoon> platoon = get_platoon();
 	if (platoon == nullptr)
 	{
 		desired_lane_change_direction = should_change_lane ?
@@ -112,21 +103,21 @@ void PlatoonVehicle::set_desired_lane_change_direction()
 		desired_lane_change_direction = 
 			platoon->can_vehicle_start_longitudinal_adjustment(my_id)?
 			RelativeLane::left : RelativeLane::same;
-	}
+	}*/
 }
 
-bool PlatoonVehicle::implement_can_start_lane_change()
-{
-	bool individual_lane_change_is_safe =
-		AutonomousVehicle::implement_can_start_lane_change();
-	if (is_in_a_platoon())
-	{
-		platoon->set_vehicle_lane_change_gap_status(get_id(),
-			individual_lane_change_is_safe);
-		return platoon->can_vehicle_start_lane_change(*this);
-	}
-	return individual_lane_change_is_safe;
-}
+//bool PlatoonVehicle::implement_check_lane_change_gaps()
+//{
+//	bool individual_lane_change_is_safe =
+//		AutonomousVehicle::implement_check_lane_change_gaps();
+//	if (is_in_a_platoon())
+//	{
+//		platoon->set_vehicle_lane_change_gap_status(get_id(),
+//			individual_lane_change_is_safe);
+//		//return platoon->can_vehicle_start_lane_change(*this);
+//	}
+//	return individual_lane_change_is_safe;
+//}
 
 void PlatoonVehicle::implement_analyze_nearby_vehicles()
 {
@@ -207,6 +198,16 @@ bool PlatoonVehicle::implement_analyze_platoons(
 	}
 
 	return new_platoon_created;
+}
+
+std::shared_ptr<Platoon> PlatoonVehicle::implement_get_platoon() const
+{
+	return platoon;
+}
+
+void PlatoonVehicle::pass_this_to_state()
+{
+	state->set_ego_vehicle(this);
 }
 
 void PlatoonVehicle::create_platoon(long platoon_id,

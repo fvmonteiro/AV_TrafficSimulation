@@ -25,28 +25,6 @@ protected:
 		std::shared_ptr<EgoVehicle> pointer_to_me, 
 		long new_platoon_id) override;
 private:
-	double implement_compute_desired_acceleration(
-		const std::unordered_map<int, TrafficLight>& traffic_lights) override;
-	double compute_vehicle_following_safe_time_headway(
-		const NearbyVehicle& nearby_vehicle) const override;
-	double compute_lane_changing_desired_time_headway(
-		const NearbyVehicle& nearby_vehicle) const override;
-	/* SCENARIO SPECIFIC: the platoon vehicles always start at the in ramp, 
-	and they try to change lanes as soon as they enter the highway */
-	void set_desired_lane_change_direction() override;
-	bool implement_can_start_lane_change() override;
-	std::shared_ptr<Platoon> implement_get_platoon() const override
-	{
-		return platoon;
-	};
-	void create_platoon(long platoon_id,
-		std::shared_ptr<PlatoonVehicle> pointer_to_me);
-	void add_myself_to_leader_platoon(
-		std::shared_ptr<Platoon> leader_platoon,
-		std::shared_ptr<PlatoonVehicle> pointer_to_me);
-
-	void compute_platoon_safe_gap_parameters();
-
 	std::shared_ptr<Platoon> platoon{ nullptr };
 	// desired velocity when not a part of the platoon
 	double alone_desired_velocity{ 0.0 };
@@ -61,4 +39,25 @@ private:
 	/* Some constants for the platoon vehicles */
 	double in_platoon_comf_accel{ 0.5 };
 	double in_platoon_rho{ 0.05 };
+
+	double implement_compute_desired_acceleration(
+		const std::unordered_map<int, TrafficLight>& traffic_lights) override;
+	double compute_vehicle_following_safe_time_headway(
+		const NearbyVehicle& nearby_vehicle) const override;
+	double compute_lane_changing_desired_time_headway(
+		const NearbyVehicle& nearby_vehicle) const override;
+	/* SCENARIO SPECIFIC: the platoon vehicles always start at the in ramp, 
+	and they try to change lanes as soon as they enter the highway */
+	void set_desired_lane_change_direction() override;
+	//bool implement_check_lane_change_gaps() override;
+	std::shared_ptr<Platoon> implement_get_platoon() const override;
+	virtual void pass_this_to_state();
+
+	void create_platoon(long platoon_id,
+		std::shared_ptr<PlatoonVehicle> pointer_to_me);
+	void add_myself_to_leader_platoon(
+		std::shared_ptr<Platoon> leader_platoon,
+		std::shared_ptr<PlatoonVehicle> pointer_to_me);
+
+	void compute_platoon_safe_gap_parameters();
 };

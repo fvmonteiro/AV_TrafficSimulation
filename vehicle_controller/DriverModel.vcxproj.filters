@@ -80,6 +80,8 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="PlatoonLaneChangeStrategy.cpp" />
+    <ClCompile Include="VehicleState.cpp" />
+    <ClCompile Include="LaneChangeGapsSafety.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ControlManager.h">
@@ -167,6 +169,8 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="PlatoonLaneChangeStrategy.h" />
+    <ClInclude Include="VehicleState.h" />
+    <ClInclude Include="LaneChangeGapsSafety.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Header Files">

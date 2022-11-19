@@ -267,13 +267,13 @@ public:
 	/* Updates the stopped time waiting for lane change */
 	void update_lane_change_waiting_time();
 	void reset_lane_change_waiting_time();
-	bool can_start_lane_change();
+	bool check_lane_change_gaps();
 
 	/* Control related methods ----------------------------------------------- */
 
 	void compute_desired_acceleration(
 		const std::unordered_map<int, TrafficLight>& traffic_lights);
-	void decide_lane_change_direction();
+	//void decide_lane_change_direction();
 
 	double get_accepted_lane_change_gap(
 		std::shared_ptr<NearbyVehicle> nearby_vehicle);
@@ -308,6 +308,20 @@ public:
 		const EgoVehicle& vehicle);
 
 protected:
+	ControlManager controller;
+	/* Keeps track of stopped time waiting for lane change */
+	double lane_change_waiting_time{ 0.0 };
+	std::vector<std::shared_ptr<NearbyVehicle>> nearby_vehicles;
+	std::unique_ptr<VehicleState> state{ nullptr };
+	/* Determines whether the vel control ref speed is the vehicle's
+	own desired speed or the max legal velocity. */
+	bool try_go_at_max_vel{ false };
+
+	bool verbose = false; /* when true, will print results to
+						  the default log file and
+						  create a specific log file for this
+						  vehicle */
+
 	EgoVehicle(long id, VehicleType type, double desired_velocity,
 		double brake_delay, bool is_lane_change_autonomous, bool is_connected,
 		double simulation_time_step, double creation_time, bool verbose);
@@ -326,24 +340,9 @@ protected:
 	returns the feasible acceleration given the approximated low level
 	dynamics */
 	double consider_vehicle_dynamics(double unfiltered_acceleration);
-
-	ControlManager controller;
-	/* Keeps track of stopped time waiting for lane change */
-	double lane_change_waiting_time{ 0.0 };
-
-	/* Nearby vehicles ------------------------------------------------------- */
-
 	void set_leader_by_id(long new_leader_id);
 	void find_leader();
-	std::vector<std::shared_ptr<NearbyVehicle>> nearby_vehicles;
-	/* Determines whether the vel control ref speed is the vehicle's
-	own desired speed or the max legal velocity. */
-	bool try_go_at_max_vel{ false };
-
-	bool verbose = false; /* when true, will print results to
-						  the default log file and
-						  create a specific log file for this
-						  vehicle */
+	
 private:
 	/* Computes the longitudinal controller input */
 	virtual double implement_compute_desired_acceleration(
@@ -352,7 +351,7 @@ private:
 	/* Decides whether the vehicle can start a
 	lane change. Returns -1 for right lane changes, +1 for left lane
 	changes and 0 for lane keeping. */
-	virtual bool implement_can_start_lane_change() = 0;
+	virtual bool implement_check_lane_change_gaps() = 0;
 	virtual long create_lane_change_request() = 0;
 	virtual void set_traffic_light_information(int traffic_light_id,
 		double distance) {};
@@ -371,12 +370,10 @@ private:
 	virtual void implement_set_accepted_lane_change_risk_to_follower(
 		double value) = 0;
 	virtual void implement_set_use_linear_lane_change_gap(long value) = 0;
-
+	
+	virtual void pass_this_to_state();
 	// TODO: should this be abstract?
-	virtual std::shared_ptr<Platoon> implement_get_platoon() const
-	{
-		return nullptr;
-	};
+	virtual std::shared_ptr<Platoon> implement_get_platoon() const;
 
 	/* Finds the current leader */
 	virtual void implement_analyze_nearby_vehicles();
@@ -440,10 +437,7 @@ private:
 	/* Distance to the end of the lane. Used to avoid missing exits in case
 	vehicle couldn't lane change earlier. */
 	std::vector<double> lane_end_distance;
-	//std::vector<State> state_implementation_v1;
-	std::unique_ptr<VehicleState> state{ nullptr };
 	double desired_lane_angle{ 0.0 };
-	//RelativeLane relative_target_lane{ RelativeLane::same };
 	RelativeLane vissim_lane_suggestion{ RelativeLane::same };
 	long turning_indicator{ 0 };
 

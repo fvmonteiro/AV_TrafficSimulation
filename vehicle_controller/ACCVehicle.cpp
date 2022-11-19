@@ -31,7 +31,7 @@ double ACCVehicle::implement_compute_desired_acceleration(
 //		get_lambda_1(), get_rho(), 0);
 //}
 
-bool ACCVehicle::implement_can_start_lane_change()
+bool ACCVehicle::implement_check_lane_change_gaps()
 {
 	return get_vissim_lane_suggestion() != RelativeLane::same;
 }

@@ -30,7 +30,7 @@ EgoVehicle::EgoVehicle(long id, VehicleType type, double desired_velocity,
 {
 	compute_safe_gap_parameters();
 	bool verbose_control_manager = false;
-	this->state = std::make_unique<SingleVehicleLaneKeepingState>(this);
+	set_state(std::make_unique<SingleVehicleLaneKeepingState>());
 
 	if (verbose)
 	{
@@ -442,6 +442,16 @@ long EgoVehicle::get_lane_change_request()
 	return create_lane_change_request();
 }
 
+void EgoVehicle::pass_this_to_state()
+{
+	state->set_ego_vehicle(this);
+}
+
+std::shared_ptr<Platoon> EgoVehicle::implement_get_platoon() const
+{
+	return nullptr;
+};
+
 void EgoVehicle::implement_analyze_nearby_vehicles()
 {
 	find_leader();
@@ -544,57 +554,6 @@ void EgoVehicle::update_state()
 	{
 		state->handle_lane_keeping_intention();
 	}
-
-	//State old_state = get_state_implementation_v1();
-	//if (desired_lane_change_direction == RelativeLane::same)
-	//{
-	//	state_implementation_v1.push_back(State::lane_keeping);
-	//}
-	//else
-	//{
-	//	update_lane_change_waiting_time();
-	//	state_implementation_v1.push_back(State::intention_to_change_lanes);
-	//}
-
-	/* State change:
-	- Reset timers when the vehicle first shows its intention to
-	change lanes.
-	- Reset the desired velocity filter when the vehicle
-	finished a lane change */
-	//if (old_state != get_state_implementation_v1())
-	//{
-	//	reset_lane_change_waiting_time();
-	//	if (has_leader())
-	//	{
-	//		controller.update_origin_lane_controller(
-	//			compute_current_desired_time_headway(*get_leader()),
-	//			get_leader()->is_connected()
-	//		);
-	//	}
-
-	//	switch (get_state_implementation_v1())
-	//	{
-	//	case State::lane_keeping:
-	//		if (verbose)
-	//		{
-	//			std::clog << "Transition from lane changing to "
-	//				<< "lane keeping" << std::endl;
-	//		}
-	//		controller.reset_origin_lane_velocity_controller(
-	//			get_velocity());
-	//		break;
-	//	case State::intention_to_change_lanes:
-	//		if (verbose)
-	//		{
-	//			std::clog << "Transition from lane keeping to "
-	//				<< "intention to change lanes" << std::endl;
-	//		}
-	//		//controller.start_longitudinal_adjustment(get_time());
-	//		break;
-	//	default:
-	//		break;
-	//	}
-	//}
 }
 
 void EgoVehicle::set_state(std::unique_ptr<VehicleState> new_state)
@@ -602,11 +561,15 @@ void EgoVehicle::set_state(std::unique_ptr<VehicleState> new_state)
 
 	if (verbose)
 	{
-		std::clog << "Transition from " << *state
-			<< " to " << *new_state << std::endl;
+		std::clog << "t=" << get_time() << ", veh " << get_id() << "\n";
+			std::clog << "Transition from ";
+			if (state == nullptr) std::clog << "null";
+			else std::clog << *state;
+			std::clog << " to " << *new_state << std::endl;
 	}
 	state = std::move(new_state);
-	//state->set_ego_vehicle(this);
+
+	pass_this_to_state();
 }
 
 void EgoVehicle::update_lane_change_waiting_time()
@@ -626,9 +589,9 @@ void EgoVehicle::reset_lane_change_waiting_time()
 	lane_change_waiting_time = 0.0;
 }
 
-bool EgoVehicle::can_start_lane_change()
+bool EgoVehicle::check_lane_change_gaps()
 {
-	return implement_can_start_lane_change();
+	return implement_check_lane_change_gaps();
 }
 
 bool EgoVehicle::is_lane_changing() const
@@ -685,22 +648,22 @@ void EgoVehicle::compute_desired_acceleration(
 		implement_compute_desired_acceleration(traffic_lights);
 }
 
-void EgoVehicle::decide_lane_change_direction()
-{
-	if (is_lane_changing())
-	{
-		lane_change_direction = get_active_lane_change_direction();
-	}
-	else if (has_lane_change_intention() && implement_can_start_lane_change())
-	{
-		lane_change_direction = desired_lane_change_direction;
-	}
-	else
-	{
-		//update_lane_change_waiting_time();
-		lane_change_direction = RelativeLane::same;
-	}
-}
+//void EgoVehicle::decide_lane_change_direction()
+//{
+//	if (is_lane_changing())
+//	{
+//		lane_change_direction = get_active_lane_change_direction();
+//	}
+//	else if (has_lane_change_intention() && implement_check_lane_change_gaps())
+//	{
+//		lane_change_direction = desired_lane_change_direction;
+//	}
+//	else
+//	{
+//		//update_lane_change_waiting_time();
+//		lane_change_direction = RelativeLane::same;
+//	}
+//}
 
 double EgoVehicle::get_accepted_lane_change_gap(
 	std::shared_ptr<NearbyVehicle> nearby_vehicle)

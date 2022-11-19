@@ -22,7 +22,7 @@
 
 /*==========================================================================*/
 
-const std::unordered_set<long> LOGGED_VEHICLES_IDS{ 2 };
+std::unordered_set<long> logged_vehicles_ids{ 0 };
 const int LOGGED_PLATOON_ID{ 0 };
 const bool CLUELESS_DEBUGGING{ false };
 //const double DEBUGGING_START_TIME{ 249.0 };
@@ -140,6 +140,7 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
             case UDA::use_linear_lane_change_gap:
             case UDA::platoon_id:
             case UDA::platoon_strategy:
+            case UDA::logged_vehicle_id:
                 return 1;
             /* Debugging: leader */
             case UDA::leader_id:
@@ -190,7 +191,7 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
     case DRIVER_DATA_VEH_ID                 :
         if (CLUELESS_DEBUGGING) {
             std::clog << "t=" << current_time
-                << ", getting data for veh. " << long_value << std::endl;
+                << ", setting data for veh. " << long_value << std::endl;
         }
 
         current_vehicle_id = long_value;
@@ -304,6 +305,9 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
             break;
         case UDA::platoon_strategy:
             platoon_lc_strategy = long_value;
+            break;
+        case UDA::logged_vehicle_id:
+            logged_vehicles_ids.insert(long_value);
             break;
         default: // do nothing
             break;
@@ -456,6 +460,11 @@ DRIVERMODEL_API  int  DriverModelGetValue (long   type,
     API documentation. */
 
     //EgoVehicle& ego_vehicle = vehicles[current_vehicle_id];
+
+    if (CLUELESS_DEBUGGING)
+    {
+        std::clog << "Getting type " << type << "\n";
+    }
 
     switch (type) {
     case DRIVER_DATA_STATUS :
@@ -696,8 +705,8 @@ DRIVERMODEL_API  int  DriverModelExecuteCommand (long number)
     case DRIVER_COMMAND_CREATE_DRIVER :
     {
         bool verbose = false;
-        if (LOGGED_VEHICLES_IDS.find(current_vehicle_id)
-            != LOGGED_VEHICLES_IDS.end()) verbose = true;
+        if (logged_vehicles_ids.find(current_vehicle_id)
+            != logged_vehicles_ids.end()) verbose = true;
         vehicles[current_vehicle_id] = std::move(
             EgoVehicleFactory::create_ego_vehicle(current_vehicle_id,
                 current_vehicle_type, current_desired_velocity,

@@ -66,29 +66,30 @@ public:
 		return this->value < 0 */
 	}
 
-	std::string to_string() const
-	{
-		switch (this->value)
-		{
-		case Value::right_right:
-			return "right of right";
-		case Value::right:
-			return "right";
-		case Value::same:
-			return "same";
-		case Value::left:
-			return "left";
-		case Value::left_left:
-			return "left of left";
-		default:
-			return "unknown relative lane";
-		}
-	}
-
 	friend std::ostream& operator<< (std::ostream& out,
 		const RelativeLane& relative_lane)
 	{
-		out << relative_lane.to_string();
+		switch (relative_lane.value)
+		{
+		case Value::right_right:
+			out << "right of right";
+			break;
+		case Value::right:
+			out << "right";
+			break;
+		case Value::same:
+			out << "same";
+			break;
+		case Value::left:
+			out << "left";
+			break;
+		case Value::left_left:
+			out << "left of left";
+			break;
+		default:
+			out << "unknown relative lane";
+			break;
+		}
 		return out;
 	}
 

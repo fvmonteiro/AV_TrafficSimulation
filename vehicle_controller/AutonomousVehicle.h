@@ -1,6 +1,7 @@
 #pragma once
 
 #include "EgoVehicle.h"
+#include "LaneChangeGapsSafety.h"
 
 /* Vehicle with autonomous longitudinal control during lane keeping and
 during adjustments for lane changing. The lane change intention still
@@ -8,7 +9,6 @@ comes from VISSIM, but the vehicle decides when it is safe enough to start */
 class AutonomousVehicle : public EgoVehicle
 {
 public:
-
 	AutonomousVehicle(long id, double desired_velocity,
 		double simulation_time_step, double creation_time,
 		bool verbose = false) : AutonomousVehicle(id,
@@ -16,8 +16,16 @@ public:
 			simulation_time_step, creation_time, verbose) {} ;
 
 	bool merge_behind_ld() const;
+	bool are_all_lane_change_gaps_safe() const;
+	LaneChangeGapsSafety get_lane_change_gaps_safety() const;
 
 protected:
+	LaneChangeGapsSafety lane_change_gaps_safety;
+	/* Necessary when computing lane change gaps with risk */
+	double dest_lane_follower_lambda_0{ 0.0 };
+	/* Necessary when computing lane change gaps with risk */
+	double dest_lane_follower_lambda_1{ 0.0 };
+
 	AutonomousVehicle(long id, VehicleType type, double desired_velocity,
 		bool is_connected, double simulation_time_step, double creation_time,
 		bool verbose = false);
@@ -26,7 +34,7 @@ protected:
 	intention, the destination lane leader and follower
 	TODO [Nov 10, 2022] Make private?*/
 	void implement_analyze_nearby_vehicles() override;
-	bool implement_can_start_lane_change() override;
+	bool implement_check_lane_change_gaps() override;
 
 	double get_lambda_1_lane_change() const { return lambda_1_lane_change; }
 	double get_accepted_risk_to_leaders() const {
@@ -55,11 +63,6 @@ protected:
 	and parameters */
 	double compute_vehicle_following_gap_for_lane_change(
 		const NearbyVehicle& nearby_vehicle, double current_lambda_1) const;
-
-	/* Necessary when computing lane change gaps with risk */
-	double dest_lane_follower_lambda_0{ 0.0 };
-	/* Necessary when computing lane change gaps with risk */
-	double dest_lane_follower_lambda_1{ 0.0 };
 
 private:
 	/* Finds the current leader and, if the vehicle has lane change

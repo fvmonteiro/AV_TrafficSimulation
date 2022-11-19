@@ -185,7 +185,7 @@ std::string NearbyVehicle::to_string() const {
 			oss << static_cast<int>(get_type());
 			break;
 		case Member::relative_lane:
-			oss << relative_lane.to_string();
+			oss << relative_lane;
 			break;
 		case Member::relative_position:
 			oss << relative_position;
@@ -203,7 +203,7 @@ std::string NearbyVehicle::to_string() const {
 			oss << acceleration;
 			break;
 		case Member::lane_change_direction:
-			oss << lane_change_direction.to_string();
+			oss << lane_change_direction;
 			break;
 		default:
 			oss << "unknown class member";

@@ -20,15 +20,38 @@ AutonomousVehicle::AutonomousVehicle(long id, VehicleType type,
 	}
 }
 
-//bool AutonomousVehicle::has_destination_lane_leader() const
-//{
-//	return get_destination_lane_leader() != nullptr;
-//}
-//
-//bool AutonomousVehicle::has_destination_lane_follower() const
-//{
-//	return get_destination_lane_follower() != nullptr;
-//}
+bool AutonomousVehicle::merge_behind_ld() const
+{
+	if (!has_destination_lane_leader()) return false;
+
+	double origin_lane_reference_velocity;
+	double ego_velocity = get_velocity();
+
+	/* Get the possible max vel at the origin lane */
+	if (controller.is_in_free_flow_at_origin_lane())
+	{
+		origin_lane_reference_velocity =
+			get_desired_velocity();
+	}
+	else
+	{
+		origin_lane_reference_velocity = get_leader()
+			->compute_velocity(ego_velocity);
+	}
+
+	return (get_destination_lane_leader()->compute_velocity(ego_velocity)
+				> origin_lane_reference_velocity - min_overtaking_rel_vel);
+}
+
+bool AutonomousVehicle::are_all_lane_change_gaps_safe() const
+{
+	return lane_change_gaps_safety.is_lane_change_safe();
+}
+
+LaneChangeGapsSafety AutonomousVehicle::get_lane_change_gaps_safety() const
+{
+	return lane_change_gaps_safety;
+}
 
 bool AutonomousVehicle::has_lane_change_conflict() const
 {
@@ -220,29 +243,6 @@ void AutonomousVehicle::update_destination_lane_leader(
 	}
 }
 
-bool AutonomousVehicle::merge_behind_ld() const
-{
-	if (!has_destination_lane_leader()) return false;
-
-	double origin_lane_reference_velocity;
-	double ego_velocity = get_velocity();
-
-	/* Get the possible max vel at the origin lane */
-	if (controller.is_in_free_flow_at_origin_lane())
-	{
-		origin_lane_reference_velocity =
-			get_desired_velocity();
-	}
-	else
-	{
-		origin_lane_reference_velocity = get_leader()
-			->compute_velocity(ego_velocity);
-	}
-
-	return (get_destination_lane_leader()->compute_velocity(ego_velocity)
-				> origin_lane_reference_velocity - min_overtaking_rel_vel);
-}
-
 double AutonomousVehicle::compute_lane_changing_desired_time_headway(
 	const NearbyVehicle& nearby_vehicle) const
 {
@@ -306,7 +306,7 @@ bool AutonomousVehicle::give_lane_change_control_to_vissim() const
 	return lane_change_waiting_time > max_lane_change_waiting_time;
 }
 
-bool AutonomousVehicle::implement_can_start_lane_change()
+bool AutonomousVehicle::implement_check_lane_change_gaps()
 {
 	if (give_lane_change_control_to_vissim())
 	{
@@ -319,31 +319,33 @@ bool AutonomousVehicle::implement_can_start_lane_change()
 
 	double margin = 0.1;
 	//if (verbose) std::clog << "Deciding lane change" << std::endl;
-
-	bool gap_same_lane_is_safe = is_lane_change_gap_safe(get_leader());
-	bool gap_ahead_is_safe = is_lane_change_gap_safe(destination_lane_leader);
+	
+	//bool gap_same_lane_is_safe = is_lane_change_gap_safe(get_leader());
+	/*bool gap_ahead_is_safe = 
+		is_lane_change_gap_safe(destination_lane_leader);*/
+	lane_change_gaps_safety.orig_lane_leader_gap = 
+		is_lane_change_gap_safe(get_leader());
+	lane_change_gaps_safety.dest_lane_leader_gap =
+		is_lane_change_gap_safe(destination_lane_leader);
 	/* Besides the regular safety conditions, we add the case
 	where the dest lane follower has completely stopped to give room
 	to the lane changing vehicle */
-	bool gap_behind_is_safe =
+	/*bool gap_behind_is_safe =*/
+	lane_change_gaps_safety.dest_lane_follower_gap = 
 		is_lane_change_gap_safe(destination_lane_follower)
 		|| ((destination_lane_follower->
 			compute_velocity(get_velocity()) <= 1.0)
 			&& (destination_lane_follower->get_distance() <= -2.0));
-	bool no_conflict = !has_lane_change_conflict();
+	/*bool no_conflict = !has_lane_change_conflict();*/
+	lane_change_gaps_safety.no_conflict =
+		!has_lane_change_conflict();
 
 	if (verbose)
 	{
-		std::clog << "[orig lane] gap ahead is safe? "
-			<< gap_same_lane_is_safe
-			<< ", [dest lane] gap ahead is safe? " << gap_ahead_is_safe
-			<< ", [dest_lane] gap behind is safe? " << gap_behind_is_safe
-			<< ", no conflict? " << no_conflict
-			<< std::endl;
+		std::clog << lane_change_gaps_safety << std::endl;
 	}
 
-	return gap_same_lane_is_safe && gap_ahead_is_safe
-		&& gap_behind_is_safe && no_conflict;
+	return lane_change_gaps_safety.is_lane_change_safe();
 }
 
 bool AutonomousVehicle::is_lane_change_gap_safe(
