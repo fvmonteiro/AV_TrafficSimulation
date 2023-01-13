@@ -82,6 +82,10 @@
     <ClCompile Include="PlatoonLaneChangeStrategy.cpp" />
     <ClCompile Include="VehicleState.cpp" />
     <ClCompile Include="LaneChangeGapsSafety.cpp" />
+    <ClCompile Include="PlatoonVehicleState.cpp" />
+    <ClCompile Include="SynchronousStates.cpp" />
+    <ClCompile Include="LeaderFirstStates.cpp" />
+    <ClCompile Include="LastVehicleFirstStates.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ControlManager.h">
@@ -171,6 +175,10 @@
     <ClInclude Include="PlatoonLaneChangeStrategy.h" />
     <ClInclude Include="VehicleState.h" />
     <ClInclude Include="LaneChangeGapsSafety.h" />
+    <ClInclude Include="PlatoonVehicleState.h" />
+    <ClInclude Include="SynchronousStates.h" />
+    <ClInclude Include="LeaderFirstStates.h" />
+    <ClInclude Include="LastVehicleFirstStates.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Header Files">

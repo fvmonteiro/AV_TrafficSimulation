@@ -37,6 +37,7 @@ public:
 	State get_state() const { return state; };
 	color_t get_state_color() const;
 
+	double get_gap_error() const;
 	double compute_desired_acceleration(const EgoVehicle& ego_vehicle,
 		const std::shared_ptr<NearbyVehicle> leader,
 		double velocity_reference);
@@ -53,6 +54,7 @@ protected:
 	bool verbose{ false };
 
 private:
+	virtual double implement_get_gap_error() const = 0;
 	virtual double implement_compute_desired_acceleration(
 		const EgoVehicle& ego_vehicle,
 		const std::shared_ptr<NearbyVehicle> leader,

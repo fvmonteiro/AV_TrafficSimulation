@@ -105,6 +105,11 @@ double SwitchedLongitudinalController::compute_gap_threshold(double gap,
 	- Worst-case: h*vf + d + (kv*vf)/kg = (h + kv/kg)*vf + d*/
 }
 
+double SwitchedLongitudinalController::implement_get_gap_error() const
+{
+	return gap_controller.get_gap_error();
+}
+
 double SwitchedLongitudinalController::implement_compute_desired_acceleration(
 	const EgoVehicle& ego_vehicle,
 	const std::shared_ptr<NearbyVehicle> leader,

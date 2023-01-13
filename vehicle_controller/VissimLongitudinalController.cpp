@@ -5,6 +5,11 @@ VissimLongitudinalController::VissimLongitudinalController(
 	std::unordered_map<State, color_t> state_to_color_map)
 	: LongitudinalController(state_to_color_map, false) {}
 
+double VissimLongitudinalController::implement_get_gap_error() const
+{
+	return 0.0;
+}
+
 double VissimLongitudinalController::implement_compute_desired_acceleration(
 	const EgoVehicle& ego_vehicle,
 	const std::shared_ptr<NearbyVehicle> leader,

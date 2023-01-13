@@ -45,11 +45,18 @@ public:
 	//ControlManager(const EgoVehicle& ego_vehicle);
 
 	//std::vector<State> get_states() { return states; };
-	ALCType get_active_alc_type() const {
-		return active_longitudinal_controller_type;
-	}
+	//ALCType get_active_alc_type() const {
+	//	return active_longitudinal_controller_type;
+	//}
 
 	color_t get_longitudinal_controller_color() const;
+	/* Safe value depends on whether or not the vehicle has lane
+	change intention */
+	double get_safe_time_headway() const;
+	/* Gets the current time headway, which can be any value between
+	the veh following or lane changing time headways if the vehicle
+	is transitiong between states. */
+	double get_current_desired_time_headway() const;
 
 	LongitudinalController::State
 		get_longitudinal_controller_state() const;
@@ -91,10 +98,10 @@ public:
 		return lateral_controller;
 	};
 	double get_reference_gap(double ego_velocity); /* could be const */
-	double get_gap_error(VehicleType type) const;
 
 	/* ----------------------------------------------------------------------- */
 
+	double get_gap_error() const;
 	/* Computes the deceleration rate to avoid collision */
 	double compute_drac(double relative_velocity, double gap);
 
@@ -188,10 +195,14 @@ private:
 	/* ------------ Control Parameters ------------ */
 
 	double velocity_filter_gain{ 10.0 };
-	double time_headway_filter_gain{ 0.3 };
-	AutonomousGains autonomous_real_following_gains{ 0.2, 1.0/*0.7*/ };
+	double time_headway_filter_gain{ 1.0 }; // 0.3 original value for CAVs
+	AutonomousGains autonomous_real_following_gains{ 0.2, 1.0 };
 	AutonomousGains autonomous_virtual_following_gains{ 0.4, 1.0 };
-	ConnectedGains connected_real_following_gains{ 0.2, 2.3, 0.13, 1.3 };
+	// Original values for CAVs
+	/*ConnectedGains connected_real_following_gains{ 0.2, 2.3, 0.13, 1.3 };*/
+	// Values focused on platoon vehicles TODO: separate controllers
+	// gains will probably have to be tuned
+	ConnectedGains connected_real_following_gains{ 0.2, 1.5, 0.13, 1.3 };
 	ConnectedGains connected_virtual_following_gains{ 0.4, 2.3, 0.13, 1.3 };
 	ConnectedGains platoon_following_gains{ 0.2, 2.3, 0.13, 1.3 };
 	VelocityControllerGains desired_velocity_controller_gains{
@@ -310,5 +321,8 @@ private:
 	/* Returns true if the computed acceleration was added to the map */
 	bool get_cooperative_desired_acceleration(
 		const ConnectedAutonomousVehicle& ego_vehicle,
+		std::unordered_map<ALCType, double>& possible_accelerations);
+	bool get_destination_lane_desired_acceleration_when_in_platoon(
+		const PlatoonVehicle& platoon_vehicle,
 		std::unordered_map<ALCType, double>& possible_accelerations);
 };

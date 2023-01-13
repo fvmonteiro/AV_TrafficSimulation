@@ -19,6 +19,11 @@ color_t LongitudinalController::get_state_color() const
 	return state_to_color_map.at(get_state());
 }
 
+double LongitudinalController::get_gap_error() const
+{
+	return implement_get_gap_error();
+}
+
 double LongitudinalController::compute_desired_acceleration(
 	const EgoVehicle& ego_vehicle,
 	const std::shared_ptr<NearbyVehicle> leader,

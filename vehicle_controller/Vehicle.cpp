@@ -3,6 +3,16 @@
 
 #include "Vehicle.h"
 
+bool operator== (const Vehicle& vehicle1, const Vehicle& vehicle2)
+{
+	return vehicle1.get_id() == vehicle2.get_id();
+}
+
+bool operator!= (const Vehicle& vehicle1, const Vehicle& vehicle2)
+{
+	return !(vehicle1 == vehicle2);
+}
+
 Vehicle::Vehicle(long id) : id{ id } {}
 
 Vehicle::Vehicle(long id, VehicleType type, double brake_delay) :

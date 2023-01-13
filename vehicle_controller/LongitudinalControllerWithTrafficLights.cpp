@@ -17,6 +17,12 @@ LongitudinalControllerWithTrafficLights(
 }
 
 double LongitudinalControllerWithTrafficLights::
+implement_get_gap_error() const
+{
+	return gap_error;
+}
+
+double LongitudinalControllerWithTrafficLights::
 implement_compute_desired_acceleration(
 	const EgoVehicle& ego_vehicle,
 	const std::shared_ptr<NearbyVehicle> leader,

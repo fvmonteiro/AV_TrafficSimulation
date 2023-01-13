@@ -15,7 +15,7 @@ public:
 			VehicleType::autonomous_car, desired_velocity, false,
 			simulation_time_step, creation_time, verbose) {} ;
 
-	bool merge_behind_ld() const;
+	bool merge_behind_dest_lane_leader() const;
 	bool are_all_lane_change_gaps_safe() const;
 	LaneChangeGapsSafety get_lane_change_gaps_safety() const;
 

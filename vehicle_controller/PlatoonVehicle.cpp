@@ -28,7 +28,24 @@ PlatoonVehicle::~PlatoonVehicle()
 
 bool PlatoonVehicle::is_platoon_leader() const
 {
-	return is_in_a_platoon() ? platoon->get_leader_id() == get_id() : true;
+	return !is_in_a_platoon() || (platoon->get_leader_id() == get_id());
+}
+
+bool PlatoonVehicle::is_last_platoon_vehicle() const
+{
+	return !is_in_a_platoon() || (platoon->get_last_veh_id() == get_id());
+}
+
+std::shared_ptr<PlatoonVehicle> 
+PlatoonVehicle::get_preceding_vehicle_in_platoon() const
+{
+	return get_platoon()->get_preceding_vehicle(get_id());
+}
+
+std::shared_ptr<PlatoonVehicle>
+PlatoonVehicle::get_following_vehicle_in_platoon() const
+{
+	return get_platoon()->get_following_vehicle(get_id());
 }
 
 double PlatoonVehicle::implement_compute_desired_acceleration(
@@ -106,32 +123,28 @@ void PlatoonVehicle::set_desired_lane_change_direction()
 	}*/
 }
 
-//bool PlatoonVehicle::implement_check_lane_change_gaps()
-//{
-//	bool individual_lane_change_is_safe =
-//		AutonomousVehicle::implement_check_lane_change_gaps();
-//	if (is_in_a_platoon())
-//	{
-//		platoon->set_vehicle_lane_change_gap_status(get_id(),
-//			individual_lane_change_is_safe);
-//		//return platoon->can_vehicle_start_lane_change(*this);
-//	}
-//	return individual_lane_change_is_safe;
-//}
-
 void PlatoonVehicle::implement_analyze_nearby_vehicles()
 {
 	// Find leader, dest lane leader and follower, and assisted vehicle
-	if (is_platoon_leader())
-	{
-		find_leader();
-		//find_cooperation_requests();
-	}
-	else // vehicle is part of a platoon
-	{
-		set_leader_by_id(platoon->get_preceding_vehicle_id(get_id()));
-	}
+	//if (is_platoon_leader())
+	//{
+	//	find_leader();
+	//	//find_cooperation_requests();
+	//}
+	//else // vehicle is part of a platoon
+	//{
+	//	set_leader_by_id(platoon->get_preceding_vehicle_id(get_id()));
+	//}
+	find_leader();
 	find_destination_lane_vehicles();
+	find_cooperation_request_from_platoon();
+}
+
+void PlatoonVehicle::find_cooperation_request_from_platoon()
+{
+	long assisted_vehicle_id = 
+		get_platoon()->get_assisted_vehicle_id(get_id());
+	set_assisted_vehicle_by_id(assisted_vehicle_id);
 }
 
 bool PlatoonVehicle::implement_analyze_platoons(
@@ -151,7 +164,9 @@ bool PlatoonVehicle::implement_analyze_platoons(
 	if (!am_in_a_platoon && !may_join_leader_platoon)
 	{
 		// Create platoon
-		if (alone_time >= max_time_looking_for_platoon)
+		create_platoon(new_platoon_id, pointer_to_me_my_type);
+		new_platoon_created = true;
+		/*if (alone_time >= max_time_looking_for_platoon)
 		{
 			create_platoon(new_platoon_id, pointer_to_me_my_type);
 			alone_time = 0.0;
@@ -160,7 +175,7 @@ bool PlatoonVehicle::implement_analyze_platoons(
 		else
 		{
 			alone_time += get_sampling_interval();
-		}
+		}*/
 	}
 	else if (!am_in_a_platoon && may_join_leader_platoon)
 	{
@@ -190,10 +205,14 @@ bool PlatoonVehicle::implement_analyze_platoons(
 	}
 	else // am_in_a_platoon && !may_join_leader_platoon
 	{
-		if (platoon->can_vehicle_leave_platoon(get_id()))
+		if (platoon->can_vehicle_leave_platoon(*this))
 		{
+			std::clog << "t=" << get_time() << " id=" << get_id()
+				<< ": leaving platoon " << platoon->get_id() << "\n";
 			platoon->remove_vehicle_by_id(get_id());
-			platoon.reset();
+			//platoon.reset();
+			create_platoon(new_platoon_id, pointer_to_me_my_type);
+			new_platoon_created = true;
 		}
 	}
 
@@ -202,6 +221,11 @@ bool PlatoonVehicle::implement_analyze_platoons(
 
 std::shared_ptr<Platoon> PlatoonVehicle::implement_get_platoon() const
 {
+	/*if (platoon == nullptr)
+	{
+		std::clog << "[ERROR] Trying to read nullptr platoon\n"
+			<< "Vehicle: " << *this << std::endl;
+	}*/
 	return platoon;
 }
 

@@ -38,6 +38,8 @@ protected:
 	double get_lambda_1(bool is_leader_connected) const;
 	double get_lambda_1_lane_change(bool is_leader_connected) const;
 
+	void set_assisted_vehicle_by_id(long assisted_vehicle_id);
+
 private:
 	double implement_compute_desired_acceleration(
 		const std::unordered_map<int, TrafficLight>& traffic_lights) override;

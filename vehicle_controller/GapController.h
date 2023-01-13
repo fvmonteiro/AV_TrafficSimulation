@@ -36,6 +36,7 @@ public:
 
 	double get_time_headway() const { return time_headway; };
 	double get_standstill_distance() const { return standstill_distance; };
+	double get_gap_error() const { return gap_error; };
 	double get_gap_error_gain() const {
 		return is_connected ? connected_gains.kg : autonomous_gains.kg;
 	};
@@ -64,7 +65,9 @@ public:
 	value for time headway*/
 	double get_desired_time_headway_gap(double ego_velocity/*,
 		bool has_lane_change_intention*/) const;
-	double get_desired_gap(double ego_velocity);
+	/* Gets the current desired gap - some value between the 
+	desired veh following and lane changing gap */
+	double get_desired_gap(double ego_velocity) const;
 
 	double compute_desired_acceleration(const EgoVehicle& ego_vehicle, 
 		const std::shared_ptr<NearbyVehicle> leader);
@@ -76,8 +79,7 @@ public:
 private:
 	VariationLimitedFilter velocity_filter;
 	VariationLimitedFilter time_headway_filter;
-
-	//double simulation_time_step{ 0.1 };
+	double gap_error{ 0.0 };
 	/* Desired gap parameters */
 	double desired_time_headway{ 1.0 };
 	double time_headway{ 1.0 }; /* time headway [s] */

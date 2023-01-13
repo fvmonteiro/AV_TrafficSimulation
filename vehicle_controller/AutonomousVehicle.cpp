@@ -20,7 +20,7 @@ AutonomousVehicle::AutonomousVehicle(long id, VehicleType type,
 	}
 }
 
-bool AutonomousVehicle::merge_behind_ld() const
+bool AutonomousVehicle::merge_behind_dest_lane_leader() const
 {
 	if (!has_destination_lane_leader()) return false;
 

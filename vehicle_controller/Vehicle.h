@@ -86,3 +86,5 @@ private:
 	double lambda_1{ 0.0 };
 };
 
+bool operator== (const Vehicle& vehicle1, const Vehicle& vehicle2);
+bool operator!= (const Vehicle& vehicle1, const Vehicle& vehicle2);

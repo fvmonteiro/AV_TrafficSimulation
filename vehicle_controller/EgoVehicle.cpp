@@ -78,7 +78,8 @@ EgoVehicle::~EgoVehicle()
 double EgoVehicle::get_time() const
 {
 	/* At creation time, the vehicle already has a velocity */
-	return creation_time + (velocity.size() - 1) * simulation_time_step;
+	return current_time;
+	//creation_time + (velocity.size() - 1) * simulation_time_step;
 }
 long EgoVehicle::get_lane() const
 {
@@ -163,13 +164,17 @@ double EgoVehicle::get_free_flow_velocity() const
 
 double EgoVehicle::get_safe_time_headway() const
 {
-	return controller.get_origin_lane_controller().
-		get_desired_time_headway();
+	return controller.get_safe_time_headway();
 }
 
 double EgoVehicle::get_gap_error() const
 {
-	return controller.get_gap_error(type);
+	return controller.get_gap_error();
+}
+
+double EgoVehicle::get_current_desired_time_headway() const
+{
+	return controller.get_current_desired_time_headway();
 }
 
 double EgoVehicle::get_gap_variation_to(
@@ -216,6 +221,11 @@ double EgoVehicle::get_collision_free_gap_to(
 		std::clog << std::endl;
 	}
 	return -1.0;
+}
+
+VehicleState* EgoVehicle::get_state() const
+{
+	return state.get();
 }
 
 void EgoVehicle::set_lane(long lane)
@@ -543,7 +553,7 @@ double EgoVehicle::compute_vehicle_following_safe_time_headway(
 
 void EgoVehicle::update_state()
 {
-
+	current_time += simulation_time_step;
 	set_desired_lane_change_direction();
 
 	if (has_lane_change_intention())
@@ -559,14 +569,14 @@ void EgoVehicle::update_state()
 void EgoVehicle::set_state(std::unique_ptr<VehicleState> new_state)
 {
 
-	if (verbose)
-	{
+	/*if (verbose)
+	{*/
 		std::clog << "t=" << get_time() << ", veh " << get_id() << "\n";
-			std::clog << "Transition from ";
-			if (state == nullptr) std::clog << "null";
-			else std::clog << *state;
-			std::clog << " to " << *new_state << std::endl;
-	}
+		std::clog << "Transition from ";
+		if (state == nullptr) std::clog << "null";
+		else std::clog << *state;
+		std::clog << " to " << *new_state << std::endl;
+	//}
 	state = std::move(new_state);
 
 	pass_this_to_state();
@@ -601,10 +611,6 @@ bool EgoVehicle::is_lane_changing() const
 
 long EgoVehicle::get_color_by_controller_state()
 {
-	/* We'll assign color to vehicles based on the current longitudinal
-	controller and on whether or not the vehicle is trying to change lanes.*/
-	//if (state_implementation_v1.empty()) return WHITE;
-
 	/* TODO: still missing color for VISSIM and for max_vel */
 	return controller.get_longitudinal_controller_color();
 }

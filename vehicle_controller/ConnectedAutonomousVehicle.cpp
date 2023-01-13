@@ -157,6 +157,16 @@ double ConnectedAutonomousVehicle::get_lambda_1_lane_change(
 		: AutonomousVehicle::get_lambda_1_lane_change();
 }
 
+void ConnectedAutonomousVehicle::set_assisted_vehicle_by_id(
+	long assisted_vehicle_id)
+{
+	std::shared_ptr<NearbyVehicle> old_assisted_vehicle =
+		std::move(assisted_vehicle);
+	assisted_vehicle = get_nearby_vehicle_by_id(assisted_vehicle_id);
+	//deal_with_close_and_slow_assited_vehicle();
+	update_assisted_vehicle(old_assisted_vehicle);
+}
+
 //double ConnectedAutonomousVehicle::compute_current_desired_time_headway(
 //	const NearbyVehicle& nearby_vehicle)
 //{

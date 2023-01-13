@@ -28,6 +28,46 @@ ControlManager::ControlManager(const EgoVehicle& ego_vehicle,
 	}
 }
 
+color_t ControlManager::get_longitudinal_controller_color() const
+{
+	std::unique_ptr<LongitudinalController> active_long_controller =
+		get_active_long_controller();
+	if (active_long_controller != nullptr)
+	{
+		return active_long_controller->get_state_color();
+	}
+	else
+	{
+		return WHITE;
+	}
+}
+
+double ControlManager::get_safe_time_headway() const
+{
+	return origin_lane_controller.get_desired_time_headway();
+}
+
+double ControlManager::get_current_desired_time_headway() const
+{
+	return origin_lane_controller.get_current_time_headway();
+}
+
+LongitudinalController::State
+ControlManager::get_longitudinal_controller_state() const
+{
+	std::unique_ptr<LongitudinalController> active_long_controller =
+		get_active_long_controller();
+	if (active_long_controller != nullptr)
+	{
+		return active_long_controller->get_state();
+	}
+	else
+	{
+		return LongitudinalController::State::uninitialized;
+	}
+}
+
+
 void ControlManager::add_vissim_controller()
 {
 	vissim_controller = VissimLongitudinalController(
@@ -112,35 +152,6 @@ void ControlManager::add_in_platoon_controller(
 	);
 }
 
-color_t ControlManager::get_longitudinal_controller_color() const
-{
-	std::unique_ptr<LongitudinalController> active_long_controller =
-		get_active_long_controller();
-	if (active_long_controller != nullptr)
-	{
-		return active_long_controller->get_state_color();
-	}
-	else
-	{
-		return WHITE;
-	}
-}
-
-LongitudinalController::State
-	ControlManager::get_longitudinal_controller_state() const
-{
-	std::unique_ptr<LongitudinalController> active_long_controller =
-		get_active_long_controller();
-	if (active_long_controller != nullptr)
-	{
-		return active_long_controller->get_state();
-	}
-	else
-	{
-		return LongitudinalController::State::uninitialized;
-	}
-}
-
 std::unique_ptr<LongitudinalController>
 ControlManager::get_active_long_controller() const
 {
@@ -176,16 +187,9 @@ double ControlManager::get_reference_gap(double ego_velocity)
 	return origin_lane_controller.get_desired_gap(ego_velocity);
 };
 
-double ControlManager::get_gap_error(VehicleType type) const
+double ControlManager::get_gap_error() const
 {
-	if (type == VehicleType::traffic_light_acc_car)
-	{
-		return with_traffic_lights_controller.get_h1();
-	}
-	else /* TODO */
-	{
-		return 0.0;
-	}
+	return get_active_long_controller()->get_gap_error();
 }
 
 /* ----------------------------------------------------------------------- */
@@ -374,16 +378,22 @@ double ControlManager::get_desired_acceleration(
 {
 	std::unordered_map<ALCType, double>
 		possible_accelerations;
+	
 	get_origin_lane_desired_acceleration(platoon_vehicle,
+		possible_accelerations);
+	get_end_of_lane_desired_acceleration(platoon_vehicle,
 		possible_accelerations);
 	if (platoon_vehicle.is_platoon_leader())
 	{
-		get_end_of_lane_desired_acceleration(platoon_vehicle,
-			possible_accelerations);
 		get_destination_lane_desired_acceleration(platoon_vehicle,
 			possible_accelerations);
 		get_cooperative_desired_acceleration(platoon_vehicle,
 			possible_accelerations);
+	}
+	else
+	{
+		get_destination_lane_desired_acceleration_when_in_platoon(
+			platoon_vehicle, possible_accelerations);
 	}
 
 	return choose_minimum_acceleration(possible_accelerations);
@@ -496,7 +506,6 @@ bool ControlManager::get_destination_lane_desired_acceleration(
 {
 	bool is_active = false;
 	//double origin_lane_reference_velocity;
-	double ego_velocity = ego_vehicle.get_velocity();
 
 	bool end_of_lane_controller_is_active =
 		end_of_lane_controller.get_state()
@@ -504,7 +513,7 @@ bool ControlManager::get_destination_lane_desired_acceleration(
 
 	/* We only activate if we want to merge behding ld
 	or if the end of the lane is close */
-	if (ego_vehicle.merge_behind_ld()
+	if (ego_vehicle.merge_behind_dest_lane_leader()
 		|| (ego_vehicle.has_destination_lane_leader()
 			&& end_of_lane_controller_is_active))
 	{
@@ -576,6 +585,48 @@ bool ControlManager::get_cooperative_desired_acceleration(
 		possible_accelerations[ALCType::cooperative_gap_generation] =
 			gap_generating_controller.compute_desired_acceleration(
 				ego_vehicle, assisted_vehicle, reference_velocity);
+		is_active = true;
+	}
+	return is_active;
+}
+
+bool ControlManager
+::get_destination_lane_desired_acceleration_when_in_platoon(
+	const PlatoonVehicle& platoon_vehicle,
+	std::unordered_map<ALCType, double>& possible_accelerations)
+{
+	/* TODO: reorganize
+	Almost copy of get_destination_lane_desired_acceleration
+	*/
+	bool is_active = false;
+	if (platoon_vehicle.has_destination_lane_leader())
+	{
+		std::shared_ptr<NearbyVehicle> dest_lane_leader =
+			platoon_vehicle.get_destination_lane_leader();
+		double ego_velocity = platoon_vehicle.get_velocity();
+		double reference_velocity = determine_low_velocity_reference(
+			ego_velocity, *dest_lane_leader);
+
+		if (verbose)
+		{
+			std::clog << "Dest. lane controller" << std::endl;
+			std::clog << "low ref vel=" << reference_velocity << std::endl;
+		}
+
+		/* If the ego vehicle is braking hard due to conditions on
+		the current lane, the destination lane controller, which
+		uses comfortable constraints, must be updated. */
+		if ((active_longitudinal_controller_type
+			!= ALCType::destination_lane)
+			&& destination_lane_controller.is_outdated(ego_velocity))
+		{
+			destination_lane_controller.reset_velocity_controller(
+				ego_velocity);
+		}
+
+		possible_accelerations[ALCType::destination_lane] =
+			destination_lane_controller.compute_desired_acceleration(
+				platoon_vehicle, dest_lane_leader, reference_velocity);
 		is_active = true;
 	}
 	return is_active;

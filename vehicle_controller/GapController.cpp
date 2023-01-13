@@ -55,7 +55,7 @@ double GapController::get_desired_time_headway_gap(
 	return compute_time_headway_gap(get_desired_time_headway(), ego_velocity);
 }
 
-double GapController::get_desired_gap(double ego_velocity)
+double GapController::get_desired_gap(double ego_velocity) const
 {
 	return compute_time_headway_gap(time_headway_filter.get_current_value(),
 		ego_velocity);
@@ -109,7 +109,7 @@ double GapController::compute_desired_acceleration(
 	double ego_velocity = ego_vehicle.get_velocity();
 	double gap = ego_vehicle.compute_gap(leader);
 	double gap_reference = compute_desired_gap(ego_velocity);
-	double gap_error = compute_gap_error(gap, gap_reference);
+	this->gap_error = compute_gap_error(gap, gap_reference);
 	double velocity_reference = leader->compute_velocity(ego_velocity);
 	/* The velocity error is set to zero when we want a "smooth start" */
 	double filtered_velocity_reference = should_perform_smooth_start ?

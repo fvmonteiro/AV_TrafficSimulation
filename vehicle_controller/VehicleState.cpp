@@ -1,11 +1,13 @@
-#include "EgoVehicle.h"
-#include "Platoon.h"
-#include "PlatoonVehicle.h"
 #include "VehicleState.h"
+#include "EgoVehicle.h"
+#include "PlatoonVehicleState.h"
 
 /* Base Class ------------------------------------------------------------- */
 
-VehicleState::VehicleState(std::string name) : name(name) {}
+VehicleState::VehicleState(std::string strategy_name, std::string state_name,
+	int state_number)
+	: strategy_name(strategy_name), state_name(state_name), 
+	state_number(state_number) {}
 
 void VehicleState::set_ego_vehicle(EgoVehicle* ego_vehicle)
 {
@@ -34,7 +36,7 @@ void VehicleState::handle_lane_change_intention()
 	/* Temporaty check to avoid crashes during test phase */
 	if (!is_ego_vehicle_set())
 	{
-		std::clog << "Handle lane keeping. No ego vehicle set\n";
+		std::clog << "Handle lane change intention. No ego vehicle set\n";
 		return;
 	}
 	implement_handle_lane_change_intention();
@@ -50,6 +52,45 @@ std::string VehicleState::unexpected_transition_message(
 	return oss.str();
 }
 
+bool have_same_strategy(const VehicleState& s1, const VehicleState& s2)
+{
+	return s1.get_strategy_name() == s2.get_strategy_name();
+}
+
+bool operator== (const VehicleState& s1, const VehicleState& s2)
+{
+	return (have_same_strategy(s1, s2)
+		&& s1.get_phase_number() == s2.get_phase_number());
+}
+
+bool operator!= (const VehicleState& s1, const VehicleState& s2)
+{
+	return !(s1 == s2);
+}
+
+bool operator> (const VehicleState& s1, const VehicleState& s2)
+{
+	if (!have_same_strategy(s1, s2))
+	{
+		std::clog << "Comparing states of different strategies\n";
+	}
+	return s1.get_phase_number() > s2.get_phase_number();
+}
+
+bool operator< (const VehicleState& s1, const VehicleState& s2)
+{
+	return s2 > s1;
+}
+
+bool operator>= (const VehicleState& s1, const VehicleState& s2)
+{
+	return !(s1 < s2);
+}
+
+bool operator<= (const VehicleState& s1, const VehicleState& s2)
+{
+	return !(s1 > s2);
+}
 /* ------------------------------------------------------------------------ */
 /* Single Vehicle States -------------------------------------------------- */
 /* ------------------------------------------------------------------------ */
@@ -119,132 +160,5 @@ void SingleVehicleLaneChangingState
 	{
 		ego_vehicle->set_lane_change_direction(
 			ego_vehicle->get_desired_lane_change_direction());
-	}
-}
-
-/* ------------------------------------------------------------------------ */
-/* Platoon Vehicle States ------------------------------------------------- */
-/* ------------------------------------------------------------------------ */
-
-void PlatoonVehicleState::set_specific_type_of_vehicle(
-	EgoVehicle* ego_vehicle)
-{
-	this->platoon_vehicle = dynamic_cast<PlatoonVehicle*>(ego_vehicle);
-}
-
-void SynchronousLaneKeepingState
-::implement_handle_lane_keeping_intention() {}
-
-void SynchronousLaneKeepingState
-::implement_handle_lane_change_intention()
-{
-	if (platoon_vehicle->is_platoon_leader())
-	{
-		platoon_vehicle->update_origin_lane_controller();
-		platoon_vehicle->set_state(
-			std::make_unique<SynchronousLongidutinalAdjustmentState>());
-	}
-	else
-	{
-		auto& leader = platoon_vehicle->get_platoon()
-			->get_preceding_vehicle(platoon_vehicle->get_id());
-		bool leader_safe_on_orig_lane =
-			leader->get_lane_change_gaps_safety().orig_lane_leader_gap;
-		if (leader_safe_on_orig_lane)
-		{
-			platoon_vehicle->update_origin_lane_controller();
-			platoon_vehicle->set_state(
-				std::make_unique<SynchronousLongidutinalAdjustmentState>());
-		}
-	}
-}
-
-/* ------------------------------------------------------------------------ */
-
-void SynchronousLongidutinalAdjustmentState
-::implement_handle_lane_keeping_intention() 
-{
-	/* This case won't happen in our simulations.
-	* For completion, this is coded assuming only the leader can 
-	abort the maneuver. */
-	if (!platoon_vehicle->get_platoon()
-		->get_platoon_leader()->has_lane_change_intention())
-	{
-		platoon_vehicle->reset_lane_change_waiting_time();
-		platoon_vehicle->update_origin_lane_controller();
-		platoon_vehicle->reset_origin_lane_velocity_controller();
-		platoon_vehicle->set_state(
-			std::make_unique<SynchronousLaneKeepingState>());
-	}
-}
-
-void SynchronousLongidutinalAdjustmentState
-::implement_handle_lane_change_intention()
-{
-	/* Check if my gaps are safe and store the info */
-	platoon_vehicle->check_lane_change_gaps();
-	/* Check if everyone's gaps are safe */
-	bool can_start_lane_change = true;
-	for (auto& item : platoon_vehicle->get_platoon()->get_vehicles())
-	{
-		LaneChangeGapsSafety lcgs = 
-			item.second->get_lane_change_gaps_safety();
-		bool gap1_is_safe = lcgs.dest_lane_follower_gap;
-		bool gap2_is_safe = lcgs.dest_lane_leader_gap;
-		bool no_conflict = lcgs.no_conflict;
-		if (item.second->is_platoon_leader() && !lcgs.is_lane_change_safe())
-		{
-			can_start_lane_change = false;
-			break;
-		}
-		else if (!(gap1_is_safe && gap2_is_safe && no_conflict))
-		{
-			can_start_lane_change = false;
-			break;
-		}
-	}
-
-	if (can_start_lane_change)
-	{
-			platoon_vehicle->set_state(
-		std::make_unique<SynchronousLaneChangingState>());
-	}
-	else
-	{
-		platoon_vehicle->update_lane_change_waiting_time();
-	}
-	/* Note: this is not a perfectly synchronous maneuver. The last vehicle
-	to check safety at the time step where everyone got safe gaps will 
-	start the maneuver one sampling time before others. */
-}
-
-/* ------------------------------------------------------------------------ */
-
-void SynchronousLaneChangingState
-::implement_handle_lane_keeping_intention()
-{
-	if (!platoon_vehicle->is_lane_changing())
-	{
-		platoon_vehicle->set_lane_change_direction(RelativeLane::same);
-		platoon_vehicle->reset_lane_change_waiting_time();
-		platoon_vehicle->update_origin_lane_controller();
-		platoon_vehicle->reset_origin_lane_velocity_controller();
-		platoon_vehicle->set_state(
-			std::make_unique<SynchronousLaneKeepingState>());
-	}
-}
-
-void SynchronousLaneChangingState
-::implement_handle_lane_change_intention()
-{
-	if (platoon_vehicle->is_lane_changing())
-	{
-		platoon_vehicle->set_lane_change_direction(
-			platoon_vehicle->get_active_lane_change_direction());
-	}
-	else
-	{
-		platoon_vehicle->set_lane_change_direction(
-			platoon_vehicle->get_desired_lane_change_direction());
 	}
 }

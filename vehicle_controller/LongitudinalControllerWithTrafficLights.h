@@ -18,9 +18,6 @@ public:
 		std::unordered_map<State, color_t> state_to_color_map,
 		bool verbose);
 
-	//State get_state() const { return active_mode; };
-	double get_h1() const { return gap_error; };
-
 	void compute_traffic_light_input_parameters(
 		const TrafficLightALCVehicle& ego_vehicle,
 		const std::unordered_map<int, TrafficLight>& traffic_lights);
@@ -37,6 +34,7 @@ private:
 	double beta{ 4.0 }; // 2.0, desired_vel / comfortable_braking + 1
 	double h3{ 0.0 }, dht{ 0.0 }, dhx{ 0.0 };
 
+	double implement_get_gap_error() const override;
 	double implement_compute_desired_acceleration(
 		const EgoVehicle& ego_vehicle,
 		const std::shared_ptr<NearbyVehicle> leader,

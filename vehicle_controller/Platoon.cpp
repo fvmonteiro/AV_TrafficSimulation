@@ -8,6 +8,7 @@ Platoon::Platoon(long id, std::shared_ptr<PlatoonVehicle> leader,
 	id {id}, verbose{verbose}
 {
 	add_leader(leader);
+	desired_velocity = leader->get_desired_velocity();
 }
 
 Platoon::~Platoon()
@@ -25,6 +26,11 @@ std::shared_ptr<PlatoonVehicle> Platoon::get_platoon_leader() const
 	return is_empty() ? nullptr : vehicles.at(leader_idx);
 }
 
+std::shared_ptr<PlatoonVehicle> Platoon::get_last_vehicle() const
+{
+	return is_empty() ? nullptr : vehicles.at(last_veh_idx);
+}
+
 long Platoon::get_leader_id() const
 {
 	return is_empty() ? 0 : get_platoon_leader()->get_id();
@@ -37,7 +43,7 @@ bool Platoon::is_empty() const
 
 long Platoon::get_last_veh_id() const
 {
-	return is_empty() ? 0 : vehicles.at(last_veh_idx)->get_id();
+	return is_empty() ? 0 : get_last_vehicle()->get_id();
 }
 
 long Platoon::get_preceding_vehicle_id(long veh_id) const
@@ -61,6 +67,9 @@ long Platoon::get_preceding_vehicle_id(long veh_id) const
 
 void Platoon::set_strategy(int strategy_number)
 {
+	std::unique_ptr<PlatoonLaneChangeStrategy> old_strategy =
+		std::move(lane_change_strategy);
+
 	switch (Strategy(strategy_number))
 	{
 	case Platoon::no_strategy:
@@ -69,18 +78,29 @@ void Platoon::set_strategy(int strategy_number)
 	case Platoon::synchronous_strategy:
 		lane_change_strategy = std::make_unique<SynchronousStrategy>();
 		break;
-	/*case Platoon::leader_first_strategy:
+	case Platoon::leader_first_strategy:
 		lane_change_strategy = std::make_unique<LeaderFirstStrategy>();
-		break;*/
-	/*case Platoon::last_vehicle_first_strategy:
 		break;
-	case Platoon::leader_first_invert_strategy:
+	case Platoon::last_vehicle_first_strategy:
+		lane_change_strategy = std::make_unique<LastVehicleFirstStrategy>();
+		break;
+	/*case Platoon::leader_first_invert_strategy:
 		break;*/
 	default:
 		std::clog << "ERROR: Platoon lane change strategy not coded\n";
 		lane_change_strategy = std::make_unique<NoStrategy>();
 		break;
 	}
+
+	/*if (verbose)
+	{*/
+		std::clog << "Platoon " << get_id() << "\n";
+		std::clog << "LC Strategy change from ";
+		if (old_strategy == nullptr) std::clog << "none";
+		else std::clog << *old_strategy;
+		std::clog << " to " << *lane_change_strategy << std::endl;
+	//}
+
 	lane_change_strategy->set_platoon(this);
 	lane_change_strategy->set_state_of_all_vehicles();
 }
@@ -243,13 +263,29 @@ std::shared_ptr<PlatoonVehicle> Platoon::get_preceding_vehicle(
 	return vehicles.at(veh_position);
 }
 
-bool Platoon::can_vehicle_leave_platoon(long veh_id) const
+std::shared_ptr<PlatoonVehicle> Platoon::get_following_vehicle(
+	long veh_id) const
+{
+	int veh_position = vehicle_id_to_position.at(veh_id);
+	while (vehicles.find(--veh_position) == vehicles.end())
+	{
+		if (veh_position < last_veh_idx) return nullptr;
+	}
+	return vehicles.at(veh_position);
+}
+
+long Platoon::get_assisted_vehicle_id(long veh_id) const
+{
+	lane_change_strategy->get_assisted_vehicle_id(*vehicles.at(veh_id));
+}
+
+bool Platoon::can_vehicle_leave_platoon(
+	const PlatoonVehicle& platoon_vehicle) const
 {
 	/* The platoon leader always stays in its platoon,
 	which might be a single vehicle platoon */
-	if (veh_id == get_leader_id()) return false;
-
-	return lane_change_strategy->can_vehicle_leave_platoon(veh_id);
+	return !platoon_vehicle.is_platoon_leader() 
+		&& lane_change_strategy->can_vehicle_leave_platoon(platoon_vehicle);
 }
 
 //bool Platoon::can_vehicle_start_longitudinal_adjustment(long veh_id) const
@@ -261,15 +297,21 @@ bool Platoon::can_vehicle_leave_platoon(long veh_id) const
 bool Platoon::has_a_vehicle_cut_in_the_platoon(
 	const PlatoonVehicle& platoon_vehicle) const
 {
-	if (platoon_vehicle.is_platoon_leader())
+	if (platoon_vehicle.is_platoon_leader()
+		|| !platoon_vehicle.has_leader())
 	{
-		return true;
+		return false;
 	}
-	std::shared_ptr<NearbyVehicle> preceding_platoon_vehicle =
-		platoon_vehicle.get_leader();
-	// TODO: return false during lane changes (of the vehicle or its leader)
-	return preceding_platoon_vehicle->is_ahead()
-		&& !preceding_platoon_vehicle->is_immediatly_ahead();
+
+	std::shared_ptr<NearbyVehicle> leader = platoon_vehicle.get_leader();
+	std::shared_ptr<PlatoonVehicle> precending_platoon_vehicle =
+		platoon_vehicle.get_preceding_vehicle_in_platoon();
+	bool are_vehs_lane_keeping =
+		(precending_platoon_vehicle->get_state()->get_phase_number() == 0)
+		&& (platoon_vehicle.get_state()->get_phase_number() == 0);
+
+	return are_vehs_lane_keeping
+		&& *leader != *precending_platoon_vehicle;
 }
 
 std::ostream& operator<< (std::ostream& out, const Platoon& platoon)

@@ -14,6 +14,12 @@ public:
 	/* Returns true if vehicle is the platoon leader 
 	or if it is not part of a platoon */
 	bool is_platoon_leader() const;
+	/* Returns true if vehicle is the last vehicle in 
+	the platoon or if it is not part of a platoon */
+	bool is_last_platoon_vehicle() const;
+
+	std::shared_ptr<PlatoonVehicle> get_preceding_vehicle_in_platoon() const;
+	std::shared_ptr<PlatoonVehicle> get_following_vehicle_in_platoon() const;
 
 protected:
 
@@ -51,7 +57,10 @@ private:
 	void set_desired_lane_change_direction() override;
 	//bool implement_check_lane_change_gaps() override;
 	std::shared_ptr<Platoon> implement_get_platoon() const override;
-	virtual void pass_this_to_state();
+	void pass_this_to_state() override;
+
+	// Check if vehicles in our platoon need gap generation
+	void find_cooperation_request_from_platoon();
 
 	void create_platoon(long platoon_id,
 		std::shared_ptr<PlatoonVehicle> pointer_to_me);

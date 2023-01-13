@@ -20,16 +20,22 @@ public:
 	~Platoon();
 
 	int get_id() const { return id; };
+	double get_desired_velocity() const { return desired_velocity; };
 	size_t get_size() const { return vehicles.size(); };
 	std::unordered_map<int, std::shared_ptr<PlatoonVehicle>>
 		get_vehicles() const { return vehicles; };
 
 	std::shared_ptr<PlatoonVehicle> get_platoon_leader() const;
+	std::shared_ptr<PlatoonVehicle> get_last_vehicle() const;
 	long get_leader_id() const;
 	long get_last_veh_id() const;
 	long get_preceding_vehicle_id(long veh_id) const;
 	std::shared_ptr<PlatoonVehicle> get_preceding_vehicle(
 		long veh_id) const;
+	std::shared_ptr<PlatoonVehicle> get_following_vehicle(
+		long veh_id) const;
+	long get_assisted_vehicle_id(long veh_id) const;
+
 	/*PlatoonLaneChangeStrategy::LaneChangeState get_lane_change_state(
 		long veh_id) const;*/
 	void set_verbose(bool verbose) { this->verbose = verbose; };
@@ -42,15 +48,16 @@ public:
 	void remove_vehicle_by_id(long veh_id);
 	//bool check_all_vehicles_lane_change_gaps();
 
-	/*void set_vehicle_lane_change_state(PlatoonVehicle& platoon_vehicle, 
-		bool should_change_lane);*/
-	//void set_vehicle_lane_change_gap_status(long veh_id, bool is_safe);
-	//bool can_vehicle_start_lane_change(const PlatoonVehicle& platoon_vehicle);
-	bool can_vehicle_leave_platoon(long veh_id) const;
-	//bool can_vehicle_start_longitudinal_adjustment(long veh_id) const;
+	bool can_vehicle_leave_platoon(
+		const PlatoonVehicle& platoon_vehicle) const;
+	/* Checks whether a non platoon vehicle inserted itself 
+	in the platoon. Does not checks during lane changes */
+	bool has_a_vehicle_cut_in_the_platoon(
+		const PlatoonVehicle& platoon_vehicle) const;
 	/* Returns true if merge successful and this platoon is now
 	empty */
 	//bool merge_into_leading_platoon(Platoon& other_platoon);
+
 
 	/* Print function */
 	friend std::ostream& operator<< (std::ostream& out,
@@ -69,6 +76,7 @@ private:
 	long id{ 0 };
 	int leader_idx{ -1 };
 	int last_veh_idx{ 0 };
+	double desired_velocity{ 0.0 };
 	bool verbose{ false };
 	std::unique_ptr<PlatoonLaneChangeStrategy> lane_change_strategy{ 
 		nullptr };
@@ -88,9 +96,5 @@ private:
 	void add_vehicle(int idx_in_platoon, 
 		std::shared_ptr <PlatoonVehicle> new_vehicle);
 	//std::shared_ptr<PlatoonVehicle> get_preceding_vehicle(long veh_id) const;
-
-	bool has_a_vehicle_cut_in_the_platoon(
-		const PlatoonVehicle& platoon_vehicle) const;
-
 };
 
