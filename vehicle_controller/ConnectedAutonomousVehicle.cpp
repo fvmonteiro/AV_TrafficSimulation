@@ -125,6 +125,7 @@ void ConnectedAutonomousVehicle::update_assisted_vehicle(
 {
 	if (has_assisted_vehicle())
 	{
+		std::clog << "Updating assisted vehicle\n";
 		//double new_max_brake = assisted_vehicle->get_max_brake();
 		if ((old_assisted_vehicle == nullptr)
 			/* || (std::abs(new_max_brake
@@ -160,6 +161,11 @@ double ConnectedAutonomousVehicle::get_lambda_1_lane_change(
 void ConnectedAutonomousVehicle::set_assisted_vehicle_by_id(
 	long assisted_vehicle_id)
 {
+	if (assisted_vehicle_id > 0)
+	{
+		std::clog << "Setting assisted veh by id. Ego id: " << get_id()
+			<< ", assisted id: " << assisted_vehicle_id << std::endl;
+	}
 	std::shared_ptr<NearbyVehicle> old_assisted_vehicle =
 		std::move(assisted_vehicle);
 	assisted_vehicle = get_nearby_vehicle_by_id(assisted_vehicle_id);

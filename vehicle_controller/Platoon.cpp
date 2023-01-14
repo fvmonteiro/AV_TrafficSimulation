@@ -276,7 +276,15 @@ std::shared_ptr<PlatoonVehicle> Platoon::get_following_vehicle(
 
 long Platoon::get_assisted_vehicle_id(long veh_id) const
 {
-	lane_change_strategy->get_assisted_vehicle_id(*vehicles.at(veh_id));
+	return lane_change_strategy->get_assisted_vehicle_id(
+		*get_vehicle_by_id(veh_id));
+}
+
+bool Platoon::can_vehicle_start_adjustment_to_dest_lane_leader(
+	long veh_id) const
+{
+	return lane_change_strategy->can_adjust_to_dest_lane_leader(
+		*get_vehicle_by_id(veh_id));
 }
 
 bool Platoon::can_vehicle_leave_platoon(

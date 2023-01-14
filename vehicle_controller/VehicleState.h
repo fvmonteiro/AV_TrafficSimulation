@@ -68,7 +68,8 @@ protected:
 
 	VehicleState(std::string strategy_name, std::string state_name,
 		int state_number);
-	std::string unexpected_transition_message(VehicleState* vehicle_state);
+	void unexpected_transition_message(VehicleState* vehicle_state,
+		bool has_lane_change_intention);
 
 private:
 	std::string strategy_name;

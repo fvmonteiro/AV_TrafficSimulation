@@ -20,7 +20,7 @@ class LastVehicleFirstLongidutinalAdjustmentState : public PlatoonVehicleState
 {
 public:
 	LastVehicleFirstLongidutinalAdjustmentState()
-		: PlatoonVehicleState("last vehicle first", "intention to lc", 2) {}
+		: PlatoonVehicleState("last vehicle first", "long adjustments", 2) {}
 private:
 	void implement_handle_lane_keeping_intention() override;
 	void implement_handle_lane_change_intention() override;
@@ -36,6 +36,8 @@ private:
 	void implement_handle_lane_change_intention() override;
 };
 
+/* In terms of functionality, we can probably do without this state,
+but it is useful to keep track of the maneuver. */
 class LastVehicleFirstCreatingGapState : public PlatoonVehicleState
 {
 public:
@@ -54,5 +56,6 @@ public:
 private:
 	void implement_handle_lane_keeping_intention() override;
 	void implement_handle_lane_change_intention() override;
+	//bool are_platoon_gaps_closed();
 };
 

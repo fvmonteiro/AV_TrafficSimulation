@@ -180,7 +180,9 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
             case UDA::safe_time_headway:
                 return 0;
             case UDA::gap_error:
-                return 0;
+                return 1;
+            case UDA::current_state:
+                return 1;
             default:
                 return 0;
             }
@@ -643,6 +645,13 @@ DRIVERMODEL_API  int  DriverModelGetValue (long   type,
             *double_value = vehicles[current_vehicle_id]->
                 get_gap_error();
             break;
+        case UDA::current_state:
+        {
+            std::string state_name =
+                vehicles[current_vehicle_id]->get_state()->get_state_name();
+            strcpy(*string_value, state_name.c_str());
+            break;
+        }
         default:
             return 0; /* doesn't set any UDA values */
         }

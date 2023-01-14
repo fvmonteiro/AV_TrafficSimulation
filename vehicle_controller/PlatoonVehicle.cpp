@@ -36,10 +36,17 @@ bool PlatoonVehicle::is_last_platoon_vehicle() const
 	return !is_in_a_platoon() || (platoon->get_last_veh_id() == get_id());
 }
 
+bool PlatoonVehicle::can_start_adjustment_to_destination_lane_leader() const
+{
+	return !is_in_a_platoon()
+		|| platoon->can_vehicle_start_adjustment_to_dest_lane_leader(
+			get_id());
+}
+
 std::shared_ptr<PlatoonVehicle> 
 PlatoonVehicle::get_preceding_vehicle_in_platoon() const
 {
-	return get_platoon()->get_preceding_vehicle(get_id());
+	return platoon->get_preceding_vehicle(get_id());
 }
 
 std::shared_ptr<PlatoonVehicle>
@@ -125,16 +132,6 @@ void PlatoonVehicle::set_desired_lane_change_direction()
 
 void PlatoonVehicle::implement_analyze_nearby_vehicles()
 {
-	// Find leader, dest lane leader and follower, and assisted vehicle
-	//if (is_platoon_leader())
-	//{
-	//	find_leader();
-	//	//find_cooperation_requests();
-	//}
-	//else // vehicle is part of a platoon
-	//{
-	//	set_leader_by_id(platoon->get_preceding_vehicle_id(get_id()));
-	//}
 	find_leader();
 	find_destination_lane_vehicles();
 	find_cooperation_request_from_platoon();
@@ -142,9 +139,12 @@ void PlatoonVehicle::implement_analyze_nearby_vehicles()
 
 void PlatoonVehicle::find_cooperation_request_from_platoon()
 {
-	long assisted_vehicle_id = 
-		get_platoon()->get_assisted_vehicle_id(get_id());
-	set_assisted_vehicle_by_id(assisted_vehicle_id);
+	if (is_in_a_platoon())
+	{
+		long assisted_vehicle_id =
+			get_platoon()->get_assisted_vehicle_id(get_id());
+		set_assisted_vehicle_by_id(assisted_vehicle_id);
+	}
 }
 
 bool PlatoonVehicle::implement_analyze_platoons(

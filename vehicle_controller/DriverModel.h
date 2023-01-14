@@ -71,6 +71,7 @@ enum class UDA {
     risk = 141,
     safe_time_headway = 142,
     gap_error = 143,
+    current_state = 144,
 
     first = h_to_assited_veh,
 };

@@ -387,14 +387,14 @@ double ControlManager::get_desired_acceleration(
 	{
 		get_destination_lane_desired_acceleration(platoon_vehicle,
 			possible_accelerations);
-		get_cooperative_desired_acceleration(platoon_vehicle,
-			possible_accelerations);
 	}
 	else
 	{
 		get_destination_lane_desired_acceleration_when_in_platoon(
 			platoon_vehicle, possible_accelerations);
 	}
+	get_cooperative_desired_acceleration(platoon_vehicle,
+		possible_accelerations);
 
 	return choose_minimum_acceleration(possible_accelerations);
 }
@@ -599,7 +599,8 @@ bool ControlManager
 	Almost copy of get_destination_lane_desired_acceleration
 	*/
 	bool is_active = false;
-	if (platoon_vehicle.has_destination_lane_leader())
+	if (platoon_vehicle.has_destination_lane_leader()
+		&& platoon_vehicle.can_start_adjustment_to_destination_lane_leader())
 	{
 		std::shared_ptr<NearbyVehicle> dest_lane_leader =
 			platoon_vehicle.get_destination_lane_leader();

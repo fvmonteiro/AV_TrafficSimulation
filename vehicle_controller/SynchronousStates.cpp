@@ -74,7 +74,7 @@ void SynchronousLongidutinalAdjustmentState
 			can_start_lane_change = false;
 			break;
 		}
-		/* v1: Mid	 platoon vehicles don't need to distance themselves from
+		/* v1: Mid platoon vehicles don't need to distance themselves from
 		their leaders*/
 		//bool gap1_is_safe = lcgs.dest_lane_follower_gap;
 		//bool gap2_is_safe = lcgs.dest_lane_leader_gap;
@@ -147,17 +147,31 @@ void SynchronousWaitingOthersState
 	if (follower == nullptr // last platoon vehicle
 		|| (*follower->get_state()) == SynchronousLaneKeepingState())
 	{
+		if (platoon_vehicle->is_platoon_leader())
+		{
+			platoon_vehicle->set_desired_velocity(
+				platoon_vehicle->get_platoon()->get_desired_velocity());
+		}
 		platoon_vehicle->update_origin_lane_controller();
 		platoon_vehicle->set_state(
 			std::make_unique<SynchronousClosingGapState>());
 	}
-
+	else if (platoon_vehicle->is_platoon_leader())
+	{
+		double desired_velocity =
+			0.8 * platoon_vehicle->get_platoon()->get_desired_velocity();
+		platoon_vehicle->set_desired_velocity(desired_velocity);
+	}
 }
 
 /* Platoon can only change lanes when all vehicles completed the
 previous lane change */
 void SynchronousWaitingOthersState
-::implement_handle_lane_change_intention() {}
+::implement_handle_lane_change_intention() 
+{
+	unexpected_transition_message(this, true);
+	implement_handle_lane_keeping_intention();
+}
 
 /* ------------------------------------------------------------------------ */
 
@@ -183,4 +197,8 @@ void SynchronousClosingGapState
 /* Platoon can only change lanes when all vehicles completed the
 previous lane change */
 void SynchronousClosingGapState
-::implement_handle_lane_change_intention() {}
+::implement_handle_lane_change_intention() 
+{
+	unexpected_transition_message(this, true);
+	implement_handle_lane_keeping_intention();
+}

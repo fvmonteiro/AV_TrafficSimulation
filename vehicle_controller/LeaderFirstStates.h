@@ -20,7 +20,7 @@ class LeaderFirstLongidutinalAdjustmentState : public PlatoonVehicleState
 {
 public:
 	LeaderFirstLongidutinalAdjustmentState()
-		: PlatoonVehicleState("leader first", "intention to lc", 2) {}
+		: PlatoonVehicleState("leader first", "long adjustments", 2) {}
 private:
 	void implement_handle_lane_keeping_intention() override;
 	void implement_handle_lane_change_intention() override;

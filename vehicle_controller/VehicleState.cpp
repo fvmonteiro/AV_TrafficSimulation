@@ -42,14 +42,16 @@ void VehicleState::handle_lane_change_intention()
 	implement_handle_lane_change_intention();
 }
 
-std::string VehicleState::unexpected_transition_message(
-	VehicleState* vehicle_state)
+void VehicleState::unexpected_transition_message(
+	VehicleState* vehicle_state, bool has_lane_change_intention)
 {
-	std::ostringstream oss;
-	oss << "WARNING: unexpected state transition at t="
+	//std::ostringstream oss;
+	std::clog << "[WARNING] unexpected state transition\n\tt="
 		<< ego_vehicle->get_time() << ", veh " << ego_vehicle->get_id()
-		<< " from state: " << vehicle_state;
-	return oss.str();
+		<< " at state " << vehicle_state << " and has "
+		<< (has_lane_change_intention ? "lane change" : "lane keeping")
+		<< " intention" << std::endl;
+	//return oss.str();
 }
 
 bool have_same_strategy(const VehicleState& s1, const VehicleState& s2)

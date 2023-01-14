@@ -35,6 +35,7 @@ public:
 	std::shared_ptr<PlatoonVehicle> get_following_vehicle(
 		long veh_id) const;
 	long get_assisted_vehicle_id(long veh_id) const;
+	bool can_vehicle_start_adjustment_to_dest_lane_leader(long veh_id) const;
 
 	/*PlatoonLaneChangeStrategy::LaneChangeState get_lane_change_state(
 		long veh_id) const;*/

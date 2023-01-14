@@ -18,6 +18,8 @@ public:
 	the platoon or if it is not part of a platoon */
 	bool is_last_platoon_vehicle() const;
 
+	bool can_start_adjustment_to_destination_lane_leader() const;
+
 	std::shared_ptr<PlatoonVehicle> get_preceding_vehicle_in_platoon() const;
 	std::shared_ptr<PlatoonVehicle> get_following_vehicle_in_platoon() const;
 

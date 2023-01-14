@@ -32,6 +32,12 @@ long PlatoonLaneChangeStrategy::get_assisted_vehicle_id(
 	return implement_get_assisted_vehicle_id(platoon_vehicle);
 }
 
+bool PlatoonLaneChangeStrategy::can_adjust_to_dest_lane_leader(
+	const PlatoonVehicle& platoon_vehicle) const
+{
+	return implement_can_adjust_to_dest_lane_leader(platoon_vehicle);
+}
+
 void PlatoonLaneChangeStrategy::set_state_of_all_vehicles()
 {
 	for (auto& item : platoon->get_vehicles())
@@ -82,6 +88,12 @@ std::unique_ptr<VehicleState> SynchronousStrategy
 	return std::make_unique<SynchronousLaneKeepingState>();
 }
 
+bool SynchronousStrategy::implement_can_adjust_to_dest_lane_leader(
+	const PlatoonVehicle& platoon_vehicle) const
+{
+	return platoon_vehicle.is_platoon_leader();
+}
+
 /* ------------------------------------------------------------------------ */
 /* Leader First Strategy -------------------------------------------------- */
 
@@ -94,22 +106,33 @@ bool LeaderFirstStrategy::implement_can_vehicle_leave_platoon(
 		return false;
 	}
 
-	std::shared_ptr<PlatoonVehicle> precending_platoon_vehicle =
-		platoon_vehicle.get_preceding_vehicle_in_platoon();
-	// Careful! leaders could be nullptr
-	std::shared_ptr<NearbyVehicle> orig_lane_leader = 
-		platoon_vehicle.get_leader();
-	std::shared_ptr<NearbyVehicle> dest_lane_leader =
-		platoon_vehicle.get_destination_lane_leader();
+	long precending_platoon_vehicle_id =
+		platoon_vehicle.get_preceding_vehicle_in_platoon()->get_id();
+	std::shared_ptr<NearbyVehicle> preceding_platoon_veh =
+		platoon_vehicle.get_nearby_vehicle_by_id(
+			precending_platoon_vehicle_id
+		);
 
-	bool next_platoon_veh_is_orig_lane_leader =
-		platoon_vehicle.has_leader()
-		&& *orig_lane_leader == *precending_platoon_vehicle;
-	bool next_platoon_veh_is_dest_lane_leader =
-		platoon_vehicle.has_destination_lane_leader()
-		&& *dest_lane_leader == *precending_platoon_vehicle;
-	return !next_platoon_veh_is_orig_lane_leader
-	    && !next_platoon_veh_is_dest_lane_leader;
+	/* Leave the platoon if the supposed platoon preceding vehicle 
+	is not immediately ahead of us (regardless of which lane) */
+	return preceding_platoon_veh == nullptr ||
+		preceding_platoon_veh->get_relative_position() != 1;
+	//std::shared_ptr<PlatoonVehicle> precending_platoon_vehicle =
+	//	platoon_vehicle.get_preceding_vehicle_in_platoon();
+	//// Careful! leaders could be nullptr
+	//std::shared_ptr<NearbyVehicle> orig_lane_leader = 
+	//	platoon_vehicle.get_leader();
+	//std::shared_ptr<NearbyVehicle> dest_lane_leader =
+	//	platoon_vehicle.get_destination_lane_leader();
+
+	//bool next_platoon_veh_is_orig_lane_leader =
+	//	platoon_vehicle.has_leader()
+	//	&& *orig_lane_leader == *precending_platoon_vehicle;
+	//bool next_platoon_veh_is_dest_lane_leader =
+	//	platoon_vehicle.has_destination_lane_leader()
+	//	&& *dest_lane_leader == *precending_platoon_vehicle;
+	//return !next_platoon_veh_is_orig_lane_leader
+	//    && !next_platoon_veh_is_dest_lane_leader;
 }
 
 std::unique_ptr<VehicleState> LeaderFirstStrategy
@@ -118,14 +141,40 @@ std::unique_ptr<VehicleState> LeaderFirstStrategy
 	return std::make_unique<LeaderFirstLaneKeepingState>();
 }
 
+bool LeaderFirstStrategy::implement_can_adjust_to_dest_lane_leader(
+	const PlatoonVehicle& platoon_vehicle) const
+{
+	if (platoon_vehicle.is_platoon_leader()) return true;
+	bool leader_is_done_lane_changing =
+		*platoon_vehicle.get_preceding_vehicle_in_platoon()->get_state()
+		> LeaderFirstLaneChangingState();
+	return leader_is_done_lane_changing;
+}
+
 /* ------------------------------------------------------------------------ */
 /* Last Vehicle First Strategy -------------------------------------------- */
 
 bool LastVehicleFirstStrategy::implement_can_vehicle_leave_platoon(
 	const PlatoonVehicle& platoon_vehicle) const
 {
-	// TODO
-	return false;
+	if (platoon_vehicle.is_platoon_leader()
+		|| (*platoon_vehicle.get_state()
+			== LastVehicleFirstLaneChangingState()))
+	{
+		return false;
+	}
+
+	long precending_platoon_vehicle_id =
+		platoon_vehicle.get_preceding_vehicle_in_platoon()->get_id();
+	std::shared_ptr<NearbyVehicle> preceding_platoon_veh =
+		platoon_vehicle.get_nearby_vehicle_by_id(
+			precending_platoon_vehicle_id
+		);
+	
+	/* Leave the platoon if the supposed platoon preceding vehicle
+	is not immediately ahead of or behind us (regardless of which lane) */
+	return preceding_platoon_veh == nullptr ||
+		std::abs(preceding_platoon_veh->get_relative_position()) > 1;
 }
 
 std::unique_ptr<VehicleState> LastVehicleFirstStrategy

@@ -18,7 +18,7 @@ class SynchronousLongidutinalAdjustmentState : public PlatoonVehicleState
 {
 public:
 	SynchronousLongidutinalAdjustmentState()
-		: PlatoonVehicleState("synchronous", "intention to lc", 2) {}
+		: PlatoonVehicleState("synchronous", "long adjustments", 2) {}
 private:
 	void implement_handle_lane_keeping_intention() override;
 	void implement_handle_lane_change_intention() override;
