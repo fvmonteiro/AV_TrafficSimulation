@@ -10,8 +10,6 @@ public:
 	LastVehicleFirstLaneKeepingState()
 		: PlatoonVehicleState("last vehicle first", "lane keeping", 1) {}
 private:
-	double waiting_velocity_percent{ 0.8 };
-
 	void implement_handle_lane_keeping_intention() override;
 	void implement_handle_lane_change_intention() override;
 };
@@ -56,6 +54,5 @@ public:
 private:
 	void implement_handle_lane_keeping_intention() override;
 	void implement_handle_lane_change_intention() override;
-	//bool are_platoon_gaps_closed();
 };
 

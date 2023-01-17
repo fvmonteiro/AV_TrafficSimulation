@@ -114,20 +114,6 @@ void PlatoonVehicle::set_desired_lane_change_direction()
 		&& (get_lane() == 1);
 	desired_lane_change_direction = should_change_lane ?
 		RelativeLane::left : RelativeLane::same;
-	/*std::shared_ptr<Platoon> platoon = get_platoon();
-	if (platoon == nullptr)
-	{
-		desired_lane_change_direction = should_change_lane ?
-			RelativeLane::left : RelativeLane::same;
-	}
-	else
-	{
-		long my_id = get_id();
-		platoon->set_vehicle_lane_change_state(*this, should_change_lane);
-		desired_lane_change_direction = 
-			platoon->can_vehicle_start_longitudinal_adjustment(my_id)?
-			RelativeLane::left : RelativeLane::same;
-	}*/
 }
 
 void PlatoonVehicle::implement_analyze_nearby_vehicles()
@@ -192,7 +178,7 @@ bool PlatoonVehicle::implement_analyze_platoons(
 		if (old_platoon_id != leader_platoon_id)
 		{
 			// remove myself
-			platoon->remove_vehicle_by_id(get_id());
+			platoon->remove_vehicle_by_id(get_id(), false);
 			// add myself to leader platoon
 			add_myself_to_leader_platoon(platoons.at(leader_platoon_id),
 				pointer_to_me_my_type);
@@ -209,7 +195,7 @@ bool PlatoonVehicle::implement_analyze_platoons(
 		{
 			std::clog << "t=" << get_time() << " id=" << get_id()
 				<< ": leaving platoon " << platoon->get_id() << "\n";
-			platoon->remove_vehicle_by_id(get_id());
+			platoon->remove_vehicle_by_id(get_id(), false);
 			//platoon.reset();
 			create_platoon(new_platoon_id, pointer_to_me_my_type);
 			new_platoon_created = true;

@@ -86,6 +86,7 @@
     <ClCompile Include="SynchronousStates.cpp" />
     <ClCompile Include="LeaderFirstStates.cpp" />
     <ClCompile Include="LastVehicleFirstStates.cpp" />
+    <ClCompile Include="LeaderFirstAndInvertStates.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ControlManager.h">
@@ -179,6 +180,7 @@
     <ClInclude Include="SynchronousStates.h" />
     <ClInclude Include="LeaderFirstStates.h" />
     <ClInclude Include="LastVehicleFirstStates.h" />
+    <ClInclude Include="LeaderFirstAndInvertStates.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Header Files">

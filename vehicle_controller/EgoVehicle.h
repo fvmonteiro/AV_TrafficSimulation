@@ -92,6 +92,7 @@ public:
 
 	double get_time() const;
 	long get_lane() const;
+	double get_distance_traveled() const;
 	long get_link() const;
 	double get_lateral_position() const;
 	RelativeLane get_preferred_relative_lane() const;
@@ -143,6 +144,7 @@ public:
 	VehicleState* get_state() const;
 
 	void set_lane(long lane);
+	void set_distance_traveled(double distance_traveled);
 	void set_link(long link);
 	void set_lateral_position(double lateral_position);
 	void set_velocity(double velocity);
@@ -413,6 +415,7 @@ private:
 	double desired_velocity{ 0 }; /* from VISSIM's desired
 								  velocity distribution */
 	std::vector<long> lane;
+	std::vector<double> distance_traveled;
 	std::vector<long> link;
 	long number_of_lanes{ 0 };
 	std::vector<RelativeLane> preferred_relative_lane;

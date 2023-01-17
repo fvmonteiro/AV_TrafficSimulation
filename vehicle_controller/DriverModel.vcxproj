@@ -249,6 +249,7 @@
     <ClCompile Include="InPlatoonLongitudinalController.cpp" />
     <ClCompile Include="LaneChangeGapsSafety.cpp" />
     <ClCompile Include="LastVehicleFirstStates.cpp" />
+    <ClCompile Include="LeaderFirstAndInvertStates.cpp" />
     <ClCompile Include="LeaderFirstStates.cpp" />
     <ClCompile Include="LongitudinalControllerWithTrafficLights.cpp" />
     <ClCompile Include="Platoon.cpp" />
@@ -297,6 +298,7 @@
     <ClInclude Include="InPlatoonLongitudinalController.h" />
     <ClInclude Include="LaneChangeGapsSafety.h" />
     <ClInclude Include="LastVehicleFirstStates.h" />
+    <ClInclude Include="LeaderFirstAndInvertStates.h" />
     <ClInclude Include="LeaderFirstStates.h" />
     <ClInclude Include="LongitudinalControllerWithTrafficLights.h" />
     <ClInclude Include="Platoon.h" />

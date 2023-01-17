@@ -4,28 +4,7 @@
 #include "PlatoonVehicle.h"
 
 void LeaderFirstLaneKeepingState
-::implement_handle_lane_keeping_intention()
-{
-	///* The leader waits for others to finish their maneuvers */
-	//if (platoon_vehicle->is_platoon_leader())
-	//{
-	//	std::shared_ptr<Platoon> platoon = platoon_vehicle->get_platoon();
-	//	bool are_all_vehicles_lane_keeping = true;
-	//	for (auto& map_item : platoon->get_vehicles())
-	//	{
-	//		VehicleState* veh_state = map_item.second->get_state();
-	//		if (*veh_state != LeaderFirstLaneKeepingState())
-	//		{
-	//			are_all_vehicles_lane_keeping = false;
-	//			break;
-	//		}
-	//	}
-	//	double desired_velocity = 
-	//		(are_all_vehicles_lane_keeping ? 1.0 : waiting_velocity_percent) 
-	//		* platoon->get_desired_velocity();
-	//	platoon_vehicle->set_desired_velocity(desired_velocity);
-	//}
-}
+::implement_handle_lane_keeping_intention() {}
 
 void LeaderFirstLaneKeepingState
 ::implement_handle_lane_change_intention()
@@ -126,7 +105,7 @@ void LeaderFirstClosingGapState
 		double platoon_desired_vel =
 			platoon_vehicle->get_platoon()->get_desired_velocity();
 		double desired_vel = platoon_desired_vel;
-		if (are_platoon_gaps_closed(
+		if (are_other_platoon_gaps_closed(platoon_vehicle->get_id(),
 			std::make_unique<LeaderFirstLaneKeepingState>()))
 		{
 			platoon_vehicle->set_state(
@@ -134,7 +113,7 @@ void LeaderFirstClosingGapState
 		}
 		else
 		{
-			desired_vel = 0.8 * platoon_desired_vel;
+			desired_vel = waiting_velocity_fraction * platoon_desired_vel;
 		}
 		platoon_vehicle->set_desired_velocity(desired_vel);
 	}
@@ -153,14 +132,6 @@ void LeaderFirstClosingGapState
 				std::make_unique<LeaderFirstLaneKeepingState>());
 		}
 	}
-
-	//if (platoon_vehicle->is_platoon_leader())
-	//{
-	//	std::clog << "t=" << platoon_vehicle->get_time()
-	//		<< " safe h=" << safe_time_headway
-	//		<< " current h=" << platoon_vehicle->get_current_desired_time_headway()
-	//		<< " gap error=" << platoon_vehicle->get_gap_error() << "\n";
-	//}
 }
 
 void LeaderFirstClosingGapState

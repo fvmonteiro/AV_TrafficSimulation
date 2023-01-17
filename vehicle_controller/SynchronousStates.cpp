@@ -65,7 +65,8 @@ void SynchronousLongidutinalAdjustmentState
 	platoon_vehicle->check_lane_change_gaps();
 	/* Check if everyone's gaps are safe */
 	bool can_start_lane_change = true;
-	for (auto& item : platoon_vehicle->get_platoon()->get_vehicles())
+	for (auto& item 
+		: platoon_vehicle->get_platoon()->get_vehicles_by_position())
 	{
 		LaneChangeGapsSafety& lcgs =
 			item.second->get_lane_change_gaps_safety();
@@ -93,6 +94,12 @@ void SynchronousLongidutinalAdjustmentState
 
 	if (can_start_lane_change)
 	{
+		if (platoon_vehicle->is_platoon_leader())
+		{
+			platoon_vehicle->get_platoon()->set_velocity_at_lane_change_start(
+				platoon_vehicle->get_velocity()
+			);
+		}
 		platoon_vehicle->set_state(
 			std::make_unique<SynchronousLaneChangingState>());
 	}
@@ -158,8 +165,9 @@ void SynchronousWaitingOthersState
 	}
 	else if (platoon_vehicle->is_platoon_leader())
 	{
-		double desired_velocity =
-			0.8 * platoon_vehicle->get_platoon()->get_desired_velocity();
+		double desired_velocity = waiting_velocity_fraction
+			* (platoon_vehicle->get_platoon()
+				->get_desired_velocity());
 		platoon_vehicle->set_desired_velocity(desired_velocity);
 	}
 }

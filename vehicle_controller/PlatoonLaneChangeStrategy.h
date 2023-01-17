@@ -116,15 +116,19 @@ private:
 	};
 };
 
-//
-//class LeaderFirstAndInvertStrategy : public PlatoonLaneChangeStrategy
-//{
-//private:
-//	LaneChangeState implement_update_vehicle_lane_change_state(
-//		long veh_id, bool should_change_lane) const override;
-//	bool implement_can_vehicle_start_lane_change(
-//		const PlatoonVehicle& platoon_vehicle,
-//		std::unordered_map<long, bool> vehicles_lane_change_gap_status)
-//		const override;
-//	bool implement_can_vehicle_leave_platoon(long veh_id) const override;
-//};
+class LeaderFirstAndInvertStrategy : public PlatoonLaneChangeStrategy
+{
+private:
+public:
+	LeaderFirstAndInvertStrategy()
+		: PlatoonLaneChangeStrategy("leader first and invert") {};
+private:
+	bool implement_can_vehicle_leave_platoon(
+		const PlatoonVehicle& platoon_vehicle) const override;
+	std::unique_ptr<VehicleState>
+		implement_get_new_lane_keeping_state() const override;
+	long implement_get_assisted_vehicle_id(
+		const PlatoonVehicle& platoon_vehicle) const override;
+	bool implement_can_adjust_to_dest_lane_leader(
+		const PlatoonVehicle& platoon_vehicle) const override;
+};

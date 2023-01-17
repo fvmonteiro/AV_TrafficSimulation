@@ -4,6 +4,7 @@
 #include "PlatoonVehicleState.h"
 #include "SynchronousStates.h"
 #include "LeaderFirstStates.h"
+#include "LeaderFirstAndInvertStates.h"
 #include "LastVehicleFirstStates.h"
 #include "NearbyVehicle.h"
 
@@ -40,7 +41,7 @@ bool PlatoonLaneChangeStrategy::can_adjust_to_dest_lane_leader(
 
 void PlatoonLaneChangeStrategy::set_state_of_all_vehicles()
 {
-	for (auto& item : platoon->get_vehicles())
+	for (auto& item : platoon->get_vehicles_by_position())
 	{
 		item.second->set_state(implement_get_new_lane_keeping_state());
 	}
@@ -202,3 +203,57 @@ long LastVehicleFirstStrategy::implement_get_assisted_vehicle_id(
 
 /* ------------------------------------------------------------------------ */
 /* Leader First and Invert Strategy --------------------------------------- */
+
+bool LeaderFirstAndInvertStrategy::implement_can_vehicle_leave_platoon(
+	const PlatoonVehicle& platoon_vehicle) const
+{
+	if (platoon_vehicle.is_platoon_leader()
+		|| (*platoon_vehicle.get_state()
+			== LastVehicleFirstLaneChangingState()))
+	{
+		return false;
+	}
+
+	long precending_platoon_vehicle_id =
+		platoon_vehicle.get_preceding_vehicle_in_platoon()->get_id();
+	std::shared_ptr<NearbyVehicle> preceding_platoon_veh =
+		platoon_vehicle.get_nearby_vehicle_by_id(
+			precending_platoon_vehicle_id
+		);
+	/* Leave the platoon if the supposed platoon preceding vehicle
+	is "out of sight" */
+	return preceding_platoon_veh == nullptr;
+}
+
+std::unique_ptr<VehicleState> LeaderFirstAndInvertStrategy
+::implement_get_new_lane_keeping_state() const
+{
+	return std::make_unique<LeaderFirstAndInvertLaneKeepingState>();
+}
+
+long LeaderFirstAndInvertStrategy::implement_get_assisted_vehicle_id(
+	const PlatoonVehicle& platoon_vehicle) const
+{
+	if (!platoon_vehicle.is_last_platoon_vehicle()
+		&& (*platoon_vehicle.get_state() 
+			== LeaderFirstAndInvertCreatingGapState()))
+	{
+		std::shared_ptr<PlatoonVehicle> follower =
+			platoon_vehicle.get_following_vehicle_in_platoon();
+		if (*follower->get_state()
+			== LeaderFirstAndInvertLongidutinalAdjustmentState())
+		{
+			return follower->get_id();
+		}
+	}
+	return 0;
+}
+
+bool LeaderFirstAndInvertStrategy::implement_can_adjust_to_dest_lane_leader(
+	const PlatoonVehicle& platoon_vehicle) const
+{
+	/* We only adjust to the destination lane leader if it is not 
+	in the platoon */
+	return platoon->get_vehicle_by_id(
+		platoon_vehicle.get_dest_lane_leader_id()) == nullptr;
+}

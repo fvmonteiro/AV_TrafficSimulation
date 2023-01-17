@@ -206,6 +206,8 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
         vehicles[current_vehicle_id]->set_lane(long_value);
         return 1;
     case DRIVER_DATA_VEH_ODOMETER           :
+        vehicles[current_vehicle_id]->set_distance_traveled(double_value);
+        return 1;
     case DRIVER_DATA_VEH_LANE_ANGLE         :
         return 1;
     case DRIVER_DATA_VEH_LATERAL_POSITION   :
@@ -735,7 +737,7 @@ DRIVERMODEL_API  int  DriverModelExecuteCommand (long number)
             long current_platoon_id =
                 vehicles[current_vehicle_id]->get_platoon()->get_id();
             platoons[current_platoon_id]->remove_vehicle_by_id(
-                current_vehicle_id);
+                current_vehicle_id, true);
             if (platoons[current_platoon_id]->is_empty())
             {
                 platoons.erase(current_platoon_id);

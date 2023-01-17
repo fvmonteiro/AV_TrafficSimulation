@@ -202,7 +202,7 @@ private:
 	/*ConnectedGains connected_real_following_gains{ 0.2, 2.3, 0.13, 1.3 };*/
 	// Values focused on platoon vehicles TODO: separate controllers
 	// gains will probably have to be tuned
-	ConnectedGains connected_real_following_gains{ 0.2, 1.5, 0.13, 1.3 };
+	ConnectedGains connected_real_following_gains{ 0.5, 2.2, 0.13, 1.3 };
 	ConnectedGains connected_virtual_following_gains{ 0.4, 2.3, 0.13, 1.3 };
 	ConnectedGains platoon_following_gains{ 0.2, 2.3, 0.13, 1.3 };
 	VelocityControllerGains desired_velocity_controller_gains{
@@ -210,7 +210,7 @@ private:
 	VelocityControllerGains adjustment_velocity_controller_gains{
 		1, 0.1, 0.03 };
 	/* The time headway used by the end-of-lane controller */
-	double time_headway_to_end_of_lane{ 1.0 };
+	double time_headway_to_end_of_lane{ 0.5 };
 
 	/* Colors to make debugging visually easier
 	General rule: bright colors represent vel control,

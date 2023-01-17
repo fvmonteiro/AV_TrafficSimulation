@@ -85,6 +85,10 @@ long EgoVehicle::get_lane() const
 {
 	return lane.back();
 }
+double EgoVehicle::get_distance_traveled() const
+{
+	return distance_traveled.back();
+}
 long EgoVehicle::get_link() const
 {
 	return link.back();
@@ -231,6 +235,10 @@ VehicleState* EgoVehicle::get_state() const
 void EgoVehicle::set_lane(long lane)
 {
 	this->lane.push_back(lane);
+}
+void EgoVehicle::set_distance_traveled(double distance_traveled)
+{
+	this->distance_traveled.push_back(distance_traveled);
 }
 void EgoVehicle::set_link(long link)
 {
