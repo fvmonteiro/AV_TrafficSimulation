@@ -196,9 +196,9 @@ public:
 	/* Returns true if a new platoon was created. */
 	bool analyze_platoons(
 		std::unordered_map<int, std::shared_ptr<Platoon>>& platoons,
-		std::shared_ptr<EgoVehicle> pointer_to_me, long new_platoon_id)
+		/*std::shared_ptr<EgoVehicle> pointer_to_me,*/ long new_platoon_id)
 	{
-		return implement_analyze_platoons(platoons, pointer_to_me,
+		return implement_analyze_platoons(platoons, /*pointer_to_me,*/
 			new_platoon_id);
 	};
 	//bool is_cutting_in(const NearbyVehicle& nearby_vehicle) const;
@@ -221,7 +221,7 @@ public:
 	vehicle's id. The signal of the lane change request indicates whether
 	it is a right (-1) or left (+1) lane change. Only connected vehicles
 	can create a lane change request*/
-	long get_lane_change_request();
+	long get_lane_change_request() const;
 
 	bool has_destination_lane_leader() const;
 	bool has_destination_lane_follower() const;
@@ -355,7 +355,7 @@ private:
 	lane change. Returns -1 for right lane changes, +1 for left lane
 	changes and 0 for lane keeping. */
 	virtual bool implement_check_lane_change_gaps() = 0;
-	virtual long create_lane_change_request() = 0;
+	virtual long create_lane_change_request() const = 0;
 	virtual void set_traffic_light_information(int traffic_light_id,
 		double distance) {};
 	virtual bool implement_has_next_traffic_light() const { return false; };
@@ -382,7 +382,7 @@ private:
 	virtual void implement_analyze_nearby_vehicles();
 	virtual bool implement_analyze_platoons(
 		std::unordered_map<int, std::shared_ptr<Platoon>>& platoons,
-		std::shared_ptr<EgoVehicle> pointer_to_me,
+		/*std::shared_ptr<EgoVehicle> pointer_to_me,*/
 		long new_platoon_id) {
 		return false;
 	};

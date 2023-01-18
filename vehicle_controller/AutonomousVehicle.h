@@ -73,7 +73,7 @@ private:
 	//void set_desired_lane_change_direction() override;
 	bool give_lane_change_control_to_vissim() const override;
 	//bool implement_can_start_lane_change() override;
-	long create_lane_change_request() override { return 0; };
+	long create_lane_change_request() const override { return 0; };
 	double compute_accepted_lane_change_gap(
 		std::shared_ptr<NearbyVehicle> nearby_vehicle) override;
 	/* Time-headway based gap (hv + d) minus a term based on

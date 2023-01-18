@@ -18,7 +18,8 @@ public:
 	long get_assisted_vehicle_id(const PlatoonVehicle& platoon_vehicle) const;
 	bool can_adjust_to_dest_lane_leader(
 		const PlatoonVehicle& platoon_vehicle) const;
-	void set_state_of_all_vehicles();
+	void set_state_of_all_vehicles() const;
+	long create_lane_change_request_for_vehicle(long veh_id) const;
 
 	friend std::ostream& operator<< (std::ostream& out,
 		const PlatoonLaneChangeStrategy& platoon_lc_strategy)
@@ -45,6 +46,8 @@ private:
 		const PlatoonVehicle& platoon_vehicle) const = 0;
 };
 
+/* ------------------------------------------------------------------------ */
+
 class NoStrategy : public PlatoonLaneChangeStrategy
 {
 public:
@@ -64,6 +67,8 @@ private:
 	};
 };
 
+/* ------------------------------------------------------------------------ */
+
 class SynchronousStrategy: public PlatoonLaneChangeStrategy
 {
 public:
@@ -80,6 +85,8 @@ private:
 	bool implement_can_adjust_to_dest_lane_leader(
 		const PlatoonVehicle& platoon_vehicle) const override;
 };
+
+/* ------------------------------------------------------------------------ */
 
 class LeaderFirstStrategy: public PlatoonLaneChangeStrategy
 {
@@ -98,6 +105,8 @@ private:
 		const PlatoonVehicle& platoon_vehicle) const override;
 };
 
+/* ------------------------------------------------------------------------ */
+
 class LastVehicleFirstStrategy : public PlatoonLaneChangeStrategy
 {
 public:
@@ -115,6 +124,8 @@ private:
 		return true;
 	};
 };
+
+/* ------------------------------------------------------------------------ */
 
 class LeaderFirstAndInvertStrategy : public PlatoonLaneChangeStrategy
 {

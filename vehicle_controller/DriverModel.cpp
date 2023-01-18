@@ -734,6 +734,8 @@ DRIVERMODEL_API  int  DriverModelExecuteCommand (long number)
         }
         if (vehicles[current_vehicle_id]->is_in_a_platoon())
         {
+            std::clog << "t=" << current_time 
+                << " Erasing veh. " << current_vehicle_id << std::endl;
             long current_platoon_id =
                 vehicles[current_vehicle_id]->get_platoon()->get_id();
             platoons[current_platoon_id]->remove_vehicle_by_id(
@@ -762,7 +764,7 @@ DRIVERMODEL_API  int  DriverModelExecuteCommand (long number)
         vehicles[current_vehicle_id]->analyze_nearby_vehicles();
 
         if (vehicles[current_vehicle_id]->analyze_platoons(platoons,
-            vehicles[current_vehicle_id], platoon_id))
+            /*vehicles[current_vehicle_id],*/ platoon_id))
         {
             platoons[platoon_id] =
                 vehicles[current_vehicle_id]->get_platoon();

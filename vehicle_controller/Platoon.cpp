@@ -4,7 +4,7 @@
 #include "Platoon.h"
 #include "PlatoonVehicle.h"
 
-Platoon::Platoon(long id, std::shared_ptr<PlatoonVehicle> leader,
+Platoon::Platoon(long id, PlatoonVehicle* leader,
 	bool verbose):
 	id {id}, verbose{verbose}
 {
@@ -14,20 +14,20 @@ Platoon::Platoon(long id, std::shared_ptr<PlatoonVehicle> leader,
 
 Platoon::~Platoon()
 {
-	if (verbose)
-	{
+	/*if (verbose)
+	{*/
 		std::clog << "Inside platoon " << id << " destructor\n"
 			<< "Vehs in platoon: " << vehicles_by_position.size()
 			<< std::endl;
-	}
+	//}
 }
 
-std::shared_ptr<PlatoonVehicle> Platoon::get_platoon_leader() const
+const PlatoonVehicle* Platoon::get_platoon_leader() const
 {
 	return is_empty() ? nullptr : vehicles_by_position.at(leader_idx);
 }
 
-std::shared_ptr<PlatoonVehicle> Platoon::get_last_vehicle() const
+const PlatoonVehicle* Platoon::get_last_vehicle() const
 {
 	return is_empty() ? nullptr : vehicles_by_position.at(last_veh_idx);
 }
@@ -49,7 +49,7 @@ long Platoon::get_last_veh_id() const
 
 long Platoon::get_preceding_vehicle_id(long veh_id) const
 {
-	std::shared_ptr<PlatoonVehicle> preceding_vehicle =
+	const PlatoonVehicle* preceding_vehicle =
 		get_preceding_vehicle(veh_id);
 	return preceding_vehicle != nullptr ? preceding_vehicle->get_id() : 0;
 }
@@ -108,8 +108,7 @@ void Platoon::set_strategy(int strategy_number)
 	lane_change_strategy->set_state_of_all_vehicles();
 }
 
-void Platoon::add_leader(
-	 std::shared_ptr <PlatoonVehicle> new_vehicle)
+void Platoon::add_leader(PlatoonVehicle* new_vehicle)
 {
 	if (verbose)
 	{
@@ -120,8 +119,7 @@ void Platoon::add_leader(
 	add_vehicle(leader_idx, new_vehicle);
 }
 
-void Platoon::add_last_vehicle(
-	std::shared_ptr <PlatoonVehicle> new_vehicle)
+void Platoon::add_last_vehicle(PlatoonVehicle* new_vehicle)
 {
 	if (verbose)
 	{
@@ -137,16 +135,18 @@ void Platoon::remove_vehicle_by_id(long veh_id, bool is_out_of_simulation)
 	if (vehicle_id_to_position.find(veh_id) !=
 		vehicle_id_to_position.end())
 	{
-		if (verbose)
-		{
+		/*if (verbose)
+		{*/
 			std::clog << "Platoon " << get_id() << ", removing veh "
 				<< veh_id << ", which is in position "
 				<< vehicle_id_to_position.at(veh_id) << std::endl;
-		}
+		//}
 		
 		long position_to_remove = vehicle_id_to_position.at(veh_id);
 		remove_vehicle_by_position(position_to_remove, veh_id,
 			is_out_of_simulation);
+
+		std::clog << "Platoon after removal " << *this << std::endl;
 	}
 	else
 	{
@@ -156,44 +156,12 @@ void Platoon::remove_vehicle_by_id(long veh_id, bool is_out_of_simulation)
 	}
 }
 
-//bool Platoon::check_all_vehicles_lane_change_gaps()
-//{
-//	for (auto& v : vehicles)
-//	{
-//		if (!v.second->get_lane_change_gaps_safety().is_lane_change_safe()) 
-//		{
-//			std::clog << "veh " << v.second->get_id() << " gaps not safe\n";
-//			return false;
-//		}
-//	}
-//	return true;
-//}
-
-//void Platoon::set_vehicle_lane_change_state(PlatoonVehicle& platoon_vehicle, 
-//	bool should_change_lane)
-//{
-//	lane_change_strategy->update_vehicle_lane_change_state(
-//		platoon_vehicle, should_change_lane, vehicles_lane_change_states);
-//}
-
-//void Platoon::set_vehicle_lane_change_gap_status(long veh_id, bool is_safe)
-//{
-//	vehicles_lane_change_gap_status[veh_id] = is_safe;
-//}
-
-//bool Platoon::can_vehicle_start_lane_change(
-//	const PlatoonVehicle& platoon_vehicle)
-//{
-//	return lane_change_strategy->can_vehicle_start_lane_change(
-//		platoon_vehicle, vehicles_lane_change_gap_status);
-//}
-
-std::shared_ptr<PlatoonVehicle> Platoon::get_vehicle_by_id(long veh_id) const
+const PlatoonVehicle* Platoon::get_vehicle_by_id(long veh_id) const
 {
 	if (vehicle_id_to_position.find(veh_id) == vehicle_id_to_position.end())
 	{
-		std::clog << "Platoon: " << *this << "\nTrying to get veh "
-			<< veh_id << std::endl;
+		/*std::clog << "Platoon: " << *this << "\nTrying to get veh "
+			<< veh_id << std::endl;*/
 		return nullptr;
 	}
 	return vehicles_by_position.at(vehicle_id_to_position.at(veh_id));
@@ -221,12 +189,14 @@ void Platoon::remove_vehicle_by_position(int idx_in_platoon, long veh_id,
 	
 	/* In case the removed vehicle was the leader or the last vehicle,
 	we update the respective indices */
-	while (vehicles_by_position.find(leader_idx) == vehicles_by_position.end())
+	while (vehicles_by_position.find(leader_idx) 
+		== vehicles_by_position.end())
 	{
 		leader_idx--;
 		if (leader_idx < last_veh_idx) return; // platoon empty!
 	}
-	while (vehicles_by_position.find(last_veh_idx) == vehicles_by_position.end())
+	while (vehicles_by_position.find(last_veh_idx) 
+		== vehicles_by_position.end())
 	{
 		last_veh_idx++;
 		if (last_veh_idx > leader_idx) return; // platoon empty!
@@ -239,7 +209,7 @@ void Platoon::remove_vehicle_by_position(int idx_in_platoon, long veh_id,
 }
 
 void Platoon::add_vehicle(int idx_in_platoon,
-	std::shared_ptr <PlatoonVehicle> new_vehicle)
+	PlatoonVehicle* new_vehicle)
 {
 	long veh_id = new_vehicle->get_id();
 	vehicles_by_position.insert({ idx_in_platoon, new_vehicle });
@@ -254,22 +224,24 @@ void Platoon::add_vehicle(int idx_in_platoon,
 		PlatoonLaneChangeStrategy::LaneChangeState::lane_keeping });*/
 }
 
-std::shared_ptr<PlatoonVehicle> Platoon::get_preceding_vehicle(
+const PlatoonVehicle* Platoon::get_preceding_vehicle(
 	long veh_id) const
 {
 	int veh_position = vehicle_id_to_position.at(veh_id);
-	while (vehicles_by_position.find(++veh_position) == vehicles_by_position.end())
+	while (vehicles_by_position.find(++veh_position) 
+		== vehicles_by_position.end())
 	{
 		if (veh_position > leader_idx) return nullptr;
 	}
 	return vehicles_by_position.at(veh_position);
 }
 
-std::shared_ptr<PlatoonVehicle> Platoon::get_following_vehicle(
+const PlatoonVehicle* Platoon::get_following_vehicle(
 	long veh_id) const
 {
 	int veh_position = vehicle_id_to_position.at(veh_id);
-	while (vehicles_by_position.find(--veh_position) == vehicles_by_position.end())
+	while (vehicles_by_position.find(--veh_position) 
+		== vehicles_by_position.end())
 	{
 		if (veh_position < last_veh_idx) return nullptr;
 	}
@@ -320,15 +292,25 @@ void Platoon::reorder_vehicles()
 	std::clog << "Platoon vehicles reordered\n";
 }
 
+long Platoon::create_lane_change_request_for_vehicle(long veh_id) const
+{
+	return 
+		lane_change_strategy->create_lane_change_request_for_vehicle(veh_id);
+}
+
 std::ostream& operator<< (std::ostream& out, const Platoon& platoon)
 {
 	out << "Platoon " << platoon.get_id()
-		<< ". Total vehs " << platoon.vehicles_by_position.size() << ". (pos, veh id) : " ;
+		//<< ", v_r=" << platoon.get_desired_velocity()
+		<< ", # vehs " << platoon.vehicles_by_position.size() 
+		<< ". (pos, veh id) : " ;
 	for (int i = platoon.last_veh_idx; i <= platoon.leader_idx; i++)
 	{
-		if (platoon.vehicles_by_position.find(i) != platoon.vehicles_by_position.end())
+		if (platoon.vehicles_by_position.find(i) 
+			!= platoon.vehicles_by_position.end())
 		{
-			out << "(" << i << ", " << platoon.vehicles_by_position.at(i)->get_id()
+			out << "(" << i << ", " 
+				<< platoon.vehicles_by_position.at(i)->get_id()
 				<< "), ";
 		}
 		else

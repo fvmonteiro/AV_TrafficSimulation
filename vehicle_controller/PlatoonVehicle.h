@@ -20,8 +20,8 @@ public:
 
 	bool can_start_adjustment_to_destination_lane_leader() const;
 
-	std::shared_ptr<PlatoonVehicle> get_preceding_vehicle_in_platoon() const;
-	std::shared_ptr<PlatoonVehicle> get_following_vehicle_in_platoon() const;
+	const PlatoonVehicle* get_preceding_vehicle_in_platoon() const;
+	const PlatoonVehicle* get_following_vehicle_in_platoon() const;
 
 protected:
 
@@ -30,7 +30,7 @@ protected:
 	/* Returns true if the vehicle creates a platoon for itself. */
 	bool implement_analyze_platoons(
 		std::unordered_map<int, std::shared_ptr<Platoon>>& platoons,
-		std::shared_ptr<EgoVehicle> pointer_to_me, 
+		/*std::shared_ptr<EgoVehicle> pointer_to_me, */
 		long new_platoon_id) override;
 private:
 	std::shared_ptr<Platoon> platoon{ nullptr };
@@ -54,6 +54,7 @@ private:
 		const NearbyVehicle& nearby_vehicle) const override;
 	double compute_lane_changing_desired_time_headway(
 		const NearbyVehicle& nearby_vehicle) const override;
+	long create_lane_change_request() const override;
 	/* SCENARIO SPECIFIC: the platoon vehicles always start at the in ramp, 
 	and they try to change lanes as soon as they enter the highway */
 	void set_desired_lane_change_direction() override;
@@ -64,11 +65,11 @@ private:
 	// Check if vehicles in our platoon need gap generation
 	void find_cooperation_request_from_platoon();
 
-	void create_platoon(long platoon_id,
-		std::shared_ptr<PlatoonVehicle> pointer_to_me);
+	void create_platoon(long platoon_id//,
+		/*std::shared_ptr<PlatoonVehicle> pointer_to_me*/);
 	void add_myself_to_leader_platoon(
-		std::shared_ptr<Platoon> leader_platoon,
-		std::shared_ptr<PlatoonVehicle> pointer_to_me);
+		std::shared_ptr<Platoon> leader_platoon//,
+		/*std::shared_ptr<PlatoonVehicle> pointer_to_me*/);
 
 	void compute_platoon_safe_gap_parameters();
 };

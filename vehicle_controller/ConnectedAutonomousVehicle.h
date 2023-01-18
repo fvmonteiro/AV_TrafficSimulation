@@ -58,7 +58,7 @@ private:
 		const NearbyVehicle& nearby_vehicle) const override;
 	virtual double compute_vehicle_following_gap_for_lane_change(
 		const NearbyVehicle& nearby_vehicle) const override;
-	long create_lane_change_request() override;
+	long create_lane_change_request() const override;
 
 	/* Returns true if a vehicle is asking to merge in front of us and
 	[to do] modifies nearby_vehicle in place to point to the proper

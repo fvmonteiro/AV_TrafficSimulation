@@ -25,6 +25,7 @@ EgoVehicle::EgoVehicle(long id, VehicleType type, double desired_velocity,
 	is_connected { is_connected },
 	simulation_time_step{ simulation_time_step },
 	creation_time{ creation_time },
+	current_time{ creation_time },
 	verbose{ verbose },
 	tau_d{ std::exp(-simulation_time_step / tau) }
 {
@@ -455,7 +456,7 @@ double EgoVehicle::compute_gap(
 	}
 }
 
-long EgoVehicle::get_lane_change_request()
+long EgoVehicle::get_lane_change_request() const
 {
 	return create_lane_change_request();
 }
@@ -586,7 +587,6 @@ void EgoVehicle::set_state(std::unique_ptr<VehicleState> new_state)
 		std::clog << " to " << *new_state << std::endl;
 	//}
 	state = std::move(new_state);
-
 	pass_this_to_state();
 }
 

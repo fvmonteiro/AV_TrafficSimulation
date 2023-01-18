@@ -48,7 +48,7 @@ implement_get_assisted_vehicle() const
 //	peek_nearby_vehicles()->set_type(nv_type, );
 //}
 
-long ConnectedAutonomousVehicle::create_lane_change_request()
+long ConnectedAutonomousVehicle::create_lane_change_request() const
 {
 	return desired_lane_change_direction.to_int() * get_id();
 }
@@ -125,10 +125,7 @@ void ConnectedAutonomousVehicle::update_assisted_vehicle(
 {
 	if (has_assisted_vehicle())
 	{
-		//double new_max_brake = assisted_vehicle->get_max_brake();
 		if ((old_assisted_vehicle == nullptr)
-			/* || (std::abs(new_max_brake
-				- old_assisted_vehicle->get_max_brake()) > 0.5)*/
 			|| (old_assisted_vehicle->get_id() != assisted_vehicle->get_id()))
 		{
 			double h_to_assisted_vehicle = std::max(0.0,

@@ -10,11 +10,11 @@ void LeaderFirstAndInvertLaneKeepingState
 void LeaderFirstAndInvertLaneKeepingState
 ::implement_handle_lane_change_intention()
 {
+	bool change_state = false;
+
 	if (platoon_vehicle->is_platoon_leader())
 	{
-		platoon_vehicle->update_origin_lane_controller();
-		platoon_vehicle->set_state(std::make_unique<
-			LeaderFirstAndInvertLongidutinalAdjustmentState>());
+		change_state = true;
 	}
 	else
 	{
@@ -24,11 +24,16 @@ void LeaderFirstAndInvertLaneKeepingState
 			->get_preceding_vehicle_in_platoon()->get_state());
 		if (leader_state > LeaderFirstAndInvertLaneChangingState())
 		{
-			platoon_vehicle->update_origin_lane_controller();
-			platoon_vehicle->set_state(
-				std::make_unique<
-				LeaderFirstAndInvertLongidutinalAdjustmentState>());
+			change_state = true;
 		}
+	}
+
+	if (change_state)
+	{
+		platoon_vehicle->update_origin_lane_controller();
+		platoon_vehicle->set_state(
+			std::make_unique<
+			LeaderFirstAndInvertLongidutinalAdjustmentState>());
 	}
 }
 
@@ -54,7 +59,7 @@ void LeaderFirstAndInvertLongidutinalAdjustmentState
 void LeaderFirstAndInvertLongidutinalAdjustmentState
 ::implement_handle_lane_change_intention()
 {
-	std::shared_ptr<PlatoonVehicle> preceding_vehicle = 
+	const PlatoonVehicle* preceding_vehicle =
 		platoon_vehicle->get_preceding_vehicle_in_platoon();
 	long dest_lane_follower_id = 
 		platoon_vehicle->get_dest_lane_follower_id();
@@ -106,15 +111,11 @@ void LeaderFirstAndInvertLaneChangingState
 void LeaderFirstAndInvertCreatingGapState::
 implement_handle_lane_keeping_intention()
 {
-	std::shared_ptr<PlatoonVehicle> following_vehicle
+	const PlatoonVehicle* following_vehicle
 		= platoon_vehicle->get_following_vehicle_in_platoon();
-	if (following_vehicle == nullptr) // last platoon vehicle
-	{
-		platoon_vehicle->set_state(
-			std::make_unique<LeaderFirstAndInvertClosingGapState>());
-	}
-	else if (*following_vehicle->get_state()
-			> LeaderFirstAndInvertLaneChangingState())
+	if (following_vehicle == nullptr // last platoon vehicle
+		|| *following_vehicle->get_state()
+			> LeaderFirstAndInvertLaneChangingState()) 
 	{
 		platoon_vehicle->set_state(
 			std::make_unique<LeaderFirstAndInvertClosingGapState>());
@@ -134,9 +135,7 @@ implement_handle_lane_change_intention()
 void LeaderFirstAndInvertClosingGapState::
 implement_handle_lane_keeping_intention()
 {
-	/* Keep monitoring if vehicle is overtaken by another platoon vehicle?
-	In this case, must not go back to lane keeping before all vehicles 
-	have changed lanes */
+	bool change_state = false;
 
 	/* Given the inversion of positions, the vehicle at the last index
 	is now the vehicle ahead of the platoon */
@@ -149,8 +148,7 @@ implement_handle_lane_keeping_intention()
 		{
 			platoon_vehicle->set_desired_velocity(platoon_desired_vel);
 			platoon_vehicle->get_platoon()->reorder_vehicles();
-			platoon_vehicle->set_state(
-				std::make_unique<LeaderFirstAndInvertLaneKeepingState>());
+			change_state = true;
 		}
 		else
 		{
@@ -177,9 +175,14 @@ implement_handle_lane_keeping_intention()
 			&& is_velocity_synchronized
 			&& is_following_platoon_vehicle_in_my_lane)
 		{
-			platoon_vehicle->set_state(
-				std::make_unique<LeaderFirstAndInvertLaneKeepingState>());
+			change_state = true;
 		}
+	}
+
+	if (change_state)
+	{
+		platoon_vehicle->set_state(
+			std::make_unique<LeaderFirstAndInvertLaneKeepingState>());
 	}
 }
 

@@ -13,9 +13,9 @@ public:
 
 	Platoon() = default;
 	/*Platoon(long id) : id{ id } {};*/
-	Platoon(long id, std::shared_ptr<PlatoonVehicle> leader) :
+	Platoon(long id, PlatoonVehicle* leader) :
 		Platoon(id, leader, false) {};
-	Platoon(long id, std::shared_ptr<PlatoonVehicle> leader,
+	Platoon(long id, PlatoonVehicle* leader,
 		bool verbose);
 	~Platoon();
 
@@ -24,20 +24,20 @@ public:
 	double get_velocity_at_lane_change_start() const {
 		return velocity_at_lane_change_start; };
 	size_t get_size() const { return vehicles_by_position.size(); };
-	std::unordered_map<int, std::shared_ptr<PlatoonVehicle>>
+	const std::unordered_map<int, PlatoonVehicle*>&
 		get_vehicles_by_position() const { return vehicles_by_position; };
 
 	long get_leader_id() const;
 	long get_last_veh_id() const;
 	long get_preceding_vehicle_id(long veh_id) const;
-	std::shared_ptr<PlatoonVehicle> get_preceding_vehicle(
+	const PlatoonVehicle* get_preceding_vehicle(
 		long veh_id) const;
-	std::shared_ptr<PlatoonVehicle> get_following_vehicle(
+	const PlatoonVehicle* get_following_vehicle(
 		long veh_id) const;
 	long get_assisted_vehicle_id(long veh_id) const;
-	std::shared_ptr<PlatoonVehicle> get_platoon_leader() const;
-	std::shared_ptr<PlatoonVehicle> get_last_vehicle() const;
-	std::shared_ptr<PlatoonVehicle> get_vehicle_by_id(long veh_id) const;
+	const PlatoonVehicle* get_platoon_leader() const;
+	const PlatoonVehicle* get_last_vehicle() const;
+	const PlatoonVehicle* get_vehicle_by_id(long veh_id) const;
 
 	void set_verbose(bool verbose) { this->verbose = verbose; };
 	void set_velocity_at_lane_change_start(double velocity) {
@@ -46,14 +46,15 @@ public:
 	void set_strategy(int strategy_number);
 
 	bool is_empty() const;
-	void add_leader(std::shared_ptr<PlatoonVehicle> new_vehicle);
-	void add_last_vehicle(std::shared_ptr<PlatoonVehicle> new_vehicle);
+	void add_leader(PlatoonVehicle* new_vehicle);
+	void add_last_vehicle(PlatoonVehicle* new_vehicle);
 	void remove_vehicle_by_id(long veh_id, bool is_out_of_simulation);
 	bool can_vehicle_start_adjustment_to_dest_lane_leader(long veh_id) const;
 	//bool check_all_vehicles_lane_change_gaps();
 	bool can_vehicle_leave_platoon(
 		const PlatoonVehicle& platoon_vehicle) const;
 	void reorder_vehicles();
+	long create_lane_change_request_for_vehicle(long veh_id) const;
 	/* Checks whether a non platoon vehicle inserted itself 
 	in the platoon. Does not checks during lane changes */
 	/*bool has_a_vehicle_cut_in_the_platoon(
@@ -83,15 +84,16 @@ private:
 	double velocity_at_lane_change_start{ 0.0 };
 	bool verbose{ false };
 	std::unique_ptr<PlatoonLaneChangeStrategy> lane_change_strategy{ 
-		nullptr };
+		//nullptr };
+		std::make_unique<NoStrategy>() };
 	/* Keys are the vehicle position in the platoon */
-	std::unordered_map<int, std::shared_ptr<PlatoonVehicle>> 
+	std::unordered_map<int, PlatoonVehicle*> 
 		vehicles_by_position;
 	std::unordered_map<long, int> vehicle_id_to_position;
 
 	void remove_vehicle_by_position(int idx_in_platoon, long veh_id,
 		bool is_out_of_simulation);
 	void add_vehicle(int idx_in_platoon, 
-		std::shared_ptr <PlatoonVehicle> new_vehicle);
+		PlatoonVehicle* new_vehicle);
 };
 

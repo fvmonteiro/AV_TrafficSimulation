@@ -21,7 +21,7 @@ protected:
 	/* Checks if all platoon vehicles, except the one identified in the 
 	parameter, are in the lane keeping state. */
 	bool are_other_platoon_gaps_closed(long veh_id, 
-		std::unique_ptr<PlatoonVehicleState>lane_keeping_state);
+		std::unique_ptr<PlatoonVehicleState> lane_keeping_state);
 	bool has_platoon_changed_lanes(std::unique_ptr<PlatoonVehicleState>
 		lane_changing_state);
 

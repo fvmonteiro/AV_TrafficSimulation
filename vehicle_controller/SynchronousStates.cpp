@@ -149,8 +149,10 @@ void SynchronousLaneChangingState
 void SynchronousWaitingOthersState
 ::implement_handle_lane_keeping_intention()
 {
+	bool change_state = false;
 	auto follower = platoon_vehicle->get_platoon()
 		->get_following_vehicle(platoon_vehicle->get_id());
+	
 	if (follower == nullptr // last platoon vehicle
 		|| (*follower->get_state()) == SynchronousLaneKeepingState())
 	{
@@ -160,8 +162,7 @@ void SynchronousWaitingOthersState
 				platoon_vehicle->get_platoon()->get_desired_velocity());
 		}
 		platoon_vehicle->update_origin_lane_controller();
-		platoon_vehicle->set_state(
-			std::make_unique<SynchronousClosingGapState>());
+		change_state = true;
 	}
 	else if (platoon_vehicle->is_platoon_leader())
 	{
@@ -169,6 +170,12 @@ void SynchronousWaitingOthersState
 			* (platoon_vehicle->get_platoon()
 				->get_desired_velocity());
 		platoon_vehicle->set_desired_velocity(desired_velocity);
+	}
+
+	if (change_state)
+	{
+		platoon_vehicle->set_state(
+			std::make_unique<SynchronousClosingGapState>());
 	}
 }
 

@@ -8,25 +8,29 @@ void LastVehicleFirstLaneKeepingState
 void LastVehicleFirstLaneKeepingState
 ::implement_handle_lane_change_intention()
 {
+	bool change_state = false;
 	if (platoon_vehicle->is_last_platoon_vehicle())
 	{
-		platoon_vehicle->update_origin_lane_controller();
-		platoon_vehicle->set_state(
-			std::make_unique<LastVehicleFirstLongidutinalAdjustmentState>());
+		change_state = true;
 	}
 	else
 	{
 		/* Platoon vehicle only starts the longitudinal adjustment
 		once the vehicle behind it has finished the lane change */
-		const VehicleState& follower_state = *(platoon_vehicle
-			->get_following_vehicle_in_platoon()->get_state());
-		if (follower_state > LastVehicleFirstLaneChangingState())
+		const VehicleState* follower_state = platoon_vehicle
+			->get_following_vehicle_in_platoon()->get_state();
+		if (*follower_state > LastVehicleFirstLaneChangingState())
 		{
-			platoon_vehicle->update_origin_lane_controller();
-			platoon_vehicle->set_state(
-				std::make_unique<
-				LastVehicleFirstLongidutinalAdjustmentState>());
+			change_state = true;
 		}
+	}
+
+	if (change_state)
+	{
+		platoon_vehicle->update_origin_lane_controller();
+		platoon_vehicle->set_state(
+			std::make_unique<
+			LastVehicleFirstLongidutinalAdjustmentState>());
 	}
 }
 
@@ -97,7 +101,7 @@ void LastVehicleFirstLaneChangingState
 void LastVehicleFirstCreatingGapState::
 implement_handle_lane_keeping_intention()
 {
-	std::shared_ptr<PlatoonVehicle> preceding_vehicle
+	const PlatoonVehicle* preceding_vehicle
 		= platoon_vehicle->get_preceding_vehicle_in_platoon();
 	if (preceding_vehicle == nullptr // platoon leader
 		|| (*preceding_vehicle->get_state()
@@ -121,6 +125,8 @@ implement_handle_lane_change_intention()
 void LastVehicleFirstClosingGapState::
 implement_handle_lane_keeping_intention()
 {
+	bool change_state = false;
+
 	if (platoon_vehicle->is_platoon_leader())
 	{
 		double platoon_desired_vel =
@@ -129,8 +135,7 @@ implement_handle_lane_keeping_intention()
 			std::make_unique<LastVehicleFirstLaneKeepingState>()))
 		{
 			platoon_vehicle->set_desired_velocity(platoon_desired_vel);
-			platoon_vehicle->set_state(
-				std::make_unique<LastVehicleFirstLaneKeepingState>());
+			change_state = true;
 		}
 		else
 		{
@@ -153,9 +158,14 @@ implement_handle_lane_keeping_intention()
 		if (has_time_headway_transition_ended && is_gap_closed
 			&& is_preceding_platoon_vehicle_in_my_lane)
 		{
-			platoon_vehicle->set_state(
-				std::make_unique<LastVehicleFirstLaneKeepingState>());
+			change_state = true;
 		}
+	}
+
+	if (change_state)
+	{
+		platoon_vehicle->set_state(
+			std::make_unique<LastVehicleFirstLaneKeepingState>());
 	}
 }
 

@@ -39,12 +39,19 @@ bool PlatoonLaneChangeStrategy::can_adjust_to_dest_lane_leader(
 	return implement_can_adjust_to_dest_lane_leader(platoon_vehicle);
 }
 
-void PlatoonLaneChangeStrategy::set_state_of_all_vehicles()
+void PlatoonLaneChangeStrategy::set_state_of_all_vehicles() const
 {
 	for (auto& item : platoon->get_vehicles_by_position())
 	{
 		item.second->set_state(implement_get_new_lane_keeping_state());
 	}
+}
+
+long PlatoonLaneChangeStrategy::create_lane_change_request_for_vehicle(
+	long veh_id) const
+{
+	// TODO
+	return 0;
 }
 
 /* ------------------------------------------------------------------------ */
@@ -78,7 +85,7 @@ bool SynchronousStrategy::implement_can_vehicle_leave_platoon(
 		return false;
 	}
 	std::shared_ptr<NearbyVehicle> leader = platoon_vehicle.get_leader();
-	std::shared_ptr<PlatoonVehicle> precending_platoon_vehicle =
+	const PlatoonVehicle* precending_platoon_vehicle =
 		platoon_vehicle.get_preceding_vehicle_in_platoon();
 	return *leader != *precending_platoon_vehicle;
 }
@@ -148,7 +155,7 @@ bool LeaderFirstStrategy::implement_can_adjust_to_dest_lane_leader(
 	if (platoon_vehicle.is_platoon_leader()) return true;
 	bool leader_is_done_lane_changing =
 		*platoon_vehicle.get_preceding_vehicle_in_platoon()->get_state()
-		> LeaderFirstLaneChangingState();
+		>= LeaderFirstLaneChangingState();
 	return leader_is_done_lane_changing;
 }
 
@@ -190,7 +197,7 @@ long LastVehicleFirstStrategy::implement_get_assisted_vehicle_id(
 	if (!platoon_vehicle.is_platoon_leader() 
 		&& *platoon_vehicle.get_state() == LastVehicleFirstCreatingGapState())
 	{
-		std::shared_ptr<PlatoonVehicle> leader = 
+		const PlatoonVehicle* leader =
 			platoon_vehicle.get_preceding_vehicle_in_platoon();
 		if (*leader->get_state()
 			== LastVehicleFirstLongidutinalAdjustmentState())
@@ -238,7 +245,7 @@ long LeaderFirstAndInvertStrategy::implement_get_assisted_vehicle_id(
 		&& (*platoon_vehicle.get_state() 
 			== LeaderFirstAndInvertCreatingGapState()))
 	{
-		std::shared_ptr<PlatoonVehicle> follower =
+		const PlatoonVehicle* follower =
 			platoon_vehicle.get_following_vehicle_in_platoon();
 		if (*follower->get_state()
 			== LeaderFirstAndInvertLongidutinalAdjustmentState())

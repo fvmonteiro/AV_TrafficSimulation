@@ -9,11 +9,10 @@ void LeaderFirstLaneKeepingState
 void LeaderFirstLaneKeepingState
 ::implement_handle_lane_change_intention()
 {
+	bool change_state = false;
 	if (platoon_vehicle->is_platoon_leader())
 	{
-		platoon_vehicle->update_origin_lane_controller();
-		platoon_vehicle->set_state(
-			std::make_unique<LeaderFirstLongidutinalAdjustmentState>());
+		change_state = true;
 	}
 	else
 	{
@@ -24,10 +23,15 @@ void LeaderFirstLaneKeepingState
 		if (leader_state > LeaderFirstLaneChangingState()
 			/*|| leader_state == LeaderFirstLaneKeepingState()*/)
 		{
-			platoon_vehicle->update_origin_lane_controller();
-			platoon_vehicle->set_state(
-				std::make_unique<LeaderFirstLongidutinalAdjustmentState>());
+			change_state = true;
 		}
+	}
+	
+	if (change_state)
+	{
+		platoon_vehicle->update_origin_lane_controller();
+		platoon_vehicle->set_state(
+			std::make_unique<LeaderFirstLongidutinalAdjustmentState>());
 	}
 }
 
@@ -98,24 +102,25 @@ void LeaderFirstLaneChangingState
 void LeaderFirstClosingGapState
 ::implement_handle_lane_keeping_intention()
 {
+	bool change_state = false;
+
 	if (platoon_vehicle->is_platoon_leader()
 		&& has_platoon_changed_lanes(
 			std::make_unique<LeaderFirstLaneChangingState>()))
 	{
 		double platoon_desired_vel =
 			platoon_vehicle->get_platoon()->get_desired_velocity();
-		double desired_vel = platoon_desired_vel;
 		if (are_other_platoon_gaps_closed(platoon_vehicle->get_id(),
 			std::make_unique<LeaderFirstLaneKeepingState>()))
 		{
-			platoon_vehicle->set_state(
-				std::make_unique<LeaderFirstLaneKeepingState>());
+			platoon_vehicle->set_desired_velocity(platoon_desired_vel);
+			change_state = true;
 		}
 		else
 		{
-			desired_vel = waiting_velocity_fraction * platoon_desired_vel;
+			platoon_vehicle->set_desired_velocity(
+				waiting_velocity_fraction * platoon_desired_vel);
 		}
-		platoon_vehicle->set_desired_velocity(desired_vel);
 	}
 	else
 	{
@@ -128,9 +133,14 @@ void LeaderFirstClosingGapState
 			< gap_error_margin;
 		if (has_time_headway_transition_ended && is_gap_safe)
 		{
-			platoon_vehicle->set_state(
-				std::make_unique<LeaderFirstLaneKeepingState>());
+			change_state = true;
 		}
+	}
+
+	if (change_state) 
+	{
+		platoon_vehicle->set_state(
+			std::make_unique<LeaderFirstLaneKeepingState>());
 	}
 }
 
