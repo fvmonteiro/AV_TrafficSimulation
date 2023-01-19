@@ -228,7 +228,7 @@ double EgoVehicle::get_collision_free_gap_to(
 	return -1.0;
 }
 
-VehicleState* EgoVehicle::get_state() const
+const VehicleState* EgoVehicle::get_state() const
 {
 	return state.get();
 }

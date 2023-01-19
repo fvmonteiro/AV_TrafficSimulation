@@ -12,23 +12,12 @@ void LeaderFirstAndInvertLaneKeepingState
 {
 	bool change_state = false;
 
-	if (platoon_vehicle->is_platoon_leader())
-	{
-		change_state = true;
-	}
-	else
-	{
-		/* Platoon vehicle only starts the longitudinal adjustment
-		once its leader has finished the lane change */
-		const VehicleState& leader_state = *(platoon_vehicle
-			->get_preceding_vehicle_in_platoon()->get_state());
-		if (leader_state > LeaderFirstAndInvertLaneChangingState())
-		{
-			change_state = true;
-		}
-	}
-
-	if (change_state)
+	/* The vehicle only starts the longitudinal adjustment
+	once its leader has finished the lane change */
+	const VehicleState* leader_state = (platoon_vehicle
+		->get_preceding_vehicle_state());
+	if (leader_state == nullptr // this is the platoon leader
+		|| *leader_state > LeaderFirstAndInvertLaneChangingState())
 	{
 		platoon_vehicle->update_origin_lane_controller();
 		platoon_vehicle->set_state(
@@ -59,12 +48,12 @@ void LeaderFirstAndInvertLongidutinalAdjustmentState
 void LeaderFirstAndInvertLongidutinalAdjustmentState
 ::implement_handle_lane_change_intention()
 {
-	const PlatoonVehicle* preceding_vehicle =
-		platoon_vehicle->get_preceding_vehicle_in_platoon();
+	long preceding_vehicle_id =
+		platoon_vehicle->get_preceding_vehicle_id();
 	long dest_lane_follower_id = 
 		platoon_vehicle->get_dest_lane_follower_id();
-	if ((preceding_vehicle == nullptr
-		|| preceding_vehicle->get_id() == dest_lane_follower_id)
+	if ((preceding_vehicle_id == 0 // this is the platoon leader
+		|| preceding_vehicle_id == dest_lane_follower_id)
 		&&
 		platoon_vehicle->check_lane_change_gaps())
 	{

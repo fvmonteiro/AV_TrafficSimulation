@@ -764,11 +764,11 @@ DRIVERMODEL_API  int  DriverModelExecuteCommand (long number)
         vehicles[current_vehicle_id]->analyze_nearby_vehicles();
 
         if (vehicles[current_vehicle_id]->analyze_platoons(platoons,
-            /*vehicles[current_vehicle_id],*/ platoon_id))
+            platoon_id, platoon_lc_strategy))
         {
             platoons[platoon_id] =
                 vehicles[current_vehicle_id]->get_platoon();
-            platoons[platoon_id]->set_strategy(platoon_lc_strategy);
+            //platoons[platoon_id]->set_strategy(platoon_lc_strategy);
             if (platoon_id == LOGGED_PLATOON_ID)
             {
                 platoons[platoon_id]->set_verbose(true);

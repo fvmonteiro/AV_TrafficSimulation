@@ -11,6 +11,7 @@ class PlatoonLaneChangeStrategy
 {
 public:
 
+	std::string get_name() const { return name; };
 	void set_platoon(Platoon* platoon) { this->platoon = platoon; };
 	bool can_vehicle_leave_platoon(
 		const PlatoonVehicle& platoon_vehicle) const;

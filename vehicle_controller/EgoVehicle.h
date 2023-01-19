@@ -141,7 +141,7 @@ public:
 		const std::shared_ptr<NearbyVehicle> nearby_vehicle) const;
 	double get_collision_free_gap_to(
 		const std::shared_ptr<NearbyVehicle> nearby_vehicle) const;
-	VehicleState* get_state() const;
+	const VehicleState* get_state() const;
 
 	void set_lane(long lane);
 	void set_distance_traveled(double distance_traveled);
@@ -196,10 +196,10 @@ public:
 	/* Returns true if a new platoon was created. */
 	bool analyze_platoons(
 		std::unordered_map<int, std::shared_ptr<Platoon>>& platoons,
-		/*std::shared_ptr<EgoVehicle> pointer_to_me,*/ long new_platoon_id)
+		long new_platoon_id, int platoon_lc_strategy)
 	{
-		return implement_analyze_platoons(platoons, /*pointer_to_me,*/
-			new_platoon_id);
+		return implement_analyze_platoons(platoons, new_platoon_id,
+			platoon_lc_strategy);
 	};
 	//bool is_cutting_in(const NearbyVehicle& nearby_vehicle) const;
 	bool has_leader() const;
@@ -382,8 +382,7 @@ private:
 	virtual void implement_analyze_nearby_vehicles();
 	virtual bool implement_analyze_platoons(
 		std::unordered_map<int, std::shared_ptr<Platoon>>& platoons,
-		/*std::shared_ptr<EgoVehicle> pointer_to_me,*/
-		long new_platoon_id) {
+		long new_platoon_id, int platoon_lc_strategy) {
 		return false;
 	};
 	virtual void set_desired_lane_change_direction();

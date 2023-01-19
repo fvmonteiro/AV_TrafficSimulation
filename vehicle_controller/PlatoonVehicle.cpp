@@ -8,8 +8,8 @@ PlatoonVehicle::PlatoonVehicle(long id, double desired_velocity,
 	bool verbose) :
 	ConnectedAutonomousVehicle(id, VehicleType::platoon_car,
 		desired_velocity, simulation_time_step, creation_time,
-		verbose),
-	alone_desired_velocity{ desired_velocity }
+		verbose)
+	//alone_desired_velocity{ desired_velocity }
 {
 	compute_platoon_safe_gap_parameters();
 	//controller.add_in_platoon_controller(*this);
@@ -40,11 +40,35 @@ bool PlatoonVehicle::is_last_platoon_vehicle() const
 	return !is_in_a_platoon() || (platoon->get_last_veh_id() == get_id());
 }
 
+bool PlatoonVehicle::has_finished_adjusting_time_headway() const
+{
+	double safe_time_headway = get_safe_time_headway();
+	bool has_time_headway_transition_ended =
+		(std::abs(safe_time_headway
+			- get_current_desired_time_headway())
+			/ safe_time_headway) < 0.1;
+	bool is_gap_error_small = get_gap_error() < gap_error_threshold;
+	return (has_time_headway_transition_ended || !has_leader())
+		&& (is_gap_error_small || is_platoon_leader());
+}
+
 bool PlatoonVehicle::can_start_adjustment_to_destination_lane_leader() const
 {
 	return !is_in_a_platoon()
 		|| platoon->can_vehicle_start_adjustment_to_dest_lane_leader(
 			get_id());
+}
+
+const VehicleState* PlatoonVehicle::get_preceding_vehicle_state() const
+{
+	const auto& veh = platoon->get_preceding_vehicle(get_id());
+	return veh == nullptr ? nullptr : veh->get_state();
+}
+
+long PlatoonVehicle::get_preceding_vehicle_id() const
+{
+	const auto& veh = platoon->get_preceding_vehicle(get_id());
+	return veh == nullptr ? 0 : veh->get_id();
 }
 
 const PlatoonVehicle*
@@ -144,7 +168,7 @@ void PlatoonVehicle::find_cooperation_request_from_platoon()
 
 bool PlatoonVehicle::implement_analyze_platoons(
 	std::unordered_map<int, std::shared_ptr<Platoon>>& platoons,
-	/*std::shared_ptr<EgoVehicle> pointer_to_me,*/ long new_platoon_id)
+	long new_platoon_id, int platoon_lc_strategy)
 {
 	bool new_platoon_created = false;
 	bool am_in_a_platoon = is_in_a_platoon();
@@ -159,15 +183,14 @@ bool PlatoonVehicle::implement_analyze_platoons(
 	if (!am_in_a_platoon && !may_join_leader_platoon)
 	{
 		// Create platoon
-		create_platoon(new_platoon_id/*, pointer_to_me_my_type*/);
+		create_platoon(new_platoon_id, platoon_lc_strategy);
 		new_platoon_created = true;
 	}
 	else if (!am_in_a_platoon && may_join_leader_platoon)
 	{
 		// Join the platoon of the vehicle ahead
 		long leader_platoon_id = get_leader()->get_platoon_id();
-		add_myself_to_leader_platoon(platoons.at(leader_platoon_id)/*,
-			pointer_to_me_my_type*/);
+		add_myself_to_leader_platoon(platoons.at(leader_platoon_id));
 	}
 	else if (am_in_a_platoon && may_join_leader_platoon)
 	{
@@ -179,8 +202,7 @@ bool PlatoonVehicle::implement_analyze_platoons(
 			// remove myself
 			platoon->remove_vehicle_by_id(get_id(), false);
 			// add myself to leader platoon
-			add_myself_to_leader_platoon(platoons.at(leader_platoon_id)/*,
-				pointer_to_me_my_type*/);
+			add_myself_to_leader_platoon(platoons.at(leader_platoon_id));
 			// delete my old platoon if it is empty
 			if (platoons.at(old_platoon_id)->is_empty())
 			{
@@ -196,7 +218,7 @@ bool PlatoonVehicle::implement_analyze_platoons(
 				<< ": leaving platoon " << platoon->get_id() << "\n";
 			platoon->remove_vehicle_by_id(get_id(), false);
 			//platoon.reset();
-			create_platoon(new_platoon_id/*, pointer_to_me_my_type*/);
+			create_platoon(new_platoon_id, platoon_lc_strategy);
 			new_platoon_created = true;
 		}
 	}
@@ -214,8 +236,8 @@ void PlatoonVehicle::pass_this_to_state()
 	state->set_ego_vehicle(this);
 }
 
-void PlatoonVehicle::create_platoon(long platoon_id//,
-	/*std::shared_ptr<PlatoonVehicle> pointer_to_me*/)
+void PlatoonVehicle::create_platoon(long platoon_id, 
+	int platoon_lc_strategy)
 {
 	/*if (verbose)
 	{*/
@@ -223,15 +245,14 @@ void PlatoonVehicle::create_platoon(long platoon_id//,
 			<< ". Creating platoon id " << platoon_id << std::endl;
 	//}
 
-	platoon = std::make_shared<Platoon>(platoon_id,
-		this);
+	platoon = std::make_shared<Platoon>(platoon_id, 
+		platoon_lc_strategy, this);
 
 	std::clog << "New platoon " << *platoon << std::endl;
 }
 
 void PlatoonVehicle::add_myself_to_leader_platoon(
-	std::shared_ptr<Platoon> leader_platoon//,
-	/*std::shared_ptr<PlatoonVehicle> pointer_to_me*/)
+	std::shared_ptr<Platoon> leader_platoon)
 {
 	// Add my pointer to the platoon vehicles list
 	leader_platoon->add_last_vehicle(this);

@@ -101,11 +101,10 @@ void LastVehicleFirstLaneChangingState
 void LastVehicleFirstCreatingGapState::
 implement_handle_lane_keeping_intention()
 {
-	const PlatoonVehicle* preceding_vehicle
-		= platoon_vehicle->get_preceding_vehicle_in_platoon();
-	if (preceding_vehicle == nullptr // platoon leader
-		|| (*preceding_vehicle->get_state()
-			>= LastVehicleFirstLaneChangingState()))
+	const VehicleState* preceding_vehicle_state
+		= platoon_vehicle->get_preceding_vehicle_state();
+	if (preceding_vehicle_state == nullptr // platoon leader
+		|| (*preceding_vehicle_state >= LastVehicleFirstLaneChangingState()))
 	{
 		platoon_vehicle->set_state(
 			std::make_unique<LastVehicleFirstClosingGapState>());
@@ -153,7 +152,7 @@ implement_handle_lane_keeping_intention()
 		bool is_gap_closed = platoon_vehicle->get_gap_error() 
 			< gap_error_margin;
 		bool is_preceding_platoon_vehicle_in_my_lane =
-			*platoon_vehicle->get_preceding_vehicle_in_platoon()->get_state()
+			*platoon_vehicle->get_preceding_vehicle_state()
 			> LastVehicleFirstLaneChangingState();
 		if (has_time_headway_transition_ended && is_gap_closed
 			&& is_preceding_platoon_vehicle_in_my_lane)

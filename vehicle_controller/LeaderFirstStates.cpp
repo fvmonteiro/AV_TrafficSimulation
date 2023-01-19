@@ -10,34 +10,20 @@ void LeaderFirstLaneKeepingState
 ::implement_handle_lane_change_intention()
 {
 	bool change_state = false;
-	if (platoon_vehicle->is_platoon_leader())
-	{
-		change_state = true;
-	}
-	else
-	{
-		/* Platoon vehicle only starts the longitudinal adjustment
-		once its leader has finished the lane change */
-		const VehicleState& leader_state = *(platoon_vehicle
-			->get_preceding_vehicle_in_platoon()->get_state());
-		if (leader_state > LeaderFirstLaneChangingState()
-			/*|| leader_state == LeaderFirstLaneKeepingState()*/)
-		{
-			change_state = true;
-		}
-	}
-	
-	if (change_state)
+	const VehicleState* leader_state = platoon_vehicle
+		->get_preceding_vehicle_state();
+	if (leader_state == nullptr // this is the platoon leader
+		|| *leader_state > LeaderFirstIncreasingGapState())
 	{
 		platoon_vehicle->update_origin_lane_controller();
 		platoon_vehicle->set_state(
-			std::make_unique<LeaderFirstLongidutinalAdjustmentState>());
+			std::make_unique<LeaderFirstIncreasingGapState>());
 	}
 }
 
 /* ------------------------------------------------------------------------ */
 
-void LeaderFirstLongidutinalAdjustmentState
+void LeaderFirstIncreasingGapState
 ::implement_handle_lane_keeping_intention()
 {
 	/* This case won't happen in our simulations.
@@ -54,10 +40,50 @@ void LeaderFirstLongidutinalAdjustmentState
 	}
 }
 
-void LeaderFirstLongidutinalAdjustmentState
+void LeaderFirstIncreasingGapState
 ::implement_handle_lane_change_intention()
 {
 	if (platoon_vehicle->check_lane_change_gaps())
+	{
+		platoon_vehicle->set_state(
+			std::make_unique<LeaderFirstLaneChangingState>());
+	}
+	else if (platoon_vehicle->has_finished_adjusting_time_headway())
+	{
+		platoon_vehicle->set_state(
+			std::make_unique<LeaderFirstLookingForSafeGapState>());
+	}
+}
+
+/* ------------------------------------------------------------------------ */
+
+void LeaderFirstLookingForSafeGapState
+::implement_handle_lane_keeping_intention()
+{
+	/* This case won't happen in our simulations.
+	* For completion, this is coded assuming only the leader can
+	abort the maneuver. */
+	if (!platoon_vehicle->get_platoon()
+		->get_platoon_leader()->has_lane_change_intention())
+	{
+		platoon_vehicle->reset_lane_change_waiting_time();
+		platoon_vehicle->update_origin_lane_controller();
+		platoon_vehicle->reset_origin_lane_velocity_controller();
+		platoon_vehicle->set_state(
+			std::make_unique<LeaderFirstLaneKeepingState>());
+	}
+}
+
+void LeaderFirstLookingForSafeGapState
+::implement_handle_lane_change_intention()
+{
+	const VehicleState* leader_state =
+		platoon_vehicle->get_preceding_vehicle_state();
+	bool has_leader_started_lane_change =
+		leader_state == nullptr // this is the platoon leader
+		|| *leader_state >= LeaderFirstLaneChangingState();
+	if (has_leader_started_lane_change 
+		&& platoon_vehicle->check_lane_change_gaps())
 	{
 		platoon_vehicle->set_state(
 			std::make_unique<LeaderFirstLaneChangingState>());
@@ -122,19 +148,9 @@ void LeaderFirstClosingGapState
 				waiting_velocity_fraction * platoon_desired_vel);
 		}
 	}
-	else
+	else if (platoon_vehicle->has_finished_adjusting_time_headway())
 	{
-		double safe_time_headway = platoon_vehicle->get_safe_time_headway();
-		bool has_time_headway_transition_ended =
-			(std::abs(safe_time_headway
-				- platoon_vehicle->get_current_desired_time_headway())
-				/ safe_time_headway) < 0.1;
-		bool is_gap_safe = platoon_vehicle->get_gap_error() 
-			< gap_error_margin;
-		if (has_time_headway_transition_ended && is_gap_safe)
-		{
 			change_state = true;
-		}
 	}
 
 	if (change_state) 

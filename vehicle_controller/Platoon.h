@@ -13,9 +13,9 @@ public:
 
 	Platoon() = default;
 	/*Platoon(long id) : id{ id } {};*/
-	Platoon(long id, PlatoonVehicle* leader) :
-		Platoon(id, leader, false) {};
-	Platoon(long id, PlatoonVehicle* leader,
+	Platoon(long id, int platoon_lc_strategy, PlatoonVehicle* leader) :
+		Platoon(id, platoon_lc_strategy, leader, false) {};
+	Platoon(long id, int platoon_lc_strategy, PlatoonVehicle* leader,
 		bool verbose);
 	~Platoon();
 

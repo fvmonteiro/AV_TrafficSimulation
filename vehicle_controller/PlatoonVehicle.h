@@ -18,8 +18,11 @@ public:
 	the platoon or if it is not part of a platoon */
 	bool is_last_platoon_vehicle() const;
 
+	bool has_finished_adjusting_time_headway() const;
 	bool can_start_adjustment_to_destination_lane_leader() const;
 
+	const VehicleState* get_preceding_vehicle_state() const;
+	long get_preceding_vehicle_id() const;
 	const PlatoonVehicle* get_preceding_vehicle_in_platoon() const;
 	const PlatoonVehicle* get_following_vehicle_in_platoon() const;
 
@@ -30,12 +33,11 @@ protected:
 	/* Returns true if the vehicle creates a platoon for itself. */
 	bool implement_analyze_platoons(
 		std::unordered_map<int, std::shared_ptr<Platoon>>& platoons,
-		/*std::shared_ptr<EgoVehicle> pointer_to_me, */
-		long new_platoon_id) override;
+		long new_platoon_id, int platoon_lc_strategy) override;
 private:
 	std::shared_ptr<Platoon> platoon{ nullptr };
 	// desired velocity when not a part of the platoon
-	double alone_desired_velocity{ 0.0 };
+	//double alone_desired_velocity{ 0.0 };
 	/* Time the vehicle has been without a platoon.
 	As soon as the vehicle enters simulation, it may create its own platoon */
 	double alone_time{ 1.0 };
@@ -43,6 +45,8 @@ private:
 	double lambda_0_platoon{ 0.0 };
 	double lambda_1_platoon{ 0.0 };
 	double lambda_1_lane_change_platoon{ 0.0 };
+	/* Used to determine whether the current gap equals the desired gap */
+	double gap_error_threshold{ 2.0 }; 
 
 	/* Some constants for the platoon vehicles */
 	double in_platoon_comf_accel{ 0.5 };
@@ -65,8 +69,7 @@ private:
 	// Check if vehicles in our platoon need gap generation
 	void find_cooperation_request_from_platoon();
 
-	void create_platoon(long platoon_id//,
-		/*std::shared_ptr<PlatoonVehicle> pointer_to_me*/);
+	void create_platoon(long platoon_id, int platoon_lc_strategy);
 	void add_myself_to_leader_platoon(
 		std::shared_ptr<Platoon> leader_platoon//,
 		/*std::shared_ptr<PlatoonVehicle> pointer_to_me*/);

@@ -4,10 +4,11 @@
 #include "Platoon.h"
 #include "PlatoonVehicle.h"
 
-Platoon::Platoon(long id, PlatoonVehicle* leader,
+Platoon::Platoon(long id, int platoon_lc_strategy, PlatoonVehicle* leader,
 	bool verbose):
 	id {id}, verbose{verbose}
 {
+	set_strategy(platoon_lc_strategy);
 	add_leader(leader);
 	desired_velocity = leader->get_desired_velocity();
 }
@@ -105,7 +106,10 @@ void Platoon::set_strategy(int strategy_number)
 	//}
 
 	lane_change_strategy->set_platoon(this);
-	lane_change_strategy->set_state_of_all_vehicles();
+	if (old_strategy->get_name() != lane_change_strategy->get_name())
+	{
+		lane_change_strategy->set_state_of_all_vehicles();
+	}
 }
 
 void Platoon::add_leader(PlatoonVehicle* new_vehicle)
@@ -172,11 +176,11 @@ void Platoon::remove_vehicle_by_position(int idx_in_platoon, long veh_id,
 {
 	try
 	{
-		if (!is_out_of_simulation)
+		/*if (!is_out_of_simulation)
 		{
 			vehicles_by_position.at(idx_in_platoon)->set_state(
 				std::make_unique<SingleVehicleLaneKeepingState>());
-		}
+		}*/
 		vehicles_by_position.erase(idx_in_platoon);
 	}
 	catch (const std::out_of_range&)
