@@ -99,7 +99,7 @@ double GapController::compute_acceleration_error(
 
 double GapController::compute_desired_acceleration(
 	const EgoVehicle& ego_vehicle,
-	const std::shared_ptr<NearbyVehicle> leader)
+	std::shared_ptr<const NearbyVehicle> leader)
 {
 	if (leader == nullptr)
 	{

@@ -17,10 +17,10 @@ public:
 		const PlatoonVehicle& platoon_vehicle) const;
 	std::unique_ptr<VehicleState> get_new_lane_keeping_state() const;
 	long get_assisted_vehicle_id(const PlatoonVehicle& platoon_vehicle) const;
-	bool can_adjust_to_dest_lane_leader(
+	bool can_adjust_to_virtual_leader(
 		const PlatoonVehicle& platoon_vehicle) const;
-	void set_state_of_all_vehicles() const;
-	long create_lane_change_request_for_vehicle(long veh_id) const;
+	void reset_state_of_all_vehicles() const;
+	long create_platoon_lane_change_request(long veh_id) const;
 
 	friend std::ostream& operator<< (std::ostream& out,
 		const PlatoonLaneChangeStrategy& platoon_lc_strategy)
@@ -43,8 +43,10 @@ private:
 		implement_get_new_lane_keeping_state() const = 0;
 	virtual long implement_get_assisted_vehicle_id(
 		const PlatoonVehicle& platoon_vehicle) const = 0;
-	virtual bool implement_can_adjust_to_dest_lane_leader(
+	virtual bool implement_can_adjust_to_virtual_leader(
 		const PlatoonVehicle& platoon_vehicle) const = 0;
+	virtual long implement_create_platoon_lane_change_request(
+		long veh_id) const = 0;
 };
 
 /* ------------------------------------------------------------------------ */
@@ -62,10 +64,12 @@ private:
 		const PlatoonVehicle& platoon_vehicle) const override {
 		return 0;
 	};
-	bool implement_can_adjust_to_dest_lane_leader(
+	bool implement_can_adjust_to_virtual_leader(
 		const PlatoonVehicle& platoon_vehicle) const override {
 		return true;
 	};
+	long implement_create_platoon_lane_change_request(
+		long veh_id) const override;
 };
 
 /* ------------------------------------------------------------------------ */
@@ -83,8 +87,10 @@ private:
 		const PlatoonVehicle& platoon_vehicle) const override {
 		return 0;
 	};
-	bool implement_can_adjust_to_dest_lane_leader(
+	bool implement_can_adjust_to_virtual_leader(
 		const PlatoonVehicle& platoon_vehicle) const override;
+	long implement_create_platoon_lane_change_request(
+		long veh_id) const override;
 };
 
 /* ------------------------------------------------------------------------ */
@@ -102,8 +108,10 @@ private:
 		const PlatoonVehicle& platoon_vehicle) const override {
 		return 0; 
 	};
-	bool implement_can_adjust_to_dest_lane_leader(
+	bool implement_can_adjust_to_virtual_leader(
 		const PlatoonVehicle& platoon_vehicle) const override;
+	long implement_create_platoon_lane_change_request(
+		long veh_id) const override;
 };
 
 /* ------------------------------------------------------------------------ */
@@ -120,10 +128,12 @@ private:
 		implement_get_new_lane_keeping_state() const override;
 	long implement_get_assisted_vehicle_id(
 			const PlatoonVehicle& platoon_vehicle) const override;
-	bool implement_can_adjust_to_dest_lane_leader(
+	bool implement_can_adjust_to_virtual_leader(
 		const PlatoonVehicle& platoon_vehicle) const override {
 		return true;
 	};
+	long implement_create_platoon_lane_change_request(
+		long veh_id) const override;
 };
 
 /* ------------------------------------------------------------------------ */
@@ -141,6 +151,8 @@ private:
 		implement_get_new_lane_keeping_state() const override;
 	long implement_get_assisted_vehicle_id(
 		const PlatoonVehicle& platoon_vehicle) const override;
-	bool implement_can_adjust_to_dest_lane_leader(
+	bool implement_can_adjust_to_virtual_leader(
 		const PlatoonVehicle& platoon_vehicle) const override;
+	long implement_create_platoon_lane_change_request(
+		long veh_id) const override;
 };

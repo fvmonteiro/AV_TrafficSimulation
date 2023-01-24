@@ -162,11 +162,6 @@ double EgoVehicle::get_current_max_brake() const
 		get_lane_change_max_brake() : max_brake;
 }
 
-double EgoVehicle::get_free_flow_velocity() const
-{
-	return try_go_at_max_vel ? MAX_VELOCITY: desired_velocity;
-}
-
 double EgoVehicle::get_safe_time_headway() const
 {
 	return controller.get_safe_time_headway();
@@ -183,7 +178,7 @@ double EgoVehicle::get_current_desired_time_headway() const
 }
 
 double EgoVehicle::get_gap_variation_to(
-	const std::shared_ptr<NearbyVehicle> nearby_vehicle) const
+	std::shared_ptr<const NearbyVehicle> nearby_vehicle) const
 {
 	if ((nearby_vehicle != nullptr)
 		&& (gap_variation_during_lane_change.find(nearby_vehicle->get_id())
@@ -206,7 +201,7 @@ double EgoVehicle::get_gap_variation_to(
 }
 
 double EgoVehicle::get_collision_free_gap_to(
-	const std::shared_ptr<NearbyVehicle> nearby_vehicle) const
+	std::shared_ptr<const NearbyVehicle> nearby_vehicle) const
 {
 	if ((nearby_vehicle != nullptr)
 		&& (collision_free_gap.find(nearby_vehicle->get_id())
@@ -338,8 +333,6 @@ void EgoVehicle::set_nearby_vehicle_type(long nv_type)
 	peek_nearby_vehicles()->set_type(VehicleType(nv_type), type);
 }
 
-
-
 bool EgoVehicle::has_leader() const
 {
 	return leader != nullptr;
@@ -359,7 +352,7 @@ double EgoVehicle::get_time_headway_to_assisted_vehicle() const
 	return 3.0;
 }
 
-std::shared_ptr<NearbyVehicle> EgoVehicle::get_leader() const
+std::shared_ptr<const NearbyVehicle> EgoVehicle::get_leader() const
 {
 	return leader;
 }
@@ -444,7 +437,7 @@ double EgoVehicle::compute_gap(const NearbyVehicle& nearby_vehicle) const
 }
 
 double EgoVehicle::compute_gap(
-	const std::shared_ptr<NearbyVehicle> nearby_vehicle) const
+	std::shared_ptr<const NearbyVehicle> nearby_vehicle) const
 {
 	if (nearby_vehicle != nullptr)
 	{
@@ -458,7 +451,7 @@ double EgoVehicle::compute_gap(
 
 long EgoVehicle::get_lane_change_request() const
 {
-	return create_lane_change_request();
+	return implement_get_lane_change_request();
 }
 
 void EgoVehicle::pass_this_to_state()
@@ -476,10 +469,16 @@ void EgoVehicle::implement_analyze_nearby_vehicles()
 	find_leader();
 }
 
+const std::vector<std::shared_ptr<NearbyVehicle>> EgoVehicle
+::get_nearby_vehicles() const
+{
+	return nearby_vehicles;
+}
+
 void EgoVehicle::set_leader_by_id(long new_leader_id)
 {
 	// Note: this makes the leader = nullptr
-	std::shared_ptr<NearbyVehicle> old_leader = std::move(leader);
+	std::shared_ptr<const NearbyVehicle> old_leader = std::move(leader);
 	leader = get_nearby_vehicle_by_id(new_leader_id);
 	update_leader(old_leader);
 }
@@ -487,7 +486,7 @@ void EgoVehicle::set_leader_by_id(long new_leader_id)
 void EgoVehicle::find_leader()
 {
 	// Note: this makes the leader = nullptr
-	std::shared_ptr<NearbyVehicle> old_leader = std::move(leader);
+	std::shared_ptr<const NearbyVehicle> old_leader = std::move(leader);
 
 	for (auto& nearby_vehicle : nearby_vehicles)
 	{
@@ -512,7 +511,7 @@ bool EgoVehicle::check_if_is_leader(const NearbyVehicle& nearby_vehicle) const
 }
 
 void EgoVehicle::update_leader(
-	const std::shared_ptr<NearbyVehicle>& old_leader)
+	std::shared_ptr<const NearbyVehicle>& old_leader)
 {
 	if (has_leader())
 	{
@@ -590,6 +589,25 @@ void EgoVehicle::set_state(std::unique_ptr<VehicleState> new_state)
 	pass_this_to_state();
 }
 
+void EgoVehicle::reset_state(
+	std::unique_ptr<VehicleState> new_lane_keeping_state)
+{
+	// TODO: poor condition checking: hard coding variables
+	if (new_lane_keeping_state->get_state_number() != 1)
+	{
+		std::clog << "[WARNING] t=" << get_time()
+			<< ", veh " << get_id() << ": reseting vehicle state to "
+			<< *new_lane_keeping_state
+			<< ", which is not a lane keeping state." << std::endl;
+	}
+
+	set_lane_change_direction(RelativeLane::same);
+	reset_lane_change_waiting_time();
+	update_origin_lane_controller();
+	update_origin_lane_controller();
+	set_state(std::move(new_lane_keeping_state));
+}
+
 void EgoVehicle::update_lane_change_waiting_time()
 {
 	if (get_velocity() < 5.0 / 3.6)
@@ -619,20 +637,9 @@ bool EgoVehicle::is_lane_changing() const
 
 long EgoVehicle::get_color_by_controller_state()
 {
-	/* TODO: still missing color for VISSIM and for max_vel */
 	return controller.get_longitudinal_controller_color();
 }
 
-//std::string EgoVehicle::print_detailed_state() const
-//{
-//	std::string state_str =
-//		state_to_string_map.at(get_state_implementation_v1()) + ", "
-//		+ ControlManager::ALC_type_to_string(
-//			controller.get_active_alc_type()) + ", "
-//		+ SwitchedLongitudinalController::state_to_string(
-//			controller.get_longitudinal_controller_state());
-//	return state_str;
-//}
 
 /* Control related methods ------------------------------------------------ */
 
@@ -680,7 +687,7 @@ void EgoVehicle::compute_desired_acceleration(
 //}
 
 double EgoVehicle::get_accepted_lane_change_gap(
-	std::shared_ptr<NearbyVehicle> nearby_vehicle)
+	std::shared_ptr<const NearbyVehicle> nearby_vehicle)
 {
 	return compute_accepted_lane_change_gap(nearby_vehicle);
 }
@@ -691,7 +698,7 @@ double EgoVehicle::get_reference_gap()
 }
 
 double EgoVehicle::compute_time_headway_gap(
-	std::shared_ptr<NearbyVehicle> nearby_vehicle)
+	std::shared_ptr<const NearbyVehicle> nearby_vehicle)
 {
 	double time_headway_gap = 0.0;
 	if (nearby_vehicle != nullptr)
@@ -704,7 +711,7 @@ double EgoVehicle::compute_time_headway_gap(
 }
 
 double EgoVehicle::compute_transient_gap(
-	std::shared_ptr<NearbyVehicle> nearby_vehicle)
+	std::shared_ptr<const NearbyVehicle> nearby_vehicle)
 {
 	double transient_gap = 0.0;
 	if (nearby_vehicle != nullptr)

@@ -14,11 +14,21 @@ private:
 	void implement_handle_lane_change_intention() override;
 };
 
-class LastVehicleFirstLongidutinalAdjustmentState : public PlatoonVehicleState
+class LastVehicleFirstIncreasingGapState : public PlatoonVehicleState
 {
 public:
-	LastVehicleFirstLongidutinalAdjustmentState()
-		: PlatoonVehicleState("last vehicle first", "long adjustments", 2) {}
+	LastVehicleFirstIncreasingGapState()
+		: PlatoonVehicleState("last vehicle first", "increasing gap", 2) {}
+private:
+	void implement_handle_lane_keeping_intention() override;
+	void implement_handle_lane_change_intention() override;
+};
+
+class LastVehicleFirstLookingForSafeGapState : public PlatoonVehicleState
+{
+public:
+	LastVehicleFirstLookingForSafeGapState()
+		: PlatoonVehicleState("last vehicle first", "looking for gap", 3) {}
 private:
 	void implement_handle_lane_keeping_intention() override;
 	void implement_handle_lane_change_intention() override;
@@ -28,7 +38,7 @@ class LastVehicleFirstLaneChangingState : public PlatoonVehicleState
 {
 public:
 	LastVehicleFirstLaneChangingState()
-		: PlatoonVehicleState("last vehicle first", "lane changing", 3) {}
+		: PlatoonVehicleState("last vehicle first", "lane changing", 4) {}
 private:
 	void implement_handle_lane_keeping_intention() override;
 	void implement_handle_lane_change_intention() override;
@@ -40,7 +50,7 @@ class LastVehicleFirstCreatingGapState : public PlatoonVehicleState
 {
 public:
 	LastVehicleFirstCreatingGapState()
-		: PlatoonVehicleState("last vehicle first", "creating gap", 4) {}
+		: PlatoonVehicleState("last vehicle first", "creating gap", 5) {}
 private:
 	void implement_handle_lane_keeping_intention() override;
 	void implement_handle_lane_change_intention() override;
@@ -50,7 +60,7 @@ class LastVehicleFirstClosingGapState : public PlatoonVehicleState
 {
 public:
 	LastVehicleFirstClosingGapState()
-		: PlatoonVehicleState("last vehicle first", "closing gap", 5) {}
+		: PlatoonVehicleState("last vehicle first", "closing gap", 6) {}
 private:
 	void implement_handle_lane_keeping_intention() override;
 	void implement_handle_lane_change_intention() override;

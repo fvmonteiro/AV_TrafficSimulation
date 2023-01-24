@@ -316,11 +316,11 @@ private:
 	/* Desired acceleration to adjust to destination lane leader.
 	Returns true if the computed acceleration was added to the map */
 	bool get_destination_lane_desired_acceleration(
-		const AutonomousVehicle& ego_vehicle,
+		const AutonomousVehicle& autonomous_vehicles,
 		std::unordered_map<ALCType, double>& possible_accelerations);
 	/* Returns true if the computed acceleration was added to the map */
 	bool get_cooperative_desired_acceleration(
-		const ConnectedAutonomousVehicle& ego_vehicle,
+		const ConnectedAutonomousVehicle& cav,
 		std::unordered_map<ALCType, double>& possible_accelerations);
 	bool get_destination_lane_desired_acceleration_when_in_platoon(
 		const PlatoonVehicle& platoon_vehicle,

@@ -25,7 +25,7 @@ implement_get_gap_error() const
 double LongitudinalControllerWithTrafficLights::
 implement_compute_desired_acceleration(
 	const EgoVehicle& ego_vehicle,
-	const std::shared_ptr<NearbyVehicle> leader,
+	std::shared_ptr<const NearbyVehicle> leader,
 	double velocity_reference)
 {
 	std::unordered_map<State, double>
@@ -58,7 +58,7 @@ double LongitudinalControllerWithTrafficLights::get_nominal_input(
 
 double LongitudinalControllerWithTrafficLights
 ::compute_vehicle_following_input(const EgoVehicle& ego_vehicle,
-	const std::shared_ptr<NearbyVehicle> leader)
+	std::shared_ptr<const NearbyVehicle> leader)
 {	
 	//std::shared_ptr<NearbyVehicle> leader = ego_vehicle.get_leader();
 	double gap = ego_vehicle.compute_gap(leader);

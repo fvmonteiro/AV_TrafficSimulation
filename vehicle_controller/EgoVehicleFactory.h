@@ -32,11 +32,11 @@ public:
 		case VehicleType::platoon_car:
 			return std::make_shared<PlatoonVehicle>(id, desired_velocity,
 					simulation_time_step, creation_time, verbose);
-		case VehicleType::traffic_light_acc_car:
+		case VehicleType::traffic_light_alc_car:
 			return std::make_unique<TrafficLightALCVehicle>(id,
 				desired_velocity,
 				simulation_time_step, creation_time, verbose);
-		case VehicleType::traffic_light_cacc_car:
+		case VehicleType::traffic_light_calc_car:
 			return std::make_unique<TrafficLightCALCVehicle>(id,
 				desired_velocity,
 				simulation_time_step, creation_time, verbose);

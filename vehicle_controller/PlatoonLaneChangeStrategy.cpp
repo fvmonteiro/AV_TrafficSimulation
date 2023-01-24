@@ -33,30 +33,24 @@ long PlatoonLaneChangeStrategy::get_assisted_vehicle_id(
 	return implement_get_assisted_vehicle_id(platoon_vehicle);
 }
 
-bool PlatoonLaneChangeStrategy::can_adjust_to_dest_lane_leader(
+bool PlatoonLaneChangeStrategy::can_adjust_to_virtual_leader(
 	const PlatoonVehicle& platoon_vehicle) const
 {
-	return implement_can_adjust_to_dest_lane_leader(platoon_vehicle);
+	return implement_can_adjust_to_virtual_leader(platoon_vehicle);
 }
 
-void PlatoonLaneChangeStrategy::set_state_of_all_vehicles() const
+void PlatoonLaneChangeStrategy::reset_state_of_all_vehicles() const
 {
-	/* TODO: this is actually dangerous because we might abruptly 
-	interrupt some vehicle operation during its execution. For example, 
-	if a vehicle was in the middle of lane change, the current code will
-	not reset the desired_lane_direction or update any of the controllers */
 	for (auto& item : platoon->get_vehicles_by_position())
 	{
-		/* TODO: Check current state, reset desired lc, controllers... */
-		item.second->set_state(implement_get_new_lane_keeping_state());
+		item.second->reset_state(implement_get_new_lane_keeping_state());
 	}
 }
 
-long PlatoonLaneChangeStrategy::create_lane_change_request_for_vehicle(
+long PlatoonLaneChangeStrategy::create_platoon_lane_change_request(
 	long veh_id) const
 {
-	// TODO
-	return 0;
+	return implement_create_platoon_lane_change_request(veh_id);
 }
 
 /* ------------------------------------------------------------------------ */
@@ -72,6 +66,12 @@ std::unique_ptr<VehicleState> NoStrategy
 ::implement_get_new_lane_keeping_state() const
 {
 	return std::make_unique<SingleVehicleLaneKeepingState>();
+}
+
+long NoStrategy::implement_create_platoon_lane_change_request(
+	long veh_id) const
+{
+	return platoon->get_vehicle_by_id(veh_id)->get_dest_lane_follower_id();
 }
 
 /* ------------------------------------------------------------------------ */
@@ -101,10 +101,16 @@ std::unique_ptr<VehicleState> SynchronousStrategy
 	return std::make_unique<SynchronousLaneKeepingState>();
 }
 
-bool SynchronousStrategy::implement_can_adjust_to_dest_lane_leader(
+bool SynchronousStrategy::implement_can_adjust_to_virtual_leader(
 	const PlatoonVehicle& platoon_vehicle) const
 {
 	return platoon_vehicle.is_platoon_leader();
+}
+
+long SynchronousStrategy::implement_create_platoon_lane_change_request(
+	long veh_id) const
+{
+	return platoon->get_destination_lane_follower_closest_to_leader();
 }
 
 /* ------------------------------------------------------------------------ */
@@ -127,9 +133,10 @@ bool LeaderFirstStrategy::implement_can_vehicle_leave_platoon(
 		);
 
 	/* Leave the platoon if the supposed platoon preceding vehicle 
-	is not immediately ahead of us (regardless of which lane) */
-	return preceding_platoon_veh == nullptr ||
-		preceding_platoon_veh->get_relative_position() != 1;
+	is not ahead of us */
+	return preceding_platoon_veh == nullptr 
+		|| preceding_platoon_veh->get_relative_position() < 0
+		|| preceding_platoon_veh->get_relative_position() > 2;
 	//std::shared_ptr<PlatoonVehicle> precending_platoon_vehicle =
 	//	platoon_vehicle.get_preceding_vehicle_in_platoon();
 	//// Careful! leaders could be nullptr
@@ -154,7 +161,7 @@ std::unique_ptr<VehicleState> LeaderFirstStrategy
 	return std::make_unique<LeaderFirstLaneKeepingState>();
 }
 
-bool LeaderFirstStrategy::implement_can_adjust_to_dest_lane_leader(
+bool LeaderFirstStrategy::implement_can_adjust_to_virtual_leader(
 	const PlatoonVehicle& platoon_vehicle) const
 {
 	if (platoon_vehicle.is_platoon_leader()) return true;
@@ -162,6 +169,12 @@ bool LeaderFirstStrategy::implement_can_adjust_to_dest_lane_leader(
 		*platoon_vehicle.get_preceding_vehicle_state()
 		> LeaderFirstIncreasingGapState();
 	return leader_is_done_lane_changing;
+}
+
+long LeaderFirstStrategy::implement_create_platoon_lane_change_request(
+	long veh_id) const
+{
+	return platoon->get_destination_lane_follower_closest_to_leader();
 }
 
 /* ------------------------------------------------------------------------ */
@@ -204,13 +217,28 @@ long LastVehicleFirstStrategy::implement_get_assisted_vehicle_id(
 	{
 		const PlatoonVehicle* leader =
 			platoon_vehicle.get_preceding_vehicle_in_platoon();
-		if (*leader->get_state()
-			== LastVehicleFirstLongidutinalAdjustmentState())
+		const VehicleState& leader_state = *leader->get_state();
+		if (leader_state == LastVehicleFirstIncreasingGapState()
+			|| leader_state == LastVehicleFirstLookingForSafeGapState()
+			)
 		{
 			return leader->get_id();
 		}
 	}
 	return 0;
+}
+
+long LastVehicleFirstStrategy::implement_create_platoon_lane_change_request(
+	long veh_id) const
+{
+	if (platoon->get_last_veh_id() == veh_id)
+	{
+		return platoon->get_last_vehicle()->get_dest_lane_follower_id();
+	}
+	else
+	{
+		return 0;
+	}
 }
 
 /* ------------------------------------------------------------------------ */
@@ -253,7 +281,7 @@ long LeaderFirstAndInvertStrategy::implement_get_assisted_vehicle_id(
 		const PlatoonVehicle* follower =
 			platoon_vehicle.get_following_vehicle_in_platoon();
 		if (*follower->get_state()
-			== LeaderFirstAndInvertLongidutinalAdjustmentState())
+			== LeaderFirstAndInvertLookingForSafeGapState())
 		{
 			return follower->get_id();
 		}
@@ -261,11 +289,25 @@ long LeaderFirstAndInvertStrategy::implement_get_assisted_vehicle_id(
 	return 0;
 }
 
-bool LeaderFirstAndInvertStrategy::implement_can_adjust_to_dest_lane_leader(
+bool LeaderFirstAndInvertStrategy::implement_can_adjust_to_virtual_leader(
 	const PlatoonVehicle& platoon_vehicle) const
 {
 	/* We only adjust to the destination lane leader if it is not 
 	in the platoon */
 	return platoon->get_vehicle_by_id(
 		platoon_vehicle.get_dest_lane_leader_id()) == nullptr;
+}
+
+long LeaderFirstAndInvertStrategy
+::implement_create_platoon_lane_change_request(
+	long veh_id) const
+{
+	if (platoon->get_leader_id() == veh_id)
+	{
+		return platoon->get_platoon_leader()->get_dest_lane_follower_id();
+	}
+	else
+	{
+		return 0;
+	}
 }

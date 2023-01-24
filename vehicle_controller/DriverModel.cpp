@@ -152,6 +152,7 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
                 return 0;
             /* Debugging: dest lane leader */
             case UDA::dest_leader_id:
+                return 1;
             case UDA::gap_to_dest_lane_leader:
             case UDA::transient_gap_to_ld:
             case UDA::veh_following_gap_to_ld:
@@ -161,6 +162,7 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
                 return 0;
             /* Debugging: dest lane follower */
             case UDA::dest_follower_id:
+                return 1;
             case UDA::gap_to_dest_lane_follower:
             case UDA::transient_gap_to_fd:
             case UDA::veh_following_gap_to_fd:
@@ -383,6 +385,17 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
             vehicles[current_vehicle_id]->peek_nearby_vehicles()
                 ->set_platoon_id(long_value);
             break;
+        case UDA::dest_leader_id:
+            vehicles[current_vehicle_id]->peek_nearby_vehicles()
+                ->set_destination_lane_leader_id(long_value);
+            break;
+        case UDA::dest_follower_id:
+            vehicles[current_vehicle_id]->peek_nearby_vehicles()
+                ->set_destination_lane_follower_id(long_value);
+            break;
+        case UDA::assisted_veh_id:
+            vehicles[current_vehicle_id]->peek_nearby_vehicles()
+                ->set_assisted_vehicle_id(long_value);
         default:
             break;
         }
@@ -775,12 +788,6 @@ DRIVERMODEL_API  int  DriverModelExecuteCommand (long number)
             }
             platoon_id++;
         }
-
-        /*if (CLUELESS_DEBUGGING)
-        {
-            std::clog << "Deciding lane change" << std::endl;
-        }
-        vehicles[current_vehicle_id]->decide_lane_change_direction();*/
 
         if (CLUELESS_DEBUGGING)
         {

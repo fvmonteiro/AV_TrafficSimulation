@@ -433,7 +433,7 @@ bool ControlManager::get_origin_lane_desired_acceleration(
 	possible_accelerations[ALCType::origin_lane] =
 		origin_lane_controller.compute_desired_acceleration(
 		ego_vehicle, ego_vehicle.get_leader(),
-		ego_vehicle.get_free_flow_velocity());
+		ego_vehicle.get_desired_velocity());
 
 	return true;
 }
@@ -501,7 +501,7 @@ bool ControlManager::get_end_of_lane_desired_acceleration(
 }
 
 bool ControlManager::get_destination_lane_desired_acceleration(
-	const AutonomousVehicle& ego_vehicle,
+	const AutonomousVehicle& autonomous_vehicle,
 	std::unordered_map<ALCType, double>& possible_accelerations)
 {
 	bool is_active = false;
@@ -513,20 +513,36 @@ bool ControlManager::get_destination_lane_desired_acceleration(
 
 	/* We only activate if we want to merge behding ld
 	or if the end of the lane is close */
-	if (ego_vehicle.merge_behind_dest_lane_leader()
-		|| (ego_vehicle.has_destination_lane_leader()
-			&& end_of_lane_controller_is_active))
+	/*if (autonomous_vehicle.merge_behind_destination_lane_leader()
+		|| (autonomous_vehicle.has_destination_lane_leader()
+			&& end_of_lane_controller_is_active))*/
+	/* [Jan 23, 2023] TO DO: changes to reflect the addition of 
+	virtual leader. However, this piece of code is not clean. We should 
+	be able to get the virtual leader directly from autonomous_vehicle */
+	std::shared_ptr<const NearbyVehicle> virtual_leader = nullptr;
+	if (autonomous_vehicle.has_virtual_leader())
+	{
+		virtual_leader =
+			autonomous_vehicle.get_virtual_leader();
+	}
+	else if (autonomous_vehicle.has_destination_lane_leader()
+		&& end_of_lane_controller_is_active)
+	{
+		virtual_leader =
+			autonomous_vehicle.get_destination_lane_leader();
+	}
+	if (virtual_leader != nullptr)
 	{
 		if (verbose)
 		{
 			std::clog << "Dest. lane controller"
 				<< std::endl;
 		}
-		std::shared_ptr<NearbyVehicle> dest_lane_leader =
-			ego_vehicle.get_destination_lane_leader();
-		double ego_velocity = ego_vehicle.get_velocity();
+		/*std::shared_ptr<const NearbyVehicle> virtual_leader =
+			autonomous_vehicle.get_virtual_leader();*/
+		double ego_velocity = autonomous_vehicle.get_velocity();
 		double reference_velocity = determine_low_velocity_reference(
-			ego_velocity, *dest_lane_leader);
+			ego_velocity, *virtual_leader);
 
 		if (verbose)
 		{
@@ -546,28 +562,28 @@ bool ControlManager::get_destination_lane_desired_acceleration(
 
 		possible_accelerations[ALCType::destination_lane] =
 			destination_lane_controller.compute_desired_acceleration(
-				ego_vehicle, dest_lane_leader, reference_velocity);
+				autonomous_vehicle, virtual_leader, reference_velocity);
 		is_active = true;
 	}
 	return is_active;
 }
 
 bool ControlManager::get_cooperative_desired_acceleration(
-	const ConnectedAutonomousVehicle& ego_vehicle,
+	const ConnectedAutonomousVehicle& cav,
 	std::unordered_map<ALCType, double>& possible_accelerations)
 {
 	bool is_active = false;
 
-	if (ego_vehicle.is_cooperating_to_generate_gap())
+	if (cav.is_cooperating_to_generate_gap())
 	{
 		if (verbose)
 		{
 			std::clog << "Gap generating controller"
 				<< std::endl;
 		}
-		std::shared_ptr<NearbyVehicle> assisted_vehicle =
-			ego_vehicle.get_assisted_vehicle();
-		double ego_velocity = ego_vehicle.get_velocity();
+		std::shared_ptr<const NearbyVehicle> assisted_vehicle =
+			cav.get_assisted_vehicle();
+		double ego_velocity = cav.get_velocity();
 		double reference_velocity = determine_low_velocity_reference(
 			ego_velocity, *assisted_vehicle);
 
@@ -584,7 +600,7 @@ bool ControlManager::get_cooperative_desired_acceleration(
 
 		possible_accelerations[ALCType::cooperative_gap_generation] =
 			gap_generating_controller.compute_desired_acceleration(
-				ego_vehicle, assisted_vehicle, reference_velocity);
+				cav, assisted_vehicle, reference_velocity);
 		is_active = true;
 	}
 	return is_active;
@@ -599,14 +615,14 @@ bool ControlManager
 	Almost copy of get_destination_lane_desired_acceleration
 	*/
 	bool is_active = false;
-	if (platoon_vehicle.has_destination_lane_leader()
-		&& platoon_vehicle.can_start_adjustment_to_destination_lane_leader())
+	if (platoon_vehicle.has_virtual_leader()
+		&& platoon_vehicle.can_start_adjustment_to_virtual_leader())
 	{
-		std::shared_ptr<NearbyVehicle> dest_lane_leader =
-			platoon_vehicle.get_destination_lane_leader();
+		std::shared_ptr<const NearbyVehicle> virtual_leader =
+			platoon_vehicle.get_virtual_leader();
 		double ego_velocity = platoon_vehicle.get_velocity();
 		double reference_velocity = determine_low_velocity_reference(
-			ego_velocity, *dest_lane_leader);
+			ego_velocity, *virtual_leader);
 
 		if (verbose)
 		{
@@ -627,7 +643,7 @@ bool ControlManager
 
 		possible_accelerations[ALCType::destination_lane] =
 			destination_lane_controller.compute_desired_acceleration(
-				platoon_vehicle, dest_lane_leader, reference_velocity);
+				platoon_vehicle, virtual_leader, reference_velocity);
 		is_active = true;
 	}
 	return is_active;

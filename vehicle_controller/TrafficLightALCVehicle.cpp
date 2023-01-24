@@ -3,7 +3,7 @@
 TrafficLightALCVehicle::TrafficLightALCVehicle(long id,
 	double desired_velocity, double simulation_time_step,
 	double creation_time, bool verbose) :
-	TrafficLightALCVehicle(id, VehicleType::traffic_light_acc_car,
+	TrafficLightALCVehicle(id, VehicleType::traffic_light_alc_car,
 		desired_velocity, false, simulation_time_step, creation_time,
 		verbose)
 {

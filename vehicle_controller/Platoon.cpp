@@ -43,6 +43,12 @@ bool Platoon::is_empty() const
 	return vehicles_by_position.size() == 0;
 }
 
+bool Platoon::is_vehicle_in_platoon(long veh_id) const
+{
+	return (vehicle_id_to_position.find(veh_id) 
+		!= vehicle_id_to_position.end());
+}
+
 long Platoon::get_last_veh_id() const
 {
 	return is_empty() ? 0 : get_last_vehicle()->get_id();
@@ -98,7 +104,7 @@ void Platoon::set_strategy(int strategy_number)
 
 	/*if (verbose)
 	{*/
-		std::clog << "Platoon " << get_id() << "\n";
+		std::clog << "Platoon " << *this << "\n";
 		std::clog << "LC Strategy change from ";
 		if (old_strategy == nullptr) std::clog << "none";
 		else std::clog << *old_strategy;
@@ -106,10 +112,8 @@ void Platoon::set_strategy(int strategy_number)
 	//}
 
 	lane_change_strategy->set_platoon(this);
-	if (old_strategy->get_name() != lane_change_strategy->get_name())
-	{
-		lane_change_strategy->set_state_of_all_vehicles();
-	}
+	lane_change_strategy->reset_state_of_all_vehicles();
+
 }
 
 void Platoon::add_leader(PlatoonVehicle* new_vehicle)
@@ -162,13 +166,39 @@ void Platoon::remove_vehicle_by_id(long veh_id, bool is_out_of_simulation)
 
 const PlatoonVehicle* Platoon::get_vehicle_by_id(long veh_id) const
 {
-	if (vehicle_id_to_position.find(veh_id) == vehicle_id_to_position.end())
+	return is_vehicle_in_platoon(veh_id) ?
+		vehicles_by_position.at(vehicle_id_to_position.at(veh_id)) 
+		: nullptr;
+}
+
+long Platoon::get_destination_lane_follower_closest_to_leader() const
+{
+	/* We're looking for the vehicle at the destination lane that's 
+	closest to the platoon leader, and that does not belong to the platoon 
+	This vehicle might be:
+	- The platoon leader's dest lane follower
+	- Some other platoon vehicle's dest lane leader 
+	- Some other platoon vehicle's dest lane follower */
+
+	long dest_lane_follower_id = 
+		get_platoon_leader()->get_dest_lane_follower_id();
+	int i = leader_idx - 1;
+	while (dest_lane_follower_id == 0 && i >= last_veh_idx)
 	{
-		/*std::clog << "Platoon: " << *this << "\nTrying to get veh "
-			<< veh_id << std::endl;*/
-		return nullptr;
+		if (vehicles_by_position.find(i) != vehicles_by_position.end())
+		{
+			auto& veh = vehicles_by_position.at(i);
+			dest_lane_follower_id = veh->get_dest_lane_leader_id();
+			if (dest_lane_follower_id == 0
+				|| dest_lane_follower_id == veh->get_preceding_vehicle_id())
+			{
+				dest_lane_follower_id =
+					vehicles_by_position.at(i)->get_dest_lane_follower_id();
+			}
+		}
+		i--;
 	}
-	return vehicles_by_position.at(vehicle_id_to_position.at(veh_id));
+	return dest_lane_follower_id;
 }
 
 void Platoon::remove_vehicle_by_position(int idx_in_platoon, long veh_id,
@@ -218,14 +248,13 @@ void Platoon::add_vehicle(int idx_in_platoon,
 	long veh_id = new_vehicle->get_id();
 	vehicles_by_position.insert({ idx_in_platoon, new_vehicle });
 	vehicle_id_to_position.insert({veh_id , idx_in_platoon });
-	//vehicles_lane_change_gap_status.insert({ veh_id, false });
 	if (lane_change_strategy != nullptr)
 	{
-		new_vehicle->set_state(
+		/* Tricky part of the code - we are forcing the vehicle out 
+		of its current state. This might interrupt some maneuver. */
+		new_vehicle->reset_state(
 			lane_change_strategy->get_new_lane_keeping_state());
 	}
-	/*vehicles_lane_change_states.insert({ veh_id, 
-		PlatoonLaneChangeStrategy::LaneChangeState::lane_keeping });*/
 }
 
 const PlatoonVehicle* Platoon::get_preceding_vehicle(
@@ -258,10 +287,10 @@ long Platoon::get_assisted_vehicle_id(long veh_id) const
 		*get_vehicle_by_id(veh_id));
 }
 
-bool Platoon::can_vehicle_start_adjustment_to_dest_lane_leader(
+bool Platoon::can_vehicle_start_adjustment_to_virtual_leader(
 	long veh_id) const
 {
-	return lane_change_strategy->can_adjust_to_dest_lane_leader(
+	return lane_change_strategy->can_adjust_to_virtual_leader(
 		*get_vehicle_by_id(veh_id));
 }
 
@@ -299,7 +328,7 @@ void Platoon::reorder_vehicles()
 long Platoon::create_lane_change_request_for_vehicle(long veh_id) const
 {
 	return 
-		lane_change_strategy->create_lane_change_request_for_vehicle(veh_id);
+		lane_change_strategy->create_platoon_lane_change_request(veh_id);
 }
 
 std::ostream& operator<< (std::ostream& out, const Platoon& platoon)

@@ -19,7 +19,7 @@ public:
 
 private:
     double implement_compute_desired_acceleration(const EgoVehicle& ego_vehicle,
-        const std::shared_ptr<NearbyVehicle> leader,
+		std::shared_ptr<const NearbyVehicle> leader,
         double velocity_reference) override;
 };
 

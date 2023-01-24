@@ -7,6 +7,7 @@
 class LeaderFirstAndInvertLaneKeepingState : public PlatoonVehicleState
 {
 public:
+	const static int number{ 1 };
 	LeaderFirstAndInvertLaneKeepingState()
 		: PlatoonVehicleState("leader first and invert", 
 			"lane keeping", 1) {}
@@ -15,13 +16,13 @@ private:
 	void implement_handle_lane_change_intention() override;
 };
 
-class LeaderFirstAndInvertLongidutinalAdjustmentState 
+class LeaderFirstAndInvertLookingForSafeGapState 
 	: public PlatoonVehicleState
 {
 public:
-	LeaderFirstAndInvertLongidutinalAdjustmentState()
+	LeaderFirstAndInvertLookingForSafeGapState()
 		: PlatoonVehicleState("leader first and invert", 
-			"long adjustments", 2) {}
+			"looking for gap", 2) {}
 private:
 	void implement_handle_lane_keeping_intention() override;
 	void implement_handle_lane_change_intention() override;

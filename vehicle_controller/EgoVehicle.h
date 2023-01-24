@@ -21,12 +21,6 @@ class Platoon;
 class EgoVehicle : public Vehicle
 {
 public:
-
-	//enum class State {
-	//	lane_keeping,
-	//	intention_to_change_lanes,
-	//};
-
 	/* Constructors ---------------------------------------------------------- */
 	EgoVehicle() = default;
 	virtual ~EgoVehicle();
@@ -114,9 +108,6 @@ public:
 
 	/* Other getters and setters --------------------------------------------- */
 
-	/* Returns the desired velocity or the max road velocity */
-	double get_free_flow_velocity() const;
-
 	std::shared_ptr<Platoon> get_platoon() const
 	{
 		return implement_get_platoon();
@@ -126,21 +117,21 @@ public:
 	double get_gap_error() const;
 	double get_current_desired_time_headway() const;
 	/* Returns a nullptr if there is no leader at the destination lane */
-	std::shared_ptr<NearbyVehicle> get_destination_lane_leader() const {
+	std::shared_ptr<const NearbyVehicle> get_destination_lane_leader() const {
 		return implement_get_destination_lane_leader();
 	};
 	/* Returns a nullptr if there is no follower at the destination lane */
-	std::shared_ptr<NearbyVehicle> get_destination_lane_follower() const {
+	std::shared_ptr<const NearbyVehicle> get_destination_lane_follower() const {
 		return implement_get_destination_lane_follower();
 	};
 	/* Returns a nullptr if there is no assisted vehicle */
-	std::shared_ptr<NearbyVehicle> get_assisted_vehicle() const {
+	std::shared_ptr<const NearbyVehicle> get_assisted_vehicle() const {
 		return implement_get_assisted_vehicle();
 	};
 	double get_gap_variation_to(
-		const std::shared_ptr<NearbyVehicle> nearby_vehicle) const;
+		std::shared_ptr<const NearbyVehicle> nearby_vehicle) const;
 	double get_collision_free_gap_to(
-		const std::shared_ptr<NearbyVehicle> nearby_vehicle) const;
+		std::shared_ptr<const NearbyVehicle> nearby_vehicle) const;
 	const VehicleState* get_state() const;
 
 	void set_lane(long lane);
@@ -205,21 +196,23 @@ public:
 	bool has_leader() const;
 	double get_time_headway_to_assisted_vehicle() const;
 	/* Returns a nullptr if there is no leader */
-	std::shared_ptr<NearbyVehicle> get_leader() const;
-	std::shared_ptr<NearbyVehicle> get_nearby_vehicle_by_id(long nv_id) const;
+	std::shared_ptr<const NearbyVehicle> get_leader() const;
+	/* Returns a nullptr if vehicle not found */
+	std::shared_ptr<NearbyVehicle> get_nearby_vehicle_by_id(
+		long nv_id) const;
+
 	/* Computes the bumper-to-bumper distance between vehicles.
 	Returns MAX_DISTANCE if nearby_vehicle is empty. */
 	double compute_gap(const NearbyVehicle& nearby_vehicle) const;
 	/* Computes the bumper-to-bumper distance between vehicles.
 	* Returns MAX_DISTANCE if nearby_vehicle is a nullptr. */
 	double compute_gap(
-		const std::shared_ptr<NearbyVehicle> nearby_vehicle) const;
+		std::shared_ptr<const NearbyVehicle> nearby_vehicle) const;
 	/* Ego velocity minus leader velocity. Returns zero if there
 	* is no leader */
 	double get_relative_velocity_to_leader();
-	/* The lane change request is an int whose absolute value equals the
-	vehicle's id. The signal of the lane change request indicates whether
-	it is a right (-1) or left (+1) lane change. Only connected vehicles
+	/* The lane change request is the id of the vehicle in front of which
+	the lane changing vehicle wants to merge. Only connected vehicles
 	can create a lane change request*/
 	long get_lane_change_request() const;
 
@@ -232,8 +225,11 @@ public:
 
 	/* Methods to debug nearby vehicles information */
 
+	// Returns zero if no dest lane leader
 	long get_dest_lane_leader_id() const;
+	// Returns zero if no dest lane follower
 	long get_dest_lane_follower_id() const;
+	// Returns zero if no assisted vehicle
 	long get_assisted_veh_id() const;
 	double get_dest_follower_time_headway() const;
 
@@ -255,6 +251,9 @@ public:
 
 	void update_state();
 	void set_state(std::unique_ptr<VehicleState> new_state);
+	/* Sets the new state (must be a lane keeping state) and resets the 
+	desired lane change direction and the longitudinal controllers. */
+	void reset_state(std::unique_ptr<VehicleState> new_lane_keeping_state);
 	//bool has_lane_change_intention() const;
 	bool is_lane_changing() const override;
 	//State get_previous_state() const;
@@ -279,7 +278,7 @@ public:
 	//void decide_lane_change_direction();
 
 	double get_accepted_lane_change_gap(
-		std::shared_ptr<NearbyVehicle> nearby_vehicle);
+		std::shared_ptr<const NearbyVehicle> nearby_vehicle);
 
 	/*double compute_accepted_lane_change_gap(
 		std::shared_ptr<NearbyVehicle> nearby_vehicle, double accepted_risk);*/
@@ -295,11 +294,11 @@ public:
 	if the ego vehicle is behind and from the other to the ego vehicle
 	if the other vehicle is behind. */
 	double compute_time_headway_gap(
-		std::shared_ptr<NearbyVehicle> nearby_vehicle);
+		std::shared_ptr<const NearbyVehicle> nearby_vehicle);
 	/* Returns the transient lane changing gap between ego vehicle
 	and other. */
 	double compute_transient_gap(
-		std::shared_ptr<NearbyVehicle> nearby_vehicle);
+		std::shared_ptr<const NearbyVehicle> nearby_vehicle);
 	void update_origin_lane_controller();
 	void reset_origin_lane_velocity_controller();
 
@@ -314,11 +313,7 @@ protected:
 	ControlManager controller;
 	/* Keeps track of stopped time waiting for lane change */
 	double lane_change_waiting_time{ 0.0 };
-	std::vector<std::shared_ptr<NearbyVehicle>> nearby_vehicles;
 	std::unique_ptr<VehicleState> state{ nullptr };
-	/* Determines whether the vel control ref speed is the vehicle's
-	own desired speed or the max legal velocity. */
-	bool try_go_at_max_vel{ false };
 
 	bool verbose = false; /* when true, will print results to
 						  the default log file and
@@ -338,11 +333,12 @@ protected:
 	double get_current_max_brake() const;
 	void set_gap_variation_during_lane_change(int nv_id, double value);
 	void set_collision_free_gap(int nv_id, double value);
-
 	/* Takes the desired acceleration given by the controller and
 	returns the feasible acceleration given the approximated low level
 	dynamics */
 	double consider_vehicle_dynamics(double unfiltered_acceleration);
+	const std::vector<std::shared_ptr<NearbyVehicle>> 
+		get_nearby_vehicles() const;
 	void set_leader_by_id(long new_leader_id);
 	void find_leader();
 	
@@ -355,13 +351,13 @@ private:
 	lane change. Returns -1 for right lane changes, +1 for left lane
 	changes and 0 for lane keeping. */
 	virtual bool implement_check_lane_change_gaps() = 0;
-	virtual long create_lane_change_request() const = 0;
+	virtual long implement_get_lane_change_request() const = 0;
 	virtual void set_traffic_light_information(int traffic_light_id,
 		double distance) {};
 	virtual bool implement_has_next_traffic_light() const { return false; };
 	//virtual void compute_lane_change_risks() {};
 	virtual double compute_accepted_lane_change_gap(
-		std::shared_ptr<NearbyVehicle> nearby_vehicle) = 0;
+		std::shared_ptr<const NearbyVehicle> nearby_vehicle) = 0;
 	virtual std::shared_ptr<NearbyVehicle>
 		implement_get_destination_lane_leader() const = 0;
 	virtual std::shared_ptr<NearbyVehicle>
@@ -391,7 +387,7 @@ private:
 		const NearbyVehicle& nearby_vehicle) const = 0;
 
 	bool check_if_is_leader(const NearbyVehicle& nearby_vehicle) const;
-	void update_leader(const std::shared_ptr<NearbyVehicle>& old_leader);
+	void update_leader(std::shared_ptr<const NearbyVehicle>& old_leader);
 
 	/* Estimated parameters used for safe gap computations (no direct
 	equivalent in VISSIM's simulation dynamics) --------------------------- */
@@ -403,6 +399,7 @@ private:
 	double tau_d{ 0.0 };
 	double comfortable_brake{ COMFORTABLE_BRAKE }; // [m/s^2]
 
+	std::vector<std::shared_ptr<NearbyVehicle>> nearby_vehicles;
 	std::shared_ptr<NearbyVehicle> leader{ nullptr };
 	std::vector<long> leader_id;
 
@@ -411,7 +408,7 @@ private:
 	double current_time{ 0.0 };
 	double simulation_time_step{ 0.1 };
 	long color{ 0 };
-	double desired_velocity{ 0 }; /* from VISSIM's desired
+	double desired_velocity{ 0.0 }; /* from VISSIM's desired
 								  velocity distribution */
 	std::vector<long> lane;
 	std::vector<double> distance_traveled;

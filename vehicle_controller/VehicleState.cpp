@@ -62,7 +62,7 @@ bool have_same_strategy(const VehicleState& s1, const VehicleState& s2)
 bool operator== (const VehicleState& s1, const VehicleState& s2)
 {
 	return (have_same_strategy(s1, s2)
-		&& s1.get_phase_number() == s2.get_phase_number());
+		&& s1.get_state_number() == s2.get_state_number());
 }
 
 bool operator!= (const VehicleState& s1, const VehicleState& s2)
@@ -76,7 +76,7 @@ bool operator> (const VehicleState& s1, const VehicleState& s2)
 	{
 		std::clog << "Comparing states of different strategies\n";
 	}
-	return s1.get_phase_number() > s2.get_phase_number();
+	return s1.get_state_number() > s2.get_state_number();
 }
 
 bool operator< (const VehicleState& s1, const VehicleState& s2)

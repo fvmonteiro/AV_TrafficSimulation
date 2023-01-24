@@ -19,21 +19,16 @@ public:
 	bool is_last_platoon_vehicle() const;
 
 	bool has_finished_adjusting_time_headway() const;
-	bool can_start_adjustment_to_destination_lane_leader() const;
+	bool can_start_adjustment_to_virtual_leader() const;
 
 	const VehicleState* get_preceding_vehicle_state() const;
 	long get_preceding_vehicle_id() const;
 	const PlatoonVehicle* get_preceding_vehicle_in_platoon() const;
+	const VehicleState* get_following_vehicle_state() const;
 	const PlatoonVehicle* get_following_vehicle_in_platoon() const;
 
-protected:
+//protected:
 
-	void implement_analyze_nearby_vehicles() override;
-	
-	/* Returns true if the vehicle creates a platoon for itself. */
-	bool implement_analyze_platoons(
-		std::unordered_map<int, std::shared_ptr<Platoon>>& platoons,
-		long new_platoon_id, int platoon_lc_strategy) override;
 private:
 	std::shared_ptr<Platoon> platoon{ nullptr };
 	// desired velocity when not a part of the platoon
@@ -54,17 +49,24 @@ private:
 
 	double implement_compute_desired_acceleration(
 		const std::unordered_map<int, TrafficLight>& traffic_lights) override;
+	void implement_analyze_nearby_vehicles() override;
+	/* Returns true if the vehicle creates a platoon for itself. */
+	bool implement_analyze_platoons(
+		std::unordered_map<int, std::shared_ptr<Platoon>>& platoons,
+		long new_platoon_id, int platoon_lc_strategy) override;
 	double compute_vehicle_following_safe_time_headway(
 		const NearbyVehicle& nearby_vehicle) const override;
 	double compute_lane_changing_desired_time_headway(
 		const NearbyVehicle& nearby_vehicle) const override;
-	long create_lane_change_request() const override;
 	/* SCENARIO SPECIFIC: the platoon vehicles always start at the in ramp, 
 	and they try to change lanes as soon as they enter the highway */
 	void set_desired_lane_change_direction() override;
 	//bool implement_check_lane_change_gaps() override;
 	std::shared_ptr<Platoon> implement_get_platoon() const override;
 	void pass_this_to_state() override;
+	/* Chooses the desired destination lane follower */
+	void create_lane_change_request() override;
+	bool was_my_cooperation_request_accepted() const override;
 
 	// Check if vehicles in our platoon need gap generation
 	void find_cooperation_request_from_platoon();

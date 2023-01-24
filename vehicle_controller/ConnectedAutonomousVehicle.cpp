@@ -7,6 +7,7 @@ ConnectedAutonomousVehicle::ConnectedAutonomousVehicle(
 	AutonomousVehicle(id, type, desired_velocity,
 		true, simulation_time_step, creation_time, verbose)
 {
+	original_desired_velocity = get_desired_velocity();
 	compute_connected_safe_gap_parameters();
 	controller.add_cooperative_lane_change_controller(*this);
 	if (verbose)
@@ -33,60 +34,113 @@ implement_get_assisted_vehicle() const
 	return assisted_vehicle;
 }
 
-//double ConnectedAutonomousVehicle::
-//implement_get_time_headway_to_assisted_vehicle() const {
-//	if (is_cooperating_to_generate_gap())
-//	{
-//		return controller.get_gap_generation_lane_controller().
-//			get_desired_time_headway();
-//	}
-//	return 0;
-//}
-
-//void ConnectedAutonomousVehicle::try_to_set_nearby_vehicle_type(long nv_type)
-//{
-//	peek_nearby_vehicles()->set_type(nv_type, );
-//}
-
-long ConnectedAutonomousVehicle::create_lane_change_request() const
+long ConnectedAutonomousVehicle::implement_get_lane_change_request() const
 {
-	return desired_lane_change_direction.to_int() * get_id();
+	return lane_change_request;
+}
+
+void ConnectedAutonomousVehicle::create_lane_change_request()
+{
+	if (get_preferred_relative_lane() != RelativeLane::same)
+		lane_change_request = get_dest_lane_follower_id();
+	else
+		lane_change_request = 0;
 }
 
 void ConnectedAutonomousVehicle::implement_analyze_nearby_vehicles()
 {
-	//AutonomousVehicle::implement_analyze_nearby_vehicles();
 	find_leader();
 	find_destination_lane_vehicles();
 	find_cooperation_requests();
+
+	create_lane_change_request();
+	// [Jan 23, 2023] No need for this function while gap choice is simple
+	//avoid_adjusting_to_a_cooperating_vehicle();
 }
 
 void ConnectedAutonomousVehicle::find_cooperation_requests()
 {
-	try_go_at_max_vel = false;
+	set_desired_velocity(original_desired_velocity);
+
 	std::shared_ptr<NearbyVehicle> old_assisted_vehicle =
 		std::move(assisted_vehicle);
 
-	for (auto& nearby_vehicle : nearby_vehicles)
+	for (auto& nearby_vehicle : get_nearby_vehicles())
 	{
-		if (check_if_is_asking_for_cooperation(*nearby_vehicle))
+		// Wants to merge in front of me?
+		if (nearby_vehicle->get_lane_change_request_veh_id() == get_id())
+		{
+			if (assisted_vehicle == nullptr
+				|| (nearby_vehicle->get_relative_position()
+					< assisted_vehicle->get_relative_position()))
+			assisted_vehicle = nearby_vehicle;
+		}
+		// Wants to merge behind me?
+		else if (nearby_vehicle->get_dest_lane_leader_id() == get_id())
+		{
+			set_desired_velocity(MAX_VELOCITY);
+		}
+		/*if (check_if_is_asking_for_cooperation(*nearby_vehicle))
 		{
 			assisted_vehicle = nearby_vehicle;
 		}
 		else if (nearby_vehicle->is_requesting_to_merge_behind())
 		{
 			try_go_at_max_vel = true;
-		}
+		}*/
 	}
 	deal_with_close_and_slow_assited_vehicle();
 	update_assisted_vehicle(old_assisted_vehicle);
 }
 
+void ConnectedAutonomousVehicle::avoid_adjusting_to_a_cooperating_vehicle()
+{
+	/* [Jan 23, 2023] Currently, vehicles only ask cooperation of their dest
+	lane follower, so this function won't change anything. It will come in
+	handy if we implement other gap choice strategies. */
+	if (was_my_cooperation_request_accepted())
+	{
+		std::shared_ptr<NearbyVehicle> cooperating_vehicle =
+			get_nearby_vehicle_by_id(lane_change_request);
+		if (cooperating_vehicle->get_relative_position() > 1)
+		{
+			set_virtual_leader_by_id(0);
+		}
+		else if (cooperating_vehicle->get_relative_position() == 1)
+		{
+			for (auto& nv : get_nearby_vehicles())
+			{
+				if (is_leader_of_destination_lane_leader(*nv))
+				{
+					set_virtual_leader_by_id(nv->get_id());
+				}
+			}
+		}
+	}
+}
+
+bool ConnectedAutonomousVehicle::was_my_cooperation_request_accepted() const
+{
+	if (lane_change_request != 0)
+	{
+		/* We know that lane_change_request must be one of the 
+		nearby vehicles. */
+		long id_of_vehicle_being_assisted =
+			get_nearby_vehicle_by_id(lane_change_request)
+			->get_assisted_vehicle_id();
+		if (id_of_vehicle_being_assisted == get_id())
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
 void ConnectedAutonomousVehicle::deal_with_close_and_slow_assited_vehicle()
 {
-	/* We need acount for case where the ego vehicle is already too
+	/* We need to account for case where the ego vehicle is too
 	close to the vehicle asking to move in and the vehicle asking to move in
-	is already very slow. The only solution would be for the ego vehicle to
+	is very slow. The only solution would be for the ego vehicle to
 	go backwards, which would lead to a deadlock situation. */
 	if (has_assisted_vehicle()
 		&& (assisted_vehicle->compute_velocity(get_velocity()) < 1)
@@ -102,7 +156,7 @@ void ConnectedAutonomousVehicle::update_destination_lane_follower(
 	if (has_destination_lane_follower())
 	{
 		std::shared_ptr<NearbyVehicle>& dest_lane_follower =
-			get_destination_lane_follower();
+			get_modifiable_dest_lane_follower();
 		controller.update_destination_lane_follower_time_headway(
 			dest_lane_follower->get_h_to_incoming_vehicle());
 
@@ -248,27 +302,28 @@ double ConnectedAutonomousVehicle::implement_compute_desired_acceleration(
 bool ConnectedAutonomousVehicle::check_if_is_asking_for_cooperation(
 	const NearbyVehicle& nearby_vehicle)
 {
-	if (nearby_vehicle.is_requesting_to_merge_ahead())
-	{
-		long lane_change_request_veh_id =
-			nearby_vehicle.get_lane_change_request_veh_id();
-		if (lane_change_request_veh_id == nearby_vehicle.get_id())
-		{
-			/* The nearby veh is requesting a gap for itself */
-			// do nothing
-		}
-		else
-		{
-			/* The nearby veh is requesting a gap for someone
-			else in its platoon */
-		}
-		/* Updating the assisted vehicle parameters */
-		/*if (lane_change_request_veh_id != assisted_vehicle_id) {
-			controller.update_assisted_vehicle(
-				get_velocity(), *nearby_vehicle);
-		}*/
-		return true;
-	}
+	// [Jan 20, 2023] Phasing out this function
+	//if (nearby_vehicle.is_requesting_to_merge_ahead())
+	//{
+	//	long lane_change_request_veh_id =
+	//		nearby_vehicle.get_lane_change_request_veh_id();
+	//	if (lane_change_request_veh_id == nearby_vehicle.get_id())
+	//	{
+	//		/* The nearby veh is requesting a gap for itself */
+	//		// do nothing
+	//	}
+	//	else
+	//	{
+	//		/* The nearby veh is requesting a gap for someone
+	//		else in its platoon */
+	//	}
+	//	/* Updating the assisted vehicle parameters */
+	//	/*if (lane_change_request_veh_id != assisted_vehicle_id) {
+	//		controller.update_assisted_vehicle(
+	//			get_velocity(), *nearby_vehicle);
+	//	}*/
+	//	return true;
+	//}
 	return false;
 }
 

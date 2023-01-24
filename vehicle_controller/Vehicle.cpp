@@ -47,7 +47,7 @@ void Vehicle::set_category(long category)
 bool Vehicle::is_a_connected_type(VehicleType vehicle_type) const 
 {
 	return (vehicle_type == VehicleType::connected_car
-		|| vehicle_type == VehicleType::traffic_light_cacc_car
+		|| vehicle_type == VehicleType::traffic_light_calc_car
 		|| vehicle_type == VehicleType::platoon_car);
 }
 

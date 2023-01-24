@@ -14,8 +14,15 @@ public:
 		bool verbose = false) : AutonomousVehicle(id,
 			VehicleType::autonomous_car, desired_velocity, false,
 			simulation_time_step, creation_time, verbose) {} ;
+	
+	/* Vehicle behind which we want to merge (not necessarily the same as
+	the destination lane leader) */
+	std::shared_ptr<const NearbyVehicle> get_virtual_leader() const {
+		return virtual_leader;
+	}
 
-	bool merge_behind_dest_lane_leader() const;
+	bool has_virtual_leader() const;
+	//bool merge_behind_virtual_leader() const;
 	bool are_all_lane_change_gaps_safe() const;
 	LaneChangeGapsSafety get_lane_change_gaps_safety() const;
 
@@ -36,28 +43,37 @@ protected:
 	void implement_analyze_nearby_vehicles() override;
 	bool implement_check_lane_change_gaps() override;
 
-	double get_lambda_1_lane_change() const { return lambda_1_lane_change; }
+	double get_lambda_1_lane_change() const { return lambda_1_lane_change; };
 	double get_accepted_risk_to_leaders() const {
 		return accepted_lane_change_risk_to_leaders;
-	}
+	};
 	double get_accepted_risk_to_follower() const {
 		return accepted_lane_change_risk_to_follower;
-	}
+	};
+	std::shared_ptr<NearbyVehicle> get_modifiable_dest_lane_follower() {
+		return implement_get_destination_lane_follower();
+	};
 
 	void find_destination_lane_vehicles();
-	void set_destination_lane_leader_by_id(long new_leader_id);
-	void set_destination_lane_follower_by_id(
-		long new_follower_id);
+	void set_virtual_leader_by_id(long new_leader_id);
+	/*void set_destination_lane_follower_by_id(
+		long new_follower_id);*/
 	bool is_destination_lane_follower(
 		const NearbyVehicle& nearby_vehicle);
-	bool is_destination_lane_leader(
-		const NearbyVehicle& nearby_vehicle);
+	bool is_destination_lane_leader(const NearbyVehicle& nearby_vehicle);
 	bool is_leader_of_destination_lane_leader(
 		const NearbyVehicle& nearby_vehicle);
-	void deal_with_stopped_destination_lane_leader(
-		bool dest_lane_leader_has_leader);
-	void update_destination_lane_leader(
-		const std::shared_ptr<NearbyVehicle>& old_leader);
+
+	/* [Jan 23, 2023] TO DO: make some of the below private? */
+	/* ----------------------------------------------------- */
+
+	void define_virtual_leader(bool dest_lane_leader_has_leader);
+	void update_virtual_leader(std::shared_ptr<const NearbyVehicle> old_leader);
+	bool is_destination_lane_leader_stuck(
+		bool dest_lane_leader_has_leader) const;
+	bool try_to_overtake_destination_lane_leader() const;
+
+	/* ----------------------------------------------------- */
 
 	/* Non-linear gap based on ego and nearby vehicles states
 	and parameters */
@@ -65,6 +81,44 @@ protected:
 		const NearbyVehicle& nearby_vehicle, double current_lambda_1) const;
 
 private:
+	double min_overtaking_rel_vel{ 10.0 / 3.6 };
+	double max_lane_change_waiting_time{ 60.0 }; // [s]
+
+	/* Relevant members for lane changing ------------------------------------ */
+
+	/* Vehicle immediately ahead at the destination lane */
+	std::shared_ptr<NearbyVehicle> destination_lane_leader{ nullptr };
+	/* Vehicle immediately behind at the destination lane */
+	std::shared_ptr<NearbyVehicle> destination_lane_follower{ nullptr };
+	/* Vehicle behind which we want to merge (not necessarily the same as 
+	the destination lane leader) */
+	std::shared_ptr<NearbyVehicle> virtual_leader{ nullptr };
+	/* Emergency braking parameter during lane change */
+	double lambda_1_lane_change{ 0.0 }; // [m/s]
+
+	/* Risk related variables --------------------------------------------- */
+	/*The risk is an estimation of the relative velocity at collision
+	time under worst case scenario. */
+
+	/* Defines if the lane change acceptance decision is based on the
+	exact risk computation or on the risk estimation based on the time
+	headway */
+	bool use_linear_lane_change_gap{ false };
+	/* Stores the time when the vehicle started trying to
+	change lanes */
+	//double lane_change_timer_start{ 0.0 }; // [s]
+	double accepted_lane_change_risk_to_leaders{ 0.0 }; // [m/s]
+	double accepted_lane_change_risk_to_follower{ 0.0 }; // [m/s]
+	//double initial_risk{ 0.0 }; // [m/s]
+	//double constant_risk_period{ 1.0 }; // [s]
+	//double delta_risk{ 3.0 }; // [m/s]
+	//double max_risk_to_leader{ 0.0 }; // [m/s]
+	/* Risk at which the lane change headway becomes equal to the
+	vehicle following headway. */
+	//double intermediate_risk_to_leader{ 0.0 }; // [m/s]
+	//double max_risk_to_follower{ 0.0 }; // [m/s]
+
+
 	/* Finds the current leader and, if the vehicle has lane change
 	intention, the destination lane leader and follower */
 	//void find_relevant_nearby_vehicles() override;
@@ -73,24 +127,26 @@ private:
 	//void set_desired_lane_change_direction() override;
 	bool give_lane_change_control_to_vissim() const override;
 	//bool implement_can_start_lane_change() override;
-	long create_lane_change_request() const override { return 0; };
+	long implement_get_lane_change_request() const override { return 0; };
 	double compute_accepted_lane_change_gap(
-		std::shared_ptr<NearbyVehicle> nearby_vehicle) override;
-	/* Time-headway based gap (hv + d) minus a term based on
-	accepted risk */
-	double compute_time_headway_gap_for_lane_change(
-		const NearbyVehicle& nearby_vehicle);
-
+		std::shared_ptr<const NearbyVehicle> nearby_vehicle) override;
 	std::shared_ptr<NearbyVehicle>
 		implement_get_destination_lane_leader() const override;
 	std::shared_ptr<NearbyVehicle>
 		implement_get_destination_lane_follower() const override;
 	std::shared_ptr<NearbyVehicle> implement_get_assisted_vehicle()
 		const override { return nullptr; };
+	/* [Jan 23, 23] For AVs for now, the virtual leader is the destination
+	lane leader. */
+	//virtual void choose_virtual_leader();
 
+	/* Time-headway based gap (hv + d) minus a term based on
+	accepted risk */
+	double compute_time_headway_gap_for_lane_change(
+		const NearbyVehicle& nearby_vehicle);
 	bool has_lane_change_conflict() const;
 	bool is_lane_change_gap_safe(
-		std::shared_ptr<NearbyVehicle>& nearby_vehicle);
+		std::shared_ptr<const NearbyVehicle> nearby_vehicle);
 	void compute_lane_change_gap_parameters();
 	/* Non-linear gap based on ego and nearby vehicles states
 	and parameters */
@@ -129,36 +185,4 @@ private:
 	//double compute_max_vehicle_following_risk(double leader_max_brake);
 	/* NOT IMPLEMENTED */
 	void update_headways_with_risk(const EgoVehicle& ego_vehicle);
-
-	double min_overtaking_rel_vel{ 10.0 / 3.6 };
-	double max_lane_change_waiting_time{ 60.0 }; // [s]
-
-	/* Relevant members for lane changing ------------------------------------ */
-
-	std::shared_ptr<NearbyVehicle> destination_lane_leader{ nullptr };
-	std::shared_ptr<NearbyVehicle> destination_lane_follower{ nullptr };
-	/* Emergency braking parameter during lane change */
-	double lambda_1_lane_change{ 0.0 }; // [m/s]
-
-	/* Risk related variables --------------------------------------------- */
-	/*The risk is an estimation of the relative velocity at collision
-	time under worst case scenario. */
-
-	/* Defines if the lane change acceptance decision is based on the
-	exact risk computation or on the risk estimation based on the time
-	headway */
-	bool use_linear_lane_change_gap{ false };
-	/* Stores the time when the vehicle started trying to
-	change lanes */
-	//double lane_change_timer_start{ 0.0 }; // [s]
-	double accepted_lane_change_risk_to_leaders{ 0.0 }; // [m/s]
-	double accepted_lane_change_risk_to_follower{ 0.0 }; // [m/s]
-	//double initial_risk{ 0.0 }; // [m/s]
-	//double constant_risk_period{ 1.0 }; // [s]
-	//double delta_risk{ 3.0 }; // [m/s]
-	//double max_risk_to_leader{ 0.0 }; // [m/s]
-	/* Risk at which the lane change headway becomes equal to the
-	vehicle following headway. */
-	//double intermediate_risk_to_leader{ 0.0 }; // [m/s]
-	//double max_risk_to_follower{ 0.0 }; // [m/s]
 };

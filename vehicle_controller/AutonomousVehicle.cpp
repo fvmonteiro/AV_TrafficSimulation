@@ -20,28 +20,33 @@ AutonomousVehicle::AutonomousVehicle(long id, VehicleType type,
 	}
 }
 
-bool AutonomousVehicle::merge_behind_dest_lane_leader() const
+bool AutonomousVehicle::has_virtual_leader() const
 {
-	if (!has_destination_lane_leader()) return false;
-
-	double origin_lane_reference_velocity;
-	double ego_velocity = get_velocity();
-
-	/* Get the possible max vel at the origin lane */
-	if (controller.is_in_free_flow_at_origin_lane())
-	{
-		origin_lane_reference_velocity =
-			get_desired_velocity();
-	}
-	else
-	{
-		origin_lane_reference_velocity = get_leader()
-			->compute_velocity(ego_velocity);
-	}
-
-	return (get_destination_lane_leader()->compute_velocity(ego_velocity)
-				> origin_lane_reference_velocity - min_overtaking_rel_vel);
+	return virtual_leader != nullptr;
 }
+
+//bool AutonomousVehicle::merge_behind_virtual_leader() const
+//{
+//	if (!has_virtual_leader()) return false;
+//
+//	double origin_lane_reference_velocity;
+//	double ego_velocity = get_velocity();
+//
+//	/* Get the possible max vel at the origin lane */
+//	if (controller.is_in_free_flow_at_origin_lane())
+//	{
+//		origin_lane_reference_velocity =
+//			get_desired_velocity();
+//	}
+//	else
+//	{
+//		origin_lane_reference_velocity = get_leader()
+//			->compute_velocity(ego_velocity);
+//	}
+//
+//	return (get_virtual_leader()->compute_velocity(ego_velocity)
+//				> origin_lane_reference_velocity - min_overtaking_rel_vel);
+//}
 
 bool AutonomousVehicle::are_all_lane_change_gaps_safe() const
 {
@@ -55,12 +60,11 @@ LaneChangeGapsSafety AutonomousVehicle::get_lane_change_gaps_safety() const
 
 bool AutonomousVehicle::has_lane_change_conflict() const
 {
-
 	//if (verbose) std::clog << "checking conflicts" << std::endl;
 	/* If there's no lane change intention, there's no conflict */
 	if (!has_lane_change_intention()) return false;
 
-	for (auto& nv : nearby_vehicles)
+	for (auto& nv : get_nearby_vehicles())
 	{
 		if (nv->is_lane_changing())
 		{
@@ -92,24 +96,24 @@ bool AutonomousVehicle::has_lane_change_conflict() const
 	return false;
 }
 
-void AutonomousVehicle::set_destination_lane_leader_by_id(long new_leader_id)
+void AutonomousVehicle::set_virtual_leader_by_id(long new_leader_id)
 {
-	// Note: this makes the destination_lane_leader = nullptr
-	std::shared_ptr<NearbyVehicle> old_dest_lane_leader =
-		std::move(destination_lane_leader);
-	destination_lane_leader = get_nearby_vehicle_by_id(new_leader_id);
-	update_destination_lane_leader(old_dest_lane_leader);
+	// Note: this makes the virtual_leader = nullptr
+	std::shared_ptr<NearbyVehicle> old_virtual_lane_leader =
+		std::move(virtual_leader);
+	virtual_leader = get_nearby_vehicle_by_id(new_leader_id);
+	update_virtual_leader(old_virtual_lane_leader);
 }
 
-void AutonomousVehicle::set_destination_lane_follower_by_id(
-	long new_follower_id)
-{
-	// Note: this makes the destination_lane_leader = nullptr
-	std::shared_ptr<NearbyVehicle> old_dest_lane_foll =
-		std::move(destination_lane_follower);
-	destination_lane_follower = get_nearby_vehicle_by_id(new_follower_id);
-	update_destination_lane_follower(old_dest_lane_foll);
-}
+//void AutonomousVehicle::set_destination_lane_follower_by_id(
+//	long new_follower_id)
+//{
+//	// Note: this makes the destination_lane_leader = nullptr
+//	std::shared_ptr<NearbyVehicle> old_dest_lane_foll =
+//		std::move(destination_lane_follower);
+//	destination_lane_follower = get_nearby_vehicle_by_id(new_follower_id);
+//	update_destination_lane_follower(old_dest_lane_foll);
+//}
 
 bool AutonomousVehicle::is_destination_lane_follower(
 	const NearbyVehicle& nearby_vehicle)
@@ -148,6 +152,7 @@ void AutonomousVehicle::implement_analyze_nearby_vehicles()
 
 void AutonomousVehicle::find_destination_lane_vehicles()
 {
+	/* Note: move operation "empties" the current pointer values */
 	std::shared_ptr<NearbyVehicle> old_dest_lane_follower =
 		std::move(destination_lane_follower);
 	std::shared_ptr<NearbyVehicle> old_dest_lane_leader =
@@ -155,7 +160,7 @@ void AutonomousVehicle::find_destination_lane_vehicles()
 	bool dest_lane_leader_has_leader = false;
 	if (has_lane_change_intention())
 	{
-		for (auto& nearby_vehicle : nearby_vehicles)
+		for (const auto& nearby_vehicle : get_nearby_vehicles())
 		{
 			if (is_destination_lane_follower(*nearby_vehicle))
 			{
@@ -172,24 +177,55 @@ void AutonomousVehicle::find_destination_lane_vehicles()
 		}
 	}
 
-	deal_with_stopped_destination_lane_leader(dest_lane_leader_has_leader);
+	//choose_virtual_leader();
+	define_virtual_leader(dest_lane_leader_has_leader);
 	update_destination_lane_follower(old_dest_lane_follower);
-	update_destination_lane_leader(old_dest_lane_leader);
+	update_virtual_leader(old_dest_lane_leader);
 }
 
-void AutonomousVehicle::deal_with_stopped_destination_lane_leader(
+void AutonomousVehicle::define_virtual_leader(
 	bool dest_lane_leader_has_leader)
+{
+	if (is_destination_lane_leader_stuck(dest_lane_leader_has_leader)
+		|| try_to_overtake_destination_lane_leader())
+	{
+		virtual_leader = nullptr;
+	}
+	else
+	{
+		virtual_leader = destination_lane_leader;
+	}
+}
+
+bool AutonomousVehicle::is_destination_lane_leader_stuck(
+	bool dest_lane_leader_has_leader) const
 {
 	/* To avoid deadlocks, we overtake the destination lane leader in case
 	it is stopped and has no leader. This situation means that the dest
-	lane leader is not moving because we are too close to it.*/
+	lane leader is not changing lanes because we are too close to it.*/
 	if (has_destination_lane_leader()
 		&& (destination_lane_leader->compute_velocity(get_velocity()) < 0.1)
 		&& !dest_lane_leader_has_leader)
 	{
-		destination_lane_follower = destination_lane_leader;
-		destination_lane_leader = nullptr;
+		/*destination_lane_follower = destination_lane_leader;
+		destination_lane_leader = nullptr;*/
+		return true;
 	}
+	return false;
+}
+
+bool AutonomousVehicle::try_to_overtake_destination_lane_leader() const
+{
+	if (!has_destination_lane_leader()) return true;
+
+	double ego_velocity = get_velocity();
+	double origin_lane_reference_velocity = 
+		controller.is_in_free_flow_at_origin_lane() ?
+		get_desired_velocity() 
+		: get_leader()->compute_velocity(ego_velocity);
+
+	return (get_destination_lane_leader()->compute_velocity(ego_velocity)
+		< origin_lane_reference_velocity - min_overtaking_rel_vel);
 }
 
 void AutonomousVehicle::update_destination_lane_follower(
@@ -212,36 +248,39 @@ void AutonomousVehicle::update_destination_lane_follower(
 	}
 }
 
-void AutonomousVehicle::update_destination_lane_leader(
-	const std::shared_ptr<NearbyVehicle>& old_leader)
+void AutonomousVehicle::update_virtual_leader(
+	std::shared_ptr<const NearbyVehicle> old_leader)
 {
-	if (has_destination_lane_leader())
+	if (has_virtual_leader())
 	{
-		double new_leader_max_brake =
-			destination_lane_leader->get_max_brake();
-		bool is_new_leader_connected =
-			destination_lane_leader->is_connected();
+		double new_leader_max_brake = virtual_leader->get_max_brake();
+		bool is_new_leader_connected = virtual_leader->is_connected();
 		if (old_leader == nullptr)
 		{
 			double ego_vel = get_velocity();
 			controller.activate_destination_lane_controller(ego_vel,
-				destination_lane_leader->compute_velocity(ego_vel),
+				virtual_leader->compute_velocity(ego_vel),
 				compute_lane_changing_desired_time_headway(
-					*destination_lane_leader),
+					*virtual_leader),
 				is_new_leader_connected);
 		}
 		else if ((std::abs(new_leader_max_brake
 			- old_leader->get_max_brake()) > 0.5)
 			|| (old_leader->get_type()
-				!= destination_lane_leader->get_type()))
+				!= virtual_leader->get_type()))
 		{
 			controller.update_destination_lane_controller(get_velocity(),
 				compute_lane_changing_desired_time_headway(
-					*destination_lane_leader),
+					*virtual_leader),
 				is_new_leader_connected);
 		}
 	}
 }
+
+//void AutonomousVehicle::choose_virtual_leader()
+//{
+//	virtual_leader = destination_lane_leader;
+//}
 
 double AutonomousVehicle::compute_lane_changing_desired_time_headway(
 	const NearbyVehicle& nearby_vehicle) const
@@ -349,7 +388,7 @@ bool AutonomousVehicle::implement_check_lane_change_gaps()
 }
 
 bool AutonomousVehicle::is_lane_change_gap_safe(
-	std::shared_ptr<NearbyVehicle>& nearby_vehicle)
+	std::shared_ptr<const NearbyVehicle> nearby_vehicle)
 {
 	if (nearby_vehicle == nullptr) return true;
 	double margin = 0.1;
@@ -364,7 +403,7 @@ bool AutonomousVehicle::is_lane_change_gap_safe(
 }
 
 double AutonomousVehicle::compute_accepted_lane_change_gap(
-	std::shared_ptr<NearbyVehicle> nearby_vehicle)
+	std::shared_ptr<const NearbyVehicle> nearby_vehicle)
 {
 	if (nearby_vehicle == nullptr) return 0.0;
 
@@ -408,6 +447,11 @@ double AutonomousVehicle::compute_accepted_lane_change_gap(
 double AutonomousVehicle::compute_time_headway_gap_for_lane_change(
 	const NearbyVehicle& nearby_vehicle)
 {
+	/* [Jan 23, 2023] Now that we have both destination_lane_leader
+	and virtual_leader, this function is outdated. The controller stores 
+	data from the virtual leader, so it should not be used to measure 
+	safety towards the destination lane leader (which might be different 
+	from the virtual leader) */
 	double accepted_time_headway_gap =
 		controller.get_desired_time_headway_gap(get_velocity(),
 			nearby_vehicle);

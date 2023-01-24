@@ -76,13 +76,13 @@ protected:
 private:
 	double implement_get_gap_error() const override;
 	double implement_compute_desired_acceleration(const EgoVehicle& ego_vehicle,
-		const std::shared_ptr<NearbyVehicle> leader,
+		std::shared_ptr<const NearbyVehicle> leader,
 		double velocity_reference) override;
 
 	/* Determines and sets the current state of the longitudinal controller
 	TODO: should this class provide a default implementation?*/
 	virtual void determine_controller_state(const EgoVehicle& ego_vehicle,
-		const std::shared_ptr<NearbyVehicle> leader,
+		std::shared_ptr<const NearbyVehicle> leader,
 		double reference_velocity, double gap_control_input) = 0;
 
 	//double simulation_time_step{ 0.01 };

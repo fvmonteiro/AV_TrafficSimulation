@@ -32,9 +32,9 @@ const color_t LIGHT_BLUE = ARGB(255, 0, 196, 255);
 const color_t LIGHT_GRAY = ARGB(255, 192, 192, 192);
 const color_t BLUE_GREEN = ARGB(255, 0, 128, 128);
 
-const double MAX_DISTANCE = 300.0; // [m]
-const double MAX_VELOCITY = 130.0; /* [m/s] depends on which VISSIM desired
-								   speed distribution we use */
+const double MAX_DISTANCE{ 300.0 }; // [m]
+const double MAX_VELOCITY{ 130.0 / 3.6 }; /* [m/s] depends on which VISSIM
+	desired speed distribution we use */
 const double CAR_MAX_BRAKE{ 6.0 }; // absolute value [m/s^2]
 const double TRUCK_MAX_BRAKE{ 5.5 }; // absolute value  [m/s^2]
 const double ACTUATOR_CONSTANT{ 0.5 }; // [s].
@@ -70,8 +70,8 @@ enum class VehicleType {
 	acc_car = 105,
 	autonomous_car = 110,
 	connected_car = 120,
-	traffic_light_acc_car = 130,
-	traffic_light_cacc_car = 135,
+	traffic_light_alc_car = 130,
+	traffic_light_calc_car = 135,
 	platoon_car = 140,
 	truck = 200,
 	bus = 300

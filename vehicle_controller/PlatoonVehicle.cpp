@@ -52,29 +52,36 @@ bool PlatoonVehicle::has_finished_adjusting_time_headway() const
 		&& (is_gap_error_small || is_platoon_leader());
 }
 
-bool PlatoonVehicle::can_start_adjustment_to_destination_lane_leader() const
+bool PlatoonVehicle::can_start_adjustment_to_virtual_leader() const
 {
 	return !is_in_a_platoon()
-		|| platoon->can_vehicle_start_adjustment_to_dest_lane_leader(
+		|| platoon->can_vehicle_start_adjustment_to_virtual_leader(
 			get_id());
 }
 
 const VehicleState* PlatoonVehicle::get_preceding_vehicle_state() const
 {
-	const auto& veh = platoon->get_preceding_vehicle(get_id());
-	return veh == nullptr ? nullptr : veh->get_state();
+	const auto& leader = platoon->get_preceding_vehicle(get_id());
+	return leader == nullptr ? nullptr : leader->get_state();
 }
 
 long PlatoonVehicle::get_preceding_vehicle_id() const
 {
-	const auto& veh = platoon->get_preceding_vehicle(get_id());
-	return veh == nullptr ? 0 : veh->get_id();
+	const auto& leader = platoon->get_preceding_vehicle(get_id());
+	return leader == nullptr ? 0 : leader->get_id();
 }
 
 const PlatoonVehicle*
 PlatoonVehicle::get_preceding_vehicle_in_platoon() const
 {
 	return platoon->get_preceding_vehicle(get_id());
+}
+
+const VehicleState*
+PlatoonVehicle::get_following_vehicle_state() const
+{
+	const auto& follower = platoon->get_following_vehicle(get_id());
+	return follower == nullptr ? nullptr : follower->get_state();
 }
 
 const PlatoonVehicle*
@@ -136,9 +143,31 @@ double PlatoonVehicle::compute_lane_changing_desired_time_headway(
 	return h_lc;
 }
 
-long PlatoonVehicle::create_lane_change_request() const
+void PlatoonVehicle::create_lane_change_request()
 {
-	return platoon->create_lane_change_request_for_vehicle(get_id());
+	lane_change_request = 
+		platoon->create_lane_change_request_for_vehicle(get_id());
+}
+
+bool PlatoonVehicle::was_my_cooperation_request_accepted() const
+{
+	if (lane_change_request != 0 )
+	{
+		/* lane_change_request might be in the nearby vehicle
+		list of some other platoon vehicle, but not ours */
+		std::shared_ptr<NearbyVehicle> cooperating_vehicle =
+			get_nearby_vehicle_by_id(lane_change_request);
+		if (cooperating_vehicle != nullptr)
+		{
+			long id_of_vehicle_being_assisted =
+				cooperating_vehicle->get_assisted_vehicle_id();
+			if (platoon->is_vehicle_in_platoon(id_of_vehicle_being_assisted))
+			{
+				return true;
+			}
+		}
+	}
+	return false;
 }
 
 void PlatoonVehicle::set_desired_lane_change_direction()
@@ -154,6 +183,7 @@ void PlatoonVehicle::implement_analyze_nearby_vehicles()
 	find_leader();
 	find_destination_lane_vehicles();
 	find_cooperation_request_from_platoon();
+	create_lane_change_request();
 }
 
 void PlatoonVehicle::find_cooperation_request_from_platoon()
@@ -247,8 +277,6 @@ void PlatoonVehicle::create_platoon(long platoon_id,
 
 	platoon = std::make_shared<Platoon>(platoon_id, 
 		platoon_lc_strategy, this);
-
-	std::clog << "New platoon " << *platoon << std::endl;
 }
 
 void PlatoonVehicle::add_myself_to_leader_platoon(

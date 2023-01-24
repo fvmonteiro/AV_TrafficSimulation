@@ -37,7 +37,9 @@ public:
 	long get_assisted_vehicle_id(long veh_id) const;
 	const PlatoonVehicle* get_platoon_leader() const;
 	const PlatoonVehicle* get_last_vehicle() const;
+	/* Returns a nullptr if vehicle not found in platoon */
 	const PlatoonVehicle* get_vehicle_by_id(long veh_id) const;
+	long get_destination_lane_follower_closest_to_leader() const;
 
 	void set_verbose(bool verbose) { this->verbose = verbose; };
 	void set_velocity_at_lane_change_start(double velocity) {
@@ -46,22 +48,15 @@ public:
 	void set_strategy(int strategy_number);
 
 	bool is_empty() const;
+	bool is_vehicle_in_platoon(long veh_id) const;
 	void add_leader(PlatoonVehicle* new_vehicle);
 	void add_last_vehicle(PlatoonVehicle* new_vehicle);
 	void remove_vehicle_by_id(long veh_id, bool is_out_of_simulation);
-	bool can_vehicle_start_adjustment_to_dest_lane_leader(long veh_id) const;
-	//bool check_all_vehicles_lane_change_gaps();
+	bool can_vehicle_start_adjustment_to_virtual_leader(long veh_id) const;
 	bool can_vehicle_leave_platoon(
 		const PlatoonVehicle& platoon_vehicle) const;
 	void reorder_vehicles();
 	long create_lane_change_request_for_vehicle(long veh_id) const;
-	/* Checks whether a non platoon vehicle inserted itself 
-	in the platoon. Does not checks during lane changes */
-	/*bool has_a_vehicle_cut_in_the_platoon(
-		const PlatoonVehicle& platoon_vehicle) const;*/
-	/* Returns true if merge successful and this platoon is now
-	empty */
-	//bool merge_into_leading_platoon(Platoon& other_platoon);
 
 	/* Print function */
 	friend std::ostream& operator<< (std::ostream& out,

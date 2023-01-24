@@ -22,13 +22,13 @@ void LeaderFirstAndInvertLaneKeepingState
 		platoon_vehicle->update_origin_lane_controller();
 		platoon_vehicle->set_state(
 			std::make_unique<
-			LeaderFirstAndInvertLongidutinalAdjustmentState>());
+			LeaderFirstAndInvertLookingForSafeGapState>());
 	}
 }
 
 /* ------------------------------------------------------------------------ */
 
-void LeaderFirstAndInvertLongidutinalAdjustmentState
+void LeaderFirstAndInvertLookingForSafeGapState
 ::implement_handle_lane_keeping_intention()
 {
 	/* This case won't happen in our simulations.
@@ -45,15 +45,17 @@ void LeaderFirstAndInvertLongidutinalAdjustmentState
 	}
 }
 
-void LeaderFirstAndInvertLongidutinalAdjustmentState
+void LeaderFirstAndInvertLookingForSafeGapState
 ::implement_handle_lane_change_intention()
 {
 	long preceding_vehicle_id =
 		platoon_vehicle->get_preceding_vehicle_id();
 	long dest_lane_follower_id = 
 		platoon_vehicle->get_dest_lane_follower_id();
+	bool has_finished_overtaking = 
+		preceding_vehicle_id == dest_lane_follower_id;
 	if ((preceding_vehicle_id == 0 // this is the platoon leader
-		|| preceding_vehicle_id == dest_lane_follower_id)
+		|| has_finished_overtaking)
 		&&
 		platoon_vehicle->check_lane_change_gaps())
 	{
@@ -100,11 +102,10 @@ void LeaderFirstAndInvertLaneChangingState
 void LeaderFirstAndInvertCreatingGapState::
 implement_handle_lane_keeping_intention()
 {
-	const PlatoonVehicle* following_vehicle
-		= platoon_vehicle->get_following_vehicle_in_platoon();
-	if (following_vehicle == nullptr // last platoon vehicle
-		|| *following_vehicle->get_state()
-			> LeaderFirstAndInvertLaneChangingState()) 
+	const VehicleState* following_vehicle_state
+		= platoon_vehicle->get_following_vehicle_state();
+	if (following_vehicle_state == nullptr // last platoon vehicle
+		|| *following_vehicle_state > LeaderFirstAndInvertLaneChangingState())
 	{
 		platoon_vehicle->set_state(
 			std::make_unique<LeaderFirstAndInvertClosingGapState>());
@@ -147,20 +148,15 @@ implement_handle_lane_keeping_intention()
 	}
 	else
 	{
-		double safe_time_headway = platoon_vehicle->get_safe_time_headway();
-		bool has_time_headway_transition_ended =
-			(std::abs(safe_time_headway
-				- platoon_vehicle->get_current_desired_time_headway())
-				/ safe_time_headway) < 0.1;
-		bool is_gap_closed = platoon_vehicle->get_gap_error()
-			< gap_error_margin;
+		bool has_finished_adjusting_time_headway =
+			platoon_vehicle->has_finished_adjusting_time_headway();
 		bool is_velocity_synchronized = !platoon_vehicle->has_leader()
 			|| platoon_vehicle->get_leader()->get_relative_velocity() > -2.0;
 		/* The "following" platoon vehicle is the one that just overtook us */
 		bool is_following_platoon_vehicle_in_my_lane =
-			*platoon_vehicle->get_following_vehicle_in_platoon()->get_state()
+			*platoon_vehicle->get_following_vehicle_state()
 			> LeaderFirstAndInvertLaneChangingState();
-		if (has_time_headway_transition_ended && is_gap_closed
+		if (has_finished_adjusting_time_headway
 			&& is_velocity_synchronized
 			&& is_following_platoon_vehicle_in_my_lane)
 		{

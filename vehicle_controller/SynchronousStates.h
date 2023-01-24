@@ -14,11 +14,21 @@ private:
 	void implement_handle_lane_change_intention() override;
 };
 
-class SynchronousLongidutinalAdjustmentState : public PlatoonVehicleState
+class SynchronousIncreasingGapState : public PlatoonVehicleState
 {
 public:
-	SynchronousLongidutinalAdjustmentState()
-		: PlatoonVehicleState("synchronous", "long adjustments", 2) {}
+	SynchronousIncreasingGapState()
+		: PlatoonVehicleState("synchronous", "increasing gap", 2) {}
+private:
+	void implement_handle_lane_keeping_intention() override;
+	void implement_handle_lane_change_intention() override;
+};
+
+class SynchronousLookingForSafeGapState : public PlatoonVehicleState
+{
+public:
+	SynchronousLookingForSafeGapState()
+		: PlatoonVehicleState("synchronous", "looking for gap", 3) {}
 private:
 	void implement_handle_lane_keeping_intention() override;
 	void implement_handle_lane_change_intention() override;
@@ -28,7 +38,7 @@ class SynchronousLaneChangingState : public PlatoonVehicleState
 {
 public:
 	SynchronousLaneChangingState()
-		: PlatoonVehicleState("synchronous", "lane changing", 3) {}
+		: PlatoonVehicleState("synchronous", "lane changing", 4) {}
 private:
 	void implement_handle_lane_keeping_intention() override;
 	void implement_handle_lane_change_intention() override;
@@ -39,7 +49,7 @@ class SynchronousWaitingOthersState : public PlatoonVehicleState
 {
 public:
 	SynchronousWaitingOthersState()
-		: PlatoonVehicleState("synchronous", "waiting others", 4) {}
+		: PlatoonVehicleState("synchronous", "waiting others", 5) {}
 private:
 	void implement_handle_lane_keeping_intention() override;
 	void implement_handle_lane_change_intention() override;
@@ -49,7 +59,7 @@ class SynchronousClosingGapState : public PlatoonVehicleState
 {
 public:
 	SynchronousClosingGapState()
-		: PlatoonVehicleState("synchronous", "closing gap", 5) {}
+		: PlatoonVehicleState("synchronous", "closing gap", 6) {}
 private:
 	void implement_handle_lane_keeping_intention() override;
 	void implement_handle_lane_change_intention() override;
