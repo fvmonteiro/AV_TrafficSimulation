@@ -31,15 +31,16 @@ protected:
 		double desired_velocity, double simulation_time_step,
 		double creation_time, bool verbose);
 
-	/* Checks if the current destination lane leader is braking to 
-	generate a gap. In this case, do not adopt it as a virtual leader */
-	void avoid_adjusting_to_a_cooperating_vehicle();
 	void find_cooperation_requests();
 
 	double get_lambda_1(bool is_leader_connected) const;
 	double get_lambda_1_lane_change(bool is_leader_connected) const;
 
 	void set_assisted_vehicle_by_id(long assisted_vehicle_id);
+
+	/* Returns a nullptr if no virtual leader 
+	[Jan 24, 2023] TODO: not sure if should be private */
+	std::shared_ptr<NearbyVehicle> define_virtual_leader() const override;
 
 private:
 	/* Emergency braking parameter between connected vehicles */

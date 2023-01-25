@@ -114,6 +114,7 @@ public:
 	};
 	
 	double get_safe_time_headway() const;
+	/* Gap minus reference gap */
 	double get_gap_error() const;
 	double get_current_desired_time_headway() const;
 	/* Returns a nullptr if there is no leader at the destination lane */
@@ -174,13 +175,13 @@ public:
 	void clear_nearby_vehicles();
 	/* Creates an instance of nearby vehicle and populates it with
 	the given data. */
-	void emplace_nearby_vehicle(long id, long relative_lane,
+	void emplace_nearby_vehicle(long nv_id, long relative_lane,
 		long relative_position);
 	/* Returns the most recently added nearby vehicle */
-	std::shared_ptr<NearbyVehicle> peek_nearby_vehicles() const;
+	//std::shared_ptr<NearbyVehicle> peek_nearby_vehicles() const;
 	/* Sets the nearby vehicle if both the ego and nearby vehicles are connected.
 	Otherwise, set the type as unknown. */
-	void set_nearby_vehicle_type(long type);
+	void set_nearby_vehicle_type(long nv_id, long type);
 	/* Looks at all nearby vehicles to find the relevant ones, such
 	* as the leader. */
 	void analyze_nearby_vehicles() { implement_analyze_nearby_vehicles(); };
@@ -232,6 +233,8 @@ public:
 	// Returns zero if no assisted vehicle
 	long get_assisted_veh_id() const;
 	double get_dest_follower_time_headway() const;
+	// Returns zero if no assisted vehicle
+	long get_virtual_leader_id() const;
 
 	bool has_next_traffic_light() const {
 		return implement_has_next_traffic_light();
@@ -337,7 +340,7 @@ protected:
 	returns the feasible acceleration given the approximated low level
 	dynamics */
 	double consider_vehicle_dynamics(double unfiltered_acceleration);
-	const std::vector<std::shared_ptr<NearbyVehicle>> 
+	const std::unordered_map<long, std::shared_ptr<NearbyVehicle>> 
 		get_nearby_vehicles() const;
 	void set_leader_by_id(long new_leader_id);
 	void find_leader();
@@ -364,6 +367,7 @@ private:
 		implement_get_destination_lane_follower() const = 0;
 	virtual std::shared_ptr<NearbyVehicle>
 		implement_get_assisted_vehicle() const = 0;
+	virtual long implement_get_virtual_leader_id() const = 0;
 	virtual void implement_set_accepted_lane_change_risk_to_leaders(
 		double value) = 0;
 	virtual void implement_set_accepted_lane_change_risk_to_follower(
@@ -399,7 +403,7 @@ private:
 	double tau_d{ 0.0 };
 	double comfortable_brake{ COMFORTABLE_BRAKE }; // [m/s^2]
 
-	std::vector<std::shared_ptr<NearbyVehicle>> nearby_vehicles;
+	std::unordered_map<long, std::shared_ptr<NearbyVehicle>> nearby_vehicles;
 	std::shared_ptr<NearbyVehicle> leader{ nullptr };
 	std::vector<long> leader_id;
 

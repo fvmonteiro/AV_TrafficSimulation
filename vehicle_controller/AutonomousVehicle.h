@@ -21,6 +21,8 @@ public:
 		return virtual_leader;
 	}
 
+	bool has_destination_lane_leader_leader() const;
+	long get_destination_lane_leader_leader_id() const;
 	bool has_virtual_leader() const;
 	//bool merge_behind_virtual_leader() const;
 	bool are_all_lane_change_gaps_safe() const;
@@ -37,10 +39,7 @@ protected:
 		bool is_connected, double simulation_time_step, double creation_time,
 		bool verbose = false);
 
-	/* Finds the current leader and, if the vehicle has lane change
-	intention, the destination lane leader and follower
-	TODO [Nov 10, 2022] Make private?*/
-	void implement_analyze_nearby_vehicles() override;
+	// [Jan 24, 23] Make private?
 	bool implement_check_lane_change_gaps() override;
 
 	double get_lambda_1_lane_change() const { return lambda_1_lane_change; };
@@ -50,12 +49,23 @@ protected:
 	double get_accepted_risk_to_follower() const {
 		return accepted_lane_change_risk_to_follower;
 	};
-	std::shared_ptr<NearbyVehicle> get_modifiable_dest_lane_follower() {
+	std::shared_ptr<NearbyVehicle> get_modifiable_dest_lane_follower() const
+	{
 		return implement_get_destination_lane_follower();
 	};
+	std::shared_ptr<NearbyVehicle> get_modifiable_dest_lane_leader() const
+	{
+		return implement_get_destination_lane_leader();
+	};
+	std::shared_ptr<NearbyVehicle> get_destination_lane_leader_leader() const
+	{
+		return destination_lane_leader_leader;
+	};
+
 
 	void find_destination_lane_vehicles();
-	void set_virtual_leader_by_id(long new_leader_id);
+	void set_virtual_leader(
+		std::shared_ptr<NearbyVehicle> new_virtual_leader);
 	/*void set_destination_lane_follower_by_id(
 		long new_follower_id);*/
 	bool is_destination_lane_follower(
@@ -67,10 +77,10 @@ protected:
 	/* [Jan 23, 2023] TO DO: make some of the below private? */
 	/* ----------------------------------------------------- */
 
-	void define_virtual_leader(bool dest_lane_leader_has_leader);
+	/* Returns a nullptr if no virtual leader */
+	virtual std::shared_ptr<NearbyVehicle> define_virtual_leader() const;
 	void update_virtual_leader(std::shared_ptr<const NearbyVehicle> old_leader);
-	bool is_destination_lane_leader_stuck(
-		bool dest_lane_leader_has_leader) const;
+	//bool is_destination_lane_leader_stuck() const;
 	bool try_to_overtake_destination_lane_leader() const;
 
 	/* ----------------------------------------------------- */
@@ -90,6 +100,8 @@ private:
 	std::shared_ptr<NearbyVehicle> destination_lane_leader{ nullptr };
 	/* Vehicle immediately behind at the destination lane */
 	std::shared_ptr<NearbyVehicle> destination_lane_follower{ nullptr };
+	/* Vehicle in front of the destination lane leader */
+	std::shared_ptr<NearbyVehicle> destination_lane_leader_leader{ nullptr };
 	/* Vehicle behind which we want to merge (not necessarily the same as 
 	the destination lane leader) */
 	std::shared_ptr<NearbyVehicle> virtual_leader{ nullptr };
@@ -124,9 +136,10 @@ private:
 	//void find_relevant_nearby_vehicles() override;
 	double implement_compute_desired_acceleration(
 		const std::unordered_map<int, TrafficLight>& traffic_lights) override;
-	//void set_desired_lane_change_direction() override;
+	/* Finds the current leader and, if the vehicle has lane change
+	intention, the destination lane leader and follower */
+	void implement_analyze_nearby_vehicles() override;
 	bool give_lane_change_control_to_vissim() const override;
-	//bool implement_can_start_lane_change() override;
 	long implement_get_lane_change_request() const override { return 0; };
 	double compute_accepted_lane_change_gap(
 		std::shared_ptr<const NearbyVehicle> nearby_vehicle) override;
@@ -136,9 +149,7 @@ private:
 		implement_get_destination_lane_follower() const override;
 	std::shared_ptr<NearbyVehicle> implement_get_assisted_vehicle()
 		const override { return nullptr; };
-	/* [Jan 23, 23] For AVs for now, the virtual leader is the destination
-	lane leader. */
-	//virtual void choose_virtual_leader();
+	long implement_get_virtual_leader_id() const override;
 
 	/* Time-headway based gap (hv + d) minus a term based on
 	accepted risk */

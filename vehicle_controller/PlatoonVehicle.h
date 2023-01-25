@@ -19,15 +19,26 @@ public:
 	bool is_last_platoon_vehicle() const;
 
 	bool has_finished_adjusting_time_headway() const;
-	bool can_start_adjustment_to_virtual_leader() const;
+	bool has_finished_increasing_gap() const;
+	bool has_finished_closing_gap() const;
+	//bool can_start_adjustment_to_virtual_leader() const;
 
-	const VehicleState* get_preceding_vehicle_state() const;
 	long get_preceding_vehicle_id() const;
-	const PlatoonVehicle* get_preceding_vehicle_in_platoon() const;
+	long get_following_vehicle_id() const;
+	const VehicleState* get_preceding_vehicle_state() const;
 	const VehicleState* get_following_vehicle_state() const;
+	const PlatoonVehicle* get_preceding_vehicle_in_platoon() const;
 	const PlatoonVehicle* get_following_vehicle_in_platoon() const;
+	/* Suggests the virtual leader as if the vehicle was not part of 
+	a platoon */
+	std::shared_ptr<NearbyVehicle> define_virtual_leader_when_alone() const;
+	bool is_vehicle_in_sight(long nearby_vehicle_id) const;
 
-//protected:
+protected:
+
+	/* Returns a nullptr if no virtual leader 
+	[Jan 24, 2023] TODO: most likely can be private */
+	std::shared_ptr<NearbyVehicle> define_virtual_leader() const override;
 
 private:
 	std::shared_ptr<Platoon> platoon{ nullptr };
@@ -70,7 +81,6 @@ private:
 
 	// Check if vehicles in our platoon need gap generation
 	void find_cooperation_request_from_platoon();
-
 	void create_platoon(long platoon_id, int platoon_lc_strategy);
 	void add_myself_to_leader_platoon(
 		std::shared_ptr<Platoon> leader_platoon//,

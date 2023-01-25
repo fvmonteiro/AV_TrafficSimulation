@@ -39,14 +39,6 @@ long ConnectedAutonomousVehicle::implement_get_lane_change_request() const
 	return lane_change_request;
 }
 
-void ConnectedAutonomousVehicle::create_lane_change_request()
-{
-	if (get_preferred_relative_lane() != RelativeLane::same)
-		lane_change_request = get_dest_lane_follower_id();
-	else
-		lane_change_request = 0;
-}
-
 void ConnectedAutonomousVehicle::implement_analyze_nearby_vehicles()
 {
 	find_leader();
@@ -54,8 +46,6 @@ void ConnectedAutonomousVehicle::implement_analyze_nearby_vehicles()
 	find_cooperation_requests();
 
 	create_lane_change_request();
-	// [Jan 23, 2023] No need for this function while gap choice is simple
-	//avoid_adjusting_to_a_cooperating_vehicle();
 }
 
 void ConnectedAutonomousVehicle::find_cooperation_requests()
@@ -65,8 +55,9 @@ void ConnectedAutonomousVehicle::find_cooperation_requests()
 	std::shared_ptr<NearbyVehicle> old_assisted_vehicle =
 		std::move(assisted_vehicle);
 
-	for (auto& nearby_vehicle : get_nearby_vehicles())
+	for (auto const& id_veh_pair : get_nearby_vehicles())
 	{
+		auto const& nearby_vehicle = id_veh_pair.second;
 		// Wants to merge in front of me?
 		if (nearby_vehicle->get_lane_change_request_veh_id() == get_id())
 		{
@@ -93,30 +84,42 @@ void ConnectedAutonomousVehicle::find_cooperation_requests()
 	update_assisted_vehicle(old_assisted_vehicle);
 }
 
-void ConnectedAutonomousVehicle::avoid_adjusting_to_a_cooperating_vehicle()
+std::shared_ptr<NearbyVehicle> ConnectedAutonomousVehicle
+::define_virtual_leader() const
 {
-	/* [Jan 23, 2023] Currently, vehicles only ask cooperation of their dest
-	lane follower, so this function won't change anything. It will come in
-	handy if we implement other gap choice strategies. */
-	if (was_my_cooperation_request_accepted())
+	/* By default, we try to merge behind the current destination
+	lane leader. */
+	std::shared_ptr<NearbyVehicle> nv = get_modifiable_dest_lane_leader();
+
+	if (try_to_overtake_destination_lane_leader())
 	{
-		std::shared_ptr<NearbyVehicle> cooperating_vehicle =
-			get_nearby_vehicle_by_id(lane_change_request);
-		if (cooperating_vehicle->get_relative_position() > 1)
+		nv = nullptr;
+	}
+	else if (was_my_cooperation_request_accepted())
+	{
+		/* We must avoid trying to merge behind a vehicle that is 
+		braking to make space for us. */
+		int cooperating_vehicle_relative_position =
+			get_nearby_vehicle_by_id(lane_change_request)
+			->get_relative_position();
+		if (cooperating_vehicle_relative_position == 1)
 		{
-			set_virtual_leader_by_id(0);
+			nv = get_destination_lane_leader_leader();
 		}
-		else if (cooperating_vehicle->get_relative_position() == 1)
+		else if (cooperating_vehicle_relative_position > 1)
 		{
-			for (auto& nv : get_nearby_vehicles())
-			{
-				if (is_leader_of_destination_lane_leader(*nv))
-				{
-					set_virtual_leader_by_id(nv->get_id());
-				}
-			}
+			nv = nullptr;
 		}
 	}
+	return nv;
+}
+
+void ConnectedAutonomousVehicle::create_lane_change_request()
+{
+	if (get_preferred_relative_lane() != RelativeLane::same)
+		lane_change_request = get_dest_lane_follower_id();
+	else
+		lane_change_request = 0;
 }
 
 bool ConnectedAutonomousVehicle::was_my_cooperation_request_accepted() const

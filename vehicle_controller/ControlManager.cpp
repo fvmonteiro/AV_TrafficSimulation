@@ -616,7 +616,7 @@ bool ControlManager
 	*/
 	bool is_active = false;
 	if (platoon_vehicle.has_virtual_leader()
-		&& platoon_vehicle.can_start_adjustment_to_virtual_leader())
+		/*&& platoon_vehicle.can_start_adjustment_to_virtual_leader()*/)
 	{
 		std::shared_ptr<const NearbyVehicle> virtual_leader =
 			platoon_vehicle.get_virtual_leader();

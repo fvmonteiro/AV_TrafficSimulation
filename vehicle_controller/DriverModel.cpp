@@ -36,6 +36,7 @@ double current_time{ 0.0 };
 long current_vehicle_type{ 0 };
 long current_vehicle_id{ 0 };
 double current_desired_velocity{ 0 };
+long current_nearby_vehicle_id{ 0 };
 long platoon_id{ 1 };
 int platoon_lc_strategy{ 0 };
 
@@ -112,14 +113,14 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
     case DRIVER_DATA_TIME                   :
         if (CLUELESS_DEBUGGING && (double_value != current_time))
         {
-            /*std::clog << "t=" << current_time
-                << ", " << vehicles.size() << " vehicles." << std::endl;*/
             std::clog << "t=" << current_time
+                << ", " << vehicles.size() << " vehicles." << std::endl;
+            /*std::clog << "t=" << current_time
                 << ", " << platoons.size() << " platoons" << std::endl;
             for (auto& it : platoons)
             {
                 std::clog << *it.second << "\n";
-            }
+            }*/
         }
         current_time = double_value;
         return 1;
@@ -171,8 +172,10 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
             case UDA::delta_gap_to_fd:
             case UDA::lc_collision_free_gap_to_fd:
                 return 0;
-            /* Debugging: assisted vehicle */
+            /* Debugging: virtual leaders */
             case UDA::assisted_veh_id:
+                return 1;
+            case UDA::virtual_leader_id:
                 return 1;
             /* Debugging: other */
             case UDA::waiting_time:
@@ -322,6 +325,7 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
     case DRIVER_DATA_NVEH_ID                :
         if (long_value > 0)
         {
+            current_nearby_vehicle_id = long_value;
             vehicles[current_vehicle_id]->emplace_nearby_vehicle(
                 long_value, index1, index2);
         }
@@ -329,73 +333,90 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
     case DRIVER_DATA_NVEH_LANE_ANGLE        :
         return 1;
     case DRIVER_DATA_NVEH_LATERAL_POSITION  :
-        vehicles[current_vehicle_id]->peek_nearby_vehicles()
+        vehicles[current_vehicle_id]
+            ->get_nearby_vehicle_by_id(current_nearby_vehicle_id)
             ->set_lateral_position(double_value);
         return 1;
     case DRIVER_DATA_NVEH_DISTANCE          :
-        vehicles[current_vehicle_id]->peek_nearby_vehicles()
+        vehicles[current_vehicle_id]
+            ->get_nearby_vehicle_by_id(current_nearby_vehicle_id)
             ->set_distance(double_value);
         return 1;
     case DRIVER_DATA_NVEH_REL_VELOCITY      :
-        vehicles[current_vehicle_id]->peek_nearby_vehicles()
+        vehicles[current_vehicle_id]
+            ->get_nearby_vehicle_by_id(current_nearby_vehicle_id)
             ->set_relative_velocity(double_value);
         return 1;
     case DRIVER_DATA_NVEH_ACCELERATION      :
-        vehicles[current_vehicle_id]->peek_nearby_vehicles()
+        vehicles[current_vehicle_id]
+            ->get_nearby_vehicle_by_id(current_nearby_vehicle_id)
             ->set_acceleration(double_value);
         return 1;
     case DRIVER_DATA_NVEH_LENGTH            :
-        vehicles[current_vehicle_id]->peek_nearby_vehicles()
+        vehicles[current_vehicle_id]
+            ->get_nearby_vehicle_by_id(current_nearby_vehicle_id)
             ->set_length(double_value);
         return 1;
     case DRIVER_DATA_NVEH_WIDTH             :
-        vehicles[current_vehicle_id]->peek_nearby_vehicles()
+        vehicles[current_vehicle_id]
+            ->get_nearby_vehicle_by_id(current_nearby_vehicle_id)
             ->set_width(double_value);
         return 1;
     case DRIVER_DATA_NVEH_WEIGHT            :
     case DRIVER_DATA_NVEH_TURNING_INDICATOR :
         return 1;
     case DRIVER_DATA_NVEH_CATEGORY          :
-        vehicles[current_vehicle_id]->peek_nearby_vehicles()
+        vehicles[current_vehicle_id]
+            ->get_nearby_vehicle_by_id(current_nearby_vehicle_id)
             ->set_category(long_value);
         return 1;
     case DRIVER_DATA_NVEH_LANE_CHANGE       :
-        vehicles[current_vehicle_id]->peek_nearby_vehicles()
+        vehicles[current_vehicle_id]
+            ->get_nearby_vehicle_by_id(current_nearby_vehicle_id)
             ->set_lane_change_direction(long_value);
         return 1;
     case DRIVER_DATA_NVEH_TYPE              :
-        vehicles[current_vehicle_id]->set_nearby_vehicle_type(long_value);
+        vehicles[current_vehicle_id]->set_nearby_vehicle_type(
+            current_nearby_vehicle_id, long_value);
         return 1;
     case DRIVER_DATA_NVEH_UDA               :
         switch (UDA(index1))
         {
         case UDA::lane_change_request:
-            vehicles[current_vehicle_id]->peek_nearby_vehicles()
+            vehicles[current_vehicle_id]
+                ->get_nearby_vehicle_by_id(current_nearby_vehicle_id)
                 ->read_lane_change_request(long_value);
             break;
         case UDA::h_to_assited_veh:
-            vehicles[current_vehicle_id]->peek_nearby_vehicles()
+            vehicles[current_vehicle_id]
+                ->get_nearby_vehicle_by_id(current_nearby_vehicle_id)
                 ->set_h_to_incoming_vehicle(double_value);
             break;
         case UDA::max_lane_change_risk_to_follower:
-            vehicles[current_vehicle_id]->peek_nearby_vehicles()
+            vehicles[current_vehicle_id]
+                ->get_nearby_vehicle_by_id(current_nearby_vehicle_id)
                 ->set_max_lane_change_risk_to_follower(double_value);
             break;
         case UDA::platoon_id:
-            vehicles[current_vehicle_id]->peek_nearby_vehicles()
+            vehicles[current_vehicle_id]
+                ->get_nearby_vehicle_by_id(current_nearby_vehicle_id)
                 ->set_platoon_id(long_value);
             break;
         case UDA::dest_leader_id:
-            vehicles[current_vehicle_id]->peek_nearby_vehicles()
+            vehicles[current_vehicle_id]
+                ->get_nearby_vehicle_by_id(current_nearby_vehicle_id)
                 ->set_destination_lane_leader_id(long_value);
             break;
         case UDA::dest_follower_id:
-            vehicles[current_vehicle_id]->peek_nearby_vehicles()
+            vehicles[current_vehicle_id]
+                ->get_nearby_vehicle_by_id(current_nearby_vehicle_id)
                 ->set_destination_lane_follower_id(long_value);
             break;
         case UDA::assisted_veh_id:
-            vehicles[current_vehicle_id]->peek_nearby_vehicles()
+            vehicles[current_vehicle_id]
+                ->get_nearby_vehicle_by_id(current_nearby_vehicle_id)
                 ->set_assisted_vehicle_id(long_value);
+            break;
         default:
             break;
         }
@@ -478,10 +499,10 @@ DRIVERMODEL_API  int  DriverModelGetValue (long   type,
 
     //EgoVehicle& ego_vehicle = vehicles[current_vehicle_id];
 
-    if (CLUELESS_DEBUGGING)
+    /*if (CLUELESS_DEBUGGING)
     {
         std::clog << "Getting type " << type << "\n";
-    }
+    }*/
 
     switch (type) {
     case DRIVER_DATA_STATUS :
@@ -642,6 +663,10 @@ DRIVERMODEL_API  int  DriverModelGetValue (long   type,
             *long_value = vehicles[current_vehicle_id]->
                 get_assisted_veh_id();
             break;
+        case UDA::virtual_leader_id:
+            *long_value = vehicles[current_vehicle_id]->
+                get_virtual_leader_id();
+            break;
         /* Debugging: others */
         case UDA::waiting_time:
             *double_value = vehicles[current_vehicle_id]->get_waiting_time();
@@ -664,6 +689,11 @@ DRIVERMODEL_API  int  DriverModelGetValue (long   type,
         {
             std::string state_name =
                 vehicles[current_vehicle_id]->get_state()->get_state_name();
+            /*std::clog << "*string_value size " << sizeof * string_value
+                << ", string_value size " << sizeof string_value
+                << ", *string_value strlen " << strlen(*string_value)
+                << ", state_name size " << sizeof state_name.c_str()
+                << ", state_name strlen " << strlen(state_name.c_str()) << "\n";*/
             strcpy(*string_value, state_name.c_str());
             break;
         }
@@ -775,6 +805,11 @@ DRIVERMODEL_API  int  DriverModelExecuteCommand (long number)
             std::clog << "Analyzing nearby vehicles" << std::endl;
         }
         vehicles[current_vehicle_id]->analyze_nearby_vehicles();
+
+        if (CLUELESS_DEBUGGING)
+        {
+            std::clog << "Analyzing platoons" << std::endl;
+        }
 
         if (vehicles[current_vehicle_id]->analyze_platoons(platoons,
             platoon_id, platoon_lc_strategy))

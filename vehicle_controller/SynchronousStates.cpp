@@ -41,7 +41,7 @@ void SynchronousIncreasingGapState
 void SynchronousIncreasingGapState
 ::implement_handle_lane_change_intention()
 {
-	if (platoon_vehicle->has_finished_adjusting_time_headway())
+	if (platoon_vehicle->has_finished_increasing_gap())
 	{
 		platoon_vehicle->set_state(
 			std::make_unique<SynchronousLookingForSafeGapState>());
@@ -202,7 +202,7 @@ void SynchronousWaitingOthersState
 void SynchronousClosingGapState
 ::implement_handle_lane_keeping_intention()
 {
-	if (platoon_vehicle->has_finished_adjusting_time_headway())
+	if (platoon_vehicle->has_finished_closing_gap())
 	{
 		platoon_vehicle->set_state(
 			std::make_unique<SynchronousLaneKeepingState>());

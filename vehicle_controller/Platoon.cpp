@@ -61,6 +61,13 @@ long Platoon::get_preceding_vehicle_id(long veh_id) const
 	return preceding_vehicle != nullptr ? preceding_vehicle->get_id() : 0;
 }
 
+long Platoon::get_following_vehicle_id(long veh_id) const
+{
+	const PlatoonVehicle* following_vehicle =
+		get_following_vehicle(veh_id);
+	return following_vehicle != nullptr ? following_vehicle->get_id() : 0;
+}
+
 //std::shared_ptr<PlatoonVehicle> Platoon::get_preceding_vehicle(
 //	const PlatoonVehicle& platoon_vehicle) const
 //{
@@ -187,13 +194,12 @@ long Platoon::get_destination_lane_follower_closest_to_leader() const
 	{
 		if (vehicles_by_position.find(i) != vehicles_by_position.end())
 		{
-			auto& veh = vehicles_by_position.at(i);
+			const auto& veh = vehicles_by_position.at(i);
 			dest_lane_follower_id = veh->get_dest_lane_leader_id();
 			if (dest_lane_follower_id == 0
-				|| dest_lane_follower_id == veh->get_preceding_vehicle_id())
+				|| is_vehicle_in_platoon(dest_lane_follower_id))
 			{
-				dest_lane_follower_id =
-					vehicles_by_position.at(i)->get_dest_lane_follower_id();
+				dest_lane_follower_id = veh->get_dest_lane_follower_id();
 			}
 		}
 		i--;
@@ -281,22 +287,23 @@ const PlatoonVehicle* Platoon::get_following_vehicle(
 	return vehicles_by_position.at(veh_position);
 }
 
-long Platoon::get_assisted_vehicle_id(long veh_id) const
-{
-	return lane_change_strategy->get_assisted_vehicle_id(
-		*get_vehicle_by_id(veh_id));
-}
+//long Platoon::get_assisted_vehicle_id(long veh_id) const
+//{
+//	return lane_change_strategy->get_assisted_vehicle_id(
+//		*get_vehicle_by_id(veh_id));
+//}
 
-bool Platoon::can_vehicle_start_adjustment_to_virtual_leader(
-	long veh_id) const
-{
-	return lane_change_strategy->can_adjust_to_virtual_leader(
-		*get_vehicle_by_id(veh_id));
-}
+//bool Platoon::can_vehicle_start_adjustment_to_virtual_leader(
+//	long veh_id) const
+//{
+//	return lane_change_strategy->can_adjust_to_virtual_leader(
+//		*get_vehicle_by_id(veh_id));
+//}
 
 bool Platoon::can_vehicle_leave_platoon(
 	const PlatoonVehicle& platoon_vehicle) const
 {
+	std::clog << "\t[Platoon] can vehicle leave platoon method\n";
 	/* The platoon leader always stays in its platoon,
 	which might be a single vehicle platoon */
 	return !platoon_vehicle.is_platoon_leader() 
@@ -329,6 +336,13 @@ long Platoon::create_lane_change_request_for_vehicle(long veh_id) const
 {
 	return 
 		lane_change_strategy->create_platoon_lane_change_request(veh_id);
+}
+
+std::shared_ptr<NearbyVehicle> Platoon
+::define_virtual_leader(const PlatoonVehicle& platoon_vehicle)
+const
+{
+	return lane_change_strategy->define_virtual_leader(platoon_vehicle);
 }
 
 std::ostream& operator<< (std::ostream& out, const Platoon& platoon)

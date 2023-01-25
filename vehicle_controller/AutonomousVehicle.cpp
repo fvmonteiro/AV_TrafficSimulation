@@ -20,6 +20,17 @@ AutonomousVehicle::AutonomousVehicle(long id, VehicleType type,
 	}
 }
 
+bool AutonomousVehicle::has_destination_lane_leader_leader() const
+{
+	return destination_lane_leader_leader != nullptr;
+}
+
+long AutonomousVehicle::get_destination_lane_leader_leader_id() const
+{
+	return has_destination_lane_leader_leader() ?
+		destination_lane_leader_leader->get_id() : 0;
+}
+
 bool AutonomousVehicle::has_virtual_leader() const
 {
 	return virtual_leader != nullptr;
@@ -64,8 +75,9 @@ bool AutonomousVehicle::has_lane_change_conflict() const
 	/* If there's no lane change intention, there's no conflict */
 	if (!has_lane_change_intention()) return false;
 
-	for (auto& nv : get_nearby_vehicles())
+	for (auto const& id_veh_pair : get_nearby_vehicles())
 	{
+		auto const& nv = id_veh_pair.second;
 		if (nv->is_lane_changing())
 		{
 			RelativeLane& nv_lane = nv->get_relative_lane();
@@ -96,12 +108,13 @@ bool AutonomousVehicle::has_lane_change_conflict() const
 	return false;
 }
 
-void AutonomousVehicle::set_virtual_leader_by_id(long new_leader_id)
+void AutonomousVehicle::set_virtual_leader(
+	std::shared_ptr<NearbyVehicle> new_virtual_leader)
 {
 	// Note: this makes the virtual_leader = nullptr
 	std::shared_ptr<NearbyVehicle> old_virtual_lane_leader =
 		std::move(virtual_leader);
-	virtual_leader = get_nearby_vehicle_by_id(new_leader_id);
+	virtual_leader = new_virtual_leader;
 	update_virtual_leader(old_virtual_lane_leader);
 }
 
@@ -155,13 +168,14 @@ void AutonomousVehicle::find_destination_lane_vehicles()
 	/* Note: move operation "empties" the current pointer values */
 	std::shared_ptr<NearbyVehicle> old_dest_lane_follower =
 		std::move(destination_lane_follower);
-	std::shared_ptr<NearbyVehicle> old_dest_lane_leader =
-		std::move(destination_lane_leader);
-	bool dest_lane_leader_has_leader = false;
+	destination_lane_leader = nullptr;
+	destination_lane_leader_leader = nullptr;
+
 	if (has_lane_change_intention())
 	{
-		for (const auto& nearby_vehicle : get_nearby_vehicles())
+		for (auto const& id_veh_pair : get_nearby_vehicles())
 		{
+			auto const& nearby_vehicle = id_veh_pair.second;
 			if (is_destination_lane_follower(*nearby_vehicle))
 			{
 				destination_lane_follower = nearby_vehicle;
@@ -172,60 +186,67 @@ void AutonomousVehicle::find_destination_lane_vehicles()
 			}
 			else if (is_leader_of_destination_lane_leader(*nearby_vehicle))
 			{
-				dest_lane_leader_has_leader = true;
+				destination_lane_leader_leader = nearby_vehicle;
 			}
 		}
 	}
 
-	//choose_virtual_leader();
-	define_virtual_leader(dest_lane_leader_has_leader);
 	update_destination_lane_follower(old_dest_lane_follower);
-	update_virtual_leader(old_dest_lane_leader);
+	set_virtual_leader(define_virtual_leader());
 }
 
-void AutonomousVehicle::define_virtual_leader(
-	bool dest_lane_leader_has_leader)
+std::shared_ptr<NearbyVehicle> AutonomousVehicle::define_virtual_leader()
+const
 {
-	if (is_destination_lane_leader_stuck(dest_lane_leader_has_leader)
-		|| try_to_overtake_destination_lane_leader())
+	if (try_to_overtake_destination_lane_leader())
 	{
-		virtual_leader = nullptr;
+		return nullptr;
 	}
 	else
 	{
-		virtual_leader = destination_lane_leader;
+		return destination_lane_leader;
 	}
 }
 
-bool AutonomousVehicle::is_destination_lane_leader_stuck(
-	bool dest_lane_leader_has_leader) const
-{
-	/* To avoid deadlocks, we overtake the destination lane leader in case
-	it is stopped and has no leader. This situation means that the dest
-	lane leader is not changing lanes because we are too close to it.*/
-	if (has_destination_lane_leader()
-		&& (destination_lane_leader->compute_velocity(get_velocity()) < 0.1)
-		&& !dest_lane_leader_has_leader)
-	{
-		/*destination_lane_follower = destination_lane_leader;
-		destination_lane_leader = nullptr;*/
-		return true;
-	}
-	return false;
-}
+//bool AutonomousVehicle::is_destination_lane_leader_stuck() const
+//{
+//	/* To avoid deadlocks, we try to overtake the destination lane leader 
+//	in case	it is stopped and has no leader. This situation means that the
+//	dest lane leader is not changing lanes because we are too close to it.*/
+//	if (has_destination_lane_leader()
+//		&& (destination_lane_leader->compute_velocity(get_velocity()) < 0.1)
+//		&& (destination_lane_leader_leader == nullptr))
+//	{
+//		/*destination_lane_follower = destination_lane_leader;
+//		destination_lane_leader = nullptr;*/
+//		return true;
+//	}
+//	return false;
+//}
 
 bool AutonomousVehicle::try_to_overtake_destination_lane_leader() const
 {
 	if (!has_destination_lane_leader()) return true;
 
 	double ego_velocity = get_velocity();
-	double origin_lane_reference_velocity = 
-		controller.is_in_free_flow_at_origin_lane() ?
-		get_desired_velocity() 
+	double dest_lane_leader_vel =
+		get_destination_lane_leader()->compute_velocity(ego_velocity);
+	double origin_lane_desired_velocity =
+		(controller.is_in_free_flow_at_origin_lane() || !has_leader()) ?
+		get_desired_velocity()
 		: get_leader()->compute_velocity(ego_velocity);
 
-	return (get_destination_lane_leader()->compute_velocity(ego_velocity)
-		< origin_lane_reference_velocity - min_overtaking_rel_vel);
+	/* We say the dest lane leader is stuck if it is not moving even 
+	though it has no leader. This can happen when vehicles in different 
+	lanes trying to "switch" lanes. */
+	bool is_dest_lane_leader_stuck =
+		dest_lane_leader_vel < 0.1
+		&& (get_destination_lane_leader_leader() == nullptr);
+	bool is_desired_speed_higher = dest_lane_leader_vel
+		< (origin_lane_desired_velocity - min_overtaking_rel_vel);
+
+	/* [Jan 24, 2023] Note: maybe the first condition is redundant. */
+	return is_dest_lane_leader_stuck || is_desired_speed_higher;
 }
 
 void AutonomousVehicle::update_destination_lane_follower(
@@ -276,11 +297,6 @@ void AutonomousVehicle::update_virtual_leader(
 		}
 	}
 }
-
-//void AutonomousVehicle::choose_virtual_leader()
-//{
-//	virtual_leader = destination_lane_leader;
-//}
 
 double AutonomousVehicle::compute_lane_changing_desired_time_headway(
 	const NearbyVehicle& nearby_vehicle) const
@@ -378,11 +394,6 @@ bool AutonomousVehicle::implement_check_lane_change_gaps()
 	/*bool no_conflict = !has_lane_change_conflict();*/
 	lane_change_gaps_safety.no_conflict =
 		!has_lane_change_conflict();
-
-	if (verbose)
-	{
-		std::clog << lane_change_gaps_safety << std::endl;
-	}
 
 	return lane_change_gaps_safety.is_lane_change_safe();
 }
@@ -620,6 +631,11 @@ implement_get_destination_lane_follower() const
 	return destination_lane_follower;
 }
 
+long AutonomousVehicle::implement_get_virtual_leader_id() const
+{
+	return has_virtual_leader() ? get_virtual_leader()->get_id() : 0;
+}
+
 void AutonomousVehicle::compute_lane_change_gap_parameters()
 {
 	lambda_1_lane_change = compute_lambda_1(max_jerk,
@@ -653,12 +669,6 @@ void AutonomousVehicle::reset_accepted_lane_change_risks(double time)
 
 bool AutonomousVehicle::update_accepted_risk(double time)
 {
-	/*if (verbose)
-	{
-		std::clog << "\tt=" << time
-			<< ", timer_start=" << lane_change_timer_start << std::endl;
-	}*/
-
 	bool has_increased = false;
 
 	/*if (((time - lane_change_timer_start) >= constant_risk_period)) {

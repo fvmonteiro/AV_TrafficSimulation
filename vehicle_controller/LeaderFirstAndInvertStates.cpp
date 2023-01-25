@@ -149,7 +149,7 @@ implement_handle_lane_keeping_intention()
 	else
 	{
 		bool has_finished_adjusting_time_headway =
-			platoon_vehicle->has_finished_adjusting_time_headway();
+			platoon_vehicle->has_finished_closing_gap();
 		bool is_velocity_synchronized = !platoon_vehicle->has_leader()
 			|| platoon_vehicle->get_leader()->get_relative_velocity() > -2.0;
 		/* The "following" platoon vehicle is the one that just overtook us */

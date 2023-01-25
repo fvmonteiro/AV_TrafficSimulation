@@ -44,7 +44,7 @@ void LastVehicleFirstIncreasingGapState
 void LastVehicleFirstIncreasingGapState
 ::implement_handle_lane_change_intention()
 {
-	if (platoon_vehicle->has_finished_adjusting_time_headway())
+	if (platoon_vehicle->has_finished_increasing_gap())
 	{
 		platoon_vehicle->set_state(
 			std::make_unique<LastVehicleFirstLookingForSafeGapState>());
@@ -162,7 +162,7 @@ implement_handle_lane_keeping_intention()
 	else
 	{
 		bool has_finished_adjusting_time_headway = 
-			platoon_vehicle->has_finished_adjusting_time_headway();
+			platoon_vehicle->has_finished_closing_gap();
 		bool is_preceding_platoon_vehicle_in_my_lane =
 			*platoon_vehicle->get_preceding_vehicle_state()
 			> LastVehicleFirstLaneChangingState();

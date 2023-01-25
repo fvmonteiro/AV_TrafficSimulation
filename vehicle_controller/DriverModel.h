@@ -66,6 +66,7 @@ enum class UDA {
     lc_collision_free_gap_to_fd,
     /* Debugging: assisted vehicle */
     assisted_veh_id = 130,
+    virtual_leader_id = 131,
     /* Debugging: other stuff */
     waiting_time = 140,
     risk = 141,

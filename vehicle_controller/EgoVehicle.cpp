@@ -308,29 +308,29 @@ void EgoVehicle::clear_nearby_vehicles()
 	collision_free_gap.clear();
 }
 
-void EgoVehicle::emplace_nearby_vehicle(long id, long relative_lane,
+void EgoVehicle::emplace_nearby_vehicle(long nv_id, long relative_lane,
 	long relative_position)
 {
 	std::shared_ptr<NearbyVehicle> nearby_vehicle =
-		std::make_shared<NearbyVehicle>(NearbyVehicle(id, relative_lane,
+		std::make_shared<NearbyVehicle>(NearbyVehicle(nv_id, relative_lane,
 		relative_position));
-	nearby_vehicles.push_back(std::move(nearby_vehicle));
+	nearby_vehicles[nv_id] = std::move(nearby_vehicle);
 }
 
-std::shared_ptr<NearbyVehicle> EgoVehicle::peek_nearby_vehicles() const
-{
-	if (!nearby_vehicles.empty())
-	{
-		return nearby_vehicles.back();
-	}
-	std::clog << "Empty nearby_vehicles container in vehicle  " << get_id()
-		<< std::endl;
-	return nullptr;
-}
+//std::shared_ptr<NearbyVehicle> EgoVehicle::peek_nearby_vehicles() const
+//{
+//	if (!nearby_vehicles.empty())
+//	{
+//		return nearby_vehicles.back();
+//	}
+//	std::clog << "Empty nearby_vehicles container in vehicle  " << get_id()
+//		<< std::endl;
+//	return nullptr;
+//}
 
-void EgoVehicle::set_nearby_vehicle_type(long nv_type)
+void EgoVehicle::set_nearby_vehicle_type(long nv_id, long nv_type)
 {
-	peek_nearby_vehicles()->set_type(VehicleType(nv_type), type);
+	get_nearby_vehicle_by_id(nv_id)->set_type(VehicleType(nv_type), type);
 }
 
 bool EgoVehicle::has_leader() const
@@ -360,11 +360,13 @@ std::shared_ptr<const NearbyVehicle> EgoVehicle::get_leader() const
 std::shared_ptr<NearbyVehicle> EgoVehicle::get_nearby_vehicle_by_id(
 	long nv_id) const
 {
-	for (std::shared_ptr<NearbyVehicle> nv : nearby_vehicles)
+	return nearby_vehicles.find(nv_id) != nearby_vehicles.end() ?
+		nearby_vehicles.at(nv_id) : nullptr;
+	/*for (std::shared_ptr<NearbyVehicle> nv : nearby_vehicles)
 	{
 		if (nv->get_id() == nv_id) return nv;
 	}
-	return nullptr;
+	return nullptr;*/
 }
 
 double EgoVehicle::get_relative_velocity_to_leader()
@@ -404,6 +406,11 @@ double EgoVehicle::get_dest_follower_time_headway() const
 {
 	return controller.get_destination_lane_controller().
 		get_follower_time_headway();
+}
+
+long EgoVehicle::get_virtual_leader_id() const
+{
+	return implement_get_virtual_leader_id();
 }
 
 bool EgoVehicle::is_in_a_platoon() const
@@ -469,7 +476,7 @@ void EgoVehicle::implement_analyze_nearby_vehicles()
 	find_leader();
 }
 
-const std::vector<std::shared_ptr<NearbyVehicle>> EgoVehicle
+const std::unordered_map<long, std::shared_ptr<NearbyVehicle>> EgoVehicle
 ::get_nearby_vehicles() const
 {
 	return nearby_vehicles;
@@ -488,9 +495,12 @@ void EgoVehicle::find_leader()
 	// Note: this makes the leader = nullptr
 	std::shared_ptr<const NearbyVehicle> old_leader = std::move(leader);
 
-	for (auto& nearby_vehicle : nearby_vehicles)
+	for (auto const& id_veh_pair : nearby_vehicles)
 	{
-		if (check_if_is_leader(*nearby_vehicle)) leader = nearby_vehicle;
+		if (check_if_is_leader(*id_veh_pair.second)) 
+		{
+			leader = id_veh_pair.second;
+		}
 	}
 	update_leader(old_leader);
 }

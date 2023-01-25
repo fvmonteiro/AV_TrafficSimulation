@@ -9,7 +9,12 @@ void LeaderFirstLaneKeepingState
 void LeaderFirstLaneKeepingState
 ::implement_handle_lane_change_intention()
 {
-	bool change_state = false;
+	/* [Jan 24, 2023] IMPORTANT NOTE:
+	This is a heuristic solution. Without an optimization step, there's
+	no way to know when the vehicles should start increasing the gap
+	to their leaders. Is it once the leader is done increasing gap, or
+	once it has started/finished its own lane change? */
+
 	const VehicleState* leader_state = platoon_vehicle
 		->get_preceding_vehicle_state();
 	if (leader_state == nullptr // this is the platoon leader
@@ -43,7 +48,7 @@ void LeaderFirstIncreasingGapState
 void LeaderFirstIncreasingGapState
 ::implement_handle_lane_change_intention()
 {
-	if (platoon_vehicle->has_finished_adjusting_time_headway())
+	if (platoon_vehicle->has_finished_increasing_gap())
 	{
 		platoon_vehicle->set_state(
 			std::make_unique<LeaderFirstLookingForSafeGapState>());
@@ -153,7 +158,7 @@ void LeaderFirstClosingGapState
 			}
 		}
 	}
-	else if (platoon_vehicle->has_finished_adjusting_time_headway())
+	else if (platoon_vehicle->has_finished_closing_gap())
 	{
 			change_state = true;
 	}

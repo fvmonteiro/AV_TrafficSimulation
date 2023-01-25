@@ -2080,6 +2080,7 @@
 		<userDefinedAttribute comment="Sum of a time headway based gap and the transient gap" dataSrcType="DATA" dataType="SHORTLENGTH" decimals="2" formula="" internalDefValueNum="0" internalDefValueStr="" internalMaxValue="INF" internalMinValue="-INF" maxStrLen="100" nameLong="Safe lane changing gap to the destination lane follower" nameShort="safeGapFd" no="124" objType="VEHICLE" subAttrs=""/>
 		<userDefinedAttribute comment="" dataSrcType="DATA" dataType="DOUBLE" decimals="2" formula="" internalDefValueStr="" internalMaxValue="INF" internalMinValue="-INF" maxStrLen="100" nameLong="Destination lane follower time headway" nameShort="destFollowerTimeHeadway" no="125" objType="VEHICLE" subAttrs=""/>
 		<userDefinedAttribute comment="ID of vehicle for which a gap is being generated" dataSrcType="DATA" dataType="INT" decimals="2" formula="" internalDefValueNum="0" internalDefValueStr="" internalMaxValue="INF" internalMinValue="-INF" maxStrLen="100" nameLong="Assisted Vehicle ID" nameShort="assistedVehId" no="130" objType="VEHICLE" subAttrs=""/>
+		<userDefinedAttribute comment="ID of the vehicle behing which we're trying to merge" dataSrcType="DATA" dataType="INT" decimals="2" formula="" internalDefValueNum="0" internalDefValueStr="" internalMaxValue="INF" internalMinValue="-INF" maxStrLen="100" nameLong="Virtual Leader ID" nameShort="virtualLeader" no="131" objType="VEHICLE" subAttrs=""/>
 		<userDefinedAttribute comment="Time stopped and waiting for a lane change" dataSrcType="DATA" dataType="DOUBLE" decimals="2" formula="" internalDefValueNum="0" internalDefValueStr="" internalMaxValue="INF" internalMinValue="-INF" maxStrLen="100" nameLong="Waiting Time" nameShort="waitingTime" no="140" objType="VEHICLE" subAttrs=""/>
 		<userDefinedAttribute comment="Collision severity under worst-case scenario" dataSrcType="DATA" dataType="DOUBLE" decimals="2" formula="" internalDefValueNum="0" internalDefValueStr="" internalMaxValue="INF" internalMinValue="-INF" maxStrLen="100" nameLong="Risk" nameShort="risk" no="141" objType="VEHICLE" subAttrs=""/>
 		<userDefinedAttribute comment="Time headway to leader at origin lane. Depends on whether the vehicle is lane changing." dataSrcType="DATA" dataType="DOUBLE" decimals="2" formula="" internalDefValueStr="" internalMaxValue="INF" internalMinValue="-INF" maxStrLen="100" nameLong="Safe Time Headway" nameShort="safeTimeHeadway" no="142" objType="VEHICLE" subAttrs=""/>
@@ -2161,7 +2162,7 @@
 	<vehicleInputs>
 		<vehicleInput anmFlag="false" link="4" name="main_flow" no="3">
 			<timeIntVehVols>
-				<timeIntervalVehVolume cont="false" timeInt="1 0" vehComp="4" volType="STOCHASTIC" volume="2000"/>
+				<timeIntervalVehVolume cont="false" timeInt="1 0" vehComp="4" volType="STOCHASTIC" volume="0"/>
 			</timeIntVehVols>
 		</vehicleInput>
 		<vehicleInput anmFlag="false" link="2" name="in_ramp" no="4">

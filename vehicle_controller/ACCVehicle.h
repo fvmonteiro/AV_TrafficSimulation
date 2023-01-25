@@ -49,6 +49,7 @@ private:
 	{
 		return nullptr;
 	};
+	long implement_get_virtual_leader_id() const override { return 0; };
 	void implement_set_accepted_lane_change_risk_to_leaders(
 		double value) override {};
 	void implement_set_accepted_lane_change_risk_to_follower(
