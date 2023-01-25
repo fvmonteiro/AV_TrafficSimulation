@@ -35,7 +35,6 @@ public:
 		long veh_id) const;
 	const PlatoonVehicle* get_following_vehicle(
 		long veh_id) const;
-	//long get_assisted_vehicle_id(long veh_id) const;
 	const PlatoonVehicle* get_platoon_leader() const;
 	const PlatoonVehicle* get_last_vehicle() const;
 	/* Returns a nullptr if vehicle not found in platoon */
@@ -53,7 +52,6 @@ public:
 	void add_leader(PlatoonVehicle* new_vehicle);
 	void add_last_vehicle(PlatoonVehicle* new_vehicle);
 	void remove_vehicle_by_id(long veh_id, bool is_out_of_simulation);
-	//bool can_vehicle_start_adjustment_to_virtual_leader(long veh_id) const;
 	bool can_vehicle_leave_platoon(
 		const PlatoonVehicle& platoon_vehicle) const;
 	void reorder_vehicles();

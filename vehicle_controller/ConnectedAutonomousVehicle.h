@@ -83,11 +83,6 @@ private:
 	virtual void create_lane_change_request();
 	virtual bool was_my_cooperation_request_accepted() const;
 
-	/* Returns true if a vehicle is asking to merge in front of us and
-	[to do] modifies nearby_vehicle in place to point to the proper
-	virtual leader */
-	bool check_if_is_asking_for_cooperation(
-		const NearbyVehicle& nearby_vehicle);
 	void deal_with_close_and_slow_assited_vehicle();
 	void compute_connected_safe_gap_parameters();
 	void update_destination_lane_follower(

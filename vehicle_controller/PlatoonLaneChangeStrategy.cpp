@@ -10,11 +10,6 @@
 
 /* BASE CLASS ------------------------------------------------------------- */
 
-//PlatoonLaneChangeStrategy::PlatoonLaneChangeStrategy(Platoon* platoon)
-//{
-//	this->platoon = platoon;//std::make_shared<Platoon>(platoon);
-//}
-
 bool PlatoonLaneChangeStrategy::can_vehicle_leave_platoon(
 	const PlatoonVehicle& platoon_vehicle) const
 {
@@ -27,18 +22,6 @@ std::unique_ptr<VehicleState> PlatoonLaneChangeStrategy
 {
 	return implement_get_new_lane_keeping_state();
 }
-
-//long PlatoonLaneChangeStrategy::get_assisted_vehicle_id(
-//	const PlatoonVehicle& platoon_vehicle) const
-//{
-//	return implement_get_assisted_vehicle_id(platoon_vehicle);
-//}
-
-//bool PlatoonLaneChangeStrategy::can_adjust_to_virtual_leader(
-//	const PlatoonVehicle& platoon_vehicle) const
-//{
-//	return implement_can_adjust_to_virtual_leader(platoon_vehicle);
-//}
 
 void PlatoonLaneChangeStrategy::reset_state_of_all_vehicles() const
 {
@@ -95,18 +78,6 @@ bool SynchronousStrategy::implement_can_vehicle_leave_platoon(
 {
 	/* The preceding platoon vehicle must always be the real leader.
 	Otherwise, the vehicle leaves the platoon */
-
-	//if (platoon_vehicle.is_platoon_leader()
-	//	//|| !platoon_vehicle.has_leader()
-	//	|| *platoon_vehicle.get_state() == SynchronousLaneChangingState())
-	//{
-	//	return false;
-	//}
-	//long leader_id = platoon_vehicle.get_leader_id();
-	//long precending_platoon_vehicle_id = 
-	//	platoon_vehicle.get_preceding_vehicle_id();
-	//return leader_id != precending_platoon_vehicle_id;
-
 	return !platoon_vehicle.is_platoon_leader()
 		&& *platoon_vehicle.get_state() != SynchronousLaneChangingState()
 		&& (platoon_vehicle.get_preceding_vehicle_id() 
@@ -118,12 +89,6 @@ std::unique_ptr<VehicleState> SynchronousStrategy
 {
 	return std::make_unique<SynchronousLaneKeepingState>();
 }
-
-//bool SynchronousStrategy::implement_can_adjust_to_virtual_leader(
-//	const PlatoonVehicle& platoon_vehicle) const
-//{
-//	return platoon_vehicle.is_platoon_leader();
-//}
 
 long SynchronousStrategy::implement_create_platoon_lane_change_request(
 	long veh_id) const
@@ -160,22 +125,6 @@ bool LeaderFirstStrategy::implement_can_vehicle_leave_platoon(
 			!= platoon_vehicle.get_dest_lane_leader_id())
 		&& (precending_platoon_veh_id
 			!= platoon_vehicle.get_destination_lane_leader_leader_id());
-	
-	/*if (platoon_vehicle.is_platoon_leader()
-		|| *platoon_vehicle.get_state() == LeaderFirstLaneChangingState())
-	{
-		return false;
-	}*/
-	/*if (*platoon_vehicle.get_state() == LeaderFirstLaneChangingState()
-		|| precending_platoon_veh_id == platoon_vehicle.get_leader_id()
-		|| (precending_platoon_veh_id 
-			== platoon_vehicle.get_dest_lane_leader_id())
-		|| (precending_platoon_veh_id
-			== platoon_vehicle.get_destination_lane_leader_leader_id()))
-	{
-		return false;
-	}
-	return true;*/
 }
 
 std::unique_ptr<VehicleState> LeaderFirstStrategy
@@ -184,20 +133,15 @@ std::unique_ptr<VehicleState> LeaderFirstStrategy
 	return std::make_unique<LeaderFirstLaneKeepingState>();
 }
 
-//bool LeaderFirstStrategy::implement_can_adjust_to_virtual_leader(
-//	const PlatoonVehicle& platoon_vehicle) const
-//{
-//	if (platoon_vehicle.is_platoon_leader()) return true;
-//	bool leader_is_done_lane_changing =
-//		*platoon_vehicle.get_preceding_vehicle_state()
-//		> LeaderFirstIncreasingGapState();
-//	return leader_is_done_lane_changing;
-//}
-
 long LeaderFirstStrategy::implement_create_platoon_lane_change_request(
 	long veh_id) const
 {
-	return platoon->get_destination_lane_follower_closest_to_leader();
+	if (*platoon->get_vehicle_by_id(veh_id)->get_state() 
+		< LeaderFirstLaneChangingState())
+	{
+		return platoon->get_destination_lane_follower_closest_to_leader();
+	}
+	return 0;
 }
 
 std::shared_ptr<NearbyVehicle> LeaderFirstStrategy
@@ -246,19 +190,6 @@ bool LastVehicleFirstStrategy::implement_can_vehicle_leave_platoon(
 		&& precending_platoon_veh_id != platoon_vehicle.get_leader_id()
 		&& (!platoon_vehicle.is_vehicle_in_sight(precending_platoon_veh_id)
 			|| preceding_platoon_veh->get_relative_position() < 0);
-
-	/*if (platoon_vehicle.is_platoon_leader()
-		|| (*platoon_vehicle.get_state()
-			== LastVehicleFirstLaneChangingState())
-		|| precending_platoon_veh_id == platoon_vehicle.get_leader_id())
-	{
-		return false;
-	}
-	const auto& preceding_platoon_veh =
-		platoon_vehicle.get_nearby_vehicle_by_id(precending_platoon_veh_id);
-
-	return !platoon_vehicle.is_vehicle_in_sight(precending_platoon_veh_id) 
-		|| preceding_platoon_veh->get_relative_position() < 0;*/
 }
 
 std::unique_ptr<VehicleState> LastVehicleFirstStrategy
@@ -266,25 +197,6 @@ std::unique_ptr<VehicleState> LastVehicleFirstStrategy
 {
 	return std::make_unique<LastVehicleFirstLaneKeepingState>();
 }
-
-//long LastVehicleFirstStrategy::implement_get_assisted_vehicle_id(
-//	const PlatoonVehicle& platoon_vehicle) const
-//{
-//	if (!platoon_vehicle.is_platoon_leader() 
-//		&& *platoon_vehicle.get_state() == LastVehicleFirstCreatingGapState())
-//	{
-//		const PlatoonVehicle* leader =
-//			platoon_vehicle.get_preceding_vehicle_in_platoon();
-//		const VehicleState& leader_state = *leader->get_state();
-//		if (leader_state == LastVehicleFirstIncreasingGapState()
-//			|| leader_state == LastVehicleFirstLookingForSafeGapState()
-//			)
-//		{
-//			return leader->get_id();
-//		}
-//	}
-//	return 0;
-//}
 
 long LastVehicleFirstStrategy::implement_create_platoon_lane_change_request(
 	long veh_id) const
@@ -356,30 +268,8 @@ bool LeaderFirstAndInvertStrategy::implement_can_vehicle_leave_platoon(
 		&& (*platoon_vehicle.get_state()
 			!= LeaderFirstAndInvertLaneChangingState())
 		&& (!platoon_vehicle.is_vehicle_in_sight(precending_platoon_veh_id)
-			|| preceding_platoon_veh->is_vehicle_in_sight(
+			|| !preceding_platoon_veh->is_vehicle_in_sight(
 				platoon_vehicle.get_id()));
-
-	//if (platoon_vehicle.is_platoon_leader()
-	//	|| (*platoon_vehicle.get_state()
-	//		== LeaderFirstAndInvertLaneChangingState()))
-	//{
-	//	return false;
-	//}
-	//
-	//long precending_platoon_veh_id =
-	//	platoon_vehicle.get_preceding_vehicle_id();
-	//const auto& preceding_platoon_veh =
-	//	platoon_vehicle.get_preceding_vehicle_in_platoon();
-	//if (platoon_vehicle.is_vehicle_in_sight(precending_platoon_veh_id))
-	//{
-	//	return true;
-	//}
-	//else //if (preceding_platoon_veh->is_vehicle_in_sight())
-	//{
-	//	
-	//	return preceding_platoon_veh->is_vehicle_in_sight(
-	//		platoon_vehicle.get_id());
-	//}
 }
 
 std::unique_ptr<VehicleState> LeaderFirstAndInvertStrategy
@@ -387,33 +277,6 @@ std::unique_ptr<VehicleState> LeaderFirstAndInvertStrategy
 {
 	return std::make_unique<LeaderFirstAndInvertLaneKeepingState>();
 }
-
-//long LeaderFirstAndInvertStrategy::implement_get_assisted_vehicle_id(
-//	const PlatoonVehicle& platoon_vehicle) const
-//{
-//	if (!platoon_vehicle.is_last_platoon_vehicle()
-//		&& (*platoon_vehicle.get_state() 
-//			== LeaderFirstAndInvertCreatingGapState()))
-//	{
-//		const PlatoonVehicle* follower =
-//			platoon_vehicle.get_following_vehicle_in_platoon();
-//		if (*follower->get_state()
-//			== LeaderFirstAndInvertLookingForSafeGapState())
-//		{
-//			return follower->get_id();
-//		}
-//	}
-//	return 0;
-//}
-
-//bool LeaderFirstAndInvertStrategy::implement_can_adjust_to_virtual_leader(
-//	const PlatoonVehicle& platoon_vehicle) const
-//{
-//	/* We only adjust to the destination lane leader if it is not 
-//	in the platoon */
-//	return platoon->get_vehicle_by_id(
-//		platoon_vehicle.get_dest_lane_leader_id()) == nullptr;
-//}
 
 long LeaderFirstAndInvertStrategy
 ::implement_create_platoon_lane_change_request(long veh_id) const

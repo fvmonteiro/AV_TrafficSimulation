@@ -189,15 +189,24 @@ long Platoon::get_destination_lane_follower_closest_to_leader() const
 
 	long dest_lane_follower_id = 
 		get_platoon_leader()->get_dest_lane_follower_id();
+	long platoon_leader_dest_lane_leader = 
+		get_platoon_leader()->get_dest_lane_leader_id();
 	int i = leader_idx - 1;
 	while (dest_lane_follower_id == 0 && i >= last_veh_idx)
 	{
 		if (vehicles_by_position.find(i) != vehicles_by_position.end())
 		{
+			/* Let k be the destination lane leader of some platoon vehicle.
+			We assume that k exists, is not a platoon vehicle and is behind
+			the platoon leader. If any of those assumptions doesn't hold, 
+			we move on to the platoon vehicle's dest lane follower. 
+			If the dest lane follower doesn't exist (id=0), the loop 
+			continues. */
 			const auto& veh = vehicles_by_position.at(i);
 			dest_lane_follower_id = veh->get_dest_lane_leader_id();
 			if (dest_lane_follower_id == 0
-				|| is_vehicle_in_platoon(dest_lane_follower_id))
+				|| is_vehicle_in_platoon(dest_lane_follower_id)
+				|| dest_lane_follower_id == platoon_leader_dest_lane_leader)
 			{
 				dest_lane_follower_id = veh->get_dest_lane_follower_id();
 			}

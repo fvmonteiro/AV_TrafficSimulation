@@ -18,11 +18,6 @@ ConnectedAutonomousVehicle::ConnectedAutonomousVehicle(
 	}
 }
 
-//bool ConnectedAutonomousVehicle::has_assisted_vehicle() const
-//{
-//	return assisted_vehicle != nullptr;
-//}
-
 bool ConnectedAutonomousVehicle::is_cooperating_to_generate_gap() const {
 	return has_assisted_vehicle();
 	/* Function seems unnecessary, but we might perform other checks here */
@@ -64,21 +59,15 @@ void ConnectedAutonomousVehicle::find_cooperation_requests()
 			if (assisted_vehicle == nullptr
 				|| (nearby_vehicle->get_relative_position()
 					< assisted_vehicle->get_relative_position()))
-			assisted_vehicle = nearby_vehicle;
+			{
+				assisted_vehicle = nearby_vehicle;
+			}
 		}
 		// Wants to merge behind me?
 		else if (nearby_vehicle->get_dest_lane_leader_id() == get_id())
 		{
 			set_desired_velocity(MAX_VELOCITY);
 		}
-		/*if (check_if_is_asking_for_cooperation(*nearby_vehicle))
-		{
-			assisted_vehicle = nearby_vehicle;
-		}
-		else if (nearby_vehicle->is_requesting_to_merge_behind())
-		{
-			try_go_at_max_vel = true;
-		}*/
 	}
 	deal_with_close_and_slow_assited_vehicle();
 	update_assisted_vehicle(old_assisted_vehicle);
@@ -300,34 +289,6 @@ double ConnectedAutonomousVehicle::implement_compute_desired_acceleration(
 	double a_desired_acceleration =
 		controller.get_desired_acceleration(*this);
 	return consider_vehicle_dynamics(a_desired_acceleration);
-}
-
-bool ConnectedAutonomousVehicle::check_if_is_asking_for_cooperation(
-	const NearbyVehicle& nearby_vehicle)
-{
-	// [Jan 20, 2023] Phasing out this function
-	//if (nearby_vehicle.is_requesting_to_merge_ahead())
-	//{
-	//	long lane_change_request_veh_id =
-	//		nearby_vehicle.get_lane_change_request_veh_id();
-	//	if (lane_change_request_veh_id == nearby_vehicle.get_id())
-	//	{
-	//		/* The nearby veh is requesting a gap for itself */
-	//		// do nothing
-	//	}
-	//	else
-	//	{
-	//		/* The nearby veh is requesting a gap for someone
-	//		else in its platoon */
-	//	}
-	//	/* Updating the assisted vehicle parameters */
-	//	/*if (lane_change_request_veh_id != assisted_vehicle_id) {
-	//		controller.update_assisted_vehicle(
-	//			get_velocity(), *nearby_vehicle);
-	//	}*/
-	//	return true;
-	//}
-	return false;
 }
 
 void ConnectedAutonomousVehicle::compute_connected_safe_gap_parameters()

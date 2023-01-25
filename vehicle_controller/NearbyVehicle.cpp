@@ -255,11 +255,11 @@ std::ostream& operator<<(std::ostream& out, const NearbyVehicle& vehicle)
 		//{"length", vehicle.length}, {"width", vehicle.width} 
 	};
 
-	for (auto name_value_pair : printed_long_members) {
+	for (const auto& name_value_pair : printed_long_members) {
 		out << name_value_pair.first << ": " <<
 			name_value_pair.second << " | ";
 	}
-	for (auto name_value_pair : printed_double_members) {
+	for (const auto& name_value_pair : printed_double_members) {
 		out << name_value_pair.first << ": " << std::setprecision(4) <<
 			name_value_pair.second << " | ";
 	}
