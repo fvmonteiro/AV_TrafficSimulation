@@ -77,28 +77,13 @@ void SynchronousLookingForSafeGapState
 	for (auto& item 
 		: platoon_vehicle->get_platoon()->get_vehicles_by_position())
 	{
-		LaneChangeGapsSafety& lcgs =
+		const LaneChangeGapsSafety& lcgs =
 			item.second->get_lane_change_gaps_safety();
 		if (!lcgs.is_lane_change_safe())
 		{
 			can_start_lane_change = false;
 			break;
 		}
-		/* v1: Mid platoon vehicles don't need to distance themselves from
-		their leaders*/
-		//bool gap1_is_safe = lcgs.dest_lane_follower_gap;
-		//bool gap2_is_safe = lcgs.dest_lane_leader_gap;
-		//bool no_conflict = lcgs.no_conflict;
-		//if (item.second->is_platoon_leader() && !lcgs.is_lane_change_safe())
-		//{
-		//	can_start_lane_change = false;
-		//	break;
-		//}
-		//else if (!(gap1_is_safe && gap2_is_safe && no_conflict))
-		//{
-		//	can_start_lane_change = false;
-		//	break;
-		//}
 	}
 
 	if (can_start_lane_change)

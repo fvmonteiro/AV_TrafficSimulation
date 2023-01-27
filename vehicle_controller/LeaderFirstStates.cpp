@@ -80,17 +80,14 @@ void LeaderFirstLookingForSafeGapState
 	const VehicleState* leader_state =
 		platoon_vehicle->get_preceding_vehicle_state();
 	long leader_id = platoon_vehicle->get_preceding_vehicle_id();
-	bool has_leader_started_lane_change =
-		leader_state == nullptr // this is the platoon leader
-		|| *leader_state >= LeaderFirstLaneChangingState();
 	/* We check if there's a vehicle longitudinally between us and 
 	the preceding platoon vehicle */
-	// NOT WORKING
-	bool will_merge_behind_the_leader = leader_state == nullptr 
-		|| (leader_id == platoon_vehicle->get_dest_lane_leader_id())
-		|| (leader_id == platoon_vehicle->get_leader_id());
-	if (has_leader_started_lane_change
-		&& will_merge_behind_the_leader
+	bool will_merge_behind_the_leader = 
+		leader_id == platoon_vehicle->get_dest_lane_leader_id()
+		|| leader_id == platoon_vehicle->get_leader_id();
+	if ((platoon_vehicle->is_platoon_leader()
+		|| /*(*leader_state >= LeaderFirstLaneChangingState()
+			&&*/ will_merge_behind_the_leader)
 		&& platoon_vehicle->check_lane_change_gaps())
 	{
 		platoon_vehicle->set_state(

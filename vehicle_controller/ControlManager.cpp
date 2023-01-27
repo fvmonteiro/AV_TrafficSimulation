@@ -182,7 +182,7 @@ ControlManager::get_active_long_controller() const
 
 /* DEBUGGING FUNCTIONS --------------------------------------------------- */
 
-double ControlManager::get_reference_gap(double ego_velocity)
+double ControlManager::get_reference_gap(double ego_velocity) const
 {
 	return origin_lane_controller.get_desired_gap(ego_velocity);
 };
@@ -417,7 +417,7 @@ double ControlManager::get_desired_acceleration(
 }
 
 void ControlManager::print_traffic_lights(const EgoVehicle& ego,
-	const std::unordered_map<int, TrafficLight>& traffic_lights)
+	const std::unordered_map<int, TrafficLight>& traffic_lights) const
 {
 	std::clog << "veh id=" << ego.get_id() << std::endl;
 	for (auto& pair : traffic_lights) std::clog << "tf id=" << pair.first <<
@@ -683,7 +683,7 @@ NearbyVehicle ControlManager::create_virtual_stopped_vehicle(
 }
 
 double ControlManager::determine_low_velocity_reference(double ego_velocity,
-	const NearbyVehicle& nearby_vehicle)
+	const NearbyVehicle& nearby_vehicle) const
 {
 	double leader_velocity =
 		nearby_vehicle.compute_velocity(ego_velocity);
@@ -711,7 +711,7 @@ double ControlManager::determine_low_velocity_reference(double ego_velocity,
 double ControlManager::compute_desired_lane_change_gap(
 	const AutonomousVehicle& ego_vehicle,
 	const NearbyVehicle& nearby_vehicle,
-	bool will_accelerate)
+	bool will_accelerate) const
 {
 	double safe_time_headway_gap = get_desired_time_headway_gap(
 		ego_vehicle.get_velocity(),
@@ -729,7 +729,7 @@ double ControlManager::compute_desired_lane_change_gap(
 }
 
 double ControlManager::get_desired_time_headway_gap(double ego_velocity,
-	const NearbyVehicle& nearby_vehicle)
+	const NearbyVehicle& nearby_vehicle) const
 {
 	double time_headway_gap = 0.0;
 	//double ego_velocity = ego_vehicle.get_velocity();
@@ -800,7 +800,7 @@ double ControlManager::get_desired_time_headway_gap(double ego_velocity,
 double ControlManager::get_gap_variation_during_lane_change(
 	const AutonomousVehicle& ego_vehicle,
 	const NearbyVehicle& nearby_vehicle,
-	bool will_accelerate)
+	bool will_accelerate) const
 {
 	return lateral_controller.compute_transient_gap(
 		ego_vehicle, nearby_vehicle, will_accelerate);

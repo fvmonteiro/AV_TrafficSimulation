@@ -230,7 +230,7 @@ std::shared_ptr<NearbyVehicle> LastVehicleFirstStrategy
 	}
 
 	bool is_done_lane_changing =
-		*platoon_vehicle.get_state() > LeaderFirstLaneChangingState();
+		*platoon_vehicle.get_state() > LastVehicleFirstLaneChangingState();
 	bool follower_is_done_lane_changing = 
 		*platoon_vehicle.get_following_vehicle_state()
 		> LastVehicleFirstLaneChangingState();

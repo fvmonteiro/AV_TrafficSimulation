@@ -65,19 +65,19 @@ double SwitchedLongitudinalController::get_current_time_headway() const
 }
 
 double SwitchedLongitudinalController::get_time_headway_gap(
-	double time_headway, double velocity) 
+	double time_headway, double velocity) const
 {
 	return gap_controller.compute_time_headway_gap(time_headway, velocity);
 }
 
 double SwitchedLongitudinalController::get_desired_time_headway_gap(
-	double ego_velocity/*, bool has_lane_change_intention*/) 
+	double ego_velocity) const
 {
-	return gap_controller.get_desired_time_headway_gap(ego_velocity/*,
-		has_lane_change_intention*/);
+	return gap_controller.get_desired_time_headway_gap(ego_velocity);
 }
 
 double SwitchedLongitudinalController::get_desired_gap(double ego_velocity)
+const
 {
 	return gap_controller.get_desired_gap(ego_velocity);
 	/*return get_time_headway_gap(time_headway_filter.get_current_value(),

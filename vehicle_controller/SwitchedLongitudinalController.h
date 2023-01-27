@@ -52,12 +52,11 @@ public:
 	double get_desired_time_headway() const;
 	/* Returns the current time headway in use */
 	double get_current_time_headway() const;
-	double get_time_headway_gap(double time_headway, double velocity);
-	double get_desired_time_headway_gap(double ego_velocity/*,
-		bool has_lane_change_intention*/);
+	double get_time_headway_gap(double time_headway, double velocity) const;
+	double get_desired_time_headway_gap(double ego_velocity) const;
 	/* Computes desired gap with a possibly varying time headway */
 	//double compute_desired_gap(double ego_velocity);
-	double get_desired_gap(double ego_velocity);
+	double get_desired_gap(double ego_velocity) const;
 	void set_desired_time_headway(double time_headway);
 
 	void compute_max_risk_to_leader(bool is_lane_changing);

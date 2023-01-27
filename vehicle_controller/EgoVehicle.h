@@ -106,7 +106,7 @@ public:
 	/* delta vel. at collision under the worst case scenario*/
 	double get_collision_risk() const;
 
-	/* Other getters and setters --------------------------------------------- */
+	/* Other getters and setters ------------------------------------------ */
 
 	std::shared_ptr<Platoon> get_platoon() const
 	{
@@ -114,7 +114,8 @@ public:
 	};
 	
 	double get_safe_time_headway() const;
-	/* Gap minus reference gap */
+	/* Gap error (gap minus reference gap) of active longitudinal
+	controller */
 	double get_gap_error() const;
 	double get_current_desired_time_headway() const;
 	/* Returns a nullptr if there is no leader at the destination lane */
@@ -293,11 +294,10 @@ public:
 	TODO [Nov 17]: double check if it needs to be public*/
 	double compute_current_desired_time_headway(
 		const NearbyVehicle& nearby_vehicle) const;
-	/* Returns the time headway gap from the ego to the other vehicle
-	if the ego vehicle is behind and from the other to the ego vehicle
-	if the other vehicle is behind. */
+	/* Returns the desired time headway gap between the ego vehicle and the 
+	nearby vehicle based on their relative positions. */
 	double compute_time_headway_gap(
-		std::shared_ptr<const NearbyVehicle> nearby_vehicle);
+		std::shared_ptr<const NearbyVehicle> nearby_vehicle) const;
 	/* Returns the transient lane changing gap between ego vehicle
 	and other. */
 	double compute_transient_gap(

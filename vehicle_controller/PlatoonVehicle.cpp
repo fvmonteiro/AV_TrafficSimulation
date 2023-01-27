@@ -55,9 +55,16 @@ bool PlatoonVehicle::has_finished_increasing_gap() const
 	/* When we increase the reference gap, the gap error becomes negative.
 	The maneuver is considered to be done when the gap error is close 
 	to becoming non-negative. */
-	bool is_gap_non_negative = get_gap_error() > (-gap_error_threshold);
+	bool is_gap_error_non_negative = true;
+	if (has_leader())
+	{
+		double safe_gap = compute_time_headway_gap(get_leader());
+		double gap = compute_gap(get_leader());
+		double gap_error = gap - safe_gap;
+		is_gap_error_non_negative = gap_error / safe_gap > (-0.05);
+	}
 	return has_finished_adjusting_time_headway()
-		&& (is_gap_non_negative || is_platoon_leader());
+		&& is_gap_error_non_negative;
 }
 
 bool PlatoonVehicle::has_finished_closing_gap() const
@@ -65,9 +72,19 @@ bool PlatoonVehicle::has_finished_closing_gap() const
 	/* When we decrease the reference gap, the gap error becomes positive.
 	The maneuver is considered to be done when the gap error is close
 	to zero. */
-	bool is_gap_error_small = get_gap_error() < gap_error_threshold;
-	return has_finished_adjusting_time_headway()
-		&& (is_gap_error_small || is_platoon_leader());
+
+	bool is_gap_error_small = true;
+	if (has_leader())
+	{
+		double safe_gap = compute_time_headway_gap(get_leader());
+		double gap = compute_gap(get_leader());
+		double gap_error = gap - safe_gap;
+		is_gap_error_small = gap_error / safe_gap < 0.05;
+	}
+	return has_finished_adjusting_time_headway() && is_gap_error_small;
+	//bool is_gap_error_small = get_gap_error() < gap_error_threshold;
+	//return has_finished_adjusting_time_headway()
+	//	&& (is_gap_error_small || is_platoon_leader());
 }
 
 //bool PlatoonVehicle::can_start_adjustment_to_virtual_leader() const

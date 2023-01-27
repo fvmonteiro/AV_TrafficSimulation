@@ -708,7 +708,7 @@ double EgoVehicle::get_reference_gap()
 }
 
 double EgoVehicle::compute_time_headway_gap(
-	std::shared_ptr<const NearbyVehicle> nearby_vehicle)
+	std::shared_ptr<const NearbyVehicle> nearby_vehicle) const
 {
 	double time_headway_gap = 0.0;
 	if (nearby_vehicle != nullptr)

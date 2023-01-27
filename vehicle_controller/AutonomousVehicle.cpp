@@ -367,17 +367,10 @@ bool AutonomousVehicle::implement_check_lane_change_gaps()
 	{
 		return get_vissim_lane_suggestion() != RelativeLane::same;
 	}
-	//if (!has_lane_change_intention())  // just to avoid computations
-	//{
-	//	return false;
-	//}
 
 	double margin = 0.1;
 	//if (verbose) std::clog << "Deciding lane change" << std::endl;
 	
-	//bool gap_same_lane_is_safe = is_lane_change_gap_safe(get_leader());
-	/*bool gap_ahead_is_safe = 
-		is_lane_change_gap_safe(destination_lane_leader);*/
 	lane_change_gaps_safety.orig_lane_leader_gap = 
 		is_lane_change_gap_safe(get_leader());
 	lane_change_gaps_safety.dest_lane_leader_gap =
@@ -385,13 +378,11 @@ bool AutonomousVehicle::implement_check_lane_change_gaps()
 	/* Besides the regular safety conditions, we add the case
 	where the dest lane follower has completely stopped to give room
 	to the lane changing vehicle */
-	/*bool gap_behind_is_safe =*/
 	lane_change_gaps_safety.dest_lane_follower_gap = 
 		is_lane_change_gap_safe(destination_lane_follower)
 		|| ((destination_lane_follower->
 			compute_velocity(get_velocity()) <= 1.0)
 			&& (destination_lane_follower->get_distance() <= -2.0));
-	/*bool no_conflict = !has_lane_change_conflict();*/
 	lane_change_gaps_safety.no_conflict =
 		!has_lane_change_conflict();
 

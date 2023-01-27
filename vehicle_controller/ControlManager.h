@@ -89,7 +89,8 @@ public:
 	};
 	/* Each controller should never be accessed directly by external
 	functions. */
-	const VirtualLongitudinalController& get_destination_lane_controller() const {
+	const VirtualLongitudinalController& get_destination_lane_controller() 
+		const {
 		return destination_lane_controller;
 	};
 	/* Each controller should never be accessed directly by external
@@ -97,7 +98,7 @@ public:
 	const LateralController& get_lateral_controller() const {
 		return lateral_controller;
 	};
-	double get_reference_gap(double ego_velocity); /* could be const */
+	double get_reference_gap(double ego_velocity) const; /* could be const */
 
 	/* ----------------------------------------------------------------------- */
 
@@ -143,27 +144,27 @@ public:
 		autonomous_vehicle);
 	/* Computes the AV desired acceleration plus the cooperative acceleration
 	to help create a gap for an incoming vehicle, and chooses the minimum. */
-	double get_desired_acceleration(
-		const ConnectedAutonomousVehicle& cav);
-	double get_desired_acceleration(
-		const PlatoonVehicle& platoon_vehicle);
+	double get_desired_acceleration(const ConnectedAutonomousVehicle& cav);
+	double get_desired_acceleration(const PlatoonVehicle& platoon_vehicle);
 	/* TODO description */
 	double get_desired_acceleration(
 		const TrafficLightALCVehicle& ego_vehicle,
 		const std::unordered_map<int, TrafficLight>& traffic_lights);
 
 	void print_traffic_lights(const EgoVehicle& ego,
-		const std::unordered_map<int, TrafficLight>& traffic_lights);
+		const std::unordered_map<int, TrafficLight>& traffic_lights) const;
 
 	/* Computes the velocity reference when adjusting for lane change */
 	double determine_low_velocity_reference(double ego_velocity,
-		const NearbyVehicle& nearby_vehicle);
+		const NearbyVehicle& nearby_vehicle) const;
 
 	/* Returns the reference gap used by the longitudinal
 	controller. It uses a previously defined time headway, which might
 	have been computed assuming some accepted risk. */
-	double compute_desired_lane_change_gap(const AutonomousVehicle& ego_vehicle,
-		const NearbyVehicle& nearby_vehicle, bool will_accelerate = false);
+	double compute_desired_lane_change_gap(
+		const AutonomousVehicle& ego_vehicle,
+		const NearbyVehicle& nearby_vehicle, 
+		bool will_accelerate = false) const;
 
 	/* Returns the accepted lane change gap, which might is different from
 	the longitudinal controller's reference gap if the accepted risk is
@@ -174,9 +175,9 @@ public:
 	//	const NearbyVehicle& nearby_vehicle,
 	//	bool will_accelerate = false);
 
-	/* Returns the time headway part of the desired lane change gap. */
+	/* Returns the safe time headway gap. */
 	double get_desired_time_headway_gap(double ego_velocity,
-		const NearbyVehicle& nearby_vehicle);
+		const NearbyVehicle& nearby_vehicle) const;
 	/* Returns the time headway part of the accepted lane change gap. */
 	/*double get_accepted_time_headway_gap(const AutonomousVehicle& ego_vehicle,
 		const NearbyVehicle& nearby_vehicle);*/
@@ -184,7 +185,7 @@ public:
 	double get_gap_variation_during_lane_change(
 		const AutonomousVehicle& ego_vehicle,
 		const NearbyVehicle& nearby_vehicle,
-		bool will_accelerate);
+		bool will_accelerate) const;
 
 
 	/* Printing ----------------------------------------------------------- */

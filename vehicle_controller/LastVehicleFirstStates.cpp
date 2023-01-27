@@ -44,7 +44,15 @@ void LastVehicleFirstIncreasingGapState
 void LastVehicleFirstIncreasingGapState
 ::implement_handle_lane_change_intention()
 {
-	if (platoon_vehicle->has_finished_increasing_gap())
+	if (platoon_vehicle->check_lane_change_gaps()
+		&& (!platoon_vehicle->has_virtual_leader() || 
+			(platoon_vehicle->get_dest_lane_leader_id()
+				== platoon_vehicle->get_virtual_leader_id())))
+	{
+		platoon_vehicle->set_state(
+			std::make_unique<LastVehicleFirstLaneChangingState>());
+	}
+	else if (platoon_vehicle->has_finished_increasing_gap())
 	{
 		platoon_vehicle->set_state(
 			std::make_unique<LastVehicleFirstLookingForSafeGapState>());
@@ -73,7 +81,10 @@ void LastVehicleFirstLookingForSafeGapState
 void LastVehicleFirstLookingForSafeGapState
 ::implement_handle_lane_change_intention()
 {
-	if (platoon_vehicle->check_lane_change_gaps())
+	if (platoon_vehicle->check_lane_change_gaps()
+		&& (!platoon_vehicle->has_virtual_leader() ||
+			(platoon_vehicle->get_dest_lane_leader_id()
+				== platoon_vehicle->get_virtual_leader_id())))
 	{
 		platoon_vehicle->set_state(
 			std::make_unique<LastVehicleFirstLaneChangingState>());
