@@ -777,8 +777,6 @@ DRIVERMODEL_API  int  DriverModelExecuteCommand (long number)
         }
         if (vehicles[current_vehicle_id]->is_in_a_platoon())
         {
-            std::clog << "t=" << current_time 
-                << " Erasing veh. " << current_vehicle_id << std::endl;
             long current_platoon_id =
                 vehicles[current_vehicle_id]->get_platoon()->get_id();
             platoons[current_platoon_id]->remove_vehicle_by_id(
@@ -794,19 +792,21 @@ DRIVERMODEL_API  int  DriverModelExecuteCommand (long number)
     {
         /* This is executed after all the set commands and before
         any get command. */
-        if (CLUELESS_DEBUGGING) {
+        bool will_print = CLUELESS_DEBUGGING
+            || vehicles[current_vehicle_id]->is_verbose();
+        if (will_print) {
             std::clog << "Veh: " << current_vehicle_id
                 << "\nUpdating states\n";
         }
         vehicles[current_vehicle_id]->update_state();
 
-        if (CLUELESS_DEBUGGING)
+        if (will_print)
         {
             std::clog << "Analyzing nearby vehicles" << std::endl;
         }
         vehicles[current_vehicle_id]->analyze_nearby_vehicles();
 
-        if (CLUELESS_DEBUGGING)
+        if (will_print)
         {
             std::clog << "Analyzing platoons" << std::endl;
         }
@@ -824,14 +824,14 @@ DRIVERMODEL_API  int  DriverModelExecuteCommand (long number)
             platoon_id++;
         }
 
-        if (CLUELESS_DEBUGGING)
+        if (will_print)
         {
             std::clog << "Deciding acceleration" << std::endl;
         }
         vehicles[current_vehicle_id]->compute_desired_acceleration(
             traffic_lights);
 
-        if (CLUELESS_DEBUGGING)
+        if (will_print)
         {
             std::clog << "Command 'Move Driver' done." << std::endl;
         }

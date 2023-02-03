@@ -13,7 +13,7 @@
 bool PlatoonLaneChangeStrategy::can_vehicle_leave_platoon(
 	const PlatoonVehicle& platoon_vehicle) const
 {
-	std::clog << "\t[PlatoonStrategy] can vehicle leave platoon method\n";
+	//std::clog << "\t[PlatoonStrategy] can vehicle leave platoon method\n";
 	return implement_can_vehicle_leave_platoon(platoon_vehicle);
 }
 

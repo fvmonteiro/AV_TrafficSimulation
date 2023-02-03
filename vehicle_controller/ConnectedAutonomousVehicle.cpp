@@ -39,7 +39,6 @@ void ConnectedAutonomousVehicle::implement_analyze_nearby_vehicles()
 	find_leader();
 	find_destination_lane_vehicles();
 	find_cooperation_requests();
-
 	create_lane_change_request();
 }
 
@@ -113,14 +112,13 @@ void ConnectedAutonomousVehicle::create_lane_change_request()
 
 bool ConnectedAutonomousVehicle::was_my_cooperation_request_accepted() const
 {
+	return false;
 	if (lane_change_request != 0)
 	{
-		/* We know that lane_change_request must be one of the 
-		nearby vehicles. */
-		long id_of_vehicle_being_assisted =
-			get_nearby_vehicle_by_id(lane_change_request)
-			->get_assisted_vehicle_id();
-		if (id_of_vehicle_being_assisted == get_id())
+		std::shared_ptr<NearbyVehicle> cooperating_vehicle =
+			get_nearby_vehicle_by_id(lane_change_request);
+		if (cooperating_vehicle != nullptr
+			&& cooperating_vehicle->get_assisted_vehicle_id() == get_id())
 		{
 			return true;
 		}

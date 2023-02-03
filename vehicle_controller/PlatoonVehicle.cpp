@@ -351,11 +351,17 @@ bool PlatoonVehicle::implement_analyze_platoons(
 	}
 	else // am_in_a_platoon && !may_join_leader_platoon
 	{
-		std::clog << "\t[PlatoonVehicle] Might leave platoon\n";
+		if (verbose)
+		{
+			std::clog << "\t[PlatoonVehicle] Might leave platoon\n";
+		}
 		if (platoon->can_vehicle_leave_platoon(*this))
 		{
-			std::clog << "t=" << get_time() << " id=" << get_id()
-				<< ": leaving platoon " << platoon->get_id() << "\n";
+			if (verbose)
+			{
+				std::clog << "t=" << get_time() << " id=" << get_id()
+					<< ": leaving platoon " << platoon->get_id() << "\n";
+			}
 			platoon->remove_vehicle_by_id(get_id(), false);
 			//platoon.reset();
 			create_platoon(new_platoon_id, platoon_lc_strategy);
@@ -379,11 +385,11 @@ void PlatoonVehicle::pass_this_to_state()
 void PlatoonVehicle::create_platoon(long platoon_id, 
 	int platoon_lc_strategy)
 {
-	/*if (verbose)
-	{*/
+	if (verbose)
+	{
 		std::clog << "Veh id " << get_id()
 			<< ". Creating platoon id " << platoon_id << std::endl;
-	//}
+	}
 
 	platoon = std::make_shared<Platoon>(platoon_id, 
 		platoon_lc_strategy, this);

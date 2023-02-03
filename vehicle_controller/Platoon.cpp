@@ -15,12 +15,12 @@ Platoon::Platoon(long id, int platoon_lc_strategy, PlatoonVehicle* leader,
 
 Platoon::~Platoon()
 {
-	/*if (verbose)
-	{*/
+	if (verbose)
+	{
 		std::clog << "Inside platoon " << id << " destructor\n"
 			<< "Vehs in platoon: " << vehicles_by_position.size()
 			<< std::endl;
-	//}
+	}
 }
 
 const PlatoonVehicle* Platoon::get_platoon_leader() const
@@ -109,14 +109,14 @@ void Platoon::set_strategy(int strategy_number)
 		break;
 	}
 
-	/*if (verbose)
-	{*/
+	if (verbose)
+	{
 		std::clog << "Platoon " << *this << "\n";
 		std::clog << "LC Strategy change from ";
 		if (old_strategy == nullptr) std::clog << "none";
 		else std::clog << *old_strategy;
 		std::clog << " to " << *lane_change_strategy << std::endl;
-	//}
+	}
 
 	lane_change_strategy->set_platoon(this);
 	lane_change_strategy->reset_state_of_all_vehicles();
@@ -150,18 +150,21 @@ void Platoon::remove_vehicle_by_id(long veh_id, bool is_out_of_simulation)
 	if (vehicle_id_to_position.find(veh_id) !=
 		vehicle_id_to_position.end())
 	{
-		/*if (verbose)
-		{*/
+		if (verbose)
+		{
 			std::clog << "Platoon " << get_id() << ", removing veh "
 				<< veh_id << ", which is in position "
 				<< vehicle_id_to_position.at(veh_id) << std::endl;
-		//}
+		}
 		
 		long position_to_remove = vehicle_id_to_position.at(veh_id);
 		remove_vehicle_by_position(position_to_remove, veh_id,
 			is_out_of_simulation);
 
-		std::clog << "Platoon after removal " << *this << std::endl;
+		if (verbose)
+		{
+			std::clog << "Platoon after removal " << *this << std::endl;
+		}
 	}
 	else
 	{
@@ -312,7 +315,7 @@ const PlatoonVehicle* Platoon::get_following_vehicle(
 bool Platoon::can_vehicle_leave_platoon(
 	const PlatoonVehicle& platoon_vehicle) const
 {
-	std::clog << "\t[Platoon] can vehicle leave platoon method\n";
+	//std::clog << "\t[Platoon] can vehicle leave platoon method\n";
 	/* The platoon leader always stays in its platoon,
 	which might be a single vehicle platoon */
 	return !platoon_vehicle.is_platoon_leader() 
@@ -338,7 +341,7 @@ void Platoon::reorder_vehicles()
 		vehicle_id_to_position[item.second->get_id()] = last_veh_idx + i;
 		i++;
 	}
-	std::clog << "Platoon vehicles reordered\n";
+	//std::clog << "Platoon vehicles reordered\n";
 }
 
 long Platoon::create_lane_change_request_for_vehicle(long veh_id) const

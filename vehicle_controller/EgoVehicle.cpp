@@ -587,14 +587,14 @@ void EgoVehicle::update_state()
 void EgoVehicle::set_state(std::unique_ptr<VehicleState> new_state)
 {
 
-	/*if (verbose)
-	{*/
+	if (verbose)
+	{
 		std::clog << "t=" << get_time() << ", veh " << get_id() << "\n";
 		std::clog << "Transition from ";
 		if (state == nullptr) std::clog << "null";
 		else std::clog << *state;
 		std::clog << " to " << *new_state << std::endl;
-	//}
+	}
 	state = std::move(new_state);
 	pass_this_to_state();
 }

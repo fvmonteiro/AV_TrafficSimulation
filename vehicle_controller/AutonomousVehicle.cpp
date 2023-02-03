@@ -71,7 +71,6 @@ LaneChangeGapsSafety AutonomousVehicle::get_lane_change_gaps_safety() const
 
 bool AutonomousVehicle::has_lane_change_conflict() const
 {
-	//if (verbose) std::clog << "checking conflicts" << std::endl;
 	/* If there's no lane change intention, there's no conflict */
 	if (!has_lane_change_intention()) return false;
 
@@ -170,7 +169,6 @@ void AutonomousVehicle::find_destination_lane_vehicles()
 		std::move(destination_lane_follower);
 	destination_lane_leader = nullptr;
 	destination_lane_leader_leader = nullptr;
-
 	if (has_lane_change_intention())
 	{
 		for (auto const& id_veh_pair : get_nearby_vehicles())
@@ -192,7 +190,8 @@ void AutonomousVehicle::find_destination_lane_vehicles()
 	}
 
 	update_destination_lane_follower(old_dest_lane_follower);
-	set_virtual_leader(define_virtual_leader());
+	std::shared_ptr<NearbyVehicle> vl = define_virtual_leader();
+	set_virtual_leader(vl);
 }
 
 std::shared_ptr<NearbyVehicle> AutonomousVehicle::define_virtual_leader()
@@ -274,25 +273,25 @@ void AutonomousVehicle::update_virtual_leader(
 {
 	if (has_virtual_leader())
 	{
-		double new_leader_max_brake = virtual_leader->get_max_brake();
-		bool is_new_leader_connected = virtual_leader->is_connected();
+		double new_leader_max_brake = get_virtual_leader()->get_max_brake();
+		bool is_new_leader_connected = get_virtual_leader()->is_connected();
 		if (old_leader == nullptr)
 		{
 			double ego_vel = get_velocity();
 			controller.activate_destination_lane_controller(ego_vel,
-				virtual_leader->compute_velocity(ego_vel),
+				get_virtual_leader()->compute_velocity(ego_vel),
 				compute_lane_changing_desired_time_headway(
-					*virtual_leader),
+					*get_virtual_leader()),
 				is_new_leader_connected);
 		}
 		else if ((std::abs(new_leader_max_brake
 			- old_leader->get_max_brake()) > 0.5)
 			|| (old_leader->get_type()
-				!= virtual_leader->get_type()))
+				!= get_virtual_leader()->get_type()))
 		{
 			controller.update_destination_lane_controller(get_velocity(),
 				compute_lane_changing_desired_time_headway(
-					*virtual_leader),
+					*get_virtual_leader()),
 				is_new_leader_connected);
 		}
 	}
