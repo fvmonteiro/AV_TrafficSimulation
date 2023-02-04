@@ -84,7 +84,10 @@ protected:
 	bool try_to_overtake_destination_lane_leader() const;
 
 	/* ----------------------------------------------------- */
-
+	
+	bool is_lane_change_gap_safe(
+		std::shared_ptr<const NearbyVehicle> nearby_vehicle) const;
+	bool has_lane_change_conflict() const;
 	/* Non-linear gap based on ego and nearby vehicles states
 	and parameters */
 	double compute_vehicle_following_gap_for_lane_change(
@@ -142,7 +145,7 @@ private:
 	bool give_lane_change_control_to_vissim() const override;
 	long implement_get_lane_change_request() const override { return 0; };
 	double compute_accepted_lane_change_gap(
-		std::shared_ptr<const NearbyVehicle> nearby_vehicle) override;
+		std::shared_ptr<const NearbyVehicle> nearby_vehicle) const override;
 	std::shared_ptr<NearbyVehicle>
 		implement_get_destination_lane_leader() const override;
 	std::shared_ptr<NearbyVehicle>
@@ -154,10 +157,7 @@ private:
 	/* Time-headway based gap (hv + d) minus a term based on
 	accepted risk */
 	double compute_time_headway_gap_for_lane_change(
-		const NearbyVehicle& nearby_vehicle);
-	bool has_lane_change_conflict() const;
-	bool is_lane_change_gap_safe(
-		std::shared_ptr<const NearbyVehicle> nearby_vehicle);
+		const NearbyVehicle& nearby_vehicle) const;
 	void compute_lane_change_gap_parameters();
 	/* Non-linear gap based on ego and nearby vehicles states
 	and parameters */

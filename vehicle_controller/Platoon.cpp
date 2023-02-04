@@ -181,7 +181,7 @@ const PlatoonVehicle* Platoon::get_vehicle_by_id(long veh_id) const
 		: nullptr;
 }
 
-long Platoon::get_destination_lane_follower_closest_to_leader() const
+long Platoon::get_destination_lane_vehicle_behind_the_leader() const
 {
 	/* We're looking for the vehicle at the destination lane that's 
 	closest to the platoon leader, and that does not belong to the platoon 
@@ -217,6 +217,11 @@ long Platoon::get_destination_lane_follower_closest_to_leader() const
 		i--;
 	}
 	return dest_lane_follower_id;
+}
+
+long Platoon::get_destination_lane_vehicle_behind_last_vehicle() const
+{
+	return get_last_vehicle()->get_dest_lane_follower_id();
 }
 
 void Platoon::remove_vehicle_by_position(int idx_in_platoon, long veh_id,
@@ -322,6 +327,14 @@ bool Platoon::can_vehicle_leave_platoon(
 		&& lane_change_strategy->can_vehicle_leave_platoon(platoon_vehicle);
 }
 
+bool Platoon::is_stuck() const
+{
+	if (is_empty()) return false;
+	const PlatoonVehicle* leader = get_platoon_leader();
+	return (leader->get_velocity() < 5 / 3.6
+		&& !leader->has_leader());
+}
+
 void Platoon::reorder_vehicles()
 {
 	/* Get vehicles in increasing order of position (assumes all
@@ -344,10 +357,11 @@ void Platoon::reorder_vehicles()
 	//std::clog << "Platoon vehicles reordered\n";
 }
 
-long Platoon::create_lane_change_request_for_vehicle(long veh_id) const
+long Platoon::create_lane_change_request_for_vehicle(
+	const PlatoonVehicle& platoon_vehicle) const
 {
-	return 
-		lane_change_strategy->create_platoon_lane_change_request(veh_id);
+	return lane_change_strategy
+		->create_platoon_lane_change_request(platoon_vehicle);
 }
 
 std::shared_ptr<NearbyVehicle> Platoon

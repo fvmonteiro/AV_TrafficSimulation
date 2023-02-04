@@ -360,7 +360,7 @@ private:
 	virtual bool implement_has_next_traffic_light() const { return false; };
 	//virtual void compute_lane_change_risks() {};
 	virtual double compute_accepted_lane_change_gap(
-		std::shared_ptr<const NearbyVehicle> nearby_vehicle) = 0;
+		std::shared_ptr<const NearbyVehicle> nearby_vehicle) const = 0;
 	virtual std::shared_ptr<NearbyVehicle>
 		implement_get_destination_lane_leader() const = 0;
 	virtual std::shared_ptr<NearbyVehicle>

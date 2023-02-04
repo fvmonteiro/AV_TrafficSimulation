@@ -76,6 +76,7 @@ private:
 		const NearbyVehicle& nearby_vehicle) const override;
 	double compute_vehicle_following_gap_for_lane_change(
 		const NearbyVehicle& nearby_vehicle) const override;
+	bool implement_check_lane_change_gaps() override;
 	long implement_get_lane_change_request() const override;
 
 	/* Id of the vehicle in front of which we want to merge

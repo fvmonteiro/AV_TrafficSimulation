@@ -46,6 +46,15 @@ void SynchronousIncreasingGapState
 		platoon_vehicle->set_state(
 			std::make_unique<SynchronousLookingForSafeGapState>());
 	}
+	else if (platoon_vehicle->is_last_platoon_vehicle()
+		&& (*platoon_vehicle->get_preceding_vehicle_state()
+			== SynchronousLaneChangingState()))
+	{
+		/* The last platoon vehicle can skip straight to lane changing
+		if the gaps have already been verified to be safe. */
+		platoon_vehicle->set_state(
+			std::make_unique<SynchronousLaneChangingState>());
+	}
 }
 
 /* ------------------------------------------------------------------------ */
@@ -70,20 +79,28 @@ void SynchronousLookingForSafeGapState
 void SynchronousLookingForSafeGapState
 ::implement_handle_lane_change_intention()
 {
-	/* Check if my gaps are safe and store the info */
-	platoon_vehicle->check_lane_change_gaps();
-	/* Check if everyone's gaps are safe */
+	/* We only need to check everyone's gaps once, and the platoon leader 
+	is always the first vehicle to be updated. */
 	bool can_start_lane_change = true;
-	for (auto& item 
-		: platoon_vehicle->get_platoon()->get_vehicles_by_position())
+	if (platoon_vehicle->is_platoon_leader())
 	{
-		const LaneChangeGapsSafety& lcgs =
-			item.second->get_lane_change_gaps_safety();
-		if (!lcgs.is_lane_change_safe())
+		for (const auto& item 
+			: platoon_vehicle->get_platoon()->get_vehicles_by_position())
 		{
-			can_start_lane_change = false;
-			break;
+			const auto& veh = item.second;
+			if (*veh->get_state() < SynchronousIncreasingGapState()
+				|| !veh->check_lane_change_gaps())
+			{
+				can_start_lane_change = false;
+				break;
+			}
 		}
+	}
+	else
+	{
+		const VehicleState& platoon_leader_state =
+			*platoon_vehicle->get_platoon()->get_platoon_leader()->get_state();
+		can_start_lane_change = platoon_leader_state == SynchronousLaneChangingState();
 	}
 
 	if (can_start_lane_change)
@@ -101,9 +118,6 @@ void SynchronousLookingForSafeGapState
 	{
 		platoon_vehicle->update_lane_change_waiting_time();
 	}
-	/* Note: this is not a perfectly synchronous maneuver. The last vehicle
-	to check safety at the time step where everyone got safe gaps will
-	start the maneuver one sampling time before others. */
 }
 
 /* ------------------------------------------------------------------------ */

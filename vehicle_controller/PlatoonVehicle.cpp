@@ -227,7 +227,7 @@ void PlatoonVehicle::create_lane_change_request()
 	if (is_in_a_platoon())
 	{
 		lane_change_request =
-			platoon->create_lane_change_request_for_vehicle(get_id());
+			platoon->create_lane_change_request_for_vehicle(*this);
 	}
 	else
 	{

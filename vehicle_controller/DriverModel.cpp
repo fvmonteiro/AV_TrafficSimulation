@@ -24,7 +24,7 @@
 
 std::unordered_set<long> logged_vehicles_ids{ 0 };
 const int LOGGED_PLATOON_ID{ 0 };
-const bool CLUELESS_DEBUGGING{ false };
+bool verbose_simulation{ false };
 //const double DEBUGGING_START_TIME{ 249.0 };
 
 SimulationLogger simulation_logger;
@@ -111,7 +111,7 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
         }
         return 1;
     case DRIVER_DATA_TIME                   :
-        if (CLUELESS_DEBUGGING && (double_value != current_time))
+        if (verbose_simulation && (double_value != current_time))
         {
             std::clog << "t=" << current_time
                 << ", " << vehicles.size() << " vehicles." << std::endl;
@@ -141,6 +141,9 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
             case UDA::use_linear_lane_change_gap:
             case UDA::platoon_id:
             case UDA::platoon_strategy:
+                return 1;
+            case UDA::verbose_simulation:
+                return 1;
             case UDA::logged_vehicle_id:
                 return 1;
             /* Debugging: leader */
@@ -196,7 +199,7 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
             return 0;
         }
     case DRIVER_DATA_VEH_ID                 :
-        if (CLUELESS_DEBUGGING) {
+        if (verbose_simulation) {
             std::clog << "t=" << current_time
                 << ", setting data for veh. " << long_value << std::endl;
         }
@@ -315,6 +318,8 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
         case UDA::platoon_strategy:
             platoon_lc_strategy = long_value;
             break;
+        case UDA::verbose_simulation:
+            verbose_simulation = long_value > 0;
         case UDA::logged_vehicle_id:
             logged_vehicles_ids.insert(long_value);
             break;
@@ -713,6 +718,18 @@ DRIVERMODEL_API  int  DriverModelGetValue (long   type,
         need to pass any values here. */
         /**double_value =
             vehicles[current_vehicle_id]->get_desired_lane_angle();*/
+        if (vehicles[current_vehicle_id]->is_verbose())
+        {
+            std::clog << "\t v="
+                << vehicles[current_vehicle_id]->get_velocity()
+                << " des accel=" 
+                << vehicles[current_vehicle_id]->get_desired_acceleration()
+                << "\n\tdes lane angle="
+                << vehicles[current_vehicle_id]->get_desired_lane_angle()
+                << " lc direction "
+                << vehicles[current_vehicle_id]->get_lane_change_direction_to_int()
+                << std::endl;
+        }
         return 0;
     case DRIVER_DATA_ACTIVE_LANE_CHANGE :
         *long_value =
@@ -771,7 +788,7 @@ DRIVERMODEL_API  int  DriverModelExecuteCommand (long number)
         return 1;
     }
     case DRIVER_COMMAND_KILL_DRIVER :
-        if (CLUELESS_DEBUGGING)
+        if (verbose_simulation)
         {
             std::clog << "Erasing veh. " << current_vehicle_id << std::endl;
         }
@@ -792,7 +809,7 @@ DRIVERMODEL_API  int  DriverModelExecuteCommand (long number)
     {
         /* This is executed after all the set commands and before
         any get command. */
-        bool will_print = CLUELESS_DEBUGGING
+        bool will_print = verbose_simulation
             || vehicles[current_vehicle_id]->is_verbose();
         if (will_print) {
             std::clog << "Veh: " << current_vehicle_id

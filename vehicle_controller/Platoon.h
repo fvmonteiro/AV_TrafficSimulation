@@ -39,7 +39,8 @@ public:
 	const PlatoonVehicle* get_last_vehicle() const;
 	/* Returns a nullptr if vehicle not found in platoon */
 	const PlatoonVehicle* get_vehicle_by_id(long veh_id) const;
-	long get_destination_lane_follower_closest_to_leader() const;
+	long get_destination_lane_vehicle_behind_the_leader() const;
+	long get_destination_lane_vehicle_behind_last_vehicle() const;
 
 	void set_verbose(bool verbose) { this->verbose = verbose; };
 	void set_velocity_at_lane_change_start(double velocity) {
@@ -54,8 +55,12 @@ public:
 	void remove_vehicle_by_id(long veh_id, bool is_out_of_simulation);
 	bool can_vehicle_leave_platoon(
 		const PlatoonVehicle& platoon_vehicle) const;
+	/* Returns true if the platoon is stopped right before the mandatory
+	lane change point, i.e., stuck waiting to start lane change.*/
+	bool is_stuck() const;
 	void reorder_vehicles();
-	long create_lane_change_request_for_vehicle(long veh_id) const;
+	long create_lane_change_request_for_vehicle(
+		const PlatoonVehicle& platoon_vehicle) const;
 	std::shared_ptr<NearbyVehicle> define_virtual_leader(
 		const PlatoonVehicle& platoon_vehicle) const;
 
@@ -92,4 +97,3 @@ private:
 	void add_vehicle(int idx_in_platoon, 
 		PlatoonVehicle* new_vehicle);
 };
-

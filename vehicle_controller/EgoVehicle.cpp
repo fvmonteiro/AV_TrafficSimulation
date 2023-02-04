@@ -30,7 +30,7 @@ EgoVehicle::EgoVehicle(long id, VehicleType type, double desired_velocity,
 	tau_d{ std::exp(-simulation_time_step / tau) }
 {
 	compute_safe_gap_parameters();
-	bool verbose_control_manager = false;
+	bool verbose_control_manager = verbose;
 	set_state(std::make_unique<SingleVehicleLaneKeepingState>());
 
 	if (verbose)
@@ -1179,22 +1179,20 @@ std::ostream& operator<< (std::ostream& out, const EgoVehicle& ego_vehicle)
 		<< ", type=" << static_cast<int>(ego_vehicle.get_type())
 		<< ", state="
 		<< *(ego_vehicle.state)
-		<< ", lane=" << ego_vehicle.get_lane()
-		<< ", pref. lane="
-		<< ego_vehicle.get_preferred_relative_lane()
-		//<< ", use preferred lane="
-		//<< ego_vehicle.get_vissim_use_preferred_lane()
-		<< ", vissim suggested lane="
-		<< ego_vehicle.get_vissim_lane_suggestion()
-		/*<< ", vissim active lc="
-		<< RelativeLane::from_long(
-			vehicle.get_vissim_active_lane_change()).to_string()*/
-		<< ", des lc=" << ego_vehicle.get_desired_lane_change_direction()
-		<< ", active lc="
-		<< ego_vehicle.get_active_lane_change_direction()
 		<< ", vel=" << ego_vehicle.get_velocity()
 		<< ", des accel=" << ego_vehicle.get_desired_acceleration()
-		<< ", accel=" << ego_vehicle.get_acceleration();
+		<< ", accel=" << ego_vehicle.get_acceleration()
+		<< ", lane=" << ego_vehicle.get_lane()
+		<< "\nLane changing:" 
+		<< " pref.="
+		<< ego_vehicle.get_preferred_relative_lane()
+		<< ", vissim suggestion="
+		<< ego_vehicle.get_vissim_lane_suggestion()
+		<< ", desired=" << ego_vehicle.get_desired_lane_change_direction()
+		<< ", decision (our choice)="
+		<< ego_vehicle.get_lane_change_direction()
+		<< ", active="
+		<< ego_vehicle.get_active_lane_change_direction();
 
 	return out; // return std::ostream so we can chain calls to operator<<
 }

@@ -54,7 +54,7 @@ private:
 		return nullptr;
 	};
 	double compute_accepted_lane_change_gap(
-		std::shared_ptr<const NearbyVehicle> nearby_vehicle) override {
+		std::shared_ptr<const NearbyVehicle> nearby_vehicle) const override {
 		return 0.0;
 	};
 	std::shared_ptr<NearbyVehicle>

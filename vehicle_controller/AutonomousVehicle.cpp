@@ -69,6 +69,21 @@ LaneChangeGapsSafety AutonomousVehicle::get_lane_change_gaps_safety() const
 	return lane_change_gaps_safety;
 }
 
+bool AutonomousVehicle::is_lane_change_gap_safe(
+	std::shared_ptr<const NearbyVehicle> nearby_vehicle) const
+{
+	if (nearby_vehicle == nullptr) return true;
+	double margin = 0.1;
+
+	//set_gap_variation_during_lane_change(nearby_vehicle->get_id(),
+	//	compute_gap_variation_during_lane_change(*nearby_vehicle));
+	//set_collision_free_gap(nearby_vehicle->get_id(),
+	//	compute_collision_free_gap_during_lane_change(*nearby_vehicle));
+
+	return (compute_gap(nearby_vehicle) + margin)
+		>= compute_accepted_lane_change_gap(nearby_vehicle);
+}
+
 bool AutonomousVehicle::has_lane_change_conflict() const
 {
 	/* If there's no lane change intention, there's no conflict */
@@ -367,7 +382,6 @@ bool AutonomousVehicle::implement_check_lane_change_gaps()
 		return get_vissim_lane_suggestion() != RelativeLane::same;
 	}
 
-	double margin = 0.1;
 	//if (verbose) std::clog << "Deciding lane change" << std::endl;
 	
 	lane_change_gaps_safety.orig_lane_leader_gap = 
@@ -388,23 +402,8 @@ bool AutonomousVehicle::implement_check_lane_change_gaps()
 	return lane_change_gaps_safety.is_lane_change_safe();
 }
 
-bool AutonomousVehicle::is_lane_change_gap_safe(
-	std::shared_ptr<const NearbyVehicle> nearby_vehicle)
-{
-	if (nearby_vehicle == nullptr) return true;
-	double margin = 0.1;
-
-	//set_gap_variation_during_lane_change(nearby_vehicle->get_id(),
-	//	compute_gap_variation_during_lane_change(*nearby_vehicle));
-	//set_collision_free_gap(nearby_vehicle->get_id(),
-	//	compute_collision_free_gap_during_lane_change(*nearby_vehicle));
-
-	return (compute_gap(nearby_vehicle) + margin)
-		>= compute_accepted_lane_change_gap(nearby_vehicle);
-}
-
 double AutonomousVehicle::compute_accepted_lane_change_gap(
-	std::shared_ptr<const NearbyVehicle> nearby_vehicle)
+	std::shared_ptr<const NearbyVehicle> nearby_vehicle) const
 {
 	if (nearby_vehicle == nullptr) return 0.0;
 
@@ -446,7 +445,7 @@ double AutonomousVehicle::compute_accepted_lane_change_gap(
 }
 
 double AutonomousVehicle::compute_time_headway_gap_for_lane_change(
-	const NearbyVehicle& nearby_vehicle)
+	const NearbyVehicle& nearby_vehicle) const
 {
 	/* [Jan 23, 2023] Now that we have both destination_lane_leader
 	and virtual_leader, this function is outdated. The controller stores 
