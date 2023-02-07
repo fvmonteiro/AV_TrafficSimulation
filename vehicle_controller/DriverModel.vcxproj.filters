@@ -79,14 +79,33 @@
     <ClCompile Include="InPlatoonLongitudinalController.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="PlatoonLaneChangeStrategy.cpp" />
-    <ClCompile Include="VehicleState.cpp" />
-    <ClCompile Include="LaneChangeGapsSafety.cpp" />
-    <ClCompile Include="PlatoonVehicleState.cpp" />
-    <ClCompile Include="SynchronousStates.cpp" />
-    <ClCompile Include="LeaderFirstStates.cpp" />
-    <ClCompile Include="LastVehicleFirstStates.cpp" />
-    <ClCompile Include="LeaderFirstAndInvertStates.cpp" />
+    <ClCompile Include="LaneChangeGapsSafety.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="VehicleState.cpp">
+      <Filter>StateMachines</Filter>
+    </ClCompile>
+    <ClCompile Include="SynchronousStates.cpp">
+      <Filter>StateMachines</Filter>
+    </ClCompile>
+    <ClCompile Include="PlatoonVehicleState.cpp">
+      <Filter>StateMachines</Filter>
+    </ClCompile>
+    <ClCompile Include="PlatoonLaneChangeStrategy.cpp">
+      <Filter>StateMachines</Filter>
+    </ClCompile>
+    <ClCompile Include="LeaderFirstStates.cpp">
+      <Filter>StateMachines</Filter>
+    </ClCompile>
+    <ClCompile Include="LastVehicleFirstStates.cpp">
+      <Filter>StateMachines</Filter>
+    </ClCompile>
+    <ClCompile Include="LeaderFirstAndInvertStates.cpp">
+      <Filter>StateMachines</Filter>
+    </ClCompile>
+    <ClCompile Include="NoLaneChangeCAV.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ControlManager.h">
@@ -173,14 +192,33 @@
     <ClInclude Include="InPlatoonLongitudinalController.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="PlatoonLaneChangeStrategy.h" />
-    <ClInclude Include="VehicleState.h" />
-    <ClInclude Include="LaneChangeGapsSafety.h" />
-    <ClInclude Include="PlatoonVehicleState.h" />
-    <ClInclude Include="SynchronousStates.h" />
-    <ClInclude Include="LeaderFirstStates.h" />
-    <ClInclude Include="LastVehicleFirstStates.h" />
-    <ClInclude Include="LeaderFirstAndInvertStates.h" />
+    <ClInclude Include="NoLaneChangeCAV.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="LaneChangeGapsSafety.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="VehicleState.h">
+      <Filter>StateMachines</Filter>
+    </ClInclude>
+    <ClInclude Include="SynchronousStates.h">
+      <Filter>StateMachines</Filter>
+    </ClInclude>
+    <ClInclude Include="PlatoonVehicleState.h">
+      <Filter>StateMachines</Filter>
+    </ClInclude>
+    <ClInclude Include="PlatoonLaneChangeStrategy.h">
+      <Filter>StateMachines</Filter>
+    </ClInclude>
+    <ClInclude Include="LeaderFirstStates.h">
+      <Filter>StateMachines</Filter>
+    </ClInclude>
+    <ClInclude Include="LeaderFirstAndInvertStates.h">
+      <Filter>StateMachines</Filter>
+    </ClInclude>
+    <ClInclude Include="LastVehicleFirstStates.h">
+      <Filter>StateMachines</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Header Files">
@@ -188,6 +226,9 @@
     </Filter>
     <Filter Include="Source Files">
       <UniqueIdentifier>{26718a99-b736-4bc6-a73a-bc5f180869a2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="StateMachines">
+      <UniqueIdentifier>{832747f0-8314-4dc8-8583-49e2215bfc0f}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

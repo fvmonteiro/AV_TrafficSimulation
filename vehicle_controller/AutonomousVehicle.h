@@ -64,6 +64,9 @@ protected:
 
 
 	void find_destination_lane_vehicles();
+	bool try_to_overtake_destination_lane_leader() const;
+	bool try_to_overtake_destination_lane_leader(double min_rel_vel) const;
+	/*[Feb 7, 2023] The four methods below can probably become private */
 	void set_virtual_leader(
 		std::shared_ptr<NearbyVehicle> new_virtual_leader);
 	/*void set_destination_lane_follower_by_id(
@@ -73,15 +76,6 @@ protected:
 	bool is_destination_lane_leader(const NearbyVehicle& nearby_vehicle);
 	bool is_leader_of_destination_lane_leader(
 		const NearbyVehicle& nearby_vehicle);
-
-	/* [Jan 23, 2023] TO DO: make some of the below private? */
-	/* ----------------------------------------------------- */
-
-	/* Returns a nullptr if no virtual leader */
-	virtual std::shared_ptr<NearbyVehicle> define_virtual_leader() const;
-	void update_virtual_leader(std::shared_ptr<const NearbyVehicle> old_leader);
-	//bool is_destination_lane_leader_stuck() const;
-	bool try_to_overtake_destination_lane_leader() const;
 
 	/* ----------------------------------------------------- */
 	
@@ -153,6 +147,8 @@ private:
 	std::shared_ptr<NearbyVehicle> implement_get_assisted_vehicle()
 		const override { return nullptr; };
 	long implement_get_virtual_leader_id() const override;
+	double compute_lane_changing_desired_time_headway(
+		const NearbyVehicle& nearby_vehicle) const override;
 
 	/* Time-headway based gap (hv + d) minus a term based on
 	accepted risk */
@@ -166,10 +162,11 @@ private:
 	double compute_gap_variation_during_lane_change(
 		const NearbyVehicle& nearby_vehicle) const;
 
+	/* Returns a nullptr if no virtual leader */
+	virtual std::shared_ptr<NearbyVehicle> define_virtual_leader() const;
+	void update_virtual_leader(std::shared_ptr<const NearbyVehicle> old_leader);
 	virtual void update_destination_lane_follower(
 		const std::shared_ptr<NearbyVehicle>& old_follower);
-	double compute_lane_changing_desired_time_headway(
-		const NearbyVehicle& nearby_vehicle) const override;
 	double estimate_nearby_vehicle_time_headway(
 		NearbyVehicle& nearby_vehicle);
 

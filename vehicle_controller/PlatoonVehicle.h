@@ -41,6 +41,7 @@ protected:
 	std::shared_ptr<NearbyVehicle> define_virtual_leader() const override;
 
 private:
+	double min_overtaking_rel_vel{ 30.0 / 3.6 };
 	std::shared_ptr<Platoon> platoon{ nullptr };
 	// desired velocity when not a part of the platoon
 	//double alone_desired_velocity{ 0.0 };

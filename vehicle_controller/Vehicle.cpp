@@ -48,7 +48,8 @@ bool Vehicle::is_a_connected_type(VehicleType vehicle_type) const
 {
 	return (vehicle_type == VehicleType::connected_car
 		|| vehicle_type == VehicleType::traffic_light_calc_car
-		|| vehicle_type == VehicleType::platoon_car);
+		|| vehicle_type == VehicleType::platoon_car
+		|| vehicle_type == VehicleType::no_lane_change_connected_car);
 }
 
 bool Vehicle::has_lane_change_intention() const 

@@ -5,9 +5,10 @@
 #include "ACCVehicle.h"
 #include "AutonomousVehicle.h"
 #include "ConnectedAutonomousVehicle.h"
+#include "NoLaneChangeCAV.h"
 #include "PlatoonVehicle.h"
 #include "TrafficLightALCVehicle.h"
-#include "Platoon.h"
+//#include "Platoon.h"
 
 class EgoVehicleFactory
 {
@@ -29,15 +30,18 @@ public:
 			return std::make_shared<ConnectedAutonomousVehicle>(id,
 				desired_velocity,
 				simulation_time_step, creation_time, verbose);
+		case VehicleType::no_lane_change_connected_car:
+			return std::make_shared<NoLaneChangeCAV>(id, desired_velocity,
+				simulation_time_step, creation_time, verbose);
 		case VehicleType::platoon_car:
 			return std::make_shared<PlatoonVehicle>(id, desired_velocity,
 					simulation_time_step, creation_time, verbose);
 		case VehicleType::traffic_light_alc_car:
-			return std::make_unique<TrafficLightALCVehicle>(id,
+			return std::make_shared<TrafficLightALCVehicle>(id,
 				desired_velocity,
 				simulation_time_step, creation_time, verbose);
 		case VehicleType::traffic_light_calc_car:
-			return std::make_unique<TrafficLightCALCVehicle>(id,
+			return std::make_shared<TrafficLightCALCVehicle>(id,
 				desired_velocity,
 				simulation_time_step, creation_time, verbose);
 		default:

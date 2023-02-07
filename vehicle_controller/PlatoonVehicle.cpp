@@ -141,7 +141,7 @@ std::shared_ptr<NearbyVehicle> PlatoonVehicle
 	lane leader. */
 	std::shared_ptr<NearbyVehicle> nv = get_modifiable_dest_lane_leader();
 
-	if (try_to_overtake_destination_lane_leader())
+	if (try_to_overtake_destination_lane_leader(min_overtaking_rel_vel))
 	{
 		nv = nullptr;
 	}

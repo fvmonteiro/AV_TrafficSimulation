@@ -238,7 +238,8 @@ const
 //	return false;
 //}
 
-bool AutonomousVehicle::try_to_overtake_destination_lane_leader() const
+bool AutonomousVehicle::try_to_overtake_destination_lane_leader(
+	double min_rel_vel) const
 {
 	if (!has_destination_lane_leader()) return true;
 
@@ -250,17 +251,22 @@ bool AutonomousVehicle::try_to_overtake_destination_lane_leader() const
 		get_desired_velocity()
 		: get_leader()->compute_velocity(ego_velocity);
 
-	/* We say the dest lane leader is stuck if it is not moving even 
-	though it has no leader. This can happen when vehicles in different 
+	/* We say the dest lane leader is stuck if it is not moving even
+	though it has no leader. This can happen when vehicles in different
 	lanes trying to "switch" lanes. */
 	bool is_dest_lane_leader_stuck =
 		dest_lane_leader_vel < 0.1
 		&& (get_destination_lane_leader_leader() == nullptr);
 	bool is_desired_speed_higher = dest_lane_leader_vel
-		< (origin_lane_desired_velocity - min_overtaking_rel_vel);
+		< (origin_lane_desired_velocity - min_rel_vel);
 
 	/* [Jan 24, 2023] Note: maybe the first condition is redundant. */
 	return is_dest_lane_leader_stuck || is_desired_speed_higher;
+}
+
+bool AutonomousVehicle::try_to_overtake_destination_lane_leader() const
+{
+	return try_to_overtake_destination_lane_leader(min_overtaking_rel_vel);
 }
 
 void AutonomousVehicle::update_destination_lane_follower(
