@@ -169,24 +169,40 @@
 		<dataCollectionMeasurement name="" no="1">
 			<dataCollectionPoints>
 				<intObjectRef key="1"/>
-				<intObjectRef key="2"/>
 			</dataCollectionPoints>
 		</dataCollectionMeasurement>
 		<dataCollectionMeasurement name="" no="2">
 			<dataCollectionPoints>
-				<intObjectRef key="3"/>
-				<intObjectRef key="4"/>
+				<intObjectRef key="2"/>
 			</dataCollectionPoints>
 		</dataCollectionMeasurement>
 		<dataCollectionMeasurement name="" no="3">
 			<dataCollectionPoints>
-				<intObjectRef key="5"/>
-				<intObjectRef key="6"/>
+				<intObjectRef key="3"/>
 			</dataCollectionPoints>
 		</dataCollectionMeasurement>
 		<dataCollectionMeasurement name="" no="4">
 			<dataCollectionPoints>
+				<intObjectRef key="4"/>
+			</dataCollectionPoints>
+		</dataCollectionMeasurement>
+		<dataCollectionMeasurement name="" no="5">
+			<dataCollectionPoints>
+				<intObjectRef key="5"/>
+			</dataCollectionPoints>
+		</dataCollectionMeasurement>
+		<dataCollectionMeasurement name="" no="6">
+			<dataCollectionPoints>
+				<intObjectRef key="6"/>
+			</dataCollectionPoints>
+		</dataCollectionMeasurement>
+		<dataCollectionMeasurement name="" no="7">
+			<dataCollectionPoints>
 				<intObjectRef key="7"/>
+			</dataCollectionPoints>
+		</dataCollectionMeasurement>
+		<dataCollectionMeasurement name="" no="8">
+			<dataCollectionPoints>
 				<intObjectRef key="8"/>
 			</dataCollectionPoints>
 		</dataCollectionMeasurement>
