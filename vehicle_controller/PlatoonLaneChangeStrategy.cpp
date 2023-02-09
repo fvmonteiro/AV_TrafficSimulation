@@ -124,15 +124,26 @@ bool LeaderFirstStrategy::implement_can_vehicle_leave_platoon(
 	- ahead of the destination lane leader 
 	*/
 
-	long precending_platoon_veh_id =
-		platoon_vehicle.get_preceding_vehicle_id();
-	return !platoon_vehicle.is_platoon_leader()
+	/*long precending_platoon_veh_id =
+		platoon_vehicle.get_preceding_vehicle_id();*/
+	/*return !platoon_vehicle.is_platoon_leader()
 		&& *platoon_vehicle.get_state() != LeaderFirstLaneChangingState()
 		&& precending_platoon_veh_id != platoon_vehicle.get_leader_id()
 		&& (precending_platoon_veh_id
 			!= platoon_vehicle.get_dest_lane_leader_id())
 		&& (precending_platoon_veh_id
-			!= platoon_vehicle.get_destination_lane_leader_leader_id());
+			!= platoon_vehicle.get_destination_lane_leader_leader_id());*/
+	if (platoon_vehicle.is_platoon_leader()) return false;
+	const PlatoonVehicle* preceding_vehicle = 
+		platoon_vehicle.get_preceding_vehicle_in_platoon();
+	/* Vehicle between us and the preceding vehicle */
+	if (preceding_vehicle->get_lane() == platoon_vehicle.get_lane()
+		&& platoon_vehicle.has_leader()
+		&& platoon_vehicle.get_leader_id() != preceding_vehicle->get_id())
+	{
+		return true;
+	}
+	return false;
 }
 
 std::unique_ptr<VehicleState> LeaderFirstStrategy
