@@ -432,15 +432,16 @@ double EgoVehicle::compute_gap(const NearbyVehicle& nearby_vehicle) const
 	{
 		return MAX_DISTANCE;
 	}
+	double offset_length;
 	if (nearby_vehicle.is_ahead())
 	{
-		return nearby_vehicle.get_distance()
-			- nearby_vehicle.get_length();
+		offset_length = -nearby_vehicle.get_length();
 	}
 	else
 	{
-		return -nearby_vehicle.get_distance() - get_length();
+		offset_length = get_length();
 	}
+	return nearby_vehicle.get_distance() + offset_length;
 }
 
 double EgoVehicle::compute_gap(
@@ -449,6 +450,51 @@ double EgoVehicle::compute_gap(
 	if (nearby_vehicle != nullptr)
 	{
 		return compute_gap(*nearby_vehicle);
+	}
+	else
+	{
+		return MAX_DISTANCE;
+	}
+}
+
+double EgoVehicle::compute_absolute_gap(const NearbyVehicle& nearby_vehicle) const
+{
+	/* Vissim's given "distance" is the distance between both front bumpers,
+	so we subtract the length from that. We need to check which vehicle is
+	ahead to determine whose length must be subtracted. */
+	return std::abs(compute_gap(nearby_vehicle));
+	//if (nearby_vehicle.get_id() <= 0) // "empty" vehicle
+	//{
+	//	return MAX_DISTANCE;
+	//}
+	//if (verbose) 
+	//{
+	//	std::clog << "\tveh " << nearby_vehicle.get_id()
+	//		<< " is ahead? " << (nearby_vehicle.is_ahead() ? "yes" : "no")
+	//		<< std::endl;
+	//}
+	//if (nearby_vehicle.is_ahead())
+	//{
+	//	return nearby_vehicle.get_distance()
+	//		- nearby_vehicle.get_length();
+	//}
+	//else
+	//{
+	//	if (verbose)
+	//	{
+	//		std::clog << "\tnv get distance: " << nearby_vehicle.get_distance()
+	//			<< std::endl;
+	//	}
+	//	return -nearby_vehicle.get_distance() - get_length();
+	//}
+}
+
+double EgoVehicle::compute_absolute_gap(
+	std::shared_ptr<const NearbyVehicle> nearby_vehicle) const
+{
+	if (nearby_vehicle != nullptr)
+	{
+		return compute_absolute_gap(*nearby_vehicle);
 	}
 	else
 	{
@@ -760,7 +806,7 @@ double EgoVehicle::compute_ttc(const NearbyVehicle& nearby_vehicle)
 		if ego vel < leader vel */
 	if (nearby_vehicle.get_relative_velocity() > 0)
 	{
-		return compute_gap(nearby_vehicle) / nearby_vehicle.get_relative_velocity();
+		return compute_absolute_gap(nearby_vehicle) / nearby_vehicle.get_relative_velocity();
 	}
 	return -1.0;
 }
@@ -776,7 +822,7 @@ double EgoVehicle::compute_drac(const NearbyVehicle& nearby_vehicle)
 	if (nearby_vehicle.get_relative_velocity() > 0)
 	{
 		return std::pow(nearby_vehicle.get_relative_velocity(), 2)
-			/ 2 / compute_gap(nearby_vehicle);
+			/ 2 / compute_absolute_gap(nearby_vehicle);
 	}
 	return -1.0;
 }

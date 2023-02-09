@@ -203,12 +203,19 @@ public:
 	std::shared_ptr<NearbyVehicle> get_nearby_vehicle_by_id(
 		long nv_id) const;
 
-	/* Computes the bumper-to-bumper distance between vehicles.
+	/* Computes the absolute bumper-to-bumper distance between vehicles.
 	Returns MAX_DISTANCE if nearby_vehicle is empty. */
 	double compute_gap(const NearbyVehicle& nearby_vehicle) const;
-	/* Computes the bumper-to-bumper distance between vehicles.
-	* Returns MAX_DISTANCE if nearby_vehicle is a nullptr. */
+	/* Computes the absolute bumper-to-bumper distance between vehicles.
+	Returns MAX_DISTANCE if nearby_vehicle is a nullptr. */
 	double compute_gap(
+		std::shared_ptr<const NearbyVehicle> nearby_vehicle) const;
+	/* Computes the absolute bumper-to-bumper distance between vehicles.
+	Returns MAX_DISTANCE if nearby_vehicle is empty. */
+	double compute_absolute_gap(const NearbyVehicle& nearby_vehicle) const;
+	/* Computes the absolute bumper-to-bumper distance between vehicles.
+	* Returns MAX_DISTANCE if nearby_vehicle is a nullptr. */
+	double compute_absolute_gap(
 		std::shared_ptr<const NearbyVehicle> nearby_vehicle) const;
 	/* Ego velocity minus leader velocity. Returns zero if there
 	* is no leader */

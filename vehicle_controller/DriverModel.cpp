@@ -621,7 +621,7 @@ DRIVERMODEL_API  int  DriverModelGetValue (long   type,
             break;
         case UDA::gap_to_dest_lane_follower:
             *double_value = vehicles[current_vehicle_id]->
-                compute_gap(vehicles[current_vehicle_id]->
+                compute_absolute_gap(vehicles[current_vehicle_id]->
                     get_destination_lane_follower()
                 );
             break;

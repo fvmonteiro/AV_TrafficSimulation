@@ -21,7 +21,7 @@ ControlManager::ControlManager(const EgoVehicle& ego_vehicle,
 	lateral_controller{ LateralController(verbose) },
 	verbose{ verbose }
 {
-	long_controllers_verbose = false;
+	long_controllers_verbose = verbose;
 	if (verbose)
 	{
 		std::clog << "Creating control manager" << std::endl;
@@ -705,6 +705,13 @@ double ControlManager::determine_low_velocity_reference(double ego_velocity,
 	double reference_velocity = std::min(
 		leader_velocity * vel_fraction,
 		ego_velocity);
+
+	if (verbose)
+	{
+		std::clog << "\tDetermining vel ref. v_l=" << leader_velocity
+			<< ", v_ref=" << reference_velocity << std::endl;
+	}
+
 	return reference_velocity;
 }
 

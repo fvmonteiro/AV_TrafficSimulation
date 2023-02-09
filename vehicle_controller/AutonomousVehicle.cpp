@@ -80,7 +80,7 @@ bool AutonomousVehicle::is_lane_change_gap_safe(
 	//set_collision_free_gap(nearby_vehicle->get_id(),
 	//	compute_collision_free_gap_during_lane_change(*nearby_vehicle));
 
-	return (compute_gap(nearby_vehicle) + margin)
+	return (compute_absolute_gap(nearby_vehicle) + margin)
 		>= compute_accepted_lane_change_gap(nearby_vehicle);
 }
 
@@ -250,6 +250,12 @@ bool AutonomousVehicle::try_to_overtake_destination_lane_leader(
 		(controller.is_in_free_flow_at_origin_lane() || !has_leader()) ?
 		get_desired_velocity()
 		: get_leader()->compute_velocity(ego_velocity);
+
+	if (verbose)
+	{
+		std::clog << "v_o=" << origin_lane_desired_velocity
+			<< ", v_d=" << dest_lane_leader_vel << "\n";
+	}
 
 	/* We say the dest lane leader is stuck if it is not moving even
 	though it has no leader. This can happen when vehicles in different
