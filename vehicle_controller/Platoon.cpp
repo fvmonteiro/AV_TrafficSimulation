@@ -191,9 +191,9 @@ long Platoon::get_destination_lane_vehicle_behind_the_leader() const
 	- Some other platoon vehicle's dest lane follower */
 
 	long dest_lane_follower_id = 
-		get_platoon_leader()->get_dest_lane_follower_id();
+		get_platoon_leader()->get_destination_lane_follower_id();
 	long platoon_leader_dest_lane_leader = 
-		get_platoon_leader()->get_dest_lane_leader_id();
+		get_platoon_leader()->get_destination_lane_leader_id();
 	int i = leader_idx - 1;
 	while (dest_lane_follower_id == 0 && i >= last_veh_idx)
 	{
@@ -206,12 +206,12 @@ long Platoon::get_destination_lane_vehicle_behind_the_leader() const
 			If the dest lane follower doesn't exist (id=0), the loop 
 			continues. */
 			const auto& veh = vehicles_by_position.at(i);
-			dest_lane_follower_id = veh->get_dest_lane_leader_id();
+			dest_lane_follower_id = veh->get_destination_lane_leader_id();
 			if (dest_lane_follower_id == 0
 				|| is_vehicle_in_platoon(dest_lane_follower_id)
 				|| dest_lane_follower_id == platoon_leader_dest_lane_leader)
 			{
-				dest_lane_follower_id = veh->get_dest_lane_follower_id();
+				dest_lane_follower_id = veh->get_destination_lane_follower_id();
 			}
 		}
 		i--;
@@ -221,7 +221,7 @@ long Platoon::get_destination_lane_vehicle_behind_the_leader() const
 
 long Platoon::get_destination_lane_vehicle_behind_last_vehicle() const
 {
-	return get_last_vehicle()->get_dest_lane_follower_id();
+	return get_last_vehicle()->get_destination_lane_follower_id();
 }
 
 void Platoon::remove_vehicle_by_position(int idx_in_platoon, long veh_id,

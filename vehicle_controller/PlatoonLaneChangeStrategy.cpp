@@ -61,7 +61,7 @@ std::unique_ptr<VehicleState> NoStrategy
 long NoStrategy::implement_create_platoon_lane_change_request(
 	const PlatoonVehicle& platoon_vehicle) const
 {
-	return platoon_vehicle.get_dest_lane_follower_id();
+	return platoon_vehicle.get_destination_lane_follower_id();
 }
 
 std::shared_ptr<NearbyVehicle> NoStrategy
@@ -117,13 +117,14 @@ std::shared_ptr<NearbyVehicle> SynchronousStrategy
 bool LeaderFirstStrategy::implement_can_vehicle_leave_platoon(
 	const PlatoonVehicle& platoon_vehicle) const
 {
+	/* [Feb 9, 2023] Old ideas focused on mandatory LC with 
+	* blocked lane */
 	/* Leave the platoon if the supposed platoon preceding vehicle is 
 	not any of the following:
 	- the real (same lane) leader
 	- the destination lane leader
 	- ahead of the destination lane leader 
 	*/
-
 	/*long precending_platoon_veh_id =
 		platoon_vehicle.get_preceding_vehicle_id();*/
 	/*return !platoon_vehicle.is_platoon_leader()
@@ -133,6 +134,7 @@ bool LeaderFirstStrategy::implement_can_vehicle_leave_platoon(
 			!= platoon_vehicle.get_dest_lane_leader_id())
 		&& (precending_platoon_veh_id
 			!= platoon_vehicle.get_destination_lane_leader_leader_id());*/
+
 	if (platoon_vehicle.is_platoon_leader()) return false;
 	const PlatoonVehicle* preceding_vehicle = 
 		platoon_vehicle.get_preceding_vehicle_in_platoon();
@@ -229,7 +231,7 @@ long LastVehicleFirstStrategy::implement_create_platoon_lane_change_request(
 	if (platoon->get_last_veh_id() == veh_id)
 	{
 		desired_future_follower_id =
-			platoon->get_last_vehicle()->get_dest_lane_follower_id();
+			platoon->get_last_vehicle()->get_destination_lane_follower_id();
 	}
 	else
 	{
@@ -248,6 +250,7 @@ long LastVehicleFirstStrategy::implement_create_platoon_lane_change_request(
 std::shared_ptr<NearbyVehicle> LastVehicleFirstStrategy
 ::implement_define_virtual_leader(const PlatoonVehicle& platoon_vehicle) const
 {
+	//std::shared_ptr<NearbyVehicle> virtual_leader = nullptr;
 	if (platoon_vehicle.is_last_platoon_vehicle())
 	{
 		return platoon_vehicle.define_virtual_leader_when_alone();
@@ -267,6 +270,13 @@ std::shared_ptr<NearbyVehicle> LastVehicleFirstStrategy
 			platoon_vehicle.get_following_vehicle_in_platoon()
 			->get_leader_id();
 		return platoon_vehicle.get_nearby_vehicle_by_id(virtual_leader_id);
+	}
+	else if (platoon_vehicle.is_platoon_leader())
+	{
+		/* We want to prevent the platoon from "running away" */
+		long dest_lane_leader_id =
+			platoon_vehicle.get_destination_lane_leader_id();
+		return platoon_vehicle.get_nearby_vehicle_by_id(dest_lane_leader_id);
 	}
 	else
 	{
@@ -310,7 +320,7 @@ long LeaderFirstAndInvertStrategy
 	if (platoon->get_leader_id() == veh_id)
 	{
 		desired_future_follower_id = 
-			platoon->get_platoon_leader()->get_dest_lane_follower_id();
+			platoon->get_platoon_leader()->get_destination_lane_follower_id();
 	}
 	else if (*platoon_vehicle.get_state()
 			== LeaderFirstAndInvertLookingForSafeGapState())

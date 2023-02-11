@@ -67,7 +67,7 @@ void RealLongitudinalController::determine_controller_state(
 	}
 	else 
 	{
-		double gap = ego_vehicle.compute_gap(leader);
+		double gap = ego_vehicle.compute_gap_to_a_leader(leader);
 		double ego_velocity = ego_vehicle.get_velocity();
 		double leader_velocity = leader->compute_velocity(ego_velocity);
 		double gap_threshold = compute_gap_threshold(gap,

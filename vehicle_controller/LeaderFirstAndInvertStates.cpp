@@ -51,7 +51,7 @@ void LeaderFirstAndInvertLookingForSafeGapState
 	long preceding_vehicle_id =
 		platoon_vehicle->get_preceding_vehicle_id();
 	long dest_lane_follower_id = 
-		platoon_vehicle->get_dest_lane_follower_id();
+		platoon_vehicle->get_destination_lane_follower_id();
 	bool has_finished_overtaking = 
 		preceding_vehicle_id == dest_lane_follower_id;
 

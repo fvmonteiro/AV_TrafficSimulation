@@ -61,7 +61,7 @@ double LongitudinalControllerWithTrafficLights
 	std::shared_ptr<const NearbyVehicle> leader)
 {	
 	//std::shared_ptr<NearbyVehicle> leader = ego_vehicle.get_leader();
-	double gap = ego_vehicle.compute_gap(leader);
+	double gap = ego_vehicle.compute_gap_to_a_leader(leader);
 	double ego_vel = ego_vehicle.get_velocity();
 	double rel_vel = leader->get_relative_velocity();
 	double leader_vel = leader->compute_velocity(ego_vel);
@@ -166,7 +166,7 @@ double LongitudinalControllerWithTrafficLights::choose_acceleration(
 	}
 
 	// TODO: h1 is already computed in the vehicle_following_input method.
-	double gap = ego_vehicle.compute_gap(ego_vehicle.get_leader());
+	double gap = ego_vehicle.compute_gap_to_a_leader(ego_vehicle.get_leader());
 	double ego_vel = ego_vehicle.get_velocity();
 	double leader_vel = ego_vehicle.get_leader()->compute_velocity(ego_vel);
 	double gap_error = gap - time_headway * ego_vel - standstill_distance;

@@ -48,8 +48,8 @@ public:
 		return max_lane_change_risk_to_follower;
 	}
 	long get_platoon_id() const { return platoon_id; };
-	long get_dest_lane_leader_id() const { return dest_lane_leader_id; };
-	long get_dest_lane_follower_id() const { return dest_lane_follower_id; };
+	long get_destination_lane_leader_id() const { return dest_lane_leader_id; };
+	long get_destination_lane_follower_id() const { return dest_lane_follower_id; };
 	long get_assisted_vehicle_id() const { return assisted_vehicle_id; };
 	void set_lateral_position(double lateral_position) {
 		this->lateral_position = lateral_position;

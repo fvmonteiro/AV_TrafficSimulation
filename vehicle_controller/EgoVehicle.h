@@ -203,20 +203,30 @@ public:
 	std::shared_ptr<NearbyVehicle> get_nearby_vehicle_by_id(
 		long nv_id) const;
 
-	/* Computes the absolute bumper-to-bumper distance between vehicles.
+	/* Computes the bumper-to-bumper distance between vehicles.
 	Returns MAX_DISTANCE if nearby_vehicle is empty. */
-	double compute_gap(const NearbyVehicle& nearby_vehicle) const;
-	/* Computes the absolute bumper-to-bumper distance between vehicles.
+	double compute_gap_to_a_leader(
+		const NearbyVehicle& nearby_vehicle) const;
+	/* Computes the bumper-to-bumper distance between vehicles.
 	Returns MAX_DISTANCE if nearby_vehicle is a nullptr. */
-	double compute_gap(
+	double compute_gap_to_a_leader(
 		std::shared_ptr<const NearbyVehicle> nearby_vehicle) const;
+	/* Computes the bumper-to-bumper distance between vehicles.
+	Returns MAX_DISTANCE if nearby_vehicle is empty. */
+	double compute_gap_to_a_follower(
+		const NearbyVehicle& nearby_vehicle) const;
+	/* Computes the bumper-to-bumper distance between vehicles.
+	Returns MAX_DISTANCE if nearby_vehicle is a nullptr. */
+	double compute_gap_to_a_follower(
+		std::shared_ptr<const NearbyVehicle> nearby_vehicle) const;
+
 	/* Computes the absolute bumper-to-bumper distance between vehicles.
 	Returns MAX_DISTANCE if nearby_vehicle is empty. */
-	double compute_absolute_gap(const NearbyVehicle& nearby_vehicle) const;
+	//double compute_absolute_gap(const NearbyVehicle& nearby_vehicle) const;
 	/* Computes the absolute bumper-to-bumper distance between vehicles.
 	* Returns MAX_DISTANCE if nearby_vehicle is a nullptr. */
-	double compute_absolute_gap(
-		std::shared_ptr<const NearbyVehicle> nearby_vehicle) const;
+	/*double compute_absolute_gap(
+		std::shared_ptr<const NearbyVehicle> nearby_vehicle) const;*/
 	/* Ego velocity minus leader velocity. Returns zero if there
 	* is no leader */
 	double get_relative_velocity_to_leader();
@@ -235,9 +245,9 @@ public:
 	/* Methods to debug nearby vehicles information */
 
 	// Returns zero if no dest lane leader
-	long get_dest_lane_leader_id() const;
+	long get_destination_lane_leader_id() const;
 	// Returns zero if no dest lane follower
-	long get_dest_lane_follower_id() const;
+	long get_destination_lane_follower_id() const;
 	// Returns zero if no assisted vehicle
 	long get_assisted_veh_id() const;
 	double get_dest_follower_time_headway() const;

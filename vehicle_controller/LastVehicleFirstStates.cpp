@@ -46,7 +46,7 @@ void LastVehicleFirstIncreasingGapState
 {
 	if (platoon_vehicle->check_lane_change_gaps()
 		&& (!platoon_vehicle->has_virtual_leader() || 
-			(platoon_vehicle->get_dest_lane_leader_id()
+			(platoon_vehicle->get_destination_lane_leader_id()
 				== platoon_vehicle->get_virtual_leader_id())))
 	{
 		platoon_vehicle->set_state(
@@ -83,7 +83,7 @@ void LastVehicleFirstLookingForSafeGapState
 {
 	if (platoon_vehicle->check_lane_change_gaps()
 		&& (!platoon_vehicle->has_virtual_leader() ||
-			(platoon_vehicle->get_dest_lane_leader_id()
+			(platoon_vehicle->get_destination_lane_leader_id()
 				== platoon_vehicle->get_virtual_leader_id())))
 	{
 		platoon_vehicle->set_state(

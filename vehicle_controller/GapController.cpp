@@ -107,7 +107,7 @@ double GapController::compute_desired_acceleration(
 	}
 
 	double ego_velocity = ego_vehicle.get_velocity();
-	double gap = ego_vehicle.compute_gap(leader);
+	double gap = ego_vehicle.compute_gap_to_a_leader(leader);
 	double gap_reference = compute_desired_gap(ego_velocity);
 	this->gap_error = compute_gap_error(gap, gap_reference);
 	double velocity_reference = leader->compute_velocity(ego_velocity);

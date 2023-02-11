@@ -79,9 +79,19 @@ bool AutonomousVehicle::is_lane_change_gap_safe(
 	//	compute_gap_variation_during_lane_change(*nearby_vehicle));
 	//set_collision_free_gap(nearby_vehicle->get_id(),
 	//	compute_collision_free_gap_during_lane_change(*nearby_vehicle));
+	double gap = nearby_vehicle->is_ahead() ?
+		compute_gap_to_a_leader(nearby_vehicle)
+		: compute_gap_to_a_follower(nearby_vehicle);
+		
+	if (verbose)
+	{
+		std::clog << "\tg=" << gap<< "\n";
+	}
 
-	return (compute_absolute_gap(nearby_vehicle) + margin)
-		>= compute_accepted_lane_change_gap(nearby_vehicle);
+	double accepted_gap = compute_accepted_lane_change_gap(
+		nearby_vehicle);
+	
+	return gap + margin >= accepted_gap;
 }
 
 bool AutonomousVehicle::has_lane_change_conflict() const
@@ -394,12 +404,23 @@ bool AutonomousVehicle::implement_check_lane_change_gaps()
 		return get_vissim_lane_suggestion() != RelativeLane::same;
 	}
 
-	//if (verbose) std::clog << "Deciding lane change" << std::endl;
-	
+	if (verbose) 
+	{
+		std::clog << "Deciding lane changing safety\n"
+			<< "\tTo orig lane leader:\n";
+	}
 	lane_change_gaps_safety.orig_lane_leader_gap = 
 		is_lane_change_gap_safe(get_leader());
+	if (verbose)
+	{
+		std::clog << "\tTo dest lane leader:\n";
+	}
 	lane_change_gaps_safety.dest_lane_leader_gap =
 		is_lane_change_gap_safe(destination_lane_leader);
+	if (verbose)
+	{
+		std::clog << "\tTo dest lane follower:\n";
+	}
 	/* Besides the regular safety conditions, we add the case
 	where the dest lane follower has completely stopped to give room
 	to the lane changing vehicle */
@@ -443,15 +464,13 @@ double AutonomousVehicle::compute_accepted_lane_change_gap(
 			*nearby_vehicle, false);
 	double accepted_gap = accepted_vehicle_following_gap
 		+ gap_variation_during_lc;
-	//if (verbose)
-	//{
-	//	std::clog << "nv id " << nearby_vehicle->get_id()
-	//		<< ": delta g_lc = " << gap_variation_during_lc
-	//		//<< ", g_h = " << gap1
-	//		//<< ", g_non-linear = " << gap2
-	//		<< ", g_vf = " << accepted_vehicle_following_gap
-	//		<< "; g_lc = " << accepted_gap << std::endl;
-	//}
+	if (verbose)
+	{
+		std::clog << "\tnv id " << nearby_vehicle->get_id()
+			<< ": delta g_lc = " << gap_variation_during_lc
+			<< ", g_vf = " << accepted_vehicle_following_gap
+			<< "; g_lc = " << accepted_gap << std::endl;
+	}
 
 	return std::max(accepted_gap, 1.0);
 }
@@ -535,17 +554,6 @@ double AutonomousVehicle::compute_vehicle_following_gap_for_lane_change(
 		/ brake_follower;
 	double stop_time_leader = v_leader / brake_leader;
 
-	//if (verbose)
-	//{
-	//	std::clog << "vf = " << v_follower
-	//		<< ", lambda1 = " << follower_lambda_1
-	//		<< ", df = " << brake_follower
-	//		<< ", vl = " << v_leader
-	//		<< ", dl = " << brake_leader
-	//		<< ", lambda 0 = " << follower_lambda_0
-	//		<< std::endl;
-	//}
-
 	double accepted_gap;
 	if (stop_time_follower >= stop_time_leader)
 	{
@@ -566,6 +574,22 @@ double AutonomousVehicle::compute_vehicle_following_gap_for_lane_change(
 	{
 		accepted_gap = 0.0;
 	}
+
+	if (verbose)
+	{
+		std::clog << "\tVeh following gap computation\n\t"
+			<< "vf=" << v_follower
+			<< ", lambda1=" << follower_lambda_1
+			<< ", df=" << brake_follower
+			<< ", vl=" << v_leader
+			<< ", dl=" << brake_leader
+			<< ", lambda 0=" << follower_lambda_0
+			<< "\n\tt_f=" << stop_time_follower
+			<< ", t_l=" << stop_time_leader
+			<< ", g_vf=" << accepted_gap
+			<< std::endl;
+	}
+
 	return std::max(0.0, accepted_gap);
 }
 

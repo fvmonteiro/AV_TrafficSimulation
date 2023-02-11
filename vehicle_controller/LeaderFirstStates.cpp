@@ -83,7 +83,7 @@ void LeaderFirstLookingForSafeGapState
 	/* We check if there's a vehicle longitudinally between us and 
 	the preceding platoon vehicle */
 	bool will_merge_behind_the_leader = 
-		leader_id == platoon_vehicle->get_dest_lane_leader_id()
+		leader_id == platoon_vehicle->get_destination_lane_leader_id()
 		|| leader_id == platoon_vehicle->get_leader_id();
 	if ((platoon_vehicle->is_platoon_leader()
 		|| /*(*leader_state >= LeaderFirstLaneChangingState()
