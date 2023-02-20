@@ -208,14 +208,14 @@
 		</dataCollectionMeasurement>
 	</dataCollectionMeasurements>
 	<dataCollectionPoints>
-		<dataCollectionPoint lane="3 2" name="" no="1" pos="0"/>
-		<dataCollectionPoint lane="3 1" name="" no="2" pos="0"/>
-		<dataCollectionPoint lane="3 2" name="" no="3" pos="0"/>
-		<dataCollectionPoint lane="3 1" name="" no="4" pos="0"/>
-		<dataCollectionPoint lane="3 2" name="" no="5" pos="547.4679456243382"/>
-		<dataCollectionPoint lane="3 1" name="" no="6" pos="547.4679456243382"/>
-		<dataCollectionPoint lane="3 2" name="" no="7" pos="1347.4679456243382"/>
-		<dataCollectionPoint lane="3 1" name="" no="8" pos="1347.4679456243382"/>
+		<dataCollectionPoint lane="1 2" name="" no="1" pos="500"/>
+		<dataCollectionPoint lane="1 1" name="" no="2" pos="500"/>
+		<dataCollectionPoint lane="3 2" name="" no="3" pos="1"/>
+		<dataCollectionPoint lane="3 1" name="" no="4" pos="1"/>
+		<dataCollectionPoint lane="3 2" name="" no="5" pos="500"/>
+		<dataCollectionPoint lane="3 1" name="" no="6" pos="500"/>
+		<dataCollectionPoint lane="3 2" name="" no="7" pos="1000"/>
+		<dataCollectionPoint lane="3 1" name="" no="8" pos="1000"/>
 	</dataCollectionPoints>
 	<desAccelerationFunctions>
 		<desAccelerationFunction name="Car" no="1">
@@ -1183,11 +1183,11 @@
 			</lanes>
 			<toLinkEndPt lane="1 1" pos="1.4052040027715551"/>
 		</link>
-		<link assumSpeedOncom="60" costPerKm="0" direction="ALL" displayType="1" emergStopDist="5" gradient="0" hasOvtLn="false" isPedArea="false" linkBehavType="3" linkEvalAct="true" linkEvalSegLen="10" lnChgDist="200" lnChgDistIsPerLn="false" lnChgEvalAct="true" lookAheadDistOvt="500" mesoFollowUpGap="0" mesoSpeed="50" mesoSpeedModel="VEHICLEBASED" name="" no="10002" ovtOnlyPT="false" ovtSpeedFact="1.3" showClsfValues="true" showLinkBar="true" showVeh="true" surch1="0" surch2="0" thickness="0" vehRecAct="true">
-			<fromLinkEndPt lane="1 1" pos="995.10751279445822"/>
+		<link assumSpeedOncom="60" costPerKm="0" direction="ALL" displayType="1" emergStopDist="5" gradient="0" hasOvtLn="false" isPedArea="false" linkBehavType="3" linkEvalAct="false" linkEvalSegLen="500" lnChgDist="200" lnChgDistIsPerLn="false" lnChgEvalAct="true" lookAheadDistOvt="500" mesoFollowUpGap="0" mesoSpeed="50" mesoSpeedModel="VEHICLEBASED" name="" no="10002" ovtOnlyPT="false" ovtSpeedFact="1.3" showClsfValues="true" showLinkBar="true" showVeh="true" surch1="0" surch2="0" thickness="0" vehRecAct="true">
+			<fromLinkEndPt lane="1 1" pos="996.87725301593423"/>
 			<geometry>
 				<points3D>
-					<point3D x="1525.5191080530203" y="-27.212260144523093" zOffset="0"/>
+					<point3D x="1527.2888300469294" y="-27.204227972675099" zOffset="0"/>
 					<point3D x="1528.4546682917173" y="-27.172484296409522" zOffset="0"/>
 				</points3D>
 			</geometry>
