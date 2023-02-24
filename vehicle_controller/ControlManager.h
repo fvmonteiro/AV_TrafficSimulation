@@ -15,6 +15,7 @@
 #include "SwitchedLongitudinalController.h"
 #include "LongitudinalControllerWithTrafficLights.h"
 #include "RealLongitudinalController.h"
+#include "VanAremLongitudinalController.h"
 #include "Vehicle.h"
 #include "VirtualLongitudinalController.h"
 #include "VissimLongitudinalController.h"
@@ -25,6 +26,7 @@ class AutonomousVehicle;
 class ConnectedAutonomousVehicle;
 class TrafficLightALCVehicle;
 class PlatoonVehicle;
+class VirdiVehicle;
 
 class ControlManager 
 {
@@ -41,8 +43,12 @@ public:
 	};
 
 	ControlManager() = default;
-	ControlManager(const EgoVehicle& ego_vehicle, bool verbose);
-	//ControlManager(const EgoVehicle& ego_vehicle);
+	//ControlManager(const EgoVehicle& ego_vehicle, bool verbose);
+	ControlManager(const ACCVehicle& acc_vehicle, bool verbose);
+	ControlManager(const AutonomousVehicle& autonomous_vehicle, bool verbose);
+	ControlManager(const ConnectedAutonomousVehicle& cav, bool verbose);
+	ControlManager(const TrafficLightALCVehicle& tfalc_vehicle, bool verbose);
+	ControlManager(const VirdiVehicle& virdi_vehicle, bool verbose);
 
 	//std::vector<State> get_states() { return states; };
 	//ALCType get_active_alc_type() const {
@@ -72,6 +78,7 @@ public:
 	void add_cooperative_lane_change_controller(
 		const ConnectedAutonomousVehicle& cav);
 	void add_traffic_lights_controller();
+	void add_van_arem_controllers(const VirdiVehicle& virdi_vehicle);
 	void add_in_platoon_controller(const PlatoonVehicle& platoon_vehicle);
 
 	/* DEBUGGING FUNCTIONS --------------------------------------------------- */
@@ -126,7 +133,10 @@ public:
 	controller, and resets its velocity filter. */
 	void update_destination_lane_controller(double ego_velocity,
 		double time_headway, bool is_leader_connected);
+	//void update_leader_lane_changing_time_headway(double time_headway);
 	void update_destination_lane_follower_time_headway(double time_headway);
+	void update_destination_lane_leader_time_headway(double time_headway);
+
 	void update_gap_generation_controller(double ego_velocity,
 		double time_headway);
 
@@ -150,7 +160,7 @@ public:
 	double get_desired_acceleration(
 		const TrafficLightALCVehicle& ego_vehicle,
 		const std::unordered_map<int, TrafficLight>& traffic_lights);
-
+	double get_desired_acceleration(const VirdiVehicle& virdi_vehicle);
 	void print_traffic_lights(const EgoVehicle& ego,
 		const std::unordered_map<int, TrafficLight>& traffic_lights) const;
 
@@ -160,11 +170,13 @@ public:
 
 	/* Returns the reference gap used by the longitudinal
 	controller. It uses a previously defined time headway, which might
-	have been computed assuming some accepted risk. */
+	have been computed assuming some accepted risk. NOT IN USE */
 	double compute_desired_lane_change_gap(
 		const AutonomousVehicle& ego_vehicle,
 		const NearbyVehicle& nearby_vehicle, 
 		bool will_accelerate = false) const;
+	double compute_accepted_lane_change_gap(const EgoVehicle& ego_vehicle,
+		const NearbyVehicle& nearby_vehicle);
 
 	/* Returns the accepted lane change gap, which might is different from
 	the longitudinal controller's reference gap if the accepted risk is
@@ -213,6 +225,10 @@ private:
 	/* The time headway used by the end-of-lane controller */
 	double time_headway_to_end_of_lane{ 0.5 };
 
+	VelocityControllerGains van_arem_vel_ctrl_gains{ 1.0, 0.0, 0.0 };
+	ConnectedGains van_arem_gap_ctrl_gains{ 0.1, 0.58, 0.0, 1.0 };
+	double virdi_max_jerk = 0.5;
+
 	/* Colors to make debugging visually easier
 	General rule: bright colors represent vel control,
 	darker colors represent vehicle following. */
@@ -227,8 +243,6 @@ private:
 		{ LongitudinalController::State::velocity_control, GREEN },
 		{ LongitudinalController::State::vehicle_following, DARK_GREEN },
 	};
-	/* TODO [Nov 11, 2022]: still missing implementation */
-	color_t orig_lane_max_vel_control_color{ BLUE_GREEN };
 	std::unordered_map<LongitudinalController::State, color_t>
 		end_of_lane_colors =
 	{
@@ -272,6 +286,13 @@ private:
 	LongitudinalControllerWithTrafficLights
 		with_traffic_lights_controller;
 	RealLongitudinalController in_platoon_controller;
+	std::unordered_map<ALCType, VanAremLongitudinalController>
+		van_arem_controllers;
+
+	/* Used to keep track of which controller is active, which helps
+	in debugging (sloppy solution) */
+	std::unordered_map<ALCType, const LongitudinalController*>
+		available_controllers;
 
 	LateralController lateral_controller;
 	/* indicates which controller is active. Used for debugging and
@@ -289,15 +310,14 @@ private:
 	bool verbose{ false };
     bool long_controllers_verbose{ false };
 
-	std::unique_ptr<LongitudinalController>
-		get_active_long_controller() const;
+	const LongitudinalController* get_active_long_controller() const;
 	/* Gets the minimum of the accelerations in the map and sets the
 	active longitudinal controller. */
 	double choose_minimum_acceleration(
 		std::unordered_map<ALCType, double>& possible_accelerations);
 
 	NearbyVehicle create_virtual_stopped_vehicle(
-		const EgoVehicle& ego_vehicle);
+		const EgoVehicle& ego_vehicle) const;
 	/* Desired accelerations --------------------- */
 
 	/* VISSIM's suggested acceleration */
@@ -326,4 +346,10 @@ private:
 	bool get_destination_lane_desired_acceleration_when_in_platoon(
 		const PlatoonVehicle& platoon_vehicle,
 		std::unordered_map<ALCType, double>& possible_accelerations);
+	/* Desired acceleration to wait at the end of the lane while
+	looking for an appropriate lane change gap. Without this,
+	vehicles might miss a desired exit.	Returns infinity if there is no
+	leader */
+	double get_end_of_lane_desired_acceleration(
+		const VirdiVehicle& virdi_vehicle);
 };

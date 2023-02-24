@@ -55,6 +55,11 @@ private:
 	std::shared_ptr<NearbyVehicle> assisted_vehicle{ nullptr };
 	double original_desired_velocity{ 0.0 };
 
+
+	void implement_create_controller() override {
+		this->controller = std::make_unique<ControlManager>(*this,
+			is_verbose());
+	};
 	double implement_compute_desired_acceleration(
 		const std::unordered_map<int, TrafficLight>& traffic_lights) override;
 	bool give_lane_change_control_to_vissim() const override

@@ -15,20 +15,25 @@ class NearbyVehicle;
 class EgoVehicle;
 
 /* Given lane change intention existis, the lateral controller defines 
-whether the maneuver can can place. 
-TODO: I would like the controller to know the address of the vehicle using 
-it, but this didn't seem to work. The address of each vehicle at construction 
-time seems to change later on.*/
+whether the maneuver can can place. TODO: rename*/
 class LateralController {
 public:
 
 	LateralController(bool verbose);
 	LateralController();
 
-	/* The safe lane change gap is the sum of the vehicle following 
-	collision free gap and the transient gap */
-	/*double compute_safe_lane_change_gap(const Vehicle& ego_vehicle,
-		const NearbyVehicle& other_vehicle, bool will_accelerate);*/
+	void set_time_headway_to_leader(double value) {
+		time_headway_to_leader = value;
+	}
+	void set_time_headway_to_destination_lane_leader(double value) {
+		time_headway_to_destination_lane_leader = value;
+	}
+	void set_time_headway_to_destination_lane_follower(double value) {
+		time_headway_to_destination_lane_follower = value;
+	}
+	
+	double compute_time_headway_gap(double ego_velocity, 
+		const NearbyVehicle& nearby_vehicle);
 	
 	/* Computes the gap variation due to non-zero relative velocities during
 	the lane change. */
@@ -44,6 +49,10 @@ private:
 	double sampling_time{ 0.01 }; // [s] can be different from VISSIM
 	double lane_change_duration{ 5.0 }; // [s]
 	double lane_width{ 3.6  }; // [m]
+	double time_headway_to_leader{ 0.0 }; // [s]
+	double time_headway_to_destination_lane_leader{ 0.0 }; // [s]
+	double time_headway_to_destination_lane_follower{ 0.0 }; // [s]
+	double standstill_distance{ 1.0 };
 	std::vector<double> lane_change_lateral_acceleration;
 	std::vector<double> lane_change_lateral_velocity;
 	std::vector<double> lane_change_lateral_position;

@@ -141,7 +141,7 @@ std::shared_ptr<NearbyVehicle> PlatoonVehicle
 	lane leader. */
 	std::shared_ptr<NearbyVehicle> nv = get_modifiable_dest_lane_leader();
 
-	if (try_to_overtake_destination_lane_leader(min_overtaking_rel_vel))
+	if (try_to_overtake_destination_lane_leader_based(min_overtaking_rel_vel))
 	{
 		nv = nullptr;
 	}
@@ -173,7 +173,7 @@ double PlatoonVehicle::implement_compute_desired_acceleration(
 	const std::unordered_map<int, TrafficLight>& traffic_lights)
 {
 	double a_desired_acceleration =
-		controller.get_desired_acceleration(*this);
+		controller->get_desired_acceleration(*this);
 	return consider_vehicle_dynamics(a_desired_acceleration);
 }
 

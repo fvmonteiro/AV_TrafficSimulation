@@ -126,5 +126,9 @@ public:
 private:
 	void implement_handle_lane_keeping_intention() override;
 	void implement_handle_lane_change_intention() override;
+
+	/* Necessary to prevent the vehicle from performing two 
+	maneuvers consecutively (and without checking the gaps) */
+	bool can_start_maneuver{ true };
 };
 

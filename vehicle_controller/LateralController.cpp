@@ -24,6 +24,64 @@ LateralController::LateralController(bool verbose)
 
 LateralController::LateralController() : LateralController(false) {}
 
+double LateralController::compute_time_headway_gap(double ego_velocity,
+	const NearbyVehicle& nearby_vehicle)
+{
+	double time_headway, follower_velocity;
+	if (nearby_vehicle.is_ahead())
+	{
+		follower_velocity = ego_velocity;
+		if (nearby_vehicle.get_relative_lane() == RelativeLane::same)
+		{
+			time_headway = time_headway_to_leader;
+		}
+		else
+		{
+			time_headway = time_headway_to_destination_lane_leader;
+		}
+	}
+	else
+	{
+		follower_velocity = nearby_vehicle.compute_velocity(ego_velocity);
+		time_headway = time_headway_to_destination_lane_follower;
+	}
+
+	/* [Feb 24, 2023] Copied from old method from AutonomousVehicle.
+	Not ready for risk taking yet. */
+	//double accepted_risk = nearby_vehicle.is_ahead() ?
+	//	accepted_lane_change_risk_to_leaders :
+	//	accepted_lane_change_risk_to_follower;
+
+	//if (accepted_risk > 0)
+	//{
+	//	double leader_max_brake, follower_max_brake, follower_lambda_1;
+	//	if (nearby_vehicle.is_ahead())
+	//	{
+	//		leader_max_brake = nearby_vehicle.get_max_brake();
+	//		follower_max_brake = get_lane_change_max_brake();
+	//		follower_lambda_1 = get_lambda_1_lane_change();
+	//	}
+	//	else
+	//	{
+	//		leader_max_brake = get_max_brake();
+	//		follower_max_brake = nearby_vehicle.get_max_brake();
+	//		follower_lambda_1 = nearby_vehicle.get_lambda_1();
+	//	}
+	//	double rho = get_rho();
+	//	double vf = get_desired_velocity();
+	//	double gamma = leader_max_brake / follower_max_brake;
+	//	double Gamma = (1 - rho) * vf / (vf + follower_lambda_1);
+
+	//	double denominator = gamma >= Gamma ? 1 : (1 - gamma);
+	//	denominator *= 2 * follower_max_brake;
+	//	double risk_term = std::pow(accepted_risk, 2) / denominator;
+	//	accepted_time_headway_gap -= risk_term;
+	//}
+
+	return time_headway * follower_velocity + standstill_distance;
+}
+
+
 double LateralController::compute_transient_gap(const EgoVehicle& ego_vehicle,
 	const NearbyVehicle& other_vehicle, bool will_accelerate) const 
 {

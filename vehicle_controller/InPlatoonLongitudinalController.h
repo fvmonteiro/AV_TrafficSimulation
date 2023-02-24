@@ -18,6 +18,7 @@ public:
 		bool verbose);
 
 private:
+	GapController gap_controller;
     double implement_compute_desired_acceleration(const EgoVehicle& ego_vehicle,
 		std::shared_ptr<const NearbyVehicle> leader,
         double velocity_reference) override;

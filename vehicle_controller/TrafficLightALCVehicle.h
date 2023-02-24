@@ -10,9 +10,6 @@ public:
 		double simulation_time_step, double creation_time,
 		bool verbose);
 
-	/* The "autonomous lane change" of this vehicle is never lane changing.
-	This should be better addressed with polymorphism. */
-
 	int get_next_traffic_light_id() const {
 		return next_traffic_light_id;
 	};
@@ -33,6 +30,10 @@ protected:
 			simulation_time_step, creation_time, verbose) {}
 
 private:
+	void implement_create_controller() override {
+		this->controller = std::make_unique<ControlManager>(*this,
+			is_verbose());
+	};
 	double implement_compute_desired_acceleration(
 		const std::unordered_map<int, TrafficLight>& traffic_lights) override;
 	bool implement_has_next_traffic_light() const override;

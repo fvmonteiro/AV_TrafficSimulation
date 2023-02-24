@@ -25,7 +25,8 @@ void Vehicle::set_category(long category)
 {
 	/* We only need to set the category once, but VISSIM passes the
 	category every time step. */
-	if (this->category == VehicleCategory::undefined) {
+	if (this->category == VehicleCategory::undefined) 
+	{
 		this->category = VehicleCategory(category);
 		switch (this->category) {
 		case VehicleCategory::truck:
@@ -129,4 +130,35 @@ double Vehicle::compute_time_headway_with_risk(
 	}
 
 	return time_headway;
+}
+
+double Vehicle::compute_risky_gap(double v_follower,
+	double v_leader, double brake_follower, double brake_leader,
+	double lambda_0, double lambda_1, double accepted_risk) const
+{
+	double accepted_risk_2 = std::pow(accepted_risk, 2);
+	double stop_time_follower = (v_follower + lambda_1)
+		/ brake_follower;
+	double stop_time_leader = v_leader / brake_leader;
+	double accepted_gap;
+	if (stop_time_follower >= stop_time_leader)
+	{
+		accepted_gap =
+			(std::pow(v_follower + lambda_1, 2)
+				- accepted_risk_2) / 2 / brake_follower
+			- std::pow(v_leader, 2) / 2 / brake_leader
+			+ lambda_0;
+	}
+	else if (brake_follower > brake_leader)
+	{
+		accepted_gap =
+			(std::pow(v_follower - v_leader + lambda_1, 2)
+				- accepted_risk_2) / 2 / (brake_follower - brake_leader)
+			+ lambda_0;
+	}
+	else
+	{
+		accepted_gap = 0.0;
+	}
+	return accepted_gap;
 }

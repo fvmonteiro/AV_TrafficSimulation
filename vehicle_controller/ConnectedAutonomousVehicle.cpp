@@ -9,7 +9,6 @@ ConnectedAutonomousVehicle::ConnectedAutonomousVehicle(
 {
 	original_desired_velocity = get_desired_velocity();
 	compute_connected_safe_gap_parameters();
-	controller.add_cooperative_lane_change_controller(*this);
 	if (verbose)
 	{
 		std::clog << "lambda1_connected = " << lambda_1_connected
@@ -111,13 +110,18 @@ std::shared_ptr<NearbyVehicle> ConnectedAutonomousVehicle
 	lane leader. */
 	std::shared_ptr<NearbyVehicle> nv = get_modifiable_dest_lane_leader();
 
-	if (try_to_overtake_destination_lane_leader())
+	if (verbose)
+	{
+		std::clog << "\tDefining virtual leader" << std::endl;
+	}
+
+	if (try_to_overtake_destination_lane_leader_based())
 	{
 		nv = nullptr;
 	}
 	else if (was_my_cooperation_request_accepted())
 	{
-		/* We must avoid trying to merge behind a vehicle that is 
+		/* We don't merge behind a vehicle that is 
 		braking to make space for us. */
 		int cooperating_vehicle_relative_position =
 			get_nearby_vehicle_by_id(lane_change_request)
@@ -131,11 +135,18 @@ std::shared_ptr<NearbyVehicle> ConnectedAutonomousVehicle
 			nv = nullptr;
 		}
 	}
+	if (verbose)
+	{
+		std::clog << "\tvirtual leader id ";
+		if (nv == nullptr) std::clog << "0" << std::endl;
+		else std::clog << nv->get_id() << std::endl;
+	}
 	return nv;
 }
 
 void ConnectedAutonomousVehicle::create_lane_change_request()
 {
+	// Only requests help for mandatory maneuvers
 	if (get_preferred_relative_lane() != RelativeLane::same)
 		lane_change_request = get_destination_lane_follower_id();
 	else
@@ -179,7 +190,7 @@ void ConnectedAutonomousVehicle::update_destination_lane_follower(
 	{
 		std::shared_ptr<NearbyVehicle>& dest_lane_follower =
 			get_modifiable_dest_lane_follower();
-		controller.update_destination_lane_follower_time_headway(
+		controller->update_destination_lane_follower_time_headway(
 			dest_lane_follower->get_h_to_incoming_vehicle());
 
 		/* We need to compute fd's lambda1 here cause it's used later in
@@ -209,7 +220,7 @@ void ConnectedAutonomousVehicle::update_assisted_vehicle(
 					*assisted_vehicle, 0
 					/* assisted_vehicle->get_max_lane_change_risk_to_follower()*/
 				));
-			controller.update_gap_generation_controller(
+			controller->update_gap_generation_controller(
 				get_velocity(), h_to_assisted_vehicle);
 		}
 	}
@@ -317,7 +328,7 @@ double ConnectedAutonomousVehicle::implement_compute_desired_acceleration(
 {
 	if (verbose) std::clog << "[CAV] get_desired_acceleration" << std::endl;
 	double a_desired_acceleration =
-		controller.get_desired_acceleration(*this);
+		controller->get_desired_acceleration(*this);
 	return consider_vehicle_dynamics(a_desired_acceleration);
 }
 

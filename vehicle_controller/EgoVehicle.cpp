@@ -30,7 +30,8 @@ EgoVehicle::EgoVehicle(long id, VehicleType type, double desired_velocity,
 	tau_d{ std::exp(-simulation_time_step / tau) }
 {
 	compute_safe_gap_parameters();
-	bool verbose_control_manager = verbose;
+	compute_lane_change_gap_parameters();
+
 	set_state(std::make_unique<SingleVehicleLaneKeepingState>());
 
 	if (verbose)
@@ -42,35 +43,19 @@ EgoVehicle::EgoVehicle(long id, VehicleType type, double desired_velocity,
 			<< ", des. vel. = " << desired_velocity
 			<< ", lambda 1 = " << get_lambda_1()
 			<< ", lambda 0 = " << get_lambda_0();
-			if (!verbose_control_manager)
-			{
-				std::clog << "\nNOTE: control manager is NOT verbose.";
-			}
 			std::clog << std::endl;
 	}
 
-	this->controller = ControlManager(*this, verbose_control_manager);
+	//this->controller = ControlManager(*this, verbose_control_manager);
 }
 
 EgoVehicle::~EgoVehicle()
 {
-	std::vector<Member> members{
-		Member::creation_time,
-		Member::preferred_relative_lane,
-		Member::state,
-		Member::velocity,
-		Member::desired_acceleration,
-		Member::active_lane_change_direction,
-		Member::leader_id,
-	};
 	if (verbose)
 	{
-		std::clog << write_header(members, true);
 		std::clog << "Vehicle " << get_id()
 			<< " out of the simulation at time "
 			<< get_time() << std::endl;
-
-		//write_simulation_log(members);
 	}
 }
 
@@ -84,36 +69,31 @@ double EgoVehicle::get_time() const
 }
 long EgoVehicle::get_lane() const
 {
-	return lane.back();
+	return lane;
 }
 double EgoVehicle::get_distance_traveled() const
 {
-	return distance_traveled.back();
+	return distance_traveled;
 }
 long EgoVehicle::get_link() const
 {
-	return link.back();
+	return link;
 }
 double EgoVehicle::get_lateral_position() const
 {
-	return lateral_position.back();
+	return lateral_position;
 }
 RelativeLane EgoVehicle::get_preferred_relative_lane() const
 {
-	return preferred_relative_lane.back();
+	return preferred_relative_lane;
 }
 double EgoVehicle::get_velocity() const
 {
-	if (velocity.empty()) /* We shouldn't need to check this condition.
-							This is used to avoid crashing during tests.*/
-	{
-		return 0;
-	}
-	return velocity.back();
+	return velocity;
 }
 double EgoVehicle::get_acceleration() const
 {
-	return acceleration.back();
+	return acceleration;
 }
 double EgoVehicle::get_desired_acceleration() const
 {
@@ -121,19 +101,19 @@ double EgoVehicle::get_desired_acceleration() const
 }
 double EgoVehicle::get_vissim_acceleration() const
 {
-	return vissim_acceleration.back();
+	return vissim_acceleration;
 }
 RelativeLane EgoVehicle::get_active_lane_change_direction() const
 {
-	return active_lane_change_direction.back();
+	return active_lane_change_direction;
 }
 double EgoVehicle::get_lane_end_distance() const
 {
-	return lane_end_distance.back();
+	return lane_end_distance;
 }
 long EgoVehicle::get_leader_id() const
 {
-	return leader_id.back();
+	return has_leader()? leader->get_id() : 0;
 }
 //EgoVehicle::State EgoVehicle::get_state_implementation_v1() const
 //{
@@ -142,15 +122,15 @@ long EgoVehicle::get_leader_id() const
 //}
 double EgoVehicle::get_ttc() const
 {
-	return ttc.back();
+	return ttc;
 }
 double EgoVehicle::get_drac() const
 {
-	return drac.back();
+	return drac;
 }
 double EgoVehicle::get_collision_risk() const
 {
-	return collision_severity_risk.back();
+	return collision_severity_risk;
 }
 /* ------------------------------------------------------------------------ */
 
@@ -158,23 +138,30 @@ double EgoVehicle::get_collision_risk() const
 
 double EgoVehicle::get_current_max_brake() const
 {
-	return has_lane_change_intention() ?
+	return is_lane_changing() ?
 		get_lane_change_max_brake() : max_brake;
+}
+
+std::pair<double, double> EgoVehicle::get_current_safe_gap_parameters() const
+{
+	return is_lane_changing() ?
+		std::make_pair(lambda_0_lane_change, lambda_1_lane_change)
+		: std::make_pair(get_lambda_0(), get_lambda_1());
 }
 
 double EgoVehicle::get_safe_time_headway() const
 {
-	return controller.get_safe_time_headway();
+	return controller->get_safe_time_headway();
 }
 
 double EgoVehicle::get_gap_error() const
 {
-	return controller.get_gap_error();
+	return controller->get_gap_error();
 }
 
 double EgoVehicle::get_current_desired_time_headway() const
 {
-	return controller.get_current_desired_time_headway();
+	return controller->get_current_desired_time_headway();
 }
 
 double EgoVehicle::get_gap_variation_to(
@@ -230,42 +217,42 @@ const VehicleState* EgoVehicle::get_state() const
 
 void EgoVehicle::set_lane(long lane)
 {
-	this->lane.push_back(lane);
+	this->lane = lane;
 }
 void EgoVehicle::set_distance_traveled(double distance_traveled)
 {
-	this->distance_traveled.push_back(distance_traveled);
+	this->distance_traveled = distance_traveled;
 }
 void EgoVehicle::set_link(long link)
 {
-	this->link.push_back(link);
+	this->link = link;
 }
 void EgoVehicle::set_lateral_position(double lateral_position)
 {
-	this->lateral_position.push_back(lateral_position);
+	this->lateral_position = lateral_position;
 }
 void EgoVehicle::set_velocity(double velocity)
 {
-	this->velocity.push_back(velocity);
+	this->velocity = velocity;
 }
 void EgoVehicle::set_acceleration(double acceleration)
 {
-	this->acceleration.push_back(acceleration);
+	this->acceleration = acceleration;
 }
 void EgoVehicle::set_vissim_acceleration(double vissim_acceleration)
 {
-	this->vissim_acceleration.push_back(vissim_acceleration);
+	this->vissim_acceleration = vissim_acceleration;
 }
 void EgoVehicle::set_active_lane_change_direction(long direction)
 {
-	this->active_lane_change_direction.push_back(
-		RelativeLane::from_long(direction));
+	this->active_lane_change_direction =
+		RelativeLane::from_long(direction);
 }
 
 void EgoVehicle::set_preferred_relative_lane(long preferred_relative_lane)
 {
-	this->preferred_relative_lane.push_back(
-		RelativeLane::from_long(preferred_relative_lane));
+	this->preferred_relative_lane =
+		RelativeLane::from_long(preferred_relative_lane);
 }
 
 //void EgoVehicle::set_relative_target_lane(long target_relative_lane)
@@ -285,7 +272,7 @@ void EgoVehicle::set_lane_end_distance(double lane_end_distance,
 {
 	if (lane_number == get_lane())
 	{
-		this->lane_end_distance.push_back(lane_end_distance);
+		this->lane_end_distance = lane_end_distance;
 	}
 }
 
@@ -342,7 +329,7 @@ double EgoVehicle::get_time_headway_to_assisted_vehicle() const
 {
 	if (has_assisted_vehicle())
 	{
-		return controller.get_gap_generation_lane_controller().
+		return controller->get_gap_generation_lane_controller().
 			get_desired_time_headway();
 	}
 	/* We return a high value when there's no assisted vehicle because,
@@ -404,7 +391,7 @@ long EgoVehicle::get_assisted_veh_id() const
 }
 double EgoVehicle::get_dest_follower_time_headway() const
 {
-	return controller.get_destination_lane_controller().
+	return controller->get_destination_lane_controller().
 		get_follower_time_headway();
 }
 
@@ -556,10 +543,7 @@ const std::unordered_map<long, std::shared_ptr<NearbyVehicle>> EgoVehicle
 
 void EgoVehicle::set_leader_by_id(long new_leader_id)
 {
-	// Note: this makes the leader = nullptr
-	std::shared_ptr<const NearbyVehicle> old_leader = std::move(leader);
 	leader = get_nearby_vehicle_by_id(new_leader_id);
-	update_leader(old_leader);
 }
 
 void EgoVehicle::find_leader()
@@ -592,17 +576,46 @@ bool EgoVehicle::check_if_is_leader(const NearbyVehicle& nearby_vehicle) const
 	return false;
 }
 
+bool EgoVehicle::is_destination_lane_follower(
+	const NearbyVehicle& nearby_vehicle)
+{
+	int current_id = nearby_vehicle.get_id();
+	RelativeLane nv_relative_lane = nearby_vehicle.get_relative_lane();
+	return nv_relative_lane == desired_lane_change_direction
+		&& nearby_vehicle.is_immediatly_behind();
+}
+
+bool EgoVehicle::is_destination_lane_leader(
+	const NearbyVehicle& nearby_vehicle)
+{
+	int current_id = nearby_vehicle.get_id();
+	RelativeLane nv_relative_lane = nearby_vehicle.get_relative_lane();
+	return nv_relative_lane == desired_lane_change_direction
+		&& nearby_vehicle.is_immediatly_ahead();
+}
+
+bool EgoVehicle::is_leader_of_destination_lane_leader(
+	const NearbyVehicle& nearby_vehicle)
+{
+	RelativeLane nv_relative_lane =
+		nearby_vehicle.get_relative_lane();
+	long relative_position =
+		nearby_vehicle.get_relative_position();
+	return (nv_relative_lane == desired_lane_change_direction
+		&& relative_position == 2);
+}
+
 void EgoVehicle::update_leader(
 	std::shared_ptr<const NearbyVehicle>& old_leader)
 {
 	if (has_leader())
 	{
-		leader_id.push_back(leader->get_id());
+		//leader_id = leader->get_id();
 		double new_leader_max_brake = leader->get_max_brake();
 		bool is_new_leader_connected = leader->is_connected();
 		if (old_leader == nullptr)
 		{
-			controller.activate_origin_lane_controller(get_velocity(),
+			controller->activate_origin_lane_controller(get_velocity(),
 				compute_current_desired_time_headway(*leader),
 				is_new_leader_connected);
 		}
@@ -610,15 +623,11 @@ void EgoVehicle::update_leader(
 			- old_leader->get_max_brake()) > 0.5)
 			|| (leader->get_type() != old_leader->get_type()))
 		{
-			controller.update_origin_lane_controller(
+			controller->update_origin_lane_controller(
 				compute_current_desired_time_headway(*leader),
 				is_new_leader_connected
 			);
 		}
-	}
-	else
-	{
-		leader_id.push_back(0);
 	}
 }
 
@@ -637,6 +646,14 @@ double EgoVehicle::compute_vehicle_following_safe_time_headway(
 {
 	return compute_time_headway_with_risk(get_desired_velocity(),
 		max_brake, nearby_vehicle.get_max_brake(), get_lambda_1(), rho, 0);
+}
+
+void EgoVehicle::compute_lane_change_gap_parameters()
+{
+	lambda_0_lane_change = compute_lambda_0(max_jerk,
+		comfortable_acceleration, get_lane_change_max_brake(), brake_delay);
+	lambda_1_lane_change = compute_lambda_1(max_jerk,
+		comfortable_acceleration, get_lane_change_max_brake(), brake_delay);
 }
 
 /* State-machine related methods ------------------------------------------ */
@@ -674,7 +691,7 @@ void EgoVehicle::set_state(std::unique_ptr<VehicleState> new_state)
 void EgoVehicle::reset_state(
 	std::unique_ptr<VehicleState> new_lane_keeping_state)
 {
-	// TODO: poor condition checking: hard coding variables
+	// TODO: poor condition checking: hard coded variables
 	if (new_lane_keeping_state->get_state_number() != 1)
 	{
 		std::clog << "[WARNING] t=" << get_time()
@@ -685,8 +702,7 @@ void EgoVehicle::reset_state(
 
 	set_lane_change_direction(RelativeLane::same);
 	reset_lane_change_waiting_time();
-	update_origin_lane_controller();
-	update_origin_lane_controller();
+	update_time_headway_to_leader();
 	set_state(std::move(new_lane_keeping_state));
 }
 
@@ -719,7 +735,12 @@ bool EgoVehicle::is_lane_changing() const
 
 long EgoVehicle::get_color_by_controller_state()
 {
-	return controller.get_longitudinal_controller_color();
+	long state_color = controller->get_longitudinal_controller_color();
+	if (compute_gap_to_a_leader(leader) < compute_safe_gap_to_leader())
+	{
+		state_color = RED;
+	}
+	return state_color;
 }
 
 
@@ -776,7 +797,7 @@ double EgoVehicle::get_accepted_lane_change_gap(
 
 double EgoVehicle::get_reference_gap()
 {
-	return controller.get_reference_gap(get_velocity());
+	return controller->get_reference_gap(get_velocity());
 }
 
 double EgoVehicle::compute_time_headway_gap(
@@ -785,7 +806,7 @@ double EgoVehicle::compute_time_headway_gap(
 	double time_headway_gap = 0.0;
 	if (nearby_vehicle != nullptr)
 	{
-		time_headway_gap = controller.get_desired_time_headway_gap(
+		time_headway_gap = controller->get_desired_time_headway_gap(
 			get_velocity(), /*has_lane_change_intention(),*/
 			*nearby_vehicle);
 	}
@@ -798,18 +819,40 @@ double EgoVehicle::compute_transient_gap(
 	double transient_gap = 0.0;
 	if (nearby_vehicle != nullptr)
 	{
-		transient_gap = controller.get_lateral_controller().
+		transient_gap = controller->get_lateral_controller().
 			compute_transient_gap(*this, *nearby_vehicle, false);
 	}
 	return transient_gap;
 }
 
-void EgoVehicle::update_origin_lane_controller()
+void EgoVehicle::update_time_headway_to_leader()
 {
 	if (has_leader())
 	{
-		controller.update_origin_lane_controller(
+		controller->update_origin_lane_controller(
 			compute_current_desired_time_headway(*get_leader()),
+			get_leader()->is_connected()
+		);
+	}
+}
+
+void EgoVehicle::increase_time_headway_to_leader()
+{
+	if (has_leader())
+	{
+		controller->update_origin_lane_controller(
+			compute_lane_changing_desired_time_headway(*get_leader()),
+			get_leader()->is_connected()
+		);
+	}
+}
+
+void EgoVehicle::decrease_time_headway_to_leader()
+{
+	if (has_leader())
+	{
+		controller->update_origin_lane_controller(
+			compute_vehicle_following_safe_time_headway(*get_leader()),
 			get_leader()->is_connected()
 		);
 	}
@@ -817,11 +860,35 @@ void EgoVehicle::update_origin_lane_controller()
 
 void EgoVehicle::reset_origin_lane_velocity_controller()
 {
-	controller.reset_origin_lane_velocity_controller(
+	controller->reset_origin_lane_velocity_controller(
 		get_velocity());
 }
 
 /* Computation of surrogate safety measurements --------------------------- */
+double EgoVehicle::compute_safe_gap_to_leader()
+{
+	return has_leader() ?
+		compute_safe_gap_to_a_leader(*leader)
+		: 0.0;
+}
+
+double EgoVehicle::compute_safe_gap_to_a_leader(
+	const NearbyVehicle& a_leader) const
+{
+	return compute_risky_gap_to_leader(a_leader, 0.0);
+}
+
+double EgoVehicle::compute_risky_gap_to_leader(const NearbyVehicle& a_leader,
+	double accepted_risk) const
+{
+	double v_follower = get_velocity();
+	double brake_follower = get_current_max_brake();
+	double v_leader = a_leader.compute_velocity(v_follower);
+	double brake_leader = a_leader.get_max_brake();
+	auto params = get_current_safe_gap_parameters();
+	return compute_risky_gap(v_follower, v_leader, brake_follower,
+		brake_leader, params.first, params.second, accepted_risk);
+}
 
 double EgoVehicle::compute_ttc(const NearbyVehicle& nearby_vehicle)
 {
@@ -981,209 +1048,209 @@ void EgoVehicle::set_desired_lane_change_direction()
 
 /* Methods for printing and debugging ------------------------------------- */
 
-void EgoVehicle::write_simulation_log(std::vector<Member> members)
-{
-	bool write_size = true;
-	std::ofstream vehicle_log;
-	std::string file_name = "vehicle" + std::to_string(get_id()) + ".txt";
-	vehicle_log.open(log_path + "\\" + file_name);
-	if (vehicle_log.is_open())
-	{
-		vehicle_log << write_header(members, write_size);
-		vehicle_log	<< write_members(members);
-		vehicle_log.close();
-	}
-	else
-	{
-		std::clog << "Unable to open file to write log of "
-			<< "vehicle " << get_id()
-			<< std::endl;
-	}
-}
+//void EgoVehicle::write_simulation_log(std::vector<Member> members)
+//{
+//	bool write_size = true;
+//	std::ofstream vehicle_log;
+//	std::string file_name = "vehicle" + std::to_string(get_id()) + ".txt";
+//	vehicle_log.open(log_path + "\\" + file_name);
+//	if (vehicle_log.is_open())
+//	{
+//		vehicle_log << write_header(members, write_size);
+//		vehicle_log	<< write_members(members);
+//		vehicle_log.close();
+//	}
+//	else
+//	{
+//		std::clog << "Unable to open file to write log of "
+//			<< "vehicle " << get_id()
+//			<< std::endl;
+//	}
+//}
 
-std::string EgoVehicle::write_header(
-	std::vector<EgoVehicle::Member> members, bool write_size)
-{
+//std::string EgoVehicle::write_header(
+//	std::vector<EgoVehicle::Member> members, bool write_size)
+//{
+//
+//	std::ostringstream oss;
+//	for (auto m : members)
+//	{
+//		oss << member_enum_to_string(m);
+//		if (write_size)
+//		{
+//			oss << " (" << get_member_size(m) << ")";
+//		}
+//		oss << ", ";
+//	}
+//	oss << std::endl;
+//
+//	return oss.str();
+//}
 
-	std::ostringstream oss;
-	for (auto m : members)
-	{
-		oss << member_enum_to_string(m);
-		if (write_size)
-		{
-			oss << " (" << get_member_size(m) << ")";
-		}
-		oss << ", ";
-	}
-	oss << std::endl;
+//std::string EgoVehicle::write_members(
+//	std::vector<EgoVehicle::Member> members)
+//{
+//	std::ostringstream oss;
+//
+//	/* Sanity check: some non critical code mistakes could
+//	create vector members with different sizes. This prevents
+//	the log from being written and crashes vissim. Let's avoid
+//	this and just write a warning message instead.*/
+//	int n_samples = (int)velocity.size(); /* velocity, lane and link members
+//	are the least likely to have the wrong size */
+//	std::vector<int> deleted_indices;
+//	for (int i = 0; i < members.size(); i++)
+//	{
+//		Member m = members.at(i);
+//		if ((get_member_size(m) != 1) // not a scalar
+//			&& (get_member_size(m) != n_samples))
+//		{
+//			oss << "Error: member " << member_enum_to_string(m)
+//				<< " has " << get_member_size(m) << " samples "
+//				<< "instead of the expected " << n_samples
+//				<< ". It won't be printed."
+//				<< std::endl;
+//			deleted_indices.push_back(i);
+//		}
+//	}
+//	for (int idx : deleted_indices)
+//	{
+//		members.erase(std::next(members.begin(), idx));
+//	}
+//
+//	// Write variables over time
+//	for (int i = 0; i < n_samples; i++)
+//	{
+//		for (auto m : members)
+//		{
+//			switch (m)
+//			{
+//			case Member::creation_time:
+//				oss << creation_time + i * simulation_time_step;
+//				break;
+//			case Member::id:
+//				oss << get_id();
+//				break;
+//			case Member::length:
+//				oss << get_length();
+//				break;
+//			case Member::width:
+//				oss << get_width();
+//				break;
+//			case Member::color:
+//				oss << "color printing code not done";
+//				break;
+//			case Member::category:
+//				oss << static_cast<int>(category);
+//				break;
+//			case Member::desired_velocity:
+//				oss << desired_velocity;
+//				break;
+//			case Member::lane:
+//				oss << lane[i];
+//				break;
+//			case Member::link:
+//				oss << link[i];
+//				break;
+//			case Member::preferred_relative_lane:
+//				oss << preferred_relative_lane[i];
+//				break;
+//			case Member::velocity:
+//				oss << velocity[i];
+//				break;
+//			case Member::acceleration:
+//				oss << acceleration[i];
+//				break;
+//			//case Member::desired_acceleration:
+//			//	oss << desired_acceleration[i];
+//			//	break;
+//			case Member::vissim_acceleration:
+//				oss << vissim_acceleration[i];
+//				break;
+//			case Member::leader_id:
+//				oss << leader_id[i];
+//				break;
+//			/*case Member::state:
+//				oss << state_to_string_map.at(state_implementation_v1[i]);
+//				break;*/
+//			case Member::active_lane_change_direction:
+//				oss << active_lane_change_direction[i];
+//				break;
+//			/*case Member::vissim_active_lane_change_direction:
+//				oss << vissim_active_lane_change[i];
+//				break;*/
+//			case Member::lane_end_distance:
+//				oss << lane_end_distance[i];
+//				break;
+//			case Member::ttc:
+//				oss << ttc[i];
+//				break;
+//			case Member::drac:
+//				oss << drac[i];
+//				break;
+//			case Member::collision_severity_risk:
+//				oss << collision_severity_risk[i];
+//				break;
+//			case Member::type:
+//				oss << static_cast<int>(get_type());
+//				break;
+//			default:
+//				oss << "";
+//				break;
+//			}
+//			oss << ", ";
+//		}
+//		oss << std::endl;
+//	}
+//	return oss.str();
+//}
 
-	return oss.str();
-}
-
-std::string EgoVehicle::write_members(
-	std::vector<EgoVehicle::Member> members)
-{
-	std::ostringstream oss;
-
-	/* Sanity check: some non critical code mistakes could
-	create vector members with different sizes. This prevents
-	the log from being written and crashes vissim. Let's avoid
-	this and just write a warning message instead.*/
-	int n_samples = (int)velocity.size(); /* velocity, lane and link members
-	are the least likely to have the wrong size */
-	std::vector<int> deleted_indices;
-	for (int i = 0; i < members.size(); i++)
-	{
-		Member m = members.at(i);
-		if ((get_member_size(m) != 1) // not a scalar
-			&& (get_member_size(m) != n_samples))
-		{
-			oss << "Error: member " << member_enum_to_string(m)
-				<< " has " << get_member_size(m) << " samples "
-				<< "instead of the expected " << n_samples
-				<< ". It won't be printed."
-				<< std::endl;
-			deleted_indices.push_back(i);
-		}
-	}
-	for (int idx : deleted_indices)
-	{
-		members.erase(std::next(members.begin(), idx));
-	}
-
-	// Write variables over time
-	for (int i = 0; i < n_samples; i++)
-	{
-		for (auto m : members)
-		{
-			switch (m)
-			{
-			case Member::creation_time:
-				oss << creation_time + i * simulation_time_step;
-				break;
-			case Member::id:
-				oss << get_id();
-				break;
-			case Member::length:
-				oss << get_length();
-				break;
-			case Member::width:
-				oss << get_width();
-				break;
-			case Member::color:
-				oss << "color printing code not done";
-				break;
-			case Member::category:
-				oss << static_cast<int>(category);
-				break;
-			case Member::desired_velocity:
-				oss << desired_velocity;
-				break;
-			case Member::lane:
-				oss << lane[i];
-				break;
-			case Member::link:
-				oss << link[i];
-				break;
-			case Member::preferred_relative_lane:
-				oss << preferred_relative_lane[i];
-				break;
-			case Member::velocity:
-				oss << velocity[i];
-				break;
-			case Member::acceleration:
-				oss << acceleration[i];
-				break;
-			//case Member::desired_acceleration:
-			//	oss << desired_acceleration[i];
-			//	break;
-			case Member::vissim_acceleration:
-				oss << vissim_acceleration[i];
-				break;
-			case Member::leader_id:
-				oss << leader_id[i];
-				break;
-			/*case Member::state:
-				oss << state_to_string_map.at(state_implementation_v1[i]);
-				break;*/
-			case Member::active_lane_change_direction:
-				oss << active_lane_change_direction[i];
-				break;
-			/*case Member::vissim_active_lane_change_direction:
-				oss << vissim_active_lane_change[i];
-				break;*/
-			case Member::lane_end_distance:
-				oss << lane_end_distance[i];
-				break;
-			case Member::ttc:
-				oss << ttc[i];
-				break;
-			case Member::drac:
-				oss << drac[i];
-				break;
-			case Member::collision_severity_risk:
-				oss << collision_severity_risk[i];
-				break;
-			case Member::type:
-				oss << static_cast<int>(get_type());
-				break;
-			default:
-				oss << "";
-				break;
-			}
-			oss << ", ";
-		}
-		oss << std::endl;
-	}
-	return oss.str();
-}
-
-int EgoVehicle::get_member_size(Member member)
-{
-	switch (member)
-	{
-	case Member::creation_time:
-	case Member::id:
-	case Member::length:
-	case Member::width:
-	case Member::color:
-	case Member::category:
-	case Member::desired_velocity:
-	case Member::type:
-	case Member::state:
-		return 1;
-	case Member::lane:
-		return (int)lane.size();
-	case Member::link:
-		return (int)link.size();
-	case Member::preferred_relative_lane:
-		return (int)preferred_relative_lane.size();
-	case Member::velocity:
-		return (int)velocity.size();
-	case Member::acceleration:
-		return (int)acceleration.size();
-	case Member::desired_acceleration:
-		return 1; // (int)desired_acceleration.size();
-	case Member::vissim_acceleration:
-		return (int)vissim_acceleration.size();
-	case Member::leader_id:
-		return (int)leader_id.size();
-	case Member::active_lane_change_direction:
-		return (int)active_lane_change_direction.size();
-	/*case Member::vissim_active_lane_change_direction:
-		return (int)vissim_active_lane_change.size();*/
-	case Member::lane_end_distance:
-		return (int)lane_end_distance.size();
-	case Member::ttc:
-		return (int)ttc.size();
-	case Member::drac:
-		return (int)drac.size();
-	case Member::collision_severity_risk:
-		return (int)collision_severity_risk.size();
-	default:
-		return 0;
-	}
-}
+//int EgoVehicle::get_member_size(Member member)
+//{
+//	switch (member)
+//	{
+//	case Member::creation_time:
+//	case Member::id:
+//	case Member::length:
+//	case Member::width:
+//	case Member::color:
+//	case Member::category:
+//	case Member::desired_velocity:
+//	case Member::type:
+//	case Member::state:
+//		return 1;
+//	case Member::lane:
+//		return (int)lane.size();
+//	case Member::link:
+//		return (int)link.size();
+//	case Member::preferred_relative_lane:
+//		return (int)preferred_relative_lane.size();
+//	case Member::velocity:
+//		return (int)velocity.size();
+//	case Member::acceleration:
+//		return (int)acceleration.size();
+//	case Member::desired_acceleration:
+//		return 1; // (int)desired_acceleration.size();
+//	case Member::vissim_acceleration:
+//		return (int)vissim_acceleration.size();
+//	case Member::leader_id:
+//		return (int)leader_id.size();
+//	case Member::active_lane_change_direction:
+//		return (int)active_lane_change_direction.size();
+//	/*case Member::vissim_active_lane_change_direction:
+//		return (int)vissim_active_lane_change.size();*/
+//	case Member::lane_end_distance:
+//		return (int)lane_end_distance.size();
+//	case Member::ttc:
+//		return (int)ttc.size();
+//	case Member::drac:
+//		return (int)drac.size();
+//	case Member::collision_severity_risk:
+//		return (int)collision_severity_risk.size();
+//	default:
+//		return 0;
+//	}
+//}
 
 std::string EgoVehicle::member_enum_to_string(Member member)
 {
@@ -1237,13 +1304,6 @@ std::string EgoVehicle::member_enum_to_string(Member member)
 		return "unknown memeber";
 	}
 }
-
-
-//const std::unordered_map<EgoVehicle::State, std::string>
-//EgoVehicle::state_to_string_map = {
-//	{ State::lane_keeping, "lane keeping" },
-//	{ State::intention_to_change_lanes, "intention to LC" },
-//};
 
 std::ostream& operator<< (std::ostream& out, const EgoVehicle& ego_vehicle)
 {

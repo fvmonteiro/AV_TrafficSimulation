@@ -150,10 +150,15 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
             case UDA::leader_id:
                 return 1;
             case UDA::leader_type:
+                return 0;
             case UDA::gap_to_leader:
+                return 1;
             case UDA::reference_gap:
+                return 1;
             case UDA::relative_velocity_to_leader:
                 return 0;
+            case UDA::safe_gap_to_leader:
+                return 1;
             /* Debugging: dest lane leader */
             case UDA::dest_leader_id:
                 return 1;
@@ -163,7 +168,7 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
             case UDA::safe_gap_to_dest_lane_leader:
             case UDA::delta_gap_to_ld:
             case UDA::lc_collision_free_gap_to_ld:
-                return 0;
+                return 1;
             /* Debugging: dest lane follower */
             case UDA::dest_follower_id:
                 return 1;
@@ -320,6 +325,7 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
             break;
         case UDA::verbose_simulation:
             verbose_simulation = long_value > 0;
+            break;
         case UDA::logged_vehicle_id:
             logged_vehicles_ids.insert(long_value);
             break;
@@ -559,7 +565,8 @@ DRIVERMODEL_API  int  DriverModelGetValue (long   type,
             break;
         case UDA::gap_to_leader:
             *double_value = vehicles[current_vehicle_id]->
-                compute_gap_to_a_leader(vehicles[current_vehicle_id]->get_leader());
+                compute_gap_to_a_leader(
+                    vehicles[current_vehicle_id]->get_leader());
             break;
         case UDA::reference_gap:
             *double_value = vehicles[current_vehicle_id]->get_reference_gap();
@@ -568,6 +575,10 @@ DRIVERMODEL_API  int  DriverModelGetValue (long   type,
             *double_value =
                 vehicles[current_vehicle_id]->get_relative_velocity_to_leader()
                 * 3.6;  // we want to display it in km/h
+            break;
+        case UDA::safe_gap_to_leader:
+            *double_value = vehicles[current_vehicle_id]->
+                compute_safe_gap_to_leader();
             break;
         /* Debugging: destination lane leader */
         case UDA::dest_leader_id:
@@ -799,7 +810,8 @@ DRIVERMODEL_API  int  DriverModelExecuteCommand (long number)
         any get command. */
         bool will_print = verbose_simulation
             || vehicles[current_vehicle_id]->is_verbose();
-        if (will_print) {
+        if (will_print) 
+        {
             std::clog << "Veh: " << current_vehicle_id
                 << "\nUpdating states\n";
         }

@@ -264,7 +264,9 @@
     <ClCompile Include="TrafficLight.cpp" />
     <ClCompile Include="TrafficLightALCVehicle.cpp" />
     <ClCompile Include="TrafficLightFileReader.cpp" />
+    <ClCompile Include="VanAremLongitudinalController.cpp" />
     <ClCompile Include="VehicleState.cpp" />
+    <ClCompile Include="VirdiVehicle.cpp" />
     <ClCompile Include="VirtualLongitudinalController.cpp" />
     <ClCompile Include="LateralController.cpp" />
     <ClCompile Include="LongitudinalController.cpp" />
@@ -313,7 +315,9 @@
     <ClInclude Include="TrafficLight.h" />
     <ClInclude Include="TrafficLightALCVehicle.h" />
     <ClInclude Include="TrafficLightFileReader.h" />
+    <ClInclude Include="VanAremLongitudinalController.h" />
     <ClInclude Include="VehicleState.h" />
+    <ClInclude Include="VirdiVehicle.h" />
     <ClInclude Include="VirtualLongitudinalController.h" />
     <ClInclude Include="LateralController.h" />
     <ClInclude Include="LongitudinalController.h" />

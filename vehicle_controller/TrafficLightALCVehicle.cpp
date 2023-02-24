@@ -7,7 +7,7 @@ TrafficLightALCVehicle::TrafficLightALCVehicle(long id,
 		desired_velocity, false, simulation_time_step, creation_time,
 		verbose)
 {
-	controller.add_traffic_lights_controller();
+	//controller->add_traffic_lights_controller();
 }
 
 bool TrafficLightALCVehicle::implement_has_next_traffic_light() const {
@@ -30,7 +30,7 @@ double TrafficLightALCVehicle::implement_compute_desired_acceleration(
 	const std::unordered_map<int, TrafficLight>& traffic_lights)
 {
 	double a_desired_acceleration =
-		controller.get_desired_acceleration(*this, traffic_lights);
+		controller->get_desired_acceleration(*this, traffic_lights);
 	return a_desired_acceleration;
 }
 

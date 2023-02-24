@@ -30,6 +30,7 @@ public:
 
 protected:
 	LaneChangeGapsSafety lane_change_gaps_safety;
+	// [Feb 24, 2023] Move these two to the Lateral Controller class
 	/* Necessary when computing lane change gaps with risk */
 	double dest_lane_follower_lambda_0{ 0.0 };
 	/* Necessary when computing lane change gaps with risk */
@@ -42,7 +43,7 @@ protected:
 	// [Jan 24, 23] Make private?
 	bool implement_check_lane_change_gaps() override;
 
-	double get_lambda_1_lane_change() const { return lambda_1_lane_change; };
+	//double get_lambda_1_lane_change() const { return lambda_1_lane_change; };
 	double get_accepted_risk_to_leaders() const {
 		return accepted_lane_change_risk_to_leaders;
 	};
@@ -64,18 +65,15 @@ protected:
 
 
 	void find_destination_lane_vehicles();
-	bool try_to_overtake_destination_lane_leader() const;
-	bool try_to_overtake_destination_lane_leader(double min_rel_vel) const;
+	bool try_to_overtake_destination_lane_leader_based() const;
+	bool try_to_overtake_destination_lane_leader_based(
+		double min_rel_vel) const;
+	bool try_to_overtake_destination_lane_leader_based_on_time() const;
 	/*[Feb 7, 2023] The four methods below can probably become private */
 	void set_virtual_leader(
 		std::shared_ptr<NearbyVehicle> new_virtual_leader);
 	/*void set_destination_lane_follower_by_id(
 		long new_follower_id);*/
-	bool is_destination_lane_follower(
-		const NearbyVehicle& nearby_vehicle);
-	bool is_destination_lane_leader(const NearbyVehicle& nearby_vehicle);
-	bool is_leader_of_destination_lane_leader(
-		const NearbyVehicle& nearby_vehicle);
 
 	/* ----------------------------------------------------- */
 	
@@ -88,7 +86,8 @@ protected:
 		const NearbyVehicle& nearby_vehicle, double current_lambda_1) const;
 
 private:
-	double min_overtaking_rel_vel{ 10.0 / 3.6 };
+	double min_overtaking_rel_vel{ 10.0	/ 3.6}; // [m/s]
+	double min_overtaking_time{ 10.0 };// s
 	double max_lane_change_waiting_time{ 60.0 }; // [s]
 
 	/* Relevant members for lane changing ------------------------------------ */
@@ -103,7 +102,7 @@ private:
 	the destination lane leader) */
 	std::shared_ptr<NearbyVehicle> virtual_leader{ nullptr };
 	/* Emergency braking parameter during lane change */
-	double lambda_1_lane_change{ 0.0 }; // [m/s]
+	//double lambda_1_lane_change{ 0.0 }; // [m/s]
 
 	/* Risk related variables --------------------------------------------- */
 	/*The risk is an estimation of the relative velocity at collision
@@ -128,6 +127,10 @@ private:
 	//double max_risk_to_follower{ 0.0 }; // [m/s]
 
 
+	void implement_create_controller() override {
+		this->controller = std::make_unique<ControlManager>(*this,
+			is_verbose());
+	};
 	/* Finds the current leader and, if the vehicle has lane change
 	intention, the destination lane leader and follower */
 	//void find_relevant_nearby_vehicles() override;
@@ -154,7 +157,7 @@ private:
 	accepted risk */
 	double compute_time_headway_gap_for_lane_change(
 		const NearbyVehicle& nearby_vehicle) const;
-	void compute_lane_change_gap_parameters();
+	//void compute_lane_change_gap_parameters();
 	/* Non-linear gap based on ego and nearby vehicles states
 	and parameters */
 	virtual double compute_vehicle_following_gap_for_lane_change(
@@ -167,6 +170,8 @@ private:
 	void update_virtual_leader(std::shared_ptr<const NearbyVehicle> old_leader);
 	virtual void update_destination_lane_follower(
 		const std::shared_ptr<NearbyVehicle>& old_follower);
+	void update_destination_lane_leader(
+		const std::shared_ptr<NearbyVehicle>& old_leader);
 	double estimate_nearby_vehicle_time_headway(
 		NearbyVehicle& nearby_vehicle);
 

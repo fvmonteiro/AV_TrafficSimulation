@@ -23,7 +23,7 @@ RealLongitudinalController::RealLongitudinalController(
 		autonomous_gains, connected_gains, velocity_filter_gain, 
 		time_headway_filter_gain, ego_vehicle.get_max_brake(), 
 		ego_vehicle.get_comfortable_acceleration(),
-		ego_vehicle.get_sampling_interval(), 
+		ego_vehicle.get_simulation_time_step(), 
 		state_to_color_map, verbose)
 {
 	if (verbose) 

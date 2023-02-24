@@ -19,7 +19,7 @@ void LeaderFirstAndInvertLaneKeepingState
 	if (leader_state == nullptr // this is the platoon leader
 		|| *leader_state > LeaderFirstAndInvertLaneChangingState())
 	{
-		platoon_vehicle->update_origin_lane_controller();
+		platoon_vehicle->update_time_headway_to_leader();
 		platoon_vehicle->set_state(
 			std::make_unique<
 			LeaderFirstAndInvertLookingForSafeGapState>());
@@ -38,7 +38,7 @@ void LeaderFirstAndInvertLookingForSafeGapState
 		->get_platoon_leader()->has_lane_change_intention())
 	{
 		platoon_vehicle->reset_lane_change_waiting_time();
-		platoon_vehicle->update_origin_lane_controller();
+		platoon_vehicle->update_time_headway_to_leader();
 		platoon_vehicle->reset_origin_lane_velocity_controller();
 		platoon_vehicle->set_state(
 			std::make_unique<LeaderFirstAndInvertLaneKeepingState>());
@@ -75,7 +75,7 @@ void LeaderFirstAndInvertLaneChangingState
 	{
 		platoon_vehicle->set_lane_change_direction(RelativeLane::same);
 		platoon_vehicle->reset_lane_change_waiting_time();
-		platoon_vehicle->update_origin_lane_controller();
+		platoon_vehicle->update_time_headway_to_leader();
 		platoon_vehicle->reset_origin_lane_velocity_controller();
 		platoon_vehicle->set_state(
 			std::make_unique<LeaderFirstAndInvertCreatingGapState>());

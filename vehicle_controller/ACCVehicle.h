@@ -14,6 +14,10 @@ public:
 		bool verbose);
 
 private:
+	void implement_create_controller() override {
+		this->controller = std::make_unique<ControlManager>(*this,
+			is_verbose());
+	};
 	double implement_compute_desired_acceleration(
 		const std::unordered_map<int, TrafficLight>& traffic_lights) override;
 	double compute_lane_changing_desired_time_headway(

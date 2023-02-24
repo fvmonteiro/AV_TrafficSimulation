@@ -49,6 +49,7 @@ enum class UDA {
     gap_to_leader,
     reference_gap,
     relative_velocity_to_leader,
+    safe_gap_to_leader,
     /* Debugging: dest lane leader */
     dest_leader_id = 110,
     gap_to_dest_lane_leader,

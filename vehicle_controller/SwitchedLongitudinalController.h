@@ -63,6 +63,8 @@ public:
 
 
 protected:
+	VelocityController velocity_controller;
+	GapController gap_controller;
 	//State state{ State::uninitialized }; // event driven logic variable
 	double hysteresis_bias{ 10.0 }; // used to avoid state chattering [m]
 	double reference_velocity_margin{ 1.0 }; // [m/s]

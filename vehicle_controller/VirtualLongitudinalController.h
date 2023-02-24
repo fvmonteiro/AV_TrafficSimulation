@@ -26,11 +26,6 @@ public:
         double velocity_filter_gain, double time_headway_filter_gain,
         std::unordered_map<State, color_t> state_to_color_map,
         bool verbose);
-    //VirtualLongitudinalController(
-    //    const EgoVehicle& ego_vehicle,
-    //    VelocityControllerGains velocity_controller_gains,
-    //    AutonomousGains autonomous_gains, ConnectedGains connected_gains,
-    //    double velocity_filter_gain, double time_headway_filter_gain);
 
     double get_follower_time_headway() const {
         return follower_time_headway;
@@ -40,9 +35,6 @@ public:
         this->follower_time_headway = h;
     };
 
-    //void set_reference_velocity(double reference_velocity, double ego_velocity);
-    //void set_reference_velocity(double ego_velocity, double adjustment_speed_factor);
-
     void determine_controller_state(const EgoVehicle& ego_vehicle,
         std::shared_ptr<const NearbyVehicle> leader,
         double reference_velocity, double gap_control_input) override;
@@ -51,6 +43,7 @@ public:
     the ego velocity. Method should only be called when the 
     destination lane controller is NOT the active one. */
     bool is_outdated(double ego_velocity) const;
+
     /*void estimate_follower_time_headway(const NearbyVehicle& follower,
         double ego_max_brake, double follower_free_flow_velocity);*/
     /* Changes the accepted risk if necessary and returns 
@@ -65,7 +58,8 @@ public:
 
 private:
     /* Estimated value of the time headway used by the follower at
-    the destination lane. Used when computing lane change safe gaps. */
+    the destination lane. Used when computing lane change safe gaps. 
+    [Feb 21, 2023] Should't belong to this class. */
     double follower_time_headway{ 0.0 };
 };
 

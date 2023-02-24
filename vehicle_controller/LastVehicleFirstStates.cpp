@@ -15,7 +15,7 @@ void LastVehicleFirstLaneKeepingState
 	if (follower_state == nullptr // this is the last platoon vehicle
 		|| *follower_state > LastVehicleFirstLaneChangingState())
 	{
-		platoon_vehicle->update_origin_lane_controller();
+		platoon_vehicle->update_time_headway_to_leader();
 		platoon_vehicle->set_state(
 			std::make_unique<
 			LastVehicleFirstIncreasingGapState>());
@@ -34,7 +34,7 @@ void LastVehicleFirstIncreasingGapState
 		->get_last_vehicle()->has_lane_change_intention())
 	{
 		platoon_vehicle->reset_lane_change_waiting_time();
-		platoon_vehicle->update_origin_lane_controller();
+		platoon_vehicle->update_time_headway_to_leader();
 		platoon_vehicle->reset_origin_lane_velocity_controller();
 		platoon_vehicle->set_state(
 			std::make_unique<LastVehicleFirstLaneKeepingState>());
@@ -71,7 +71,7 @@ void LastVehicleFirstLookingForSafeGapState
 		->get_last_vehicle()->has_lane_change_intention())
 	{
 		platoon_vehicle->reset_lane_change_waiting_time();
-		platoon_vehicle->update_origin_lane_controller();
+		platoon_vehicle->update_time_headway_to_leader();
 		platoon_vehicle->reset_origin_lane_velocity_controller();
 		platoon_vehicle->set_state(
 			std::make_unique<LastVehicleFirstLaneKeepingState>());
@@ -101,7 +101,7 @@ void LastVehicleFirstLaneChangingState
 	{
 		platoon_vehicle->set_lane_change_direction(RelativeLane::same);
 		platoon_vehicle->reset_lane_change_waiting_time();
-		platoon_vehicle->update_origin_lane_controller();
+		platoon_vehicle->update_time_headway_to_leader();
 		platoon_vehicle->reset_origin_lane_velocity_controller();
 		platoon_vehicle->set_state(
 			std::make_unique<LastVehicleFirstCreatingGapState>());

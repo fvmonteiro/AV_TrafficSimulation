@@ -14,6 +14,7 @@ public:
 	/* Getters and setters */
 
 	double get_max_brake() const { return max_brake; };
+	double get_max_jerk() const { return max_jerk; };
 	long get_id() const { return id; };
 	double get_length() const { return length; };
 	double get_width() const { return width; };
@@ -47,6 +48,9 @@ protected:
 	double compute_time_headway_with_risk(double free_flow_velocity,
 		double follower_max_brake, double leader_max_brake,
 		double lambda_1, double rho, double accepted_risk) const;
+	double compute_risky_gap(double v_follower,
+		double v_leader, double brake_follower, double brake_leader,
+		double lambda_0, double lambda_1, double accepted_risk) const;
 	/* Maximum possible accepted risk that keeps the time headway positive. */
 	double compute_max_risk(double leader_max_brake,
 		double follower_max_brake, double desired_velocity, double rho);
@@ -61,8 +65,8 @@ protected:
 	max brake based on speed (and no jerk). We estimate these parameters
 	for safe gap computations */
 
-	double max_brake{ 0.0 }; // [m/s^2]
-	double max_jerk{ 0.0 }; // [m/s^3]
+	double max_brake{ 0.0 }; // [m/s^2] Absolute value
+	double max_jerk{ 0.0 }; // [m/s^3] Absolute value
 	double brake_delay{ 0.0 }; // [s]
 	double comfortable_acceleration{ COMFORTABLE_ACCELERATION }; // [m/s^2]
 

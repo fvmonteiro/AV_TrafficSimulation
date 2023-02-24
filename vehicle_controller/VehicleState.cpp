@@ -103,7 +103,7 @@ void SingleVehicleLaneKeepingState
 void SingleVehicleLaneKeepingState
 ::implement_handle_lane_change_intention()
 {
-	ego_vehicle->update_origin_lane_controller();
+	ego_vehicle->update_time_headway_to_leader();
 	ego_vehicle->set_state(
 		std::make_unique<SingleVehicleLongidutinalAdjustmentState>());
 }
@@ -114,7 +114,7 @@ void SingleVehicleLongidutinalAdjustmentState
 ::implement_handle_lane_keeping_intention()
 {
 	ego_vehicle->reset_lane_change_waiting_time();
-	ego_vehicle->update_origin_lane_controller();
+	ego_vehicle->update_time_headway_to_leader();
 	ego_vehicle->reset_origin_lane_velocity_controller();
 	ego_vehicle->set_state(
 		std::make_unique<SingleVehicleLaneKeepingState>());
@@ -125,6 +125,9 @@ void SingleVehicleLongidutinalAdjustmentState
 {
 	if (ego_vehicle->check_lane_change_gaps())
 	{
+		ego_vehicle->set_lane_change_direction(
+			ego_vehicle->get_desired_lane_change_direction());
+		ego_vehicle->reset_lane_change_waiting_time();
 		ego_vehicle->set_state(
 			std::make_unique<SingleVehicleLaneChangingState>());
 	}
@@ -139,11 +142,11 @@ void SingleVehicleLongidutinalAdjustmentState
 void SingleVehicleLaneChangingState
 ::implement_handle_lane_keeping_intention()
 {
+	can_start_maneuver = false;
+	ego_vehicle->set_lane_change_direction(RelativeLane::same);
 	if (!ego_vehicle->is_lane_changing())
 	{
-		ego_vehicle->set_lane_change_direction(RelativeLane::same);
-		ego_vehicle->reset_lane_change_waiting_time();
-		ego_vehicle->update_origin_lane_controller();
+		ego_vehicle->update_time_headway_to_leader();
 		ego_vehicle->reset_origin_lane_velocity_controller();
 		ego_vehicle->set_state(
 			std::make_unique<SingleVehicleLaneKeepingState>());
@@ -153,14 +156,24 @@ void SingleVehicleLaneChangingState
 void SingleVehicleLaneChangingState
 ::implement_handle_lane_change_intention() 
 {
-	if (ego_vehicle->is_lane_changing())
+	if (can_start_maneuver)
 	{
-		ego_vehicle->set_lane_change_direction(
-			ego_vehicle->get_active_lane_change_direction());
+		if (ego_vehicle->is_lane_changing())
+		{
+			ego_vehicle->set_lane_change_direction(
+				ego_vehicle->get_active_lane_change_direction());
+		}
+		else
+		{
+			ego_vehicle->set_lane_change_direction(
+				ego_vehicle->get_desired_lane_change_direction());
+		}
 	}
-	else
+	else 
 	{
-		ego_vehicle->set_lane_change_direction(
-			ego_vehicle->get_desired_lane_change_direction());
+		/* Vehicle already performed one lane change and is trying to 
+		start another one without first checking the gaps */
+		ego_vehicle->set_state(
+			std::make_unique<SingleVehicleLaneKeepingState>());
 	}
 }
