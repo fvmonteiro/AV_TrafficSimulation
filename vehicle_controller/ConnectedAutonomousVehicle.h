@@ -79,10 +79,12 @@ private:
 		double nv_max_lane_change_risk) const;
 	double compute_lane_changing_desired_time_headway(
 		const NearbyVehicle& nearby_vehicle) const override;
-	double compute_vehicle_following_gap_for_lane_change(
-		const NearbyVehicle& nearby_vehicle) const override;
-	//bool implement_check_lane_change_gaps() override;
+	/*double compute_vehicle_following_gap_for_lane_change(
+		const NearbyVehicle& nearby_vehicle) const override;*/
+	
 	long implement_get_lane_change_request() const override;
+	double compute_accepted_lane_change_gap(
+		std::shared_ptr<const NearbyVehicle> nearby_vehicle) const override;
 
 	/* Id of the vehicle in front of which we want to merge
 	IF we are trying to perform a mandatory lane change */

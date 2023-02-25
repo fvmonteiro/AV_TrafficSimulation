@@ -25,7 +25,7 @@ PlatoonVehicle::~PlatoonVehicle()
 {
 	if (verbose) 
 	{
-		std::clog << "[PlatoonVehicle] Destructor. t=" << get_time()
+		std::clog << "[PlatoonVehicle] Destructor. t=" << get_current_time()
 			<< ", veh " << get_id() << std::endl;
 	}
 }
@@ -359,7 +359,7 @@ bool PlatoonVehicle::implement_analyze_platoons(
 		{
 			if (verbose)
 			{
-				std::clog << "t=" << get_time() << " id=" << get_id()
+				std::clog << "t=" << get_current_time() << " id=" << get_id()
 					<< ": leaving platoon " << platoon->get_id() << "\n";
 			}
 			platoon->remove_vehicle_by_id(get_id(), false);

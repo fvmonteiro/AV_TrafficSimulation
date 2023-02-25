@@ -21,15 +21,30 @@ class Platoon;
 class EgoVehicle : public Vehicle
 {
 public:
-	/* Constructors ---------------------------------------------------------- */
+	/* Constructors ------------------------------------------------------- */
 	EgoVehicle() = default;
 	virtual ~EgoVehicle();
 
-	/* Getters and setters */
+	/* Getters and setters ------------------------------------------------ */
 
 	double get_simulation_time_step() const { return simulation_time_step; };
-	long get_color() const { return color; };
+	double get_current_time() const { return current_time; };
 	double get_desired_velocity() const { return desired_velocity; };
+	long get_lane() const { return lane; };
+	double get_distance_traveled() const { return distance_traveled; }
+	long get_link() const { return link; };
+	double get_lateral_position() const { return lateral_position; }
+	RelativeLane get_preferred_relative_lane() const {
+		return preferred_relative_lane;
+	};
+	double get_velocity() const { return velocity; };
+	double get_acceleration() const { return acceleration; };
+	double get_desired_acceleration() const { return desired_acceleration; };
+	double get_vissim_acceleration() const { return vissim_acceleration; };
+	RelativeLane get_active_lane_change_direction() const {
+		return active_lane_change_direction;
+	};
+	double get_lane_end_distance() const { return lane_end_distance; };
 	double get_comfortable_acceleration() const {
 		return comfortable_acceleration;
 	};
@@ -44,9 +59,6 @@ public:
 	RelativeLane get_vissim_lane_suggestion() const {
 		return vissim_lane_suggestion;
 	}
-	/*int get_relative_target_lane() const {
-		return relative_target_lane.to_int();
-	};*/
 	long get_turning_indicator() const { return turning_indicator; };
 	double get_waiting_time() const { return lane_change_waiting_time; };
 	long get_vissim_use_preferred_lane() const {
@@ -59,64 +71,38 @@ public:
 	/* Our internal lane change decision */
 	int get_lane_change_direction_to_int() const {
 		return lane_change_direction.to_int(); };
-	/* Proportional maximum expected relative speed */
-	//double get_rho() const { return rho; };
+	double get_ttc() const { return ttc; }
+	double get_drac() const { return drac; }
+	/* delta vel. at collision under the worst case scenario */
+	double get_collision_risk() const { return collision_severity_risk; }
 
-	void set_desired_velocity(double desired_velocity) {
-		this->desired_velocity = desired_velocity;
+	void set_desired_velocity(double value) { desired_velocity = value; };
+	void set_lane(long value) { lane = lane; };
+	void set_distance_traveled(double value) { distance_traveled = value; };
+	void set_link(long value) { link = value; };
+	void set_lateral_position(double value) { lateral_position = value; };
+	void set_velocity(double value) { velocity = value; };
+	void set_acceleration(double value) { acceleration = value; };
+	void set_vissim_acceleration(double value) {
+		vissim_acceleration = value;
 	};
-	void set_number_of_lanes(long number_of_lanes) {
-		this->number_of_lanes = number_of_lanes;
-	};
-	void set_desired_lane_angle(double desired_lane_angle) {
-		this->desired_lane_angle = desired_lane_angle;
-	};
-	void set_turning_indicator(long turning_indicator) {
-		this->turning_indicator = turning_indicator;
-	};
+	void set_number_of_lanes(long value) {number_of_lanes = value; };
+	void set_desired_lane_angle(double value) { desired_lane_angle = value; };
+	void set_turning_indicator(long value) { turning_indicator = value; };
 	void set_vissim_use_preferred_lane(long value) {
-		this->vissim_use_preferred_lane = value;
+		vissim_use_preferred_lane = value;
 	};
-	void set_lane_change_direction(RelativeLane relative_lane)
-	{
-		this->lane_change_direction = relative_lane;
-	}
-	void set_verbose(bool verbose)
-	{
-		this->verbose = verbose;
-	}
+	void set_lane_change_direction(RelativeLane value) {
+		this->lane_change_direction = value;
+	};
+	void set_verbose(bool value) { verbose = value; };
 
-	/* Getters of most recent values ----------------------------------------- */
+	/* Non-trivial Getters and setters ---------------------------------------- */
 
-	double get_time() const;
-	long get_lane() const;
-	double get_distance_traveled() const;
-	long get_link() const;
-	double get_lateral_position() const;
-	RelativeLane get_preferred_relative_lane() const;
-	double get_velocity() const;
-	double get_acceleration() const;
-	double get_desired_acceleration() const;
-	double get_vissim_acceleration() const;
-	/* Returns the active lane change direction given by VISSIM */
-	RelativeLane get_active_lane_change_direction() const;
-	//long get_vissim_active_lane_change() const;
-	double get_lane_end_distance() const;
 	long get_leader_id() const;
-
-	//State get_state_implementation_v1() const;
-	double get_ttc() const;
-	double get_drac() const;
-	/* delta vel. at collision under the worst case scenario*/
-	double get_collision_risk() const;
-
-	/* Other getters and setters ------------------------------------------ */
-
-	std::shared_ptr<Platoon> get_platoon() const
-	{
+	std::shared_ptr<Platoon> get_platoon() const {
 		return implement_get_platoon();
 	};
-	
 	double get_safe_time_headway() const;
 	/* Gap error (gap minus reference gap) of active longitudinal
 	controller */
@@ -140,13 +126,6 @@ public:
 		std::shared_ptr<const NearbyVehicle> nearby_vehicle) const;
 	const VehicleState* get_state() const;
 
-	void set_lane(long lane);
-	void set_distance_traveled(double distance_traveled);
-	void set_link(long link);
-	void set_lateral_position(double lateral_position);
-	void set_velocity(double velocity);
-	void set_acceleration(double acceleration);
-	void set_vissim_acceleration(double vissim_acceleration);
 	/* Sets the active lane change direction given by VISSIM */
 	void set_active_lane_change_direction(long direction);
 	/*void set_vissim_active_lane_change(int active_lane_change);*/
@@ -366,6 +345,7 @@ protected:
 		const NearbyVehicle& nearby_vehicle) const;
 	void compute_lane_change_gap_parameters();
 
+	/* Proportional maximum expected relative speed */
 	double get_rho() const { return rho; };
 	double get_lambda_0_lane_change() const { return lambda_0_lane_change; };
 	double get_lambda_1_lane_change() const { return lambda_1_lane_change; };
@@ -416,7 +396,6 @@ private:
 	double creation_time{ 0.0 };
 	double current_time{ 0.0 };
 	double simulation_time_step{ 0.1 };
-	long color{ 0 };
 	double desired_velocity{ 0.0 }; /* from VISSIM's desired
 								  velocity distribution */
 	long lane{ 0 };

@@ -239,7 +239,7 @@ compute_transient_safe_set(const TrafficLightALCVehicle& ego_vehicle,
 	else
 	{
 		double lambda0 = beta * comfortable_braking;
-		double time = ego_vehicle.get_time();
+		double time = ego_vehicle.get_current_time();
 		double next_red_time = next_traffic_light.get_time_of_next_red();
 		ht = -lambda0 * (time - next_red_time);
 		dht = -lambda0;
@@ -301,7 +301,7 @@ compute_transient_safe_set_amber_light(
 	}
 	else // amber light
 	{
-		double time = ego_vehicle.get_time();
+		double time = ego_vehicle.get_current_time();
 		double lambda0 = beta * comfortable_braking;
 		double time_crossed_last_traffic_light =
 			ego_vehicle.get_time_crossed_last_traffic_light();
@@ -364,7 +364,7 @@ compute_transient_safe_set_all_space(
 	else
 	{
 		double lambda0 = beta * comfortable_braking;
-		double time = ego_vehicle.get_time();
+		double time = ego_vehicle.get_current_time();
 		double time_crossed_last_traffic_light =
 			ego_vehicle.get_time_crossed_last_traffic_light();
 		double last_time_next_traffic_light_became_green =

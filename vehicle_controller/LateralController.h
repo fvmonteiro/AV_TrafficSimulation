@@ -28,13 +28,17 @@ public:
 	void set_time_headway_to_destination_lane_leader(double value) {
 		time_headway_to_destination_lane_leader = value;
 	}
-	void set_time_headway_to_destination_lane_follower(double value) {
-		time_headway_to_destination_lane_follower = value;
-	}
-	
+
+	void set_destination_lane_follower_parameters(double new_lambda_0,
+		double new_lambda_1);
+	void set_destination_lane_follower_time_headway(double new_time_headway);
+
 	double compute_time_headway_gap(double ego_velocity, 
-		const NearbyVehicle& nearby_vehicle);
-	
+		const NearbyVehicle& nearby_vehicle, double accepted_risk);
+	double compute_vehicle_following_gap_for_lane_change(
+		const EgoVehicle& ego_vehicle, const NearbyVehicle& nearby_vehicle,
+		double follower_lambda_1, double accepted_risk) const;
+
 	/* Computes the gap variation due to non-zero relative velocities during
 	the lane change. */
 	double compute_transient_gap(const EgoVehicle& ego_vehicle, 
@@ -52,6 +56,9 @@ private:
 	double time_headway_to_leader{ 0.0 }; // [s]
 	double time_headway_to_destination_lane_leader{ 0.0 }; // [s]
 	double time_headway_to_destination_lane_follower{ 0.0 }; // [s]
+	double dest_lane_follower_lambda_0{ 0.0 };
+	double dest_lane_follower_lambda_1{ 0.0 };
+
 	double standstill_distance{ 1.0 };
 	std::vector<double> lane_change_lateral_acceleration;
 	std::vector<double> lane_change_lateral_velocity;

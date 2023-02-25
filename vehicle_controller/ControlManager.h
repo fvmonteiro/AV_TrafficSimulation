@@ -134,7 +134,10 @@ public:
 	void update_destination_lane_controller(double ego_velocity,
 		double time_headway, bool is_leader_connected);
 	//void update_leader_lane_changing_time_headway(double time_headway);
-	void update_destination_lane_follower_time_headway(double time_headway);
+	void update_destination_lane_follower_parameters(
+		NearbyVehicle& dest_lane_follower);
+	void update_destination_lane_follower_time_headway(double ego_max_brake,
+		bool are_vehicles_connected, NearbyVehicle& dest_lane_follower);
 	void update_destination_lane_leader_time_headway(double time_headway);
 
 	void update_gap_generation_controller(double ego_velocity,
@@ -171,12 +174,15 @@ public:
 	/* Returns the reference gap used by the longitudinal
 	controller. It uses a previously defined time headway, which might
 	have been computed assuming some accepted risk. NOT IN USE */
-	double compute_desired_lane_change_gap(
-		const AutonomousVehicle& ego_vehicle,
-		const NearbyVehicle& nearby_vehicle, 
-		bool will_accelerate = false) const;
+	//double compute_desired_lane_change_gap(
+	//	const AutonomousVehicle& ego_vehicle,
+	//	const NearbyVehicle& nearby_vehicle, 
+	//	bool will_accelerate = false) const;
 	double compute_accepted_lane_change_gap(const EgoVehicle& ego_vehicle,
-		const NearbyVehicle& nearby_vehicle);
+		const NearbyVehicle& nearby_vehicle, double accepted_risk);
+	double compute_accepted_lane_change_gap_exact(const EgoVehicle& ego_vehicle,
+		const NearbyVehicle& nearby_vehicle, double ego_lambda_1, 
+		double accepted_risk);
 
 	/* Returns the accepted lane change gap, which might is different from
 	the longitudinal controller's reference gap if the accepted risk is

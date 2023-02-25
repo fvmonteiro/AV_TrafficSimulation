@@ -20,7 +20,7 @@ void TrafficLightALCVehicle::set_traffic_light_information(
 	if (implement_has_next_traffic_light()
 		&& (traffic_light_id != next_traffic_light_id))
 	{
-		time_crossed_last_traffic_light = get_time();
+		time_crossed_last_traffic_light = get_current_time();
 	}
 	next_traffic_light_id = traffic_light_id;
 	distance_to_next_traffic_light = distance;

@@ -191,18 +191,17 @@ void ConnectedAutonomousVehicle::update_destination_lane_follower(
 		std::shared_ptr<NearbyVehicle>& dest_lane_follower =
 			get_modifiable_dest_lane_follower();
 		controller->update_destination_lane_follower_time_headway(
-			dest_lane_follower->get_h_to_incoming_vehicle());
-
-		/* We need to compute fd's lambda1 here cause it's used later in
-		computing gaps that accept risks. */
+			get_max_brake(), dest_lane_follower->is_connected(),
+			*dest_lane_follower);
 		if ((old_follower == nullptr )
 			|| (old_follower->get_id() != dest_lane_follower->get_id()))
 		{
-			dest_lane_follower->compute_safe_gap_parameters();
-			dest_lane_follower_lambda_0 =
-				get_destination_lane_follower()->get_lambda_0();
-			dest_lane_follower_lambda_1 =
-				get_destination_lane_follower()->get_lambda_1();
+			controller->update_destination_lane_follower_parameters(
+				*dest_lane_follower);
+			//dest_lane_follower_lambda_0 =
+			//	get_destination_lane_follower()->get_lambda_0();
+			//dest_lane_follower_lambda_1 =
+			//	get_destination_lane_follower()->get_lambda_1();
 		}
 	}
 }
@@ -290,6 +289,36 @@ compute_vehicle_following_time_headway(
 		current_lambda_1, get_rho(), nv_max_lane_change_risk);
 }
 
+double ConnectedAutonomousVehicle::compute_accepted_lane_change_gap(
+	std::shared_ptr<const NearbyVehicle> nearby_vehicle) const
+{
+	if (nearby_vehicle == nullptr) return 0.0;
+
+	double accepted_gap;
+	double accepted_risk = 0.0;
+
+	if (verbose)
+	{
+		std::clog << "\tUsing linear overestimation? "
+			<< use_linear_lane_change_gap << "\n";
+	}
+
+	if (use_linear_lane_change_gap)
+	{
+		accepted_gap = controller->compute_accepted_lane_change_gap(*this,
+			*nearby_vehicle, accepted_risk);
+	}
+	else
+	{
+		accepted_gap = controller->compute_accepted_lane_change_gap_exact(
+			*this, *nearby_vehicle, 
+			get_lambda_1_lane_change(nearby_vehicle->is_connected()), 
+			accepted_risk);
+	}
+
+	return std::max(accepted_gap, 1.0);
+}
+
 double ConnectedAutonomousVehicle::compute_lane_changing_desired_time_headway(
 	const NearbyVehicle& nearby_vehicle) const
 {
@@ -313,15 +342,15 @@ double ConnectedAutonomousVehicle::compute_lane_changing_desired_time_headway(
 	}*/
 }
 
-double ConnectedAutonomousVehicle::
-compute_vehicle_following_gap_for_lane_change(
-	const NearbyVehicle& nearby_vehicle) const
-{
-	double current_lambda_1 =
-		get_lambda_1_lane_change(nearby_vehicle.is_connected());
-	return AutonomousVehicle::compute_vehicle_following_gap_for_lane_change(
-		nearby_vehicle, current_lambda_1);
-}
+//double ConnectedAutonomousVehicle::
+//compute_vehicle_following_gap_for_lane_change(
+//	const NearbyVehicle& nearby_vehicle) const
+//{
+//	double current_lambda_1 =
+//		get_lambda_1_lane_change(nearby_vehicle.is_connected());
+//	return AutonomousVehicle::compute_vehicle_following_gap_for_lane_change(
+//		nearby_vehicle, current_lambda_1);
+//}
 
 double ConnectedAutonomousVehicle::implement_compute_desired_acceleration(
 	const std::unordered_map<int, TrafficLight>& traffic_lights)

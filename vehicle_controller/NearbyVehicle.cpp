@@ -165,12 +165,17 @@ bool NearbyVehicle::is_in_a_platoon() const
 	return platoon_id != -1;
 }
 
-double NearbyVehicle::estimate_desired_time_headway(double free_flow_velocity,
-	double leader_max_brake, double rho, double risk)
+double NearbyVehicle::estimate_desired_time_headway(
+	double leader_max_brake, double risk) const
 {
-	compute_safe_gap_parameters();
-	return compute_time_headway_with_risk(free_flow_velocity, 
-		get_max_brake(), leader_max_brake, get_lambda_1(), rho, risk);
+	/* When estimating the desired time headway, we must be conservative */
+	/* [Feb 24, 2023] We're using the exact max brake, rho and lambda 1 
+	values to be consistent with the safe lane change paper parameters */
+	double free_flow_velocity = MAX_VELOCITY;
+	double rho = 0.2;
+	return std::max(0.0,
+		compute_time_headway_with_risk(free_flow_velocity,
+			get_max_brake(), leader_max_brake, get_lambda_1(), rho, risk));
 }
 
 double NearbyVehicle::estimate_max_accepted_risk_to_incoming_vehicle(

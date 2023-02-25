@@ -100,8 +100,8 @@ public:
 	void read_lane_change_request(long lane_change_request);
 	bool is_in_a_platoon() const;
 
-	double estimate_desired_time_headway(double free_flow_velocity,
-		double leader_max_brake, double rho, double risk);
+	double estimate_desired_time_headway(double leader_max_brake, 
+		double risk) const;
 	double estimate_max_accepted_risk_to_incoming_vehicle(
 		double free_flow_velocity, double leader_max_brake, double rho);
 

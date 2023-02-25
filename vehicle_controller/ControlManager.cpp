@@ -392,13 +392,33 @@ void ControlManager::update_destination_lane_controller(double ego_velocity,
 	//destination_lane_controller.reset_leader_velocity_filter(ego_velocity);
 }
 
-void ControlManager::update_destination_lane_follower_time_headway(
-	double time_headway)
+void ControlManager::update_destination_lane_follower_parameters( 
+	NearbyVehicle& dest_lane_follower)
 {
-	lateral_controller.set_time_headway_to_destination_lane_follower(
-		time_headway);
+	dest_lane_follower.compute_safe_gap_parameters();
+	lateral_controller.set_destination_lane_follower_parameters(
+		dest_lane_follower.get_lambda_0(), dest_lane_follower.get_lambda_1());
 	// [Feb 24, 2023] TODO: should no longer be needed
-	destination_lane_controller.set_follower_time_headway(time_headway);
+	//destination_lane_controller.set_follower_time_headway(time_headway);
+}
+
+void ControlManager::update_destination_lane_follower_time_headway(
+	double ego_max_brake, bool are_vehicles_connected,
+	NearbyVehicle& dest_lane_follower)
+{
+	double dest_lane_follower_time_headway = are_vehicles_connected ?
+		dest_lane_follower.get_h_to_incoming_vehicle()
+		: dest_lane_follower.estimate_desired_time_headway(ego_max_brake, 0);
+
+	if (verbose)
+	{
+		std::clog << "Are vehs connected? " << are_vehicles_connected
+			<< ", h_f=" << dest_lane_follower_time_headway << "\n";
+	}
+	lateral_controller.set_destination_lane_follower_time_headway(
+		dest_lane_follower_time_headway);
+	// [Feb 24, 2023] TODO: should no longer be needed
+	//destination_lane_controller.set_follower_time_headway(time_headway);
 }
 
 void ControlManager::update_destination_lane_leader_time_headway(
@@ -690,7 +710,7 @@ bool ControlManager::get_destination_lane_desired_acceleration(
 	/* [Jan 23, 2023] TO DO: changes to reflect the addition of 
 	virtual leader. However, this piece of code is not clean. We should 
 	be able to get the virtual leader directly from autonomous_vehicle */
-	std::shared_ptr<const NearbyVehicle> virtual_leader = nullptr;
+	/*std::shared_ptr<const NearbyVehicle> virtual_leader = nullptr;
 	if (autonomous_vehicle.has_virtual_leader())
 	{
 		virtual_leader =
@@ -701,7 +721,10 @@ bool ControlManager::get_destination_lane_desired_acceleration(
 	{
 		virtual_leader =
 			autonomous_vehicle.get_destination_lane_leader();
-	}
+	}*/
+
+	std::shared_ptr<const NearbyVehicle> virtual_leader = 
+		autonomous_vehicle.get_virtual_leader();;
 	if (virtual_leader != nullptr)
 	{
 		if (verbose)
@@ -888,6 +911,14 @@ NearbyVehicle ControlManager::create_virtual_stopped_vehicle(
 	virtual_vehicle.set_distance(
 		ego_vehicle.get_lane_end_distance());
 	virtual_vehicle.set_length(0.0);
+
+	if (verbose)
+	{
+		std::clog << "\tEOL distance: " << ego_vehicle.get_lane_end_distance()
+			<< "\n";
+		std::clog << "\tVirtual stopped leader " << virtual_vehicle << "\n";
+	}
+
 	return virtual_vehicle;
 }
 
@@ -924,38 +955,59 @@ double ControlManager::determine_low_velocity_reference(double ego_velocity,
 	return reference_velocity;
 }
 
-double ControlManager::compute_desired_lane_change_gap(
-	const AutonomousVehicle& ego_vehicle,
-	const NearbyVehicle& nearby_vehicle,
-	bool will_accelerate) const
-{
-	double safe_time_headway_gap = get_desired_time_headway_gap(
-		ego_vehicle.get_velocity(),
-		/*ego_vehicle.has_lane_change_intention(),*/
-		nearby_vehicle);
-	/* TODO: the function calls do not make much sense here.
-	You call this method from the ego vehicle, and then call an ego vehicle
-	method in here.*/
-	/*double collision_free_gap = ego_vehicle.compute_exact_collision_free_gap(
-		nearby_vehicle);*/
-	double transient_gap = lateral_controller.compute_transient_gap(
-		ego_vehicle, nearby_vehicle, will_accelerate);
-
-	return safe_time_headway_gap /*collision_free_gap*/ + transient_gap;
-}
+//double ControlManager::compute_desired_lane_change_gap(
+//	const AutonomousVehicle& ego_vehicle,
+//	const NearbyVehicle& nearby_vehicle,
+//	bool will_accelerate) const
+//{
+//	double safe_time_headway_gap = get_desired_time_headway_gap(
+//		ego_vehicle.get_velocity(),
+//		/*ego_vehicle.has_lane_change_intention(),*/
+//		nearby_vehicle);
+//	/* TODO: the function calls do not make much sense here.
+//	You call this method from the ego vehicle, and then call an ego vehicle
+//	method in here.*/
+//	/*double collision_free_gap = ego_vehicle.compute_exact_collision_free_gap(
+//		nearby_vehicle);*/
+//	double transient_gap = lateral_controller.compute_transient_gap(
+//		ego_vehicle, nearby_vehicle, will_accelerate);
+//
+//	return safe_time_headway_gap /*collision_free_gap*/ + transient_gap;
+//}
 
 double ControlManager::compute_accepted_lane_change_gap(
-	const EgoVehicle& ego_vehicle, const NearbyVehicle& nearby_vehicle)
+	const EgoVehicle& ego_vehicle, const NearbyVehicle& nearby_vehicle,
+	double accepted_risk)
 {
 	double veh_following_gap = lateral_controller.compute_time_headway_gap(
-		ego_vehicle.get_velocity(), nearby_vehicle);
+		ego_vehicle.get_velocity(), nearby_vehicle, accepted_risk);
 	double gap_variation = lateral_controller.compute_transient_gap(ego_vehicle,
 		nearby_vehicle, false);
 
 	if (verbose)
 	{
-		std::clog << "\tUsing linear overestimation? "
-			<< "\n\tnv id " << nearby_vehicle.get_id()
+		std::clog << "\tnv id " << nearby_vehicle.get_id()
+			<< ": delta g_lc = " << gap_variation
+			<< ", g_vf = " << veh_following_gap
+			<< "; g_lc = " << veh_following_gap + gap_variation << std::endl;
+	}
+
+	return veh_following_gap + gap_variation;
+}
+
+double ControlManager::compute_accepted_lane_change_gap_exact(
+	const EgoVehicle& ego_vehicle, const NearbyVehicle& nearby_vehicle,
+	double ego_lambda_1, double accepted_risk)
+{
+	double veh_following_gap =
+		lateral_controller.compute_vehicle_following_gap_for_lane_change(
+			ego_vehicle, nearby_vehicle, ego_lambda_1, accepted_risk);
+	double gap_variation = lateral_controller.compute_transient_gap(ego_vehicle,
+		nearby_vehicle, false);
+
+	if (verbose)
+	{
+		std::clog << "\tnv id " << nearby_vehicle.get_id()
 			<< ": delta g_lc = " << gap_variation
 			<< ", g_vf = " << veh_following_gap
 			<< "; g_lc = " << veh_following_gap + gap_variation << std::endl;

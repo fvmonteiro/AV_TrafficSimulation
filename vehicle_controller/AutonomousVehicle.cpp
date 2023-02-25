@@ -183,11 +183,6 @@ void AutonomousVehicle::find_destination_lane_vehicles()
 		}
 	}
 
-	if (verbose)
-	{
-		std::clog << "Done looping over nearby vehs.\n";
-	}
-
 	update_destination_lane_follower(old_dest_lane_follower);
 	update_destination_lane_leader(old_dest_lane_leader);
 	std::shared_ptr<NearbyVehicle> vl = define_virtual_leader();
@@ -197,7 +192,6 @@ void AutonomousVehicle::find_destination_lane_vehicles()
 std::shared_ptr<NearbyVehicle> AutonomousVehicle::define_virtual_leader()
 const
 {
-
 	if (try_to_overtake_destination_lane_leader_based())
 	{
 		return nullptr;
@@ -242,14 +236,19 @@ bool AutonomousVehicle::try_to_overtake_destination_lane_leader_based(
 	lanes trying to "switch" lanes. */
 	bool is_dest_lane_leader_stuck =
 		dest_lane_leader_vel < 0.1
-		&& (get_destination_lane_leader_leader() == nullptr);
+		&& (!has_destination_lane_leader_leader());
 	bool is_desired_vel_higher = dest_lane_leader_vel
 		< (origin_lane_desired_velocity - min_rel_vel);
 
 	if (verbose)
 	{
 		std::clog << "\tv_o=" << origin_lane_desired_velocity
-			<< ", v_d=" << dest_lane_leader_vel << "\n";
+			<< ", v_d=" << dest_lane_leader_vel 
+			<< ", is_desired_vel_higher? " << is_desired_vel_higher 
+			<< ", dest lane leader has leader? "
+			<< has_destination_lane_leader_leader()
+			<< ", is dest lane leader stuck? " 
+			<< is_dest_lane_leader_stuck <<"\n";
 	}
 
 	/* [Jan 24, 2023] Note: maybe the first condition is redundant. */
@@ -304,17 +303,20 @@ void AutonomousVehicle::update_destination_lane_follower(
 {
 	if (has_destination_lane_follower())
 	{
+		get_is_connected();
 		if (old_follower == nullptr
 			|| (old_follower->get_category()
 				!= destination_lane_follower->get_category()))
 		{
+			//destination_lane_follower->compute_safe_gap_parameters();
+			controller->update_destination_lane_follower_parameters(
+				*destination_lane_follower);
 			controller->update_destination_lane_follower_time_headway(
-				estimate_nearby_vehicle_time_headway(
-					*destination_lane_follower));
-			dest_lane_follower_lambda_0 =
-				destination_lane_follower->get_lambda_0();
-			dest_lane_follower_lambda_1 =
-				destination_lane_follower->get_lambda_1();
+				get_max_brake(), false, *destination_lane_follower);
+			//dest_lane_follower_lambda_0 =
+			//	destination_lane_follower->get_lambda_0();
+			//dest_lane_follower_lambda_1 =
+			//	destination_lane_follower->get_lambda_1();
 		}
 	}
 }
@@ -425,8 +427,7 @@ double AutonomousVehicle::estimate_nearby_vehicle_time_headway(
 	//return nearby_vehicle.estimate_desired_time_headway(get_desired_velocity(),
 	//	max_brake, get_rho(), accepted_risk);
 	return std::max(0.0,
-		nearby_vehicle.estimate_desired_time_headway(MAX_VELOCITY,
-			max_brake, get_rho(), 0/*accepted_lane_change_risk_to_follower*/));
+		nearby_vehicle.estimate_desired_time_headway(max_brake, 0));
 }
 
 double AutonomousVehicle::implement_compute_desired_acceleration(
@@ -486,36 +487,35 @@ double AutonomousVehicle::compute_accepted_lane_change_gap(
 	if (nearby_vehicle == nullptr) return 0.0;
 
 	double accepted_gap;
-
+	double accepted_risk = 0.0;
 	// Only to be used during initial checks
 	/*double gap1, gap2;
 	gap1 = compute_time_headway_gap_for_lane_change(*nearby_vehicle);
 	gap2 = compute_vehicle_following_gap_for_lane_change(*nearby_vehicle);*/
+	
+	if (verbose)
+	{
+		std::clog << "\tUsing linear overestimation? "
+			<< use_linear_lane_change_gap << "\n";
+	}
 
 	if (use_linear_lane_change_gap)
 	{
-		accepted_gap =
-			controller->compute_accepted_lane_change_gap(*this, 
-				*nearby_vehicle);
-			//compute_time_headway_gap_for_lane_change(*nearby_vehicle);
+		accepted_gap = controller->compute_accepted_lane_change_gap(*this,
+				*nearby_vehicle, accepted_risk);
 	}
 	else
 	{
-		double vehicle_following_gap =
+		accepted_gap = controller->compute_accepted_lane_change_gap_exact(
+			*this, *nearby_vehicle, get_lambda_1_lane_change(), 
+			accepted_risk);
+		/*double vehicle_following_gap =
 			compute_vehicle_following_gap_for_lane_change(
 				*nearby_vehicle);
 		double gap_variation_during_lc =
 			controller->get_gap_variation_during_lane_change(*this,
 				*nearby_vehicle, false);
-		accepted_gap = vehicle_following_gap + gap_variation_during_lc;
-	}
-
-	if (verbose)
-	{
-		std::clog << "\tUsing linear overestimation? " 
-			<< use_linear_lane_change_gap
-			<< "\n\tnv id " << nearby_vehicle->get_id()
-			<< "; g_lc = " << accepted_gap << std::endl;
+		accepted_gap = vehicle_following_gap + gap_variation_during_lc;*/
 	}
 
 	return std::max(accepted_gap, 1.0);
@@ -529,6 +529,8 @@ double AutonomousVehicle::compute_time_headway_gap_for_lane_change(
 	data from the virtual leader, so it should not be used to measure 
 	safety towards the destination lane leader (which might be different 
 	from the virtual leader) */
+	if (verbose) std::clog << "[WARNING] USING OUTDATED METHOD\n";
+
 	double accepted_time_headway_gap =
 		controller->get_desired_time_headway_gap(get_velocity(),
 			nearby_vehicle);
@@ -566,79 +568,79 @@ double AutonomousVehicle::compute_time_headway_gap_for_lane_change(
 	return std::max(0.0, accepted_time_headway_gap);
 }
 
-double AutonomousVehicle::compute_vehicle_following_gap_for_lane_change(
-	const NearbyVehicle& nearby_vehicle, double current_lambda_1) const
-{
-	double follower_lambda_0, follower_lambda_1, accepted_risk;
-	double v_follower, v_leader;
-	double brake_follower, brake_leader;
-	double ego_velocity = get_velocity();
-	double delta_v = nearby_vehicle.get_relative_velocity();
-	if (nearby_vehicle.is_ahead())
-	{
-		accepted_risk = accepted_lane_change_risk_to_leaders;
-		follower_lambda_0 = get_lambda_0();
-		follower_lambda_1 = current_lambda_1;
-		v_follower = ego_velocity;
-		v_leader = nearby_vehicle.compute_velocity(ego_velocity);
-		brake_follower = get_lane_change_max_brake();
-		brake_leader = nearby_vehicle.get_max_brake();
-	}
-	else
-	{
-		accepted_risk = accepted_lane_change_risk_to_follower;
-		follower_lambda_0 = dest_lane_follower_lambda_0;
-		follower_lambda_1 = dest_lane_follower_lambda_1;
-		v_leader = ego_velocity;
-		v_follower = nearby_vehicle.compute_velocity(ego_velocity);
-		brake_follower = nearby_vehicle.get_max_brake();
-		brake_leader = max_brake;
-		delta_v = -delta_v;
-	}
-
-	double accepted_risk_2 = std::pow(accepted_risk, 2);
-	double stop_time_follower = (v_follower + follower_lambda_1)
-		/ brake_follower;
-	double stop_time_leader = v_leader / brake_leader;
-
-	double accepted_gap;
-	if (stop_time_follower >= stop_time_leader)
-	{
-		accepted_gap =
-			(std::pow(v_follower + follower_lambda_1, 2)
-				- accepted_risk_2) / 2 / brake_follower
-			- std::pow(v_leader, 2) / 2 / brake_leader
-			+ follower_lambda_0;
-	}
-	else if (brake_follower > brake_leader)
-	{
-		accepted_gap =
-			(std::pow(delta_v + follower_lambda_1, 2)
-				- accepted_risk_2) / 2 / (brake_follower - brake_leader)
-			+ follower_lambda_0;
-	}
-	else
-	{
-		accepted_gap = 0.0;
-	}
-
-	if (verbose)
-	{
-		std::clog << "\tVeh following gap computation\n\t"
-			<< "vf=" << v_follower
-			<< ", lambda1=" << follower_lambda_1
-			<< ", df=" << brake_follower
-			<< ", vl=" << v_leader
-			<< ", dl=" << brake_leader
-			<< ", lambda 0=" << follower_lambda_0
-			<< "\n\tt_f=" << stop_time_follower
-			<< ", t_l=" << stop_time_leader
-			<< ", g_vf=" << accepted_gap
-			<< std::endl;
-	}
-
-	return std::max(0.0, accepted_gap);
-}
+//double AutonomousVehicle::compute_vehicle_following_gap_for_lane_change(
+//	const NearbyVehicle& nearby_vehicle, double current_lambda_1) const
+//{
+//	double follower_lambda_0, follower_lambda_1, accepted_risk;
+//	double v_follower, v_leader;
+//	double brake_follower, brake_leader;
+//	double ego_velocity = get_velocity();
+//	double delta_v = nearby_vehicle.get_relative_velocity();
+//	if (nearby_vehicle.is_ahead())
+//	{
+//		accepted_risk = accepted_lane_change_risk_to_leaders;
+//		follower_lambda_0 = get_lambda_0();
+//		follower_lambda_1 = current_lambda_1;
+//		v_follower = ego_velocity;
+//		v_leader = nearby_vehicle.compute_velocity(ego_velocity);
+//		brake_follower = get_lane_change_max_brake();
+//		brake_leader = nearby_vehicle.get_max_brake();
+//	}
+//	else
+//	{
+//		accepted_risk = accepted_lane_change_risk_to_follower;
+//		follower_lambda_0 = dest_lane_follower_lambda_0;
+//		follower_lambda_1 = dest_lane_follower_lambda_1;
+//		v_leader = ego_velocity;
+//		v_follower = nearby_vehicle.compute_velocity(ego_velocity);
+//		brake_follower = nearby_vehicle.get_max_brake();
+//		brake_leader = max_brake;
+//		delta_v = -delta_v;
+//	}
+//
+//	double accepted_risk_2 = std::pow(accepted_risk, 2);
+//	double stop_time_follower = (v_follower + follower_lambda_1)
+//		/ brake_follower;
+//	double stop_time_leader = v_leader / brake_leader;
+//
+//	double accepted_gap;
+//	if (stop_time_follower >= stop_time_leader)
+//	{
+//		accepted_gap =
+//			(std::pow(v_follower + follower_lambda_1, 2)
+//				- accepted_risk_2) / 2 / brake_follower
+//			- std::pow(v_leader, 2) / 2 / brake_leader
+//			+ follower_lambda_0;
+//	}
+//	else if (brake_follower > brake_leader)
+//	{
+//		accepted_gap =
+//			(std::pow(delta_v + follower_lambda_1, 2)
+//				- accepted_risk_2) / 2 / (brake_follower - brake_leader)
+//			+ follower_lambda_0;
+//	}
+//	else
+//	{
+//		accepted_gap = 0.0;
+//	}
+//
+//	if (verbose)
+//	{
+//		std::clog << "\tVeh following gap computation\n\t"
+//			<< "vf=" << v_follower
+//			<< ", lambda1=" << follower_lambda_1
+//			<< ", df=" << brake_follower
+//			<< ", vl=" << v_leader
+//			<< ", dl=" << brake_leader
+//			<< ", lambda 0=" << follower_lambda_0
+//			<< "\n\tt_f=" << stop_time_follower
+//			<< ", t_l=" << stop_time_leader
+//			<< ", g_vf=" << accepted_gap
+//			<< std::endl;
+//	}
+//
+//	return std::max(0.0, accepted_gap);
+//}
 
 //void AutonomousVehicle::compute_lane_change_risks()
 //{
@@ -671,12 +673,12 @@ double AutonomousVehicle::compute_vehicle_following_gap_for_lane_change(
 //	}
 //}
 
-double AutonomousVehicle::compute_vehicle_following_gap_for_lane_change(
-	const NearbyVehicle& nearby_vehicle) const
-{
-	return compute_vehicle_following_gap_for_lane_change(
-		nearby_vehicle, get_lambda_1_lane_change());
-}
+//double AutonomousVehicle::compute_vehicle_following_gap_for_lane_change(
+//	const NearbyVehicle& nearby_vehicle) const
+//{
+//	return compute_vehicle_following_gap_for_lane_change(
+//		nearby_vehicle, get_lambda_1_lane_change());
+//}
 
 double AutonomousVehicle::compute_gap_variation_during_lane_change(
 	const NearbyVehicle& nearby_vehicle) const

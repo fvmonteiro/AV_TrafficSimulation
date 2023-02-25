@@ -32,9 +32,14 @@ protected:
 	LaneChangeGapsSafety lane_change_gaps_safety;
 	// [Feb 24, 2023] Move these two to the Lateral Controller class
 	/* Necessary when computing lane change gaps with risk */
-	double dest_lane_follower_lambda_0{ 0.0 };
-	/* Necessary when computing lane change gaps with risk */
-	double dest_lane_follower_lambda_1{ 0.0 };
+	//double dest_lane_follower_lambda_0{ 0.0 };
+	///* Necessary when computing lane change gaps with risk */
+	//double dest_lane_follower_lambda_1{ 0.0 };
+
+	/* Defines if the lane change acceptance decision is based on the
+	exact risk computation or on the risk estimation based on the time
+	headway */
+	bool use_linear_lane_change_gap{ false };
 
 	AutonomousVehicle(long id, VehicleType type, double desired_velocity,
 		bool is_connected, double simulation_time_step, double creation_time,
@@ -82,8 +87,8 @@ protected:
 	bool has_lane_change_conflict() const;
 	/* Non-linear gap based on ego and nearby vehicles states
 	and parameters */
-	double compute_vehicle_following_gap_for_lane_change(
-		const NearbyVehicle& nearby_vehicle, double current_lambda_1) const;
+	//double compute_vehicle_following_gap_for_lane_change(
+	//	const NearbyVehicle& nearby_vehicle, double current_lambda_1) const;
 
 private:
 	double min_overtaking_rel_vel{ 10.0	/ 3.6}; // [m/s]
@@ -108,10 +113,7 @@ private:
 	/*The risk is an estimation of the relative velocity at collision
 	time under worst case scenario. */
 
-	/* Defines if the lane change acceptance decision is based on the
-	exact risk computation or on the risk estimation based on the time
-	headway */
-	bool use_linear_lane_change_gap{ false };
+	
 	/* Stores the time when the vehicle started trying to
 	change lanes */
 	//double lane_change_timer_start{ 0.0 }; // [s]
@@ -154,14 +156,14 @@ private:
 		const NearbyVehicle& nearby_vehicle) const override;
 
 	/* Time-headway based gap (hv + d) minus a term based on
-	accepted risk */
+	accepted risk NO LONGER IN USE [Feb 24, 2023]*/
 	double compute_time_headway_gap_for_lane_change(
 		const NearbyVehicle& nearby_vehicle) const;
 	//void compute_lane_change_gap_parameters();
 	/* Non-linear gap based on ego and nearby vehicles states
 	and parameters */
-	virtual double compute_vehicle_following_gap_for_lane_change(
-		const NearbyVehicle& nearby_vehicle) const;
+	//virtual double compute_vehicle_following_gap_for_lane_change(
+	//	const NearbyVehicle& nearby_vehicle) const;
 	double compute_gap_variation_during_lane_change(
 		const NearbyVehicle& nearby_vehicle) const;
 

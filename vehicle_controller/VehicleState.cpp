@@ -47,7 +47,7 @@ void VehicleState::unexpected_transition_message(
 {
 	//std::ostringstream oss;
 	std::clog << "[WARNING] unexpected state transition\n\tt="
-		<< ego_vehicle->get_time() << ", veh " << ego_vehicle->get_id()
+		<< ego_vehicle->get_current_time() << ", veh " << ego_vehicle->get_id()
 		<< " at state " << vehicle_state << " and has "
 		<< (has_lane_change_intention ? "lane change" : "lane keeping")
 		<< " intention" << std::endl;

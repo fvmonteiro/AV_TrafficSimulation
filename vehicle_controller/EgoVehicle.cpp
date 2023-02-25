@@ -55,86 +55,16 @@ EgoVehicle::~EgoVehicle()
 	{
 		std::clog << "Vehicle " << get_id()
 			<< " out of the simulation at time "
-			<< get_time() << std::endl;
+			<< get_current_time() << std::endl;
 	}
 }
 
-/* "Current" getters ------------------------------------------------------ */
+/* Non-trivial Getters and setters ---------------------------------------- */
 
-double EgoVehicle::get_time() const
-{
-	/* At creation time, the vehicle already has a velocity */
-	return current_time;
-	//creation_time + (velocity.size() - 1) * simulation_time_step;
-}
-long EgoVehicle::get_lane() const
-{
-	return lane;
-}
-double EgoVehicle::get_distance_traveled() const
-{
-	return distance_traveled;
-}
-long EgoVehicle::get_link() const
-{
-	return link;
-}
-double EgoVehicle::get_lateral_position() const
-{
-	return lateral_position;
-}
-RelativeLane EgoVehicle::get_preferred_relative_lane() const
-{
-	return preferred_relative_lane;
-}
-double EgoVehicle::get_velocity() const
-{
-	return velocity;
-}
-double EgoVehicle::get_acceleration() const
-{
-	return acceleration;
-}
-double EgoVehicle::get_desired_acceleration() const
-{
-	return desired_acceleration;
-}
-double EgoVehicle::get_vissim_acceleration() const
-{
-	return vissim_acceleration;
-}
-RelativeLane EgoVehicle::get_active_lane_change_direction() const
-{
-	return active_lane_change_direction;
-}
-double EgoVehicle::get_lane_end_distance() const
-{
-	return lane_end_distance;
-}
 long EgoVehicle::get_leader_id() const
 {
-	return has_leader()? leader->get_id() : 0;
+	return has_leader() ? leader->get_id() : 0;
 }
-//EgoVehicle::State EgoVehicle::get_state_implementation_v1() const
-//{
-//	return state_implementation_v1.empty() ?
-//		State::lane_keeping : state_implementation_v1.back();
-//}
-double EgoVehicle::get_ttc() const
-{
-	return ttc;
-}
-double EgoVehicle::get_drac() const
-{
-	return drac;
-}
-double EgoVehicle::get_collision_risk() const
-{
-	return collision_severity_risk;
-}
-/* ------------------------------------------------------------------------ */
-
-/* Other getters and setters ---------------------------------------------- */
 
 double EgoVehicle::get_current_max_brake() const
 {
@@ -215,34 +145,7 @@ const VehicleState* EgoVehicle::get_state() const
 	return state.get();
 }
 
-void EgoVehicle::set_lane(long lane)
-{
-	this->lane = lane;
-}
-void EgoVehicle::set_distance_traveled(double distance_traveled)
-{
-	this->distance_traveled = distance_traveled;
-}
-void EgoVehicle::set_link(long link)
-{
-	this->link = link;
-}
-void EgoVehicle::set_lateral_position(double lateral_position)
-{
-	this->lateral_position = lateral_position;
-}
-void EgoVehicle::set_velocity(double velocity)
-{
-	this->velocity = velocity;
-}
-void EgoVehicle::set_acceleration(double acceleration)
-{
-	this->acceleration = acceleration;
-}
-void EgoVehicle::set_vissim_acceleration(double vissim_acceleration)
-{
-	this->vissim_acceleration = vissim_acceleration;
-}
+
 void EgoVehicle::set_active_lane_change_direction(long direction)
 {
 	this->active_lane_change_direction =
@@ -329,6 +232,7 @@ double EgoVehicle::get_time_headway_to_assisted_vehicle() const
 {
 	if (has_assisted_vehicle())
 	{
+		/* Only true when both ego and nearby vehicles are connected */
 		return controller->get_gap_generation_lane_controller().
 			get_desired_time_headway();
 	}
@@ -678,7 +582,7 @@ void EgoVehicle::set_state(std::unique_ptr<VehicleState> new_state)
 
 	if (verbose)
 	{
-		std::clog << "t=" << get_time() << ", veh " << get_id() << "\n";
+		std::clog << "t=" << get_current_time() << ", veh " << get_id() << "\n";
 		std::clog << "Transition from ";
 		if (state == nullptr) std::clog << "null";
 		else std::clog << *state;
@@ -694,7 +598,7 @@ void EgoVehicle::reset_state(
 	// TODO: poor condition checking: hard coded variables
 	if (new_lane_keeping_state->get_state_number() != 1)
 	{
-		std::clog << "[WARNING] t=" << get_time()
+		std::clog << "[WARNING] t=" << get_current_time()
 			<< ", veh " << get_id() << ": reseting vehicle state to "
 			<< *new_lane_keeping_state
 			<< ", which is not a lane keeping state." << std::endl;
@@ -1307,7 +1211,7 @@ std::string EgoVehicle::member_enum_to_string(Member member)
 
 std::ostream& operator<< (std::ostream& out, const EgoVehicle& ego_vehicle)
 {
-	out << "t=" << ego_vehicle.get_time()
+	out << "t=" << ego_vehicle.get_current_time()
 		<< ", id=" << ego_vehicle.get_id()
 		<< ", type=" << static_cast<int>(ego_vehicle.get_type())
 		<< ", state="
