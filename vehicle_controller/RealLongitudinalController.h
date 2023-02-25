@@ -16,7 +16,7 @@ class RealLongitudinalController :
 {
 
 public:
-    RealLongitudinalController();
+    RealLongitudinalController() = default;
     RealLongitudinalController(const EgoVehicle& ego_vehicle,
         VelocityControllerGains velocity_controller_gains,
         AutonomousGains autonomous_gains, ConnectedGains connected_gains,

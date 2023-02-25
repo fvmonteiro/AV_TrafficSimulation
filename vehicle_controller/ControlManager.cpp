@@ -710,7 +710,7 @@ bool ControlManager::get_destination_lane_desired_acceleration(
 	/* [Jan 23, 2023] TO DO: changes to reflect the addition of 
 	virtual leader. However, this piece of code is not clean. We should 
 	be able to get the virtual leader directly from autonomous_vehicle */
-	/*std::shared_ptr<const NearbyVehicle> virtual_leader = nullptr;
+	std::shared_ptr<const NearbyVehicle> virtual_leader = nullptr;
 	if (autonomous_vehicle.has_virtual_leader())
 	{
 		virtual_leader =
@@ -721,10 +721,7 @@ bool ControlManager::get_destination_lane_desired_acceleration(
 	{
 		virtual_leader =
 			autonomous_vehicle.get_destination_lane_leader();
-	}*/
-
-	std::shared_ptr<const NearbyVehicle> virtual_leader = 
-		autonomous_vehicle.get_virtual_leader();;
+	}
 	if (virtual_leader != nullptr)
 	{
 		if (verbose)

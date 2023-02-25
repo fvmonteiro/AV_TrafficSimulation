@@ -77,7 +77,7 @@ public:
 	double get_collision_risk() const { return collision_severity_risk; }
 
 	void set_desired_velocity(double value) { desired_velocity = value; };
-	void set_lane(long value) { lane = lane; };
+	void set_lane(long value) { lane = value; };
 	void set_distance_traveled(double value) { distance_traveled = value; };
 	void set_link(long value) { link = value; };
 	void set_lateral_position(double value) { lateral_position = value; };
