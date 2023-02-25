@@ -38,12 +38,18 @@ enum class UDA {
     max_lane_change_risk_to_leaders,
     max_lane_change_risk_to_follower,
     use_linear_lane_change_gap,
+    platoon_id,
+    platoon_strategy,
+    /* Logging options */
+    verbose_simulation = 98,
+    logged_vehicle_id = 99,
     /* Debugging: leader */
     leader_id = 100, 
     leader_type, 
     gap_to_leader,
     reference_gap,
     relative_velocity_to_leader,
+    safe_gap_to_leader,
     /* Debugging: dest lane leader */
     dest_leader_id = 110,
     gap_to_dest_lane_leader,
@@ -63,11 +69,13 @@ enum class UDA {
     lc_collision_free_gap_to_fd,
     /* Debugging: assisted vehicle */
     assisted_veh_id = 130,
+    virtual_leader_id = 131,
     /* Debugging: other stuff */
     waiting_time = 140,
     risk = 141,
     safe_time_headway = 142,
     gap_error = 143,
+    current_state = 144,
 
     first = h_to_assited_veh,
 };

@@ -19,13 +19,8 @@ NearbyVehicle::NearbyVehicle(long id, long relative_lane,
 
 void NearbyVehicle::set_type(VehicleType nv_type, VehicleType ego_type)
 {
-	/* This function is only called by connected ego vehicles
-	trying to set the type of a nearby vehicle.
-	The nearby vehicle type is only set if the nearby vehicle is 
-	also connected. */
-
-	//VehicleType temp_veh_type = VehicleType(nv_type);
-
+	/* CAVs can recognize other connected vehicles.
+	AVs and CAVs can recognize human-driven vehicles versus all others. */
 	if (is_a_connected_type(ego_type) && is_a_connected_type(nv_type))
 	{
 		this->type = nv_type;
@@ -39,9 +34,10 @@ void NearbyVehicle::set_type(VehicleType nv_type, VehicleType ego_type)
 		switch (nv_type)
 		{
 		case VehicleType::connected_car:
-		case VehicleType::traffic_light_cacc_car:
+		case VehicleType::traffic_light_calc_car:
 		case VehicleType::autonomous_car:
-		case VehicleType::traffic_light_acc_car:
+		case VehicleType::traffic_light_alc_car:
+		case VehicleType::platoon_car:
 			this->type = VehicleType::autonomous_car;
 			this->brake_delay = AUTONOMOUS_BRAKE_DELAY;
 			break;
@@ -53,6 +49,24 @@ void NearbyVehicle::set_type(VehicleType nv_type, VehicleType ego_type)
 	}
 }
 
+void NearbyVehicle::set_destination_lane_leader_id(long veh_id) 
+{
+	// We can only write/read this info from connected nearby vehicles
+	this->dest_lane_leader_id = is_connected() ? veh_id : 0;
+}
+
+void NearbyVehicle::set_destination_lane_follower_id(long veh_id) 
+{
+	// We can only write/read this info from connected nearby vehicles
+	this->dest_lane_follower_id = is_connected() ? veh_id : 0;
+}
+
+void NearbyVehicle::set_assisted_vehicle_id(long veh_id)
+{
+	// We can only write/read this info from connected nearby vehicles
+	this->assisted_vehicle_id = is_connected() ? veh_id : 0;
+}
+
 bool NearbyVehicle::is_connected() const 
 {
 	/* The nearby vehicle type is only set to connected if the ego vehicle
@@ -60,39 +74,47 @@ bool NearbyVehicle::is_connected() const
 	connected vehicle. */
 
 	return (type == VehicleType::connected_car
-		|| type == VehicleType::traffic_light_cacc_car
+		|| type == VehicleType::traffic_light_calc_car
 		|| type == VehicleType::platoon_car);
 }
 
-double NearbyVehicle::compute_velocity(double ego_velocity) const {
+double NearbyVehicle::compute_velocity(double ego_velocity) const 
+{
 	return ego_velocity - relative_velocity;
 }
+
 
 bool NearbyVehicle::is_on_same_lane() const {
 	return get_relative_lane() == RelativeLane::same;
 }
 
-bool NearbyVehicle::is_immediatly_ahead() const {
+bool NearbyVehicle::is_immediatly_ahead() const 
+{
 	return get_relative_position() == 1;
 }
 
-bool NearbyVehicle::is_immediatly_behind() const {
+bool NearbyVehicle::is_immediatly_behind() const 
+{
 	return get_relative_position() == -1;
 }
 
-bool NearbyVehicle::is_ahead() const {
+bool NearbyVehicle::is_ahead() const 
+{
 	return get_relative_position() > 0;
 }
 
-bool NearbyVehicle::is_behind() const {
+bool NearbyVehicle::is_behind() const 
+{
 	return !is_ahead();
 }
 
-bool NearbyVehicle::is_lane_changing() const {
+bool NearbyVehicle::is_lane_changing() const 
+{
 	return lane_change_direction != RelativeLane::same;
 }
 
-bool NearbyVehicle::is_cutting_in() const {
+bool NearbyVehicle::is_cutting_in() const 
+{
 	if (is_ahead() && (is_lane_changing())) 
 	{
 		/* The nearby vehicle must be changing lanes towards the ego vehicle
@@ -111,38 +133,49 @@ bool NearbyVehicle::is_cutting_in() const {
 	return false;
 }
 
-bool NearbyVehicle::is_requesting_to_merge_ahead() const 
-{
-	return is_connected() 
-		&& has_lane_change_intention()
-		&& is_immediatly_ahead()
-		&& (relative_lane == desired_lane_change_direction.get_opposite());
-}
-
-bool NearbyVehicle::is_requesting_to_merge_behind() const 
-{
-	return is_connected() 
-		&& has_lane_change_intention() 
-		&& is_behind()
-		&& (relative_lane == desired_lane_change_direction.get_opposite()
-			|| relative_lane == RelativeLane::same);
-}
+//bool NearbyVehicle::is_requesting_to_merge_ahead() const 
+//{
+//	return is_connected() 
+//		&& has_lane_change_intention()
+//		&& is_immediatly_ahead()
+//		&& (relative_lane == desired_lane_change_direction.get_opposite());
+//}
+//
+//bool NearbyVehicle::is_requesting_to_merge_behind() const 
+//{
+//	return is_connected() 
+//		&& has_lane_change_intention() 
+//		&& is_behind()
+//		&& (relative_lane == desired_lane_change_direction.get_opposite()
+//			|| relative_lane == RelativeLane::same);
+//}
 
 void NearbyVehicle::read_lane_change_request(long lane_change_request) 
 {
 	/* Getting the sign of lane change request */
-	int request_sign = (lane_change_request > 0) 
-		- (lane_change_request < 0);
-	set_desired_lane_change_direction(request_sign);
-	lane_change_request_veh_id = std::abs(lane_change_request);
+	//int request_sign = (lane_change_request > 0) 
+	//	- (lane_change_request < 0);
+	//set_desired_lane_change_direction(request_sign);
+	//lane_change_request_veh_id = std::abs(lane_change_request);
+	lane_change_request_veh_id = lane_change_request;
 }
 
-double NearbyVehicle::estimate_desired_time_headway(double free_flow_velocity,
-	double leader_max_brake, double rho, double risk)
+bool NearbyVehicle::is_in_a_platoon() const
 {
-	compute_safe_gap_parameters();
-	return compute_time_headway_with_risk(free_flow_velocity, 
-		get_max_brake(), leader_max_brake, get_lambda_1(), rho, risk);
+	return platoon_id != -1;
+}
+
+double NearbyVehicle::estimate_desired_time_headway(
+	double leader_max_brake, double risk) const
+{
+	/* When estimating the desired time headway, we must be conservative */
+	/* [Feb 24, 2023] We're using the exact max brake, rho and lambda 1 
+	values to be consistent with the safe lane change paper parameters */
+	double free_flow_velocity = MAX_VELOCITY;
+	double rho = 0.2;
+	return std::max(0.0,
+		compute_time_headway_with_risk(free_flow_velocity,
+			get_max_brake(), leader_max_brake, get_lambda_1(), rho, risk));
 }
 
 double NearbyVehicle::estimate_max_accepted_risk_to_incoming_vehicle(
@@ -161,7 +194,8 @@ std::string NearbyVehicle::to_string() const {
 		Member::lane_change_direction
 	};
 
-	for (Member m : printed_members) {
+	for (Member m : printed_members) 
+	{
 		oss << member_to_string.at(m) << "=";
 		switch (m) {
 		case Member::id:
@@ -180,7 +214,7 @@ std::string NearbyVehicle::to_string() const {
 			oss << static_cast<int>(get_type());
 			break;
 		case Member::relative_lane:
-			oss << relative_lane.to_string();
+			oss << relative_lane;
 			break;
 		case Member::relative_position:
 			oss << relative_position;
@@ -198,7 +232,7 @@ std::string NearbyVehicle::to_string() const {
 			oss << acceleration;
 			break;
 		case Member::lane_change_direction:
-			oss << lane_change_direction.to_string();
+			oss << lane_change_direction;
 			break;
 		default:
 			oss << "unknown class member";
@@ -226,11 +260,11 @@ std::ostream& operator<<(std::ostream& out, const NearbyVehicle& vehicle)
 		//{"length", vehicle.length}, {"width", vehicle.width} 
 	};
 
-	for (auto name_value_pair : printed_long_members) {
+	for (const auto& name_value_pair : printed_long_members) {
 		out << name_value_pair.first << ": " <<
 			name_value_pair.second << " | ";
 	}
-	for (auto name_value_pair : printed_double_members) {
+	for (const auto& name_value_pair : printed_double_members) {
 		out << name_value_pair.first << ": " << std::setprecision(4) <<
 			name_value_pair.second << " | ";
 	}

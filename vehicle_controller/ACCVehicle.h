@@ -11,13 +11,14 @@ public:
 
 	ACCVehicle(long id, double desired_velocity,
 		double simulation_time_step, double creation_time,
-		bool verbose = false) :
-		EgoVehicle(id, VehicleType::acc_car, desired_velocity,
-			AUTONOMOUS_BRAKE_DELAY, false, false,
-			simulation_time_step, creation_time, verbose) {}
+		bool verbose);
 
 private:
-	double compute_desired_acceleration(
+	void implement_create_controller() override {
+		this->controller = std::make_unique<ControlManager>(*this,
+			is_verbose());
+	};
+	double implement_compute_desired_acceleration(
 		const std::unordered_map<int, TrafficLight>& traffic_lights) override;
 	double compute_lane_changing_desired_time_headway(
 		const NearbyVehicle& nearby_vehicle) const override
@@ -28,12 +29,13 @@ private:
 	{
 		return true;
 	};
-	/* Follows VISSIM's recommendation */
-	bool can_start_lane_change() override;
 
-	long create_lane_change_request() override { return 0; };
+	/* Follows VISSIM's recommendation */
+	bool implement_check_lane_change_gaps() override;
+
+	long implement_get_lane_change_request() const override { return 0; };
 	double compute_accepted_lane_change_gap(
-		std::shared_ptr<NearbyVehicle> nearby_vehicle) override {
+		std::shared_ptr<const NearbyVehicle> nearby_vehicle) const override {
 		return 0.0;
 	};
 	std::shared_ptr<NearbyVehicle>
@@ -51,6 +53,7 @@ private:
 	{
 		return nullptr;
 	};
+	long implement_get_virtual_leader_id() const override { return 0; };
 	void implement_set_accepted_lane_change_risk_to_leaders(
 		double value) override {};
 	void implement_set_accepted_lane_change_risk_to_follower(

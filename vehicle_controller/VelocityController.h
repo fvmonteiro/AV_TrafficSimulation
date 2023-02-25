@@ -54,5 +54,5 @@ private:
 
 	double error_integral{ 0.0 };
 
-	bool verbose;
+	bool verbose{ false };
 };

@@ -17,12 +17,14 @@ RealLongitudinalController::RealLongitudinalController(
 	VelocityControllerGains velocity_controller_gains,
 	AutonomousGains autonomous_gains, ConnectedGains connected_gains,
 	double velocity_filter_gain, double time_headway_filter_gain,
+	std::unordered_map<State, color_t> state_to_color_map,
 	bool verbose) :
 	SwitchedLongitudinalController(velocity_controller_gains,
 		autonomous_gains, connected_gains, velocity_filter_gain, 
 		time_headway_filter_gain, ego_vehicle.get_max_brake(), 
 		ego_vehicle.get_comfortable_acceleration(),
-		ego_vehicle.get_sampling_interval(), verbose)
+		ego_vehicle.get_simulation_time_step(), 
+		state_to_color_map, verbose)
 {
 	if (verbose) 
 	{
@@ -30,20 +32,15 @@ RealLongitudinalController::RealLongitudinalController(
 	}
 }
 
-RealLongitudinalController::RealLongitudinalController(
-	const EgoVehicle& ego_vehicle,
-	VelocityControllerGains velocity_controller_gains,
-	AutonomousGains autonomous_gains, ConnectedGains connected_gains,
-	double velocity_filter_gain, double time_headway_filter_gain) :
-	RealLongitudinalController(ego_vehicle,
-		velocity_controller_gains, autonomous_gains, connected_gains,
-		velocity_filter_gain, time_headway_filter_gain, false) {}
+//RealLongitudinalController::RealLongitudinalController(
+//	const EgoVehicle& ego_vehicle,
+//	VelocityControllerGains velocity_controller_gains,
+//	AutonomousGains autonomous_gains, ConnectedGains connected_gains,
+//	double velocity_filter_gain, double time_headway_filter_gain) :
+//	RealLongitudinalController(ego_vehicle,
+//		velocity_controller_gains, autonomous_gains, connected_gains,
+//		velocity_filter_gain, time_headway_filter_gain, false) {}
 
-//OriginLaneLongitudinalController::OriginLaneLongitudinalController(
-//	const EgoVehicle& ego_vehicle, double kg, double kv, bool verbose)
-//	: OriginLaneLongitudinalController(ego_vehicle, verbose) {
-//	set_vehicle_following_gains(kg, kv);
-//}
 
 void RealLongitudinalController::update_leader_velocity_filter(
 	double leader_velocity) 
@@ -54,7 +51,7 @@ void RealLongitudinalController::update_leader_velocity_filter(
 
 void RealLongitudinalController::determine_controller_state(
 	const EgoVehicle& ego_vehicle,
-	const std::shared_ptr<NearbyVehicle> leader,
+	std::shared_ptr<const NearbyVehicle> leader,
 	double reference_velocity, double gap_control_input) {
 
 	if (leader == nullptr) // no vehicle ahead
@@ -70,19 +67,20 @@ void RealLongitudinalController::determine_controller_state(
 	}
 	else 
 	{
-		double gap = ego_vehicle.compute_gap(leader);
+		double gap = ego_vehicle.compute_gap_to_a_leader(leader);
 		double ego_velocity = ego_vehicle.get_velocity();
 		double leader_velocity = leader->compute_velocity(ego_velocity);
 		double gap_threshold = compute_gap_threshold(gap,
 			reference_velocity - ego_velocity, gap_control_input);
-
 		if (state == State::vehicle_following) 
 		{
 			gap_threshold += hysteresis_bias;
 		}
 
-		if ((gap < gap_threshold)
-			&& (leader_velocity < reference_velocity)) 
+		bool is_gap_small = gap < gap_threshold;
+		bool is_leader_too_fast =
+			leader_velocity > (reference_velocity + reference_velocity_margin);
+		if (is_gap_small && !is_leader_too_fast)
 		{
 			state = State::vehicle_following;
 		}

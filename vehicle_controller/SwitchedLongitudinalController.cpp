@@ -10,7 +10,6 @@
 
 #include "EgoVehicle.h"
 #include "SwitchedLongitudinalController.h"
-#include "TimeHeadwayGapController.h"
 
 SwitchedLongitudinalController::SwitchedLongitudinalController(
 	const VelocityControllerGains& velocity_controller_gains,
@@ -18,23 +17,29 @@ SwitchedLongitudinalController::SwitchedLongitudinalController(
 	const ConnectedGains& connected_gains,
 	double velocity_filter_gain, double time_headway_filter_gain,
 	double filter_brake_limit, double comfortable_acceleration,
-	double simulation_time_step, bool verbose) :
-	autonomous_gains{ autonomous_gains },
-	connected_gains{ connected_gains }
+	double simulation_time_step,
+	std::unordered_map<State, color_t> state_to_color_map,
+	bool verbose) :
+	LongitudinalController(state_to_color_map, verbose)
+	/*autonomous_gains{ autonomous_gains },
+	connected_gains{ connected_gains }*/
 {
-	this->verbose = verbose;
 	velocity_controller = VelocityController(simulation_time_step,
 		velocity_controller_gains, velocity_filter_gain, 
 		comfortable_acceleration, filter_brake_limit);
-	gap_controller = TimeHeadwayGapController(
-			simulation_time_step, autonomous_gains, connected_gains,
-			velocity_filter_gain, time_headway_filter_gain,
-			comfortable_acceleration, filter_brake_limit, verbose);
+	gap_controller = GapController(simulation_time_step, autonomous_gains,
+		connected_gains, velocity_filter_gain, time_headway_filter_gain,
+		comfortable_acceleration, filter_brake_limit, verbose);
 }
 
 void SwitchedLongitudinalController::connect_gap_controller(bool is_connected)
 {
 	gap_controller.set_connexion(is_connected);
+}
+
+void SwitchedLongitudinalController::smooth_start_leader_velocity_filter()
+{
+	gap_controller.ask_for_smooth_start();
 }
 
 void SwitchedLongitudinalController::reset_leader_velocity_filter(
@@ -60,18 +65,19 @@ double SwitchedLongitudinalController::get_current_time_headway() const
 }
 
 double SwitchedLongitudinalController::get_time_headway_gap(
-	double time_headway, double velocity) 
+	double time_headway, double velocity) const
 {
 	return gap_controller.compute_time_headway_gap(time_headway, velocity);
 }
 
 double SwitchedLongitudinalController::get_desired_time_headway_gap(
-	double ego_velocity) 
+	double ego_velocity) const
 {
 	return gap_controller.get_desired_time_headway_gap(ego_velocity);
 }
 
 double SwitchedLongitudinalController::get_desired_gap(double ego_velocity)
+const
 {
 	return gap_controller.get_desired_gap(ego_velocity);
 	/*return get_time_headway_gap(time_headway_filter.get_current_value(),
@@ -91,20 +97,22 @@ double SwitchedLongitudinalController::compute_gap_threshold(double gap,
 	input is greater or equal to kg*h*(Vf - v) > 0. */
 	double h = gap_controller.get_desired_time_headway();
 	double kg = gap_controller.get_gap_error_gain();
+	/* Line below is equivalent to the paper's equation but using
+	only variables easily available to the code */
 	return gap + h * (diff_to_velocity_reference) - gap_control_input / kg;
-	/*double time_headway = get_safe_time_headway();
-	double kg = autonomous_gains.kg;
-	double kv = autonomous_gains.kv;
-	return time_headway * free_flow_velocity + standstill_distance
-		- 1 / kg * (kv * velocity_error);*/
 	/* Other threshold options:
 	- VISSIM's maximum gap: 250
 	- Worst-case: h*vf + d + (kv*vf)/kg = (h + kv/kg)*vf + d*/
 }
 
-double SwitchedLongitudinalController::compute_desired_acceleration(
+double SwitchedLongitudinalController::implement_get_gap_error() const
+{
+	return gap_controller.get_gap_error();
+}
+
+double SwitchedLongitudinalController::implement_compute_desired_acceleration(
 	const EgoVehicle& ego_vehicle,
-	const std::shared_ptr<NearbyVehicle> leader,
+	std::shared_ptr<const NearbyVehicle> leader,
 	double velocity_reference) 
 {
 	double desired_acceleration;

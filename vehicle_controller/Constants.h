@@ -18,6 +18,7 @@ const color_t BLUE = ARGB(255, 0, 0, 255);
 const color_t YELLOW = ARGB(255, 255, 255, 0);
 const color_t MAGENTA = ARGB(255, 255, 0, 255);
 const color_t CYAN = ARGB(255, 0, 255, 255);
+const color_t GRAY = ARGB(255, 128, 128, 128);
 
 const color_t DARK_RED = ARGB(255, 128, 0, 0);
 const color_t DARK_GREEN = ARGB(255, 0, 128, 0);
@@ -25,13 +26,15 @@ const color_t DARK_BLUE = ARGB(255, 0, 0, 128);
 const color_t DARK_YELLOW = ARGB(255, 196, 196, 0);
 const color_t DARK_MAGENTA = ARGB(255, 128, 0, 128); // PURPLE
 const color_t DARK_CYAN = ARGB(255, 0, 128, 128);
+const color_t DARK_GRAY = ARGB(255, 64, 64, 64);
 
 const color_t LIGHT_BLUE = ARGB(255, 0, 196, 255);
+const color_t LIGHT_GRAY = ARGB(255, 192, 192, 192);
 const color_t BLUE_GREEN = ARGB(255, 0, 128, 128);
 
-const double MAX_DISTANCE = 300.0; // [m]
-const double MAX_VELOCITY = 130.0; /* [m/s] depends on which VISSIM desired
-								   speed distribution we use */
+const double MAX_DISTANCE{ 300.0 }; // [m]
+const double MAX_VELOCITY{ 130.0 / 3.6 }; /* [m/s] depends on which VISSIM
+	desired speed distribution we use */
 const double CAR_MAX_BRAKE{ 6.0 }; // absolute value [m/s^2]
 const double TRUCK_MAX_BRAKE{ 5.5 }; // absolute value  [m/s^2]
 const double ACTUATOR_CONSTANT{ 0.5 }; // [s].
@@ -43,9 +46,7 @@ const double CONNECTED_BRAKE_DELAY{ 0.1 }; // [s]
 const double AUTONOMOUS_BRAKE_DELAY{ 0.2 }; // [s]
 const double HUMAN_BRAKE_DELAY{ 0.75 }; // [s]
 
-const double VIRDI_MAX_JERK{ 0.5 }; // [m/s^3]
-const double VIRDI_MAX_ACCEL{ 6.0 };// [m/s^2]
-const double VIRDI_MIN_ACCEL{ -8.0 };// [m/s^2]
+const long MAIN_LINK_NUMBER{ 3 };
 
 /* Categories set by VISSIM */
 enum class VehicleCategory {
@@ -69,10 +70,11 @@ enum class VehicleType {
 	acc_car = 105,
 	autonomous_car = 110,
 	connected_car = 120,
-	virdi_car = 125,
-	traffic_light_acc_car = 130,
-	traffic_light_cacc_car = 135,
+	no_lane_change_connected_car = 121,
+	traffic_light_alc_car = 130,
+	traffic_light_calc_car = 135,
 	platoon_car = 140,
+	virdi_car = 150,
 	truck = 200,
 	bus = 300
 };

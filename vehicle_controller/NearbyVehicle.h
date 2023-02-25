@@ -47,7 +47,10 @@ public:
 	double get_max_lane_change_risk_to_follower() const {
 		return max_lane_change_risk_to_follower;
 	}
-
+	long get_platoon_id() const { return platoon_id; };
+	long get_destination_lane_leader_id() const { return dest_lane_leader_id; };
+	long get_destination_lane_follower_id() const { return dest_lane_follower_id; };
+	long get_assisted_vehicle_id() const { return assisted_vehicle_id; };
 	void set_lateral_position(double lateral_position) {
 		this->lateral_position = lateral_position;
 	};
@@ -74,12 +77,14 @@ public:
 	void set_max_lane_change_risk_to_follower(double r) {
 		this->max_lane_change_risk_to_follower = r;
 	}
+	void set_platoon_id(long platoon_id) {
+		this->platoon_id = platoon_id;
+	}
 
 	void set_type(VehicleType nv_type, VehicleType ego_type) /*override*/;
-	/* Special getters and setters */
-
-	//double get_lambda_0() const { return lambda_0; };
-	//double get_lambda_1() const { return lambda_1; };
+	void set_destination_lane_leader_id(long veh_id);
+	void set_destination_lane_follower_id(long veh_id);
+	void set_assisted_vehicle_id(long veh_id);
 
 	bool is_connected() const;
 	double compute_velocity(double ego_velocity) const;
@@ -90,15 +95,13 @@ public:
 	bool is_behind() const;
 	bool is_lane_changing() const override;
 	bool is_cutting_in() const;
-	bool is_requesting_to_merge_ahead() const;
-	bool is_requesting_to_merge_behind() const;
-	/*void fill_with_dummy_values();
-	void copy_current_states(NearbyVehicle& nearby_vehicle);*/
-	/*void compute_safe_gap_parameters();*/
+	/*bool is_requesting_to_merge_ahead() const;
+	bool is_requesting_to_merge_behind() const;*/
 	void read_lane_change_request(long lane_change_request);
+	bool is_in_a_platoon() const;
 
-	double estimate_desired_time_headway(double free_flow_velocity,
-		double leader_max_brake, double rho, double risk);
+	double estimate_desired_time_headway(double leader_max_brake, 
+		double risk) const;
 	double estimate_max_accepted_risk_to_incoming_vehicle(
 		double free_flow_velocity, double leader_max_brake, double rho);
 
@@ -129,6 +132,10 @@ private:
 	ego vehicle that wants to merge in front of it.*/
 	double h_to_incoming_vehicle{ 0.0 };
 	double max_lane_change_risk_to_follower{ 0.0 };
+	long platoon_id{ -1 };
+	long dest_lane_leader_id{ 0 };
+	long dest_lane_follower_id{ 0 };
+	long assisted_vehicle_id{ 0 };
 
 	enum class Member {
 		id,

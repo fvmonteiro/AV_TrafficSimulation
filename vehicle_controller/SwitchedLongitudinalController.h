@@ -15,7 +15,6 @@
 #include "LongitudinalController.h"
 #include "VariationLimitedFilter.h"
 #include "VelocityController.h"
-#include "TimeHeadwayGapController.h"
 
 // Forward declaration
 class NearbyVehicle;
@@ -34,7 +33,9 @@ public:
 		const ConnectedGains& connected_gains,
 		double velocity_filter_gain, double time_headway_filter_gain,
 		double filter_brake_limit, double comfortable_acceleration,
-		double simulation_time_step, bool verbose);
+		double simulation_time_step,
+		std::unordered_map<State, color_t> state_to_color_map,
+		bool verbose);
 
 	
 	/* --------------- Methods related to velocity control ---------------- */
@@ -44,18 +45,18 @@ public:
 	/* ------------------ Methods related to gap control ------------------ */
 
 	void connect_gap_controller(bool is_connected);
+	void smooth_start_leader_velocity_filter();
 	void reset_leader_velocity_filter(double reset_velocity);
 	void reset_time_headway_filter(double time_headway);
 	/* Returns the desired (final) time headway. */
 	double get_desired_time_headway() const;
 	/* Returns the current time headway in use */
 	double get_current_time_headway() const;
-	double get_time_headway_gap(double time_headway, double velocity);
-	double get_desired_time_headway_gap(double ego_velocity/*,
-		bool has_lane_change_intention*/);
+	double get_time_headway_gap(double time_headway, double velocity) const;
+	double get_desired_time_headway_gap(double ego_velocity) const;
 	/* Computes desired gap with a possibly varying time headway */
 	//double compute_desired_gap(double ego_velocity);
-	double get_desired_gap(double ego_velocity);
+	double get_desired_gap(double ego_velocity) const;
 	void set_desired_time_headway(double time_headway);
 
 	void compute_max_risk_to_leader(bool is_lane_changing);
@@ -63,12 +64,10 @@ public:
 
 protected:
 	VelocityController velocity_controller;
-	TimeHeadwayGapController gap_controller;
-
+	GapController gap_controller;
 	//State state{ State::uninitialized }; // event driven logic variable
 	double hysteresis_bias{ 10.0 }; // used to avoid state chattering [m]
-
-	//bool verbose{ false };
+	double reference_velocity_margin{ 1.0 }; // [m/s]
 
 	/* Computes the gap threshold to decide whether velocity or vehicle
 	following control */
@@ -76,23 +75,23 @@ protected:
 		double diff_to_velocity_reference, double gap_control_input);
 
 private:
-
-	double compute_desired_acceleration(const EgoVehicle& ego_vehicle,
-		const std::shared_ptr<NearbyVehicle> leader,
+	double implement_get_gap_error() const override;
+	double implement_compute_desired_acceleration(const EgoVehicle& ego_vehicle,
+		std::shared_ptr<const NearbyVehicle> leader,
 		double velocity_reference) override;
 
 	/* Determines and sets the current state of the longitudinal controller
 	TODO: should this class provide a default implementation?*/
 	virtual void determine_controller_state(const EgoVehicle& ego_vehicle,
-		const std::shared_ptr<NearbyVehicle> leader,
+		std::shared_ptr<const NearbyVehicle> leader,
 		double reference_velocity, double gap_control_input) = 0;
 
 	//double simulation_time_step{ 0.01 };
 
 	/* Vehicle following and velocity control gains
 	(computed in Matlab. Should be computed here?) */
-	AutonomousGains autonomous_gains;
-	ConnectedGains connected_gains;
+	/*AutonomousGains autonomous_gains;
+	ConnectedGains connected_gains;*/
 
 };
 

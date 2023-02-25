@@ -18,13 +18,15 @@ VirtualLongitudinalController::VirtualLongitudinalController(
 	VelocityControllerGains velocity_controller_gains,
 	AutonomousGains autonomous_gains, ConnectedGains connected_gains,
 	double velocity_filter_gain, double time_headway_filter_gain,
+	std::unordered_map<State, color_t> state_to_color_map,
 	bool verbose) :
 	SwitchedLongitudinalController(velocity_controller_gains,
 		autonomous_gains, connected_gains,
 		velocity_filter_gain, time_headway_filter_gain,
 		ego_vehicle.get_comfortable_brake(), 
 		ego_vehicle.get_comfortable_acceleration(),
-		ego_vehicle.get_sampling_interval(), verbose) 
+		ego_vehicle.get_simulation_time_step(), 
+		state_to_color_map, verbose) 
 {
 	if (verbose) 
 	{
@@ -32,18 +34,18 @@ VirtualLongitudinalController::VirtualLongitudinalController(
 	}
 }
 
-VirtualLongitudinalController::VirtualLongitudinalController(
-	const EgoVehicle& ego_vehicle,
-	VelocityControllerGains velocity_controller_gains,
-	AutonomousGains autonomous_gains, ConnectedGains connected_gains,
-	double velocity_filter_gain, double time_headway_filter_gain) :
-	VirtualLongitudinalController(ego_vehicle,
-		velocity_controller_gains, autonomous_gains, connected_gains,
-		velocity_filter_gain, time_headway_filter_gain, false) {}
+//VirtualLongitudinalController::VirtualLongitudinalController(
+//	const EgoVehicle& ego_vehicle,
+//	VelocityControllerGains velocity_controller_gains,
+//	AutonomousGains autonomous_gains, ConnectedGains connected_gains,
+//	double velocity_filter_gain, double time_headway_filter_gain) :
+//	VirtualLongitudinalController(ego_vehicle,
+//		velocity_controller_gains, autonomous_gains, connected_gains,
+//		velocity_filter_gain, time_headway_filter_gain, false) {}
 
 void VirtualLongitudinalController::determine_controller_state(
 	const EgoVehicle& ego_vehicle, 
-	const std::shared_ptr<NearbyVehicle> leader,
+	std::shared_ptr<const NearbyVehicle> leader,
 	double reference_velocity, double gap_control_input) 
 {
 	if (leader == nullptr) 
@@ -63,10 +65,10 @@ void VirtualLongitudinalController::determine_controller_state(
 			ego_vehicle.get_acceleration(), leader->get_acceleration()
 		);*/
 		
-		double gap = ego_vehicle.compute_gap(leader);
+		double gap = ego_vehicle.compute_gap_to_a_leader(leader);
 		double ego_velocity = ego_vehicle.get_velocity();
 		double gap_threshold = compute_gap_threshold(gap,
-			reference_velocity - ego_velocity, gap_control_input);
+			0/*reference_velocity - ego_velocity*/, gap_control_input);
 
 		if (state == State::vehicle_following) {
 			gap_threshold -= hysteresis_bias;

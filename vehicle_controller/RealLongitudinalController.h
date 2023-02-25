@@ -16,16 +16,17 @@ class RealLongitudinalController :
 {
 
 public:
-    RealLongitudinalController() = default;
+    RealLongitudinalController();
     RealLongitudinalController(const EgoVehicle& ego_vehicle,
         VelocityControllerGains velocity_controller_gains,
         AutonomousGains autonomous_gains, ConnectedGains connected_gains,
         double velocity_filter_gain, double time_headway_filter_gain,
+        std::unordered_map<State, color_t> state_to_color_map,
         bool verbose);
-    RealLongitudinalController(const EgoVehicle& ego_vehicle,
+    /*RealLongitudinalController(const EgoVehicle& ego_vehicle,
         VelocityControllerGains velocity_controller_gains,
         AutonomousGains autonomous_gains, ConnectedGains connected_gains,
-        double velocity_filter_gain, double time_headway_filter_gain);
+        double velocity_filter_gain, double time_headway_filter_gain);*/
 
     /* To be used ONLY when the compute_desired_acceleration method is not
     called. So far, only necessary when we allow VISSIM to take control 
@@ -34,7 +35,7 @@ public:
 
     /* Determines and sets the current state of the longitudinal controller */
     void determine_controller_state(const EgoVehicle& ego_vehicle,
-        const std::shared_ptr<NearbyVehicle> leader,
+        std::shared_ptr<const NearbyVehicle> leader,
         double reference_velocity, double gap_control_input) override;
 
 };

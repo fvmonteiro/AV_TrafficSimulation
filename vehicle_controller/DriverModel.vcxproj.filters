@@ -46,9 +46,6 @@
     <ClCompile Include="LongitudinalControllerWithTrafficLights.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="TrafficLightACCVehicle.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="ACCVehicle.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -70,18 +67,47 @@
     <ClCompile Include="GapController.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="TalebpourALC.cpp">
+    <ClCompile Include="Platoon.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="TimeHeadwayGapController.cpp">
+    <ClCompile Include="TrafficLightALCVehicle.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="VanAremGapController.cpp">
+    <ClCompile Include="VissimLongitudinalController.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="VirdiVehicle.cpp">
-      <Filter>Header Files</Filter>
+    <ClCompile Include="InPlatoonLongitudinalController.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="LaneChangeGapsSafety.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="VehicleState.cpp">
+      <Filter>StateMachines</Filter>
+    </ClCompile>
+    <ClCompile Include="SynchronousStates.cpp">
+      <Filter>StateMachines</Filter>
+    </ClCompile>
+    <ClCompile Include="PlatoonVehicleState.cpp">
+      <Filter>StateMachines</Filter>
+    </ClCompile>
+    <ClCompile Include="PlatoonLaneChangeStrategy.cpp">
+      <Filter>StateMachines</Filter>
+    </ClCompile>
+    <ClCompile Include="LeaderFirstStates.cpp">
+      <Filter>StateMachines</Filter>
+    </ClCompile>
+    <ClCompile Include="LastVehicleFirstStates.cpp">
+      <Filter>StateMachines</Filter>
+    </ClCompile>
+    <ClCompile Include="LeaderFirstAndInvertStates.cpp">
+      <Filter>StateMachines</Filter>
+    </ClCompile>
+    <ClCompile Include="NoLaneChangeCAV.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="VanAremLongitudinalController.cpp" />
+    <ClCompile Include="VirdiVehicle.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ControlManager.h">
@@ -135,9 +161,6 @@
     <ClInclude Include="EgoVehicleFactory.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="TrafficLightACCVehicle.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="ACCVehicle.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -159,18 +182,47 @@
     <ClInclude Include="GapController.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="TalebpourALC.h">
+    <ClInclude Include="Platoon.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="TimeHeadwayGapController.h">
+    <ClInclude Include="TrafficLightALCVehicle.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="VanAremGapController.h">
+    <ClInclude Include="VissimLongitudinalController.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="VirdiVehicle.h">
-      <Filter>Source Files</Filter>
+    <ClInclude Include="InPlatoonLongitudinalController.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="NoLaneChangeCAV.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="LaneChangeGapsSafety.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="VehicleState.h">
+      <Filter>StateMachines</Filter>
+    </ClInclude>
+    <ClInclude Include="SynchronousStates.h">
+      <Filter>StateMachines</Filter>
+    </ClInclude>
+    <ClInclude Include="PlatoonVehicleState.h">
+      <Filter>StateMachines</Filter>
+    </ClInclude>
+    <ClInclude Include="PlatoonLaneChangeStrategy.h">
+      <Filter>StateMachines</Filter>
+    </ClInclude>
+    <ClInclude Include="LeaderFirstStates.h">
+      <Filter>StateMachines</Filter>
+    </ClInclude>
+    <ClInclude Include="LeaderFirstAndInvertStates.h">
+      <Filter>StateMachines</Filter>
+    </ClInclude>
+    <ClInclude Include="LastVehicleFirstStates.h">
+      <Filter>StateMachines</Filter>
+    </ClInclude>
+    <ClInclude Include="VanAremLongitudinalController.h" />
+    <ClInclude Include="VirdiVehicle.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Header Files">
@@ -178,6 +230,9 @@
     </Filter>
     <Filter Include="Source Files">
       <UniqueIdentifier>{26718a99-b736-4bc6-a73a-bc5f180869a2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="StateMachines">
+      <UniqueIdentifier>{832747f0-8314-4dc8-8583-49e2215bfc0f}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>
