@@ -192,7 +192,7 @@ void AutonomousVehicle::find_destination_lane_vehicles()
 std::shared_ptr<NearbyVehicle> AutonomousVehicle::define_virtual_leader()
 const
 {
-	if (try_to_overtake_destination_lane_leader_based())
+	if (try_to_overtake_destination_lane_leader())
 	{
 		return nullptr;
 	}
@@ -218,7 +218,7 @@ const
 //	return false;
 //}
 
-bool AutonomousVehicle::try_to_overtake_destination_lane_leader_based(
+bool AutonomousVehicle::try_to_overtake_destination_lane_leader(
 	double min_rel_vel) const
 {
 	if (!has_destination_lane_leader()) return true;
@@ -255,9 +255,9 @@ bool AutonomousVehicle::try_to_overtake_destination_lane_leader_based(
 	return is_dest_lane_leader_stuck || is_desired_vel_higher;
 }
 
-bool AutonomousVehicle::try_to_overtake_destination_lane_leader_based() const
+bool AutonomousVehicle::try_to_overtake_destination_lane_leader() const
 {
-	return try_to_overtake_destination_lane_leader_based(
+	return try_to_overtake_destination_lane_leader(
 		min_overtaking_rel_vel);
 }
 

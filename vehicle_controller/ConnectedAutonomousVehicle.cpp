@@ -115,7 +115,7 @@ std::shared_ptr<NearbyVehicle> ConnectedAutonomousVehicle
 		std::clog << "\tDefining virtual leader" << std::endl;
 	}
 
-	if (try_to_overtake_destination_lane_leader_based())
+	if (try_to_overtake_destination_lane_leader())
 	{
 		nv = nullptr;
 	}
@@ -147,7 +147,8 @@ std::shared_ptr<NearbyVehicle> ConnectedAutonomousVehicle
 void ConnectedAutonomousVehicle::create_lane_change_request()
 {
 	// Only requests help for mandatory maneuvers
-	if (get_preferred_relative_lane() != RelativeLane::same)
+	//if (get_preferred_relative_lane() != RelativeLane::same)
+	if (has_lane_change_intention())
 		lane_change_request = get_destination_lane_follower_id();
 	else
 		lane_change_request = 0;

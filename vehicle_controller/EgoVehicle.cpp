@@ -927,7 +927,7 @@ void EgoVehicle::set_desired_lane_change_direction()
 	desire to change lanes. The former indicates preference due to
 	routing, so it takes precedence over the latter. */
 	RelativeLane current_preferred_lane = get_preferred_relative_lane();
-	desired_lane_change_direction = RelativeLane::same;
+	//desired_lane_change_direction = RelativeLane::same;
 	if (current_preferred_lane.is_to_the_left())
 	{
 		desired_lane_change_direction = RelativeLane::left;

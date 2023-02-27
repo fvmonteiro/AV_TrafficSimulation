@@ -70,8 +70,8 @@ protected:
 
 
 	void find_destination_lane_vehicles();
-	bool try_to_overtake_destination_lane_leader_based() const;
-	bool try_to_overtake_destination_lane_leader_based(
+	bool try_to_overtake_destination_lane_leader() const;
+	bool try_to_overtake_destination_lane_leader(
 		double min_rel_vel) const;
 	bool try_to_overtake_destination_lane_leader_based_on_time() const;
 	/*[Feb 7, 2023] The four methods below can probably become private */
