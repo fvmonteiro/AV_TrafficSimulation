@@ -69,8 +69,11 @@ void VirdiVehicle::implement_analyze_nearby_vehicles()
 		}
 	}
 	// Create request
-	if (get_preferred_relative_lane() != RelativeLane::same)
+	//if (get_preferred_relative_lane() != RelativeLane::same)
+	if (has_lane_change_intention())
+	{
 		lane_change_request = get_destination_lane_follower_id();
+	}
 
 	if (verbose)
 	{
