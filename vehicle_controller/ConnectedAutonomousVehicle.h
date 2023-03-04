@@ -97,4 +97,5 @@ private:
 		const std::shared_ptr<NearbyVehicle>& old_follower) override;
 	void update_assisted_vehicle(
 		const std::shared_ptr<NearbyVehicle>& old_assisted_vehicle);
+	void set_max_desired_velocity(bool should_increase);
 };

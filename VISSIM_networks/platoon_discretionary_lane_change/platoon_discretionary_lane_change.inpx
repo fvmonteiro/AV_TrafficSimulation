@@ -594,22 +594,28 @@
 				<speedDistributionDataPoint fx="1" x="120"/>
 			</speedDistrDatPts>
 		</desSpeedDistribution>
-		<desSpeedDistribution name="5 km/h" no="5">
+		<desSpeedDistribution name="70" no="4">
 			<speedDistrDatPts>
-				<speedDistributionDataPoint fx="0" x="4"/>
-				<speedDistributionDataPoint fx="1" x="6"/>
+				<speedDistributionDataPoint fx="0" x="70"/>
+				<speedDistributionDataPoint fx="1" x="70"/>
 			</speedDistrDatPts>
 		</desSpeedDistribution>
-		<desSpeedDistribution name="12 km/h" no="12">
+		<desSpeedDistribution name="90" no="5">
 			<speedDistrDatPts>
-				<speedDistributionDataPoint fx="0" x="12"/>
-				<speedDistributionDataPoint fx="1" x="15"/>
+				<speedDistributionDataPoint fx="0" x="90"/>
+				<speedDistributionDataPoint fx="1" x="90"/>
 			</speedDistrDatPts>
 		</desSpeedDistribution>
-		<desSpeedDistribution name="15 km/h" no="15">
+		<desSpeedDistribution name="110" no="6">
 			<speedDistrDatPts>
-				<speedDistributionDataPoint fx="0" x="15"/>
-				<speedDistributionDataPoint fx="1" x="20"/>
+				<speedDistributionDataPoint fx="0" x="110"/>
+				<speedDistributionDataPoint fx="1" x="110"/>
+			</speedDistrDatPts>
+		</desSpeedDistribution>
+		<desSpeedDistribution name="50" no="7">
+			<speedDistrDatPts>
+				<speedDistributionDataPoint fx="0" x="50"/>
+				<speedDistributionDataPoint fx="1" x="50"/>
 			</speedDistrDatPts>
 		</desSpeedDistribution>
 		<desSpeedDistribution name="20 km/h" no="20">
@@ -723,282 +729,6 @@
 				<speedDistributionDataPoint fx="1" x="205"/>
 			</speedDistrDatPts>
 		</desSpeedDistribution>
-		<desSpeedDistribution name="2.09 km/h (0.58 m/s)" no="1001">
-			<speedDistrDatPts>
-				<speedDistributionDataPoint fx="0" x="2.08"/>
-				<speedDistributionDataPoint fx="0.0001" x="2.0879"/>
-				<speedDistributionDataPoint fx="0.9999" x="2.0881"/>
-				<speedDistributionDataPoint fx="1" x="2.09"/>
-			</speedDistrDatPts>
-		</desSpeedDistribution>
-		<desSpeedDistribution name="2.88 km/h (0.80 m/s)" no="1002">
-			<speedDistrDatPts>
-				<speedDistributionDataPoint fx="0" x="2.87"/>
-				<speedDistributionDataPoint fx="0.0001" x="2.8799"/>
-				<speedDistributionDataPoint fx="0.9999" x="2.8801"/>
-				<speedDistributionDataPoint fx="1" x="2.89"/>
-			</speedDistrDatPts>
-		</desSpeedDistribution>
-		<desSpeedDistribution name="3.24 km/h (0.90 m/s) ±" no="1003">
-			<speedDistrDatPts>
-				<speedDistributionDataPoint fx="0" x="2.74"/>
-				<speedDistributionDataPoint fx="0.15" x="2.99"/>
-				<speedDistributionDataPoint fx="0.85" x="3.49"/>
-				<speedDistributionDataPoint fx="1" x="3.74"/>
-			</speedDistrDatPts>
-		</desSpeedDistribution>
-		<desSpeedDistribution name="3.60 km/h (1.00 m/s) ±" no="1004">
-			<speedDistrDatPts>
-				<speedDistributionDataPoint fx="0" x="3.1"/>
-				<speedDistributionDataPoint fx="0.15" x="3.35"/>
-				<speedDistributionDataPoint fx="0.85" x="3.85"/>
-				<speedDistributionDataPoint fx="1" x="4.1"/>
-			</speedDistrDatPts>
-		</desSpeedDistribution>
-		<desSpeedDistribution name="3.96 km/h (1.10 m/s) ±" no="1005">
-			<speedDistrDatPts>
-				<speedDistributionDataPoint fx="0" x="3.46"/>
-				<speedDistributionDataPoint fx="0.15" x="3.71"/>
-				<speedDistributionDataPoint fx="0.85" x="4.21"/>
-				<speedDistributionDataPoint fx="1" x="4.46"/>
-			</speedDistrDatPts>
-		</desSpeedDistribution>
-		<desSpeedDistribution name="4.32 km/h (1.20 m/s) ±" no="1007">
-			<speedDistrDatPts>
-				<speedDistributionDataPoint fx="0" x="3.82"/>
-				<speedDistributionDataPoint fx="0.15" x="4.07"/>
-				<speedDistributionDataPoint fx="0.85" x="4.57"/>
-				<speedDistributionDataPoint fx="1" x="4.82"/>
-			</speedDistrDatPts>
-		</desSpeedDistribution>
-		<desSpeedDistribution name="4.75 km/h (1.32 m/s) ±" no="1008">
-			<speedDistrDatPts>
-				<speedDistributionDataPoint fx="0" x="3.354"/>
-				<speedDistributionDataPoint fx="0.05" x="3.665"/>
-				<speedDistributionDataPoint fx="0.13" x="3.976"/>
-				<speedDistributionDataPoint fx="0.25" x="4.286"/>
-				<speedDistributionDataPoint fx="0.41" x="4.597"/>
-				<speedDistributionDataPoint fx="0.59" x="4.907"/>
-				<speedDistributionDataPoint fx="0.75" x="5.222"/>
-				<speedDistributionDataPoint fx="0.87" x="5.528"/>
-				<speedDistributionDataPoint fx="0.95" x="5.839"/>
-				<speedDistributionDataPoint fx="1" x="6.15"/>
-			</speedDistrDatPts>
-		</desSpeedDistribution>
-		<desSpeedDistribution name="4.93 km/h (1.37 m/s) ±" no="1009">
-			<speedDistrDatPts>
-				<speedDistributionDataPoint fx="0" x="3.481"/>
-				<speedDistributionDataPoint fx="0.05" x="3.804"/>
-				<speedDistributionDataPoint fx="0.13" x="4.126"/>
-				<speedDistributionDataPoint fx="0.25" x="4.448"/>
-				<speedDistributionDataPoint fx="0.41" x="4.771"/>
-				<speedDistributionDataPoint fx="0.59" x="5.093"/>
-				<speedDistributionDataPoint fx="0.75" x="5.416"/>
-				<speedDistributionDataPoint fx="0.87" x="5.738"/>
-				<speedDistributionDataPoint fx="0.95" x="6.06"/>
-				<speedDistributionDataPoint fx="1" x="6.383"/>
-			</speedDistrDatPts>
-		</desSpeedDistribution>
-		<desSpeedDistribution name="5.51 km/h (1.53 m/s) ±" no="1010">
-			<speedDistrDatPts>
-				<speedDistributionDataPoint fx="0" x="3.888"/>
-				<speedDistributionDataPoint fx="0.05" x="4.248"/>
-				<speedDistributionDataPoint fx="0.13" x="4.608"/>
-				<speedDistributionDataPoint fx="0.25" x="4.968"/>
-				<speedDistributionDataPoint fx="0.41" x="5.328"/>
-				<speedDistributionDataPoint fx="0.59" x="5.688"/>
-				<speedDistributionDataPoint fx="0.75" x="6.048"/>
-				<speedDistributionDataPoint fx="0.87" x="6.408"/>
-				<speedDistributionDataPoint fx="0.95" x="6.768"/>
-				<speedDistributionDataPoint fx="1" x="7.128"/>
-			</speedDistrDatPts>
-		</desSpeedDistribution>
-		<desSpeedDistribution name="IMO-M &lt;30" no="1020">
-			<speedDistrDatPts>
-				<speedDistributionDataPoint fx="0" x="3.996"/>
-				<speedDistributionDataPoint fx="1" x="6.66"/>
-			</speedDistrDatPts>
-		</desSpeedDistribution>
-		<desSpeedDistribution name="IMO-F &lt;30" no="1021">
-			<speedDistrDatPts>
-				<speedDistributionDataPoint fx="0" x="3.348"/>
-				<speedDistributionDataPoint fx="1" x="5.58"/>
-			</speedDistrDatPts>
-		</desSpeedDistribution>
-		<desSpeedDistribution name="IMO-M 30-50" no="1022">
-			<speedDistrDatPts>
-				<speedDistributionDataPoint fx="0" x="3.49"/>
-				<speedDistributionDataPoint fx="1" x="5.83"/>
-			</speedDistrDatPts>
-		</desSpeedDistribution>
-		<desSpeedDistribution name="IMO-F 30-50" no="1023">
-			<speedDistrDatPts>
-				<speedDistributionDataPoint fx="0" x="2.56"/>
-				<speedDistributionDataPoint fx="1" x="4.28"/>
-			</speedDistrDatPts>
-		</desSpeedDistribution>
-		<desSpeedDistribution name="IMO-M &gt;50" no="1024">
-			<speedDistrDatPts>
-				<speedDistributionDataPoint fx="0" x="3.024"/>
-				<speedDistributionDataPoint fx="1" x="5.04"/>
-			</speedDistrDatPts>
-		</desSpeedDistribution>
-		<desSpeedDistribution name="IMO-F &gt;50" no="1025">
-			<speedDistrDatPts>
-				<speedDistributionDataPoint fx="0" x="2.016"/>
-				<speedDistributionDataPoint fx="1" x="3.384"/>
-			</speedDistrDatPts>
-		</desSpeedDistribution>
-		<desSpeedDistribution name="IMO-M MI1" no="1026">
-			<speedDistrDatPts>
-				<speedDistributionDataPoint fx="0" x="2.304"/>
-				<speedDistributionDataPoint fx="1" x="3.816"/>
-			</speedDistrDatPts>
-		</desSpeedDistribution>
-		<desSpeedDistribution name="IMO-F MI1" no="1027">
-			<speedDistrDatPts>
-				<speedDistributionDataPoint fx="0" x="1.548"/>
-				<speedDistributionDataPoint fx="1" x="2.556"/>
-			</speedDistrDatPts>
-		</desSpeedDistribution>
-		<desSpeedDistribution name="IMO-M MI2" no="1028">
-			<speedDistrDatPts>
-				<speedDistributionDataPoint fx="0" x="1.98"/>
-				<speedDistributionDataPoint fx="1" x="3.276"/>
-			</speedDistrDatPts>
-		</desSpeedDistribution>
-		<desSpeedDistribution name="IMO-F MI2" no="1029">
-			<speedDistrDatPts>
-				<speedDistributionDataPoint fx="0" x="1.332"/>
-				<speedDistributionDataPoint fx="1" x="2.196"/>
-			</speedDistrDatPts>
-		</desSpeedDistribution>
-		<desSpeedDistribution name="Fruin 1" no="1040">
-			<speedDistrDatPts>
-				<speedDistributionDataPoint fx="0" x="2.11"/>
-				<speedDistributionDataPoint fx="0.013" x="2.56"/>
-				<speedDistributionDataPoint fx="0.071" x="3.01"/>
-				<speedDistributionDataPoint fx="0.175" x="3.45"/>
-				<speedDistributionDataPoint fx="0.406" x="3.9"/>
-				<speedDistributionDataPoint fx="0.685" x="4.35"/>
-				<speedDistributionDataPoint fx="0.88" x="4.84"/>
-				<speedDistributionDataPoint fx="0.961" x="5.28"/>
-				<speedDistributionDataPoint fx="0.981" x="5.73"/>
-				<speedDistributionDataPoint fx="0.994" x="6.18"/>
-				<speedDistributionDataPoint fx="1" x="6.62"/>
-			</speedDistrDatPts>
-		</desSpeedDistribution>
-		<desSpeedDistribution name="Fruin 2" no="1041">
-			<speedDistrDatPts>
-				<speedDistributionDataPoint fx="0" x="2.11"/>
-				<speedDistributionDataPoint fx="0.006" x="2.56"/>
-				<speedDistributionDataPoint fx="0.032" x="3.01"/>
-				<speedDistributionDataPoint fx="0.119" x="3.45"/>
-				<speedDistributionDataPoint fx="0.304" x="3.9"/>
-				<speedDistributionDataPoint fx="0.516" x="4.35"/>
-				<speedDistributionDataPoint fx="0.744" x="4.84"/>
-				<speedDistributionDataPoint fx="0.891" x="5.28"/>
-				<speedDistributionDataPoint fx="0.968" x="5.73"/>
-				<speedDistributionDataPoint fx="0.987" x="6.18"/>
-				<speedDistributionDataPoint fx="1" x="6.62"/>
-			</speedDistrDatPts>
-		</desSpeedDistribution>
-		<desSpeedDistribution name="Predt-Milinski" no="1042">
-			<speedDistrDatPts>
-				<speedDistributionDataPoint fx="0" x="0"/>
-				<speedDistributionDataPoint fx="0.011" x="0.3"/>
-				<speedDistributionDataPoint fx="0.052" x="0.9"/>
-				<speedDistributionDataPoint fx="0.138" x="1.5"/>
-				<speedDistributionDataPoint fx="0.32" x="2.1"/>
-				<speedDistributionDataPoint fx="0.553" x="2.7"/>
-				<speedDistributionDataPoint fx="0.713" x="3.3"/>
-				<speedDistributionDataPoint fx="0.79" x="3.9"/>
-				<speedDistributionDataPoint fx="0.85" x="4.5"/>
-				<speedDistributionDataPoint fx="0.893" x="5.1"/>
-				<speedDistributionDataPoint fx="0.927" x="5.7"/>
-				<speedDistributionDataPoint fx="0.953" x="6.3"/>
-				<speedDistributionDataPoint fx="0.976" x="6.9"/>
-				<speedDistributionDataPoint fx="0.993" x="7.5"/>
-				<speedDistributionDataPoint fx="1" x="8.1"/>
-			</speedDistrDatPts>
-		</desSpeedDistribution>
-		<desSpeedDistribution name="Stairs Kretz 1" no="1043">
-			<speedDistrDatPts>
-				<speedDistributionDataPoint fx="0" x="0.72"/>
-				<speedDistributionDataPoint fx="0.055" x="1.08"/>
-				<speedDistributionDataPoint fx="0.452" x="1.44"/>
-				<speedDistributionDataPoint fx="0.877" x="1.8"/>
-				<speedDistributionDataPoint fx="0.945" x="2.16"/>
-				<speedDistributionDataPoint fx="0.973" x="2.52"/>
-				<speedDistributionDataPoint fx="0.986" x="2.88"/>
-				<speedDistributionDataPoint fx="1" x="4.68"/>
-			</speedDistrDatPts>
-		</desSpeedDistribution>
-		<desSpeedDistribution name="Stairs Kretz 2" no="1044">
-			<speedDistrDatPts>
-				<speedDistributionDataPoint fx="0" x="0.36"/>
-				<speedDistributionDataPoint fx="0.003" x="0.54"/>
-				<speedDistributionDataPoint fx="0.008" x="0.72"/>
-				<speedDistributionDataPoint fx="0.069" x="1.08"/>
-				<speedDistributionDataPoint fx="0.296" x="1.26"/>
-				<speedDistributionDataPoint fx="0.689" x="1.44"/>
-				<speedDistributionDataPoint fx="0.887" x="1.62"/>
-				<speedDistributionDataPoint fx="0.967" x="1.8"/>
-				<speedDistributionDataPoint fx="0.985" x="1.98"/>
-				<speedDistributionDataPoint fx="0.987" x="2.16"/>
-				<speedDistributionDataPoint fx="0.992" x="2.34"/>
-				<speedDistributionDataPoint fx="0.995" x="2.52"/>
-				<speedDistributionDataPoint fx="0.997" x="2.7"/>
-				<speedDistributionDataPoint fx="1" x="4.14"/>
-			</speedDistrDatPts>
-		</desSpeedDistribution>
-		<desSpeedDistribution name="At Airports - S.B. Young" no="1045">
-			<speedDistrDatPts>
-				<speedDistributionDataPoint fx="0" x="3.3"/>
-				<speedDistributionDataPoint fx="0.015034" x="3.336462"/>
-				<speedDistributionDataPoint fx="0.053041" x="3.59081"/>
-				<speedDistributionDataPoint fx="0.103666" x="3.773071"/>
-				<speedDistributionDataPoint fx="0.255365" x="4.040716"/>
-				<speedDistributionDataPoint fx="0.449933" x="4.256679"/>
-				<speedDistributionDataPoint fx="0.542538" x="4.41048"/>
-				<speedDistributionDataPoint fx="0.582693" x="4.516479"/>
-				<speedDistributionDataPoint fx="0.624137" x="4.682254"/>
-				<speedDistributionDataPoint fx="0.686649" x="5.026911"/>
-				<speedDistributionDataPoint fx="0.72318" x="5.337051"/>
-				<speedDistributionDataPoint fx="0.774515" x="5.613145"/>
-				<speedDistributionDataPoint fx="0.877368" x="6.020304"/>
-				<speedDistributionDataPoint fx="0.912392" x="6.271403"/>
-				<speedDistributionDataPoint fx="0.943356" x="6.634187"/>
-				<speedDistributionDataPoint fx="0.964368" x="7.168421"/>
-				<speedDistributionDataPoint fx="0.987865" x="7.508381"/>
-				<speedDistributionDataPoint fx="0.997839" x="7.80813"/>
-				<speedDistributionDataPoint fx="1" x="8.2296"/>
-			</speedDistrDatPts>
-		</desSpeedDistribution>
-		<desSpeedDistribution name="On Moving Walkways - S.B. Young" no="1046">
-			<speedDistrDatPts>
-				<speedDistributionDataPoint fx="0" x="0"/>
-				<speedDistributionDataPoint fx="0.0001" x="0.765462"/>
-				<speedDistributionDataPoint fx="0.254852" x="0.765562"/>
-				<speedDistributionDataPoint fx="0.28627" x="1.304489"/>
-				<speedDistributionDataPoint fx="0.302666" x="1.656738"/>
-				<speedDistributionDataPoint fx="0.325205" x="2.407758"/>
-				<speedDistributionDataPoint fx="0.351299" x="2.953785"/>
-				<speedDistributionDataPoint fx="0.362231" x="3.124574"/>
-				<speedDistributionDataPoint fx="0.382169" x="3.300298"/>
-				<speedDistributionDataPoint fx="0.406531" x="3.463337"/>
-				<speedDistributionDataPoint fx="0.45902" x="3.700048"/>
-				<speedDistributionDataPoint fx="0.589058" x="4.121024"/>
-				<speedDistributionDataPoint fx="0.67566" x="4.407455"/>
-				<speedDistributionDataPoint fx="0.751254" x="4.774043"/>
-				<speedDistributionDataPoint fx="0.866077" x="5.51479"/>
-				<speedDistributionDataPoint fx="0.924504" x="5.961132"/>
-				<speedDistributionDataPoint fx="0.947342" x="6.237696"/>
-				<speedDistributionDataPoint fx="0.971817" x="6.615232"/>
-				<speedDistributionDataPoint fx="0.985613" x="7.152273"/>
-				<speedDistributionDataPoint fx="1" x="8.2296"/>
-			</speedDistrDatPts>
-		</desSpeedDistribution>
 	</desSpeedDistributions>
 	<displayTypes>
 		<displayType allSidesSame="false" anisoFilt="true" borderColor="ff808080" borderLineStyle="SOLIDLINE" curved="false" fillColor="ff808080" fillStyle="SOLIDFILL" invisible="false" name="Road gray" no="1" noMipmap="false" rail="false" railFlangeHgt="0.013" railFlangeWid="0.15" railGauge="1.435" railHeadHgt="0.043" railHeadWid="0.073" railHgt="0.172" railType="STANDARD" railWebWid="0.016" texHorizLen="1" textureFilename="" tiesHgt="0.02" tiesLen="2.6" tiesSpac="0.6" tiesTexFilename="" tiesTexHorizLen="1" tiesType="STANDARD" tiesWid="0.26"/>
@@ -1030,7 +760,7 @@
 		<routGuid1 interval="999999" offset="0" strategy="NEWROUTETODESTINATIONPARKINGLOT"/>
 		<routGuid2 interval="999999" offset="0" strategy="NEWROUTETODESTINATIONPARKINGLOT"/>
 	</dynamicAssignment>
-	<evaluation autoCreateResultColumns="true" databaseConnection="" evalOutDir="#data#results\test" keepPrevResults="KEEPALL" listAutoExportType="FILE" nodesDelaySegmentStart="100" queueBeginSpeed="5" queueConsiderAdjacentLanes="true" queueEndSpeed="10" queueMaxHeadway="20" queueMaxLength="500">
+	<evaluation autoCreateResultColumns="true" databaseConnection="" evalOutDir="#data#results\test" keepPrevResults="KEEPCURRENT" listAutoExportType="FILE" nodesDelaySegmentStart="100" queueBeginSpeed="5" queueConsiderAdjacentLanes="true" queueEndSpeed="10" queueMaxHeadway="20" queueMaxLength="500">
 		<areaMeasRawData fromTime="0" toTime="99999" writeFile="false"/>
 		<areaMeasResults collectData="false" fromTime="0" interval="99999" toTime="99999"/>
 		<areaResults collectData="false" fromTime="0" interval="99999" toTime="99999"/>
@@ -1138,7 +868,7 @@
 			<geometry>
 				<points3D>
 					<point3D x="1528.3041328080121" y="-27.172513385654351" zOffset="0"/>
-					<point3D x="3521.4389721907592" y="-26.787363081592584" zOffset="0"/>
+					<point3D x="4504.0581038563523" y="-21.121553162538618" zOffset="0"/>
 				</points3D>
 			</geometry>
 			<lanes>
@@ -1188,7 +918,7 @@
 			<geometry>
 				<points3D>
 					<point3D x="1527.2888300469294" y="-27.204227972675099" zOffset="0"/>
-					<point3D x="1528.4546682917173" y="-27.172484296409522" zOffset="0"/>
+					<point3D x="1528.4546679833118" y="-27.172207284287513" zOffset="0"/>
 				</points3D>
 			</geometry>
 			<lanes>
@@ -1894,40 +1624,6 @@
 			</pedTypes>
 		</pedestrianClass>
 	</pedestrianClasses>
-	<pedestrianCompositions>
-		<pedestrianComposition name="Pedestrians" no="1">
-			<pedCompRelFlows>
-				<pedestrianCompositionRelativeFlow desSpeedDistr="1022" pedType="100" relFlow="1"/>
-				<pedestrianCompositionRelativeFlow desSpeedDistr="1023" pedType="200" relFlow="1"/>
-			</pedCompRelFlows>
-		</pedestrianComposition>
-		<pedestrianComposition name="Commuters at a station" no="11">
-			<pedCompRelFlows>
-				<pedestrianCompositionRelativeFlow desSpeedDistr="1002" pedType="100" relFlow="10"/>
-				<pedestrianCompositionRelativeFlow desSpeedDistr="1008" pedType="100" relFlow="4"/>
-				<pedestrianCompositionRelativeFlow desSpeedDistr="1010" pedType="100" relFlow="30"/>
-				<pedestrianCompositionRelativeFlow desSpeedDistr="1002" pedType="200" relFlow="10"/>
-				<pedestrianCompositionRelativeFlow desSpeedDistr="1008" pedType="200" relFlow="4"/>
-				<pedestrianCompositionRelativeFlow desSpeedDistr="1010" pedType="200" relFlow="30"/>
-				<pedestrianCompositionRelativeFlow desSpeedDistr="1009" pedType="250" relFlow="10"/>
-				<pedestrianCompositionRelativeFlow desSpeedDistr="1001" pedType="300" relFlow="2"/>
-			</pedCompRelFlows>
-		</pedestrianComposition>
-		<pedestrianComposition name="International Maritime Organization MSC/Circ. 1238" no="21">
-			<pedCompRelFlows>
-				<pedestrianCompositionRelativeFlow desSpeedDistr="1020" pedType="100" relFlow="7"/>
-				<pedestrianCompositionRelativeFlow desSpeedDistr="1022" pedType="100" relFlow="7"/>
-				<pedestrianCompositionRelativeFlow desSpeedDistr="1024" pedType="100" relFlow="16"/>
-				<pedestrianCompositionRelativeFlow desSpeedDistr="1026" pedType="100" relFlow="10"/>
-				<pedestrianCompositionRelativeFlow desSpeedDistr="1028" pedType="100" relFlow="10"/>
-				<pedestrianCompositionRelativeFlow desSpeedDistr="1021" pedType="200" relFlow="7"/>
-				<pedestrianCompositionRelativeFlow desSpeedDistr="1023" pedType="200" relFlow="7"/>
-				<pedestrianCompositionRelativeFlow desSpeedDistr="1025" pedType="200" relFlow="16"/>
-				<pedestrianCompositionRelativeFlow desSpeedDistr="1027" pedType="200" relFlow="10"/>
-				<pedestrianCompositionRelativeFlow desSpeedDistr="1029" pedType="200" relFlow="10"/>
-			</pedCompRelFlows>
-		</pedestrianComposition>
-	</pedestrianCompositions>
 	<pedestrianTypes>
 		<pedestrianType hairColorDistr="102" hgtVar="0.15" lenVar="0.1" model2D3DDistr="100" name="Man" no="100" shirtColorDistr="101" shoesColorDistr="104" trousersColorDistr="103" walkBehav="1" widVar="0.1"/>
 		<pedestrianType hairColorDistr="202" hgtVar="0.15" lenVar="0.1" model2D3DDistr="200" name="Woman" no="200" shirtColorDistr="201" shoesColorDistr="204" trousersColorDistr="203" walkBehav="1" widVar="0.1"/>
@@ -1972,7 +1668,22 @@
 			</distrDataPts>
 		</powerDistribution>
 	</powerDistributions>
-	<simulation comment="" numCores="1" numRuns="1" randSeed="9" randSeedIncr="1" retroSync="false" simMode="MICRO" simPeriod="1200" simRes="10" simSpeed="10" startTm="0" useAllCores="false" useMaxSimSpeed="true" volumeIncrDynAssign="0"/>
+	<reducedSpeedAreas>
+		<reducedSpeedArea anmFlag="false" lane="3 1" length="100" name="orig_lane" no="1" pos="2875.7601231163753" timeFrom="0" timeTo="99999">
+			<vehClassSpeedRed>
+				<vehClassSpeedReduction decel="2" desSpeedDistr="7" vehClass="10"/>
+				<vehClassSpeedReduction decel="2" desSpeedDistr="7" vehClass="20"/>
+				<vehClassSpeedReduction decel="2" desSpeedDistr="7" vehClass="30"/>
+			</vehClassSpeedRed>
+		</reducedSpeedArea>
+		<reducedSpeedArea anmFlag="false" lane="3 2" length="100" name="dest_lane" no="2" pos="2875.7601231163753" timeFrom="0" timeTo="99999">
+			<vehClassSpeedRed>
+				<vehClassSpeedReduction decel="2" desSpeedDistr="7" vehClass="10"/>
+				<vehClassSpeedReduction decel="2" desSpeedDistr="7" vehClass="20"/>
+			</vehClassSpeedRed>
+		</reducedSpeedArea>
+	</reducedSpeedAreas>
+	<simulation comment="" numCores="1" numRuns="1" randSeed="7" randSeedIncr="1" retroSync="false" simMode="MICRO" simPeriod="1200" simRes="10" simSpeed="10" startTm="0" useAllCores="false" useMaxSimSpeed="true" volumeIncrDynAssign="0"/>
 	<timeDistributions>
 		<timeDistribution mean="0.5" name="0.5 s" no="1" stdDev="0" type="NORMAL"/>
 		<timeDistribution mean="0.9" name="0.9 s" no="2" stdDev="0" type="NORMAL"/>
@@ -2044,7 +1755,7 @@
 		<userDefinedAttribute comment="" dataSrcType="DATA" dataType="INT" decimals="2" formula="" internalDefValueNum="-1" internalDefValueStr="" internalMaxValue="INF" internalMinValue="-INF" maxStrLen="100" nameLong="Platoon ID" nameShort="platoonID" no="12" objType="VEHICLE" subAttrs=""/>
 		<userDefinedAttribute comment="0: No strategy; 1: Synchronous;  2: Leader first; 3: Last vehicle first; 4: Leader first and invert" dataSrcType="DATA" dataType="INT" decimals="2" formula="" internalDefValueNum="2" internalDefValueStr="" internalMaxValue="INF" internalMinValue="-INF" maxStrLen="100" nameLong="Platoon lane change strategy" nameShort="platoonLCStrategy" no="13" objType="VEHICLE" subAttrs=""/>
 		<userDefinedAttribute comment="If true, prints updates on all the controlled vehicles to a log file." dataSrcType="DATA" dataType="BOOL" decimals="2" formula="" internalDefValueNum="0" internalDefValueStr="" internalMaxValue="INF" internalMinValue="-INF" maxStrLen="100" nameLong="Verbose Simulation" nameShort="verboseSimulation" no="98" objType="VEHICLE" subAttrs=""/>
-		<userDefinedAttribute comment="Writes information about vehicle to a text file." dataSrcType="DATA" dataType="INT" decimals="2" formula="" internalDefValueNum="0" internalDefValueStr="" internalMaxValue="INF" internalMinValue="-INF" maxStrLen="100" nameLong="Logged vehicle ID" nameShort="loggedVehID" no="99" objType="VEHICLE" subAttrs=""/>
+		<userDefinedAttribute comment="Writes information about vehicle to log file. Does not work for id = 1" dataSrcType="DATA" dataType="INT" decimals="2" formula="" internalDefValueNum="0" internalDefValueStr="" internalMaxValue="INF" internalMinValue="-INF" maxStrLen="100" nameLong="Logged vehicle ID" nameShort="loggedVehID" no="99" objType="VEHICLE" subAttrs=""/>
 		<userDefinedAttribute comment="" dataSrcType="DATA" dataType="INT" decimals="2" formula="" internalDefValueNum="0" internalDefValueStr="" internalMaxValue="INF" internalMinValue="-INF" maxStrLen="100" nameLong="Leader ID" nameShort="leaderID" no="100" objType="VEHICLE" subAttrs=""/>
 		<userDefinedAttribute comment="Human driven car=100, Autonomous car = 110, Truck=200, Bus=300" dataSrcType="DATA" dataType="INT" decimals="2" formula="" internalDefValueNum="0" internalDefValueStr="" internalMaxValue="INF" internalMinValue="-INF" maxStrLen="100" nameLong="Leader type" nameShort="leaderType" no="101" objType="VEHICLE" subAttrs=""/>
 		<userDefinedAttribute comment="" dataSrcType="DATA" dataType="SHORTLENGTH" decimals="2" formula="" internalDefValueNum="300" internalDefValueStr="" internalMaxValue="INF" internalMinValue="-INF" maxStrLen="100" nameLong="Gap to leader" nameShort="gapToLeader" no="102" objType="VEHICLE" subAttrs=""/>
@@ -2109,7 +1820,7 @@
 		</vehicleComposition>
 		<vehicleComposition name="all_connected_slower" no="4">
 			<vehCompRelFlows>
-				<vehicleCompositionRelativeFlow desSpeedDistr="1" relFlow="100" vehType="121"/>
+				<vehicleCompositionRelativeFlow desSpeedDistr="1" relFlow="1" vehType="121"/>
 			</vehCompRelFlows>
 		</vehicleComposition>
 		<vehicleComposition name="all_connected_same" no="5">
@@ -2120,6 +1831,16 @@
 		<vehicleComposition name="all_connected_faster" no="6">
 			<vehCompRelFlows>
 				<vehicleCompositionRelativeFlow desSpeedDistr="3" relFlow="1" vehType="121"/>
+			</vehCompRelFlows>
+		</vehicleComposition>
+		<vehicleComposition name="orig_lane" no="7">
+			<vehCompRelFlows>
+				<vehicleCompositionRelativeFlow desSpeedDistr="6" relFlow="100" vehType="121"/>
+			</vehCompRelFlows>
+		</vehicleComposition>
+		<vehicleComposition name="dest_lane" no="8">
+			<vehCompRelFlows>
+				<vehicleCompositionRelativeFlow desSpeedDistr="6" relFlow="100" vehType="121"/>
 			</vehCompRelFlows>
 		</vehicleComposition>
 		<vehicleComposition name="all_autonomous" no="20">
@@ -2136,12 +1857,12 @@
 	<vehicleInputs>
 		<vehicleInput anmFlag="false" link="4" name="left_lane" no="3">
 			<timeIntVehVols>
-				<timeIntervalVehVolume cont="false" timeInt="1 0" vehComp="6" volType="STOCHASTIC" volume="2000"/>
+				<timeIntervalVehVolume cont="false" timeInt="1 0" vehComp="8" volType="STOCHASTIC" volume="2500"/>
 			</timeIntVehVols>
 		</vehicleInput>
 		<vehicleInput anmFlag="false" link="2" name="right_lane" no="4">
 			<timeIntVehVols>
-				<timeIntervalVehVolume cont="false" timeInt="1 0" vehComp="6" volType="STOCHASTIC" volume="0"/>
+				<timeIntervalVehVolume cont="false" timeInt="1 0" vehComp="7" volType="STOCHASTIC" volume="2500"/>
 			</timeIntVehVols>
 		</vehicleInput>
 	</vehicleInputs>

@@ -6,8 +6,8 @@ ConnectedAutonomousVehicle::ConnectedAutonomousVehicle(
 	bool verbose) :
 	AutonomousVehicle(id, type, desired_velocity,
 		true, simulation_time_step, creation_time, verbose)
+	//original_desired_velocity(desired_velocity)
 {
-	original_desired_velocity = get_desired_velocity();
 	compute_connected_safe_gap_parameters();
 	if (verbose)
 	{
@@ -75,7 +75,8 @@ void ConnectedAutonomousVehicle::implement_analyze_nearby_vehicles()
 
 void ConnectedAutonomousVehicle::find_cooperation_requests()
 {
-	set_desired_velocity(original_desired_velocity);
+	//set_desired_velocity(original_desired_velocity);
+	bool should_increase_vel = false;
 
 	std::shared_ptr<NearbyVehicle> old_assisted_vehicle =
 		std::move(assisted_vehicle);
@@ -96,9 +97,11 @@ void ConnectedAutonomousVehicle::find_cooperation_requests()
 		// Wants to merge behind me?
 		else if (nearby_vehicle->get_destination_lane_leader_id() == get_id())
 		{
-			set_desired_velocity(MAX_VELOCITY);
+			//set_desired_velocity(MAX_VELOCITY);
+			should_increase_vel = true;
 		}
 	}
+	set_max_desired_velocity(should_increase_vel);
 	deal_with_close_and_slow_assited_vehicle();
 	update_assisted_vehicle(old_assisted_vehicle);
 }
@@ -226,6 +229,21 @@ void ConnectedAutonomousVehicle::update_assisted_vehicle(
 	}
 }
 
+void ConnectedAutonomousVehicle::set_max_desired_velocity(
+	bool should_increase)
+{
+	bool is_at_max = get_desired_velocity() == MAX_VELOCITY;
+	if (should_increase && !is_at_max)
+	{
+		original_desired_velocity = get_desired_velocity();
+		set_desired_velocity(MAX_VELOCITY);
+	}
+	else if (!should_increase && is_at_max)
+	{
+		set_desired_velocity(original_desired_velocity);
+	}
+}
+
 double ConnectedAutonomousVehicle::get_lambda_1(
 	bool is_leader_connected) const
 {
@@ -250,23 +268,6 @@ void ConnectedAutonomousVehicle::set_assisted_vehicle_by_id(
 	//deal_with_close_and_slow_assited_vehicle();
 	update_assisted_vehicle(old_assisted_vehicle);
 }
-
-//double ConnectedAutonomousVehicle::compute_current_desired_time_headway(
-//	const NearbyVehicle& nearby_vehicle)
-//{
-//	/*double current_lambda_1 = get_lambda_1(leader.is_connected());
-//	double risk = 0;*/
-//	if (has_lane_change_intention())
-//	{
-//		return compute_lane_changing_desired_time_headway(nearby_vehicle);
-//		/*current_lambda_1 = get_lambda_1_lane_change(leader.is_connected());
-//		risk = get_accepted_risk_to_leaders();*/
-//	}
-//	return compute_vehicle_following_desired_time_headway(nearby_vehicle);
-//	/*return compute_time_headway_with_risk(get_desired_velocity(),
-//		get_current_max_brake(), leader.get_max_brake(),
-//		current_lambda_1, get_rho(), risk);*/
-//}
 
 double ConnectedAutonomousVehicle::
 compute_vehicle_following_safe_time_headway(
@@ -342,16 +343,6 @@ double ConnectedAutonomousVehicle::compute_lane_changing_desired_time_headway(
 		return h_lc;
 	}*/
 }
-
-//double ConnectedAutonomousVehicle::
-//compute_vehicle_following_gap_for_lane_change(
-//	const NearbyVehicle& nearby_vehicle) const
-//{
-//	double current_lambda_1 =
-//		get_lambda_1_lane_change(nearby_vehicle.is_connected());
-//	return AutonomousVehicle::compute_vehicle_following_gap_for_lane_change(
-//		nearby_vehicle, current_lambda_1);
-//}
 
 double ConnectedAutonomousVehicle::implement_compute_desired_acceleration(
 	const std::unordered_map<int, TrafficLight>& traffic_lights)

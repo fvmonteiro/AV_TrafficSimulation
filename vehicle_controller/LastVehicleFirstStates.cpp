@@ -91,7 +91,7 @@ void LastVehicleFirstLookingForSafeGapState
 	}
 }
 
-/* ------------------------------------------------------------------------ */
+/*==========================================================================*/
 
 void LastVehicleFirstLaneChangingState
 ::implement_handle_lane_keeping_intention()

@@ -106,8 +106,12 @@
     <ClCompile Include="NoLaneChangeCAV.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="VanAremLongitudinalController.cpp" />
-    <ClCompile Include="VirdiVehicle.cpp" />
+    <ClCompile Include="VanAremLongitudinalController.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="VirdiVehicle.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ControlManager.h">
@@ -221,8 +225,12 @@
     <ClInclude Include="LastVehicleFirstStates.h">
       <Filter>StateMachines</Filter>
     </ClInclude>
-    <ClInclude Include="VanAremLongitudinalController.h" />
-    <ClInclude Include="VirdiVehicle.h" />
+    <ClInclude Include="VirdiVehicle.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="VanAremLongitudinalController.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Header Files">

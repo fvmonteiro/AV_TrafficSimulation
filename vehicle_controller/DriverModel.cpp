@@ -462,6 +462,7 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
         traffic_lights[index1].set_current_state_start_time(double_value);
         return 1;
     case DRIVER_DATA_SPEED_LIMIT_DISTANCE   :
+        return 1;
     case DRIVER_DATA_SPEED_LIMIT_VALUE      :
         return 1;
     /* IMPORTANT: Following are behavior data suggested for the current time
@@ -490,7 +491,7 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
     }
 }
 
-/*--------------------------------------------------------------------------*/
+/*==========================================================================*/
 
 DRIVERMODEL_API  int  DriverModelGetValue (long   type,
                                            long   index1,

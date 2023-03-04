@@ -55,7 +55,6 @@ void VirdiVehicle::implement_analyze_nearby_vehicles()
 			{
 				destination_lane_leader = nearby_vehicle;
 			}
-
 		}
 		// Assisted vehicle
 		if (nearby_vehicle->get_lane_change_request_veh_id() == get_id())
