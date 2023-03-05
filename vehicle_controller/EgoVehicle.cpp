@@ -201,10 +201,12 @@ void EgoVehicle::clear_nearby_vehicles()
 void EgoVehicle::emplace_nearby_vehicle(long nv_id, long relative_lane,
 	long relative_position)
 {
-	std::shared_ptr<NearbyVehicle> nearby_vehicle =
-		std::make_shared<NearbyVehicle>(NearbyVehicle(nv_id, relative_lane,
-		relative_position));
-	nearby_vehicles[nv_id] = std::move(nearby_vehicle);
+	/*std::shared_ptr<NearbyVehicle> nearby_vehicle =
+		std::make_shared<NearbyVehicle>(nv_id, relative_lane,
+		relative_position);*/
+	nearby_vehicles[nv_id] = std::make_shared<NearbyVehicle>(
+		nv_id, relative_lane, relative_position); 
+	//std::move(nearby_vehicle);
 }
 
 //std::shared_ptr<NearbyVehicle> EgoVehicle::peek_nearby_vehicles() const
@@ -467,7 +469,7 @@ void EgoVehicle::find_leader()
 
 bool EgoVehicle::check_if_is_leader(const NearbyVehicle& nearby_vehicle) const
 {
-	if ((nearby_vehicle.is_immediatly_ahead()
+	if ((nearby_vehicle.is_ahead()
 		&& nearby_vehicle.is_on_same_lane())
 		|| nearby_vehicle.is_cutting_in())
 	{

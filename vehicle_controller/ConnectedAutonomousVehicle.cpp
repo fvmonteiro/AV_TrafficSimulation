@@ -113,11 +113,6 @@ std::shared_ptr<NearbyVehicle> ConnectedAutonomousVehicle
 	lane leader. */
 	std::shared_ptr<NearbyVehicle> nv = get_modifiable_dest_lane_leader();
 
-	if (verbose)
-	{
-		std::clog << "\tDefining virtual leader" << std::endl;
-	}
-
 	if (try_to_overtake_destination_lane_leader())
 	{
 		nv = nullptr;
@@ -137,12 +132,6 @@ std::shared_ptr<NearbyVehicle> ConnectedAutonomousVehicle
 		{
 			nv = nullptr;
 		}
-	}
-	if (verbose)
-	{
-		std::clog << "\tvirtual leader id ";
-		if (nv == nullptr) std::clog << "0" << std::endl;
-		else std::clog << nv->get_id() << std::endl;
 	}
 	return nv;
 }

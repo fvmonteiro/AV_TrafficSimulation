@@ -856,7 +856,7 @@
 		<link assumSpeedOncom="60" costPerKm="0" direction="ALL" displayType="1" emergStopDist="5" gradient="0" hasOvtLn="false" isPedArea="false" level="1" linkBehavType="3" linkEvalAct="false" linkEvalSegLen="800" lnChgDist="200" lnChgDistIsPerLn="false" lnChgEvalAct="false" lookAheadDistOvt="500" mesoFollowUpGap="0" mesoSpeed="50" mesoSpeedModel="VEHICLEBASED" name="in_right" no="2" ovtOnlyPT="false" ovtSpeedFact="1.3" showClsfValues="true" showLinkBar="true" showVeh="true" surch1="0" surch2="0" thickness="0" vehRecAct="true">
 			<geometry>
 				<points3D>
-					<point3D x="316.03032978140783" y="-32.689992507334026" zOffset="0"/>
+					<point3D x="227.93718651716807" y="-32.689992507334026" zOffset="0"/>
 					<point3D x="527.84936138196974" y="-33.489539572702171" zOffset="0"/>
 				</points3D>
 			</geometry>
@@ -879,7 +879,7 @@
 		<link assumSpeedOncom="60" costPerKm="0" direction="ALL" displayType="1" emergStopDist="5" gradient="0" hasOvtLn="false" isPedArea="false" level="1" linkBehavType="3" linkEvalAct="false" linkEvalSegLen="800" lnChgDist="200" lnChgDistIsPerLn="false" lnChgEvalAct="false" lookAheadDistOvt="500" mesoFollowUpGap="0" mesoSpeed="50" mesoSpeedModel="VEHICLEBASED" name="in_left" no="4" ovtOnlyPT="false" ovtSpeedFact="1.3" showClsfValues="true" showLinkBar="true" showVeh="true" surch1="0" surch2="0" thickness="0" vehRecAct="false">
 			<geometry>
 				<points3D>
-					<point3D x="316.43029505274853" y="-28.779582847341121" zOffset="0"/>
+					<point3D x="228.11069126597857" y="-29.277795996907511" zOffset="0"/>
 					<point3D x="526.71864883633793" y="-30.027924116030317" zOffset="0"/>
 				</points3D>
 			</geometry>
@@ -888,7 +888,7 @@
 			</lanes>
 		</link>
 		<link assumSpeedOncom="60" costPerKm="0" direction="ALL" displayType="1" emergStopDist="5" gradient="0" hasOvtLn="false" isPedArea="false" linkBehavType="1" linkEvalAct="false" linkEvalSegLen="10" lnChgDist="200" lnChgDistIsPerLn="false" lnChgEvalAct="true" lookAheadDistOvt="500" mesoFollowUpGap="0" mesoSpeed="50" mesoSpeedModel="VEHICLEBASED" name="connector_left" no="10000" ovtOnlyPT="false" ovtSpeedFact="1.3" showClsfValues="true" showLinkBar="true" showVeh="true" surch1="0" surch2="0" thickness="0" vehRecAct="true">
-			<fromLinkEndPt lane="4 1" pos="210.292059034418"/>
+			<fromLinkEndPt lane="4 1" pos="298.60889976110326"/>
 			<geometry>
 				<points3D>
 					<point3D x="526.71864883633793" y="-30.027924116030317" zOffset="0"/>
@@ -901,10 +901,10 @@
 			<toLinkEndPt lane="1 2" pos="1.4107697303991751"/>
 		</link>
 		<link assumSpeedOncom="60" costPerKm="0" direction="ALL" displayType="1" emergStopDist="5" gradient="0" hasOvtLn="false" isPedArea="false" linkBehavType="1" linkEvalAct="false" linkEvalSegLen="10" lnChgDist="200" lnChgDistIsPerLn="false" lnChgEvalAct="true" lookAheadDistOvt="500" mesoFollowUpGap="0" mesoSpeed="50" mesoSpeedModel="VEHICLEBASED" name="connector_right" no="10001" ovtOnlyPT="false" ovtSpeedFact="1.3" showClsfValues="true" showLinkBar="true" showVeh="true" surch1="0" surch2="0" thickness="0" vehRecAct="true">
-			<fromLinkEndPt lane="2 1" pos="210.76959010281288"/>
+			<fromLinkEndPt lane="2 1" pos="298.86229012833235"/>
 			<geometry>
 				<points3D>
-					<point3D x="526.79841836317007" y="-33.485572609015286" zOffset="0"/>
+					<point3D x="526.79841461085562" y="-33.486737814463844" zOffset="0"/>
 					<point3D x="531.83497654844791" y="-33.472275634290838" zOffset="0"/>
 				</points3D>
 			</geometry>

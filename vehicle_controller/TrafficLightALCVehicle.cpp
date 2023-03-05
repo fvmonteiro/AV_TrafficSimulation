@@ -10,7 +10,8 @@ TrafficLightALCVehicle::TrafficLightALCVehicle(long id,
 	//controller->add_traffic_lights_controller();
 }
 
-bool TrafficLightALCVehicle::implement_has_next_traffic_light() const {
+bool TrafficLightALCVehicle::implement_has_next_traffic_light() const 
+{
 	return next_traffic_light_id != 0;
 }
 
