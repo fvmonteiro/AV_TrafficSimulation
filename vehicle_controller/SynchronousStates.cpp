@@ -100,7 +100,8 @@ void SynchronousLookingForSafeGapState
 	{
 		const VehicleState& platoon_leader_state =
 			*platoon_vehicle->get_platoon()->get_platoon_leader()->get_state();
-		can_start_lane_change = platoon_leader_state == SynchronousLaneChangingState();
+		can_start_lane_change = 
+			platoon_leader_state == SynchronousLaneChangingState();
 	}
 
 	if (can_start_lane_change)

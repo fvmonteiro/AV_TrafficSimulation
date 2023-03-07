@@ -176,16 +176,9 @@ std::shared_ptr<NearbyVehicle> LeaderFirstStrategy
 	{
 		return platoon_vehicle.define_virtual_leader_when_alone();
 	}
-	const VehicleState& veh_state = *platoon_vehicle.get_state();
-	bool is_trying_to_change_lanes = 
-		veh_state > LeaderFirstLaneKeepingState();
-	bool is_done_lane_changing =
-		veh_state > LeaderFirstLaneChangingState();
-	bool leader_is_done_lane_changing =
-		*platoon_vehicle.get_preceding_vehicle_state()
-		> LeaderFirstLaneChangingState();
-	if ((is_trying_to_change_lanes && !is_done_lane_changing)
-		&& leader_is_done_lane_changing)
+	if (!platoon_vehicle.has_leader()
+		|| (platoon_vehicle.get_leader_id()
+			!= platoon_vehicle.get_preceding_vehicle_id()))
 	{
 		return platoon_vehicle.get_nearby_vehicle_by_id(
 			platoon_vehicle.get_preceding_vehicle_id());
@@ -194,6 +187,24 @@ std::shared_ptr<NearbyVehicle> LeaderFirstStrategy
 	{
 		return nullptr;
 	}
+	/*const VehicleState& veh_state = *platoon_vehicle.get_state();
+	bool is_trying_to_change_lanes = 
+		veh_state > LeaderFirstLaneKeepingState();
+	bool is_done_lane_changing =
+		veh_state > LeaderFirstLaneChangingState();
+	bool has_leader_started_lane_change =
+		*platoon_vehicle.get_preceding_vehicle_state()
+		>= LeaderFirstLaneChangingState();
+	if ((is_trying_to_change_lanes && !is_done_lane_changing)
+		&& has_leader_started_lane_change)
+	{
+		return platoon_vehicle.get_nearby_vehicle_by_id(
+			platoon_vehicle.get_preceding_vehicle_id());
+	}
+	else
+	{
+		return nullptr;
+	}*/
 }
 
 /* ------------------------------------------------------------------------ */

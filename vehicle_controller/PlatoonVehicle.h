@@ -52,12 +52,10 @@ private:
 	double lambda_0_platoon{ 0.0 };
 	double lambda_1_platoon{ 0.0 };
 	double lambda_1_lane_change_platoon{ 0.0 };
-	/* Used to determine whether the current gap equals the desired gap */
-	double gap_error_threshold{ 2.0 }; 
 
 	/* Some constants for the platoon vehicles */
 	double in_platoon_comf_accel{ 0.5 };
-	double in_platoon_rho{ 0.05 };
+	double in_platoon_rho{ 0.1 };
 
 	double implement_compute_desired_acceleration(
 		const std::unordered_map<int, TrafficLight>& traffic_lights) override;

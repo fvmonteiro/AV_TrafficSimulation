@@ -214,7 +214,7 @@ private:
 	/* ------------ Control Parameters ------------ */
 
 	double velocity_filter_gain{ 10.0 };
-	double time_headway_filter_gain{ 1.0 }; // 0.3 original value for CAVs
+	double time_headway_filter_gain{ 0.5 }; // 0.3 original value for CAVs
 	AutonomousGains autonomous_real_following_gains{ 0.2, 1.0 };
 	AutonomousGains autonomous_virtual_following_gains{ 0.4, 1.0 };
 	// Original values for CAVs

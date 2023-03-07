@@ -15,8 +15,8 @@ void LeaderFirstLaneKeepingState
 	to their leaders. Is it once the leader is done increasing gap, or
 	once it has started/finished its own lane change? */
 
-	const VehicleState* leader_state = platoon_vehicle
-		->get_preceding_vehicle_state();
+	const VehicleState* leader_state = 
+		platoon_vehicle->get_preceding_vehicle_state();
 	if (leader_state == nullptr // this is the platoon leader
 		|| *leader_state > LeaderFirstIncreasingGapState())
 	{

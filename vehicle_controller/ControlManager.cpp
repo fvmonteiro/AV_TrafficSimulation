@@ -351,7 +351,11 @@ void ControlManager::activate_destination_lane_controller(double ego_velocity,
 	destination_lane_controller.reset_leader_velocity_filter(leader_velocity);
 	/* NOTE: include 'if (time_headway_filter.get_is_initialized())' ?
 	And force initial value to be the non-lane-changing one? */
-	destination_lane_controller.reset_time_headway_filter(time_headway);
+	/* [Mar 6] Test: setting the initial value equal the current 
+	origin lane time headway value. In the update function, we 
+	set the desired value to the lane changing one. */
+	destination_lane_controller.reset_time_headway_filter(
+		origin_lane_controller.get_current_time_headway());
 	update_destination_lane_controller(ego_velocity, time_headway,
 		is_leader_connected);
 }
@@ -386,7 +390,7 @@ void ControlManager::update_destination_lane_controller(double ego_velocity,
 			<< time_headway << std::endl;
 	}
 
-	destination_lane_controller.smooth_start_leader_velocity_filter();
+	//destination_lane_controller.smooth_start_leader_velocity_filter();
 	destination_lane_controller.set_desired_time_headway(time_headway);
 	destination_lane_controller.connect_gap_controller(is_leader_connected);
 	//destination_lane_controller.reset_leader_velocity_filter(ego_velocity);
@@ -398,8 +402,6 @@ void ControlManager::update_destination_lane_follower_parameters(
 	dest_lane_follower.compute_safe_gap_parameters();
 	lateral_controller.set_destination_lane_follower_parameters(
 		dest_lane_follower.get_lambda_0(), dest_lane_follower.get_lambda_1());
-	// [Feb 24, 2023] TODO: should no longer be needed
-	//destination_lane_controller.set_follower_time_headway(time_headway);
 }
 
 void ControlManager::update_destination_lane_follower_time_headway(
@@ -417,8 +419,6 @@ void ControlManager::update_destination_lane_follower_time_headway(
 	}
 	lateral_controller.set_destination_lane_follower_time_headway(
 		dest_lane_follower_time_headway);
-	// [Feb 24, 2023] TODO: should no longer be needed
-	//destination_lane_controller.set_follower_time_headway(time_headway);
 }
 
 void ControlManager::update_destination_lane_leader_time_headway(
