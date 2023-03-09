@@ -261,12 +261,12 @@ long LastVehicleFirstStrategy::implement_create_platoon_lane_change_request(
 std::shared_ptr<NearbyVehicle> LastVehicleFirstStrategy
 ::implement_define_virtual_leader(const PlatoonVehicle& platoon_vehicle) const
 {
-	//std::shared_ptr<NearbyVehicle> virtual_leader = nullptr;
 	if (platoon_vehicle.is_last_platoon_vehicle())
 	{
 		return platoon_vehicle.define_virtual_leader_when_alone();
 	}
 
+	long virtual_leader_id = 0;
 	bool is_done_lane_changing =
 		*platoon_vehicle.get_state() > LastVehicleFirstLaneChangingState();
 	bool follower_is_done_lane_changing = 
@@ -277,22 +277,25 @@ std::shared_ptr<NearbyVehicle> LastVehicleFirstStrategy
 	{
 		/* Once the follower has changed lanes, we try to merge between
 		the follower and its real leader. */
-		long virtual_leader_id = 
+		long follower_real_leader_id = 
 			platoon_vehicle.get_following_vehicle_in_platoon()
 			->get_leader_id();
-		return platoon_vehicle.get_nearby_vehicle_by_id(virtual_leader_id);
+		/* We must take into account the few moments where we are "half"
+		in the destination lane */
+		virtual_leader_id =
+			follower_real_leader_id == platoon_vehicle.get_id() ?
+			platoon_vehicle.get_destination_lane_leader_id()
+			: follower_real_leader_id;
 	}
-	else if (platoon_vehicle.is_platoon_leader())
+	else if (platoon_vehicle.is_platoon_leader()
+		&& (*platoon->get_last_vehicle()->get_state()
+			> LastVehicleFirstLaneKeepingState()))
 	{
 		/* We want to prevent the platoon from "running away" */
-		long dest_lane_leader_id =
-			platoon_vehicle.get_destination_lane_leader_id();
-		return platoon_vehicle.get_nearby_vehicle_by_id(dest_lane_leader_id);
+		virtual_leader_id = 0;
+			//platoon_vehicle.get_destination_lane_leader_id();
 	}
-	else
-	{
-		return nullptr;
-	}
+	return platoon_vehicle.get_nearby_vehicle_by_id(virtual_leader_id);
 }
 
 /* ------------------------------------------------------------------------ */
@@ -324,7 +327,8 @@ std::unique_ptr<VehicleState> LeaderFirstAndInvertStrategy
 }
 
 long LeaderFirstAndInvertStrategy
-::implement_create_platoon_lane_change_request(const PlatoonVehicle& platoon_vehicle) const
+::implement_create_platoon_lane_change_request(
+	const PlatoonVehicle& platoon_vehicle) const
 {
 	long desired_future_follower_id = 0;
 	long veh_id = platoon_vehicle.get_id();
@@ -350,22 +354,46 @@ std::shared_ptr<NearbyVehicle> LeaderFirstAndInvertStrategy
 		return platoon_vehicle.define_virtual_leader_when_alone();
 	}
 
-	const VehicleState& leader_state =
+	/*const VehicleState& leader_state =
 		*platoon_vehicle.get_preceding_vehicle_state();
 	bool leader_is_done_lane_changing = leader_state
-		> LeaderFirstAndInvertLaneChangingState();
-	if (leader_is_done_lane_changing)
+		> LeaderFirstAndInvertLaneChangingState();*/
+	
+	/* As soon as the platoon preceding vehicle is no longer
+	our real leader, we start to overtaking it. The goal is to
+	merge merge between the preceding vehicle and its real leader. */
+	const auto& preceding_vehicle =
+		*platoon_vehicle.get_preceding_vehicle_in_platoon();
+	std::shared_ptr<NearbyVehicle> virtual_leader{ nullptr };
+	if (!platoon_vehicle.has_leader()
+		|| (platoon_vehicle.get_leader_id()
+			!= preceding_vehicle.get_id()))
 	{
-		/* Once the preceding vehicle has changed lanes, we try to overtake 
-		the preceding vehicle, and merge between the preceding vehicle 
-		and its real leader. */
-		long virtual_leader_id =
-			platoon_vehicle.get_preceding_vehicle_in_platoon()
-			->get_leader_id();
-		return platoon_vehicle.get_nearby_vehicle_by_id(virtual_leader_id);
+		long preceding_veh_leader_id = preceding_vehicle.get_leader_id();
+		if (preceding_veh_leader_id == platoon_vehicle.get_id())
+		{
+			// We already overtook the preceding vehicle
+			virtual_leader = platoon_vehicle.get_nearby_vehicle_by_id(
+				platoon_vehicle.get_destination_lane_leader_id());
+		}
+		else
+		{
+			virtual_leader = platoon_vehicle.get_nearby_vehicle_by_id(
+				preceding_veh_leader_id);
+			if (virtual_leader == nullptr)
+			{
+				/* We didn't find the preceding vehicle's leader in the
+				platoon vehicle's nearby vehicle list*/
+				virtual_leader =
+					platoon_vehicle.create_nearby_vehicle_from_another(
+						preceding_vehicle, preceding_veh_leader_id);
+			}
+		}
+		//return virtual_leader;
 	}
-	else
+	return virtual_leader;
+	/*else
 	{
 		return nullptr;
-	}
+	}*/
 }

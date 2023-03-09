@@ -152,13 +152,13 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
             case UDA::leader_type:
                 return 0;
             case UDA::gap_to_leader:
-                return 1;
+                return 0;
             case UDA::reference_gap:
-                return 1;
+                return 0;
             case UDA::relative_velocity_to_leader:
                 return 0;
             case UDA::safe_gap_to_leader:
-                return 1;
+                return 0;
             /* Debugging: dest lane leader */
             case UDA::dest_leader_id:
                 return 1;
@@ -168,7 +168,7 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
             case UDA::safe_gap_to_dest_lane_leader:
             case UDA::delta_gap_to_ld:
             case UDA::lc_collision_free_gap_to_ld:
-                return 1;
+                return 0;
             /* Debugging: dest lane follower */
             case UDA::dest_follower_id:
                 return 1;
@@ -639,8 +639,8 @@ DRIVERMODEL_API  int  DriverModelGetValue (long   type,
             break;
         case UDA::transient_gap_to_fd:
             *double_value = vehicles[current_vehicle_id]->
-                compute_transient_gap(
-                    vehicles[current_vehicle_id]->get_destination_lane_follower()
+                compute_transient_gap(vehicles[current_vehicle_id]
+                    ->get_destination_lane_follower()
                 );
             break;
         case UDA::veh_following_gap_to_fd:

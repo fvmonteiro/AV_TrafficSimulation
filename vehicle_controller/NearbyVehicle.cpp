@@ -67,6 +67,15 @@ void NearbyVehicle::set_assisted_vehicle_id(long veh_id)
 	this->assisted_vehicle_id = is_connected() ? veh_id : 0;
 }
 
+void NearbyVehicle::offset_from_another(const NearbyVehicle& other_vehicle)
+{
+	relative_lane = RelativeLane::from_long(relative_lane.to_int()
+		+ other_vehicle.get_relative_lane().to_int());
+	relative_position += other_vehicle.get_relative_position();
+	distance += other_vehicle.get_distance();
+	relative_velocity += other_vehicle.get_relative_velocity();
+}
+
 bool NearbyVehicle::is_connected() const 
 {
 	/* The nearby vehicle type is only set to connected if the ego vehicle
@@ -74,6 +83,7 @@ bool NearbyVehicle::is_connected() const
 	connected vehicle. */
 
 	return (type == VehicleType::connected_car
+		|| type == VehicleType::no_lane_change_connected_car
 		|| type == VehicleType::traffic_light_calc_car
 		|| type == VehicleType::platoon_car);
 }

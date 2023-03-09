@@ -37,7 +37,8 @@ public:
 		const NearbyVehicle& nearby_vehicle, double accepted_risk);
 	double compute_vehicle_following_gap_for_lane_change(
 		const EgoVehicle& ego_vehicle, const NearbyVehicle& nearby_vehicle,
-		double follower_lambda_1, double accepted_risk) const;
+		std::pair<double, double> ego_safe_lane_changing_params,
+		double accepted_risk) const;
 
 	/* Computes the gap variation due to non-zero relative velocities during
 	the lane change. */

@@ -42,8 +42,10 @@ EgoVehicle::EgoVehicle(long id, VehicleType type, double desired_velocity,
 			<< ", type " << static_cast<int>(get_type())
 			<< ", des. vel. = " << desired_velocity
 			<< ", lambda 1 = " << get_lambda_1()
-			<< ", lambda 0 = " << get_lambda_0();
-			std::clog << std::endl;
+			<< ", lambda 0 = " << get_lambda_0()
+			<< ", lambda 1 lc = " << get_lambda_1_lane_change()
+			<< ", lambda 0 lc = " << get_lambda_0_lane_change()
+			<< std::endl;
 	}
 
 	//this->controller = ControlManager(*this, verbose_control_manager);
@@ -66,6 +68,11 @@ long EgoVehicle::get_leader_id() const
 	return has_leader() ? leader->get_id() : 0;
 }
 
+long EgoVehicle::get_old_leader_id() const
+{
+	return old_leader_id;
+}
+
 double EgoVehicle::get_current_max_brake() const
 {
 	return is_lane_changing() ?
@@ -75,8 +82,14 @@ double EgoVehicle::get_current_max_brake() const
 std::pair<double, double> EgoVehicle::get_current_safe_gap_parameters() const
 {
 	return is_lane_changing() ?
-		std::make_pair(lambda_0_lane_change, lambda_1_lane_change)
+		get_lane_changing_safe_gap_parameters()
 		: std::make_pair(get_lambda_0(), get_lambda_1());
+}
+
+std::pair<double, double> EgoVehicle::get_lane_changing_safe_gap_parameters()
+const
+{
+	return std::make_pair(lambda_0_lane_change, lambda_1_lane_change);
 }
 
 double EgoVehicle::get_safe_time_headway() const
@@ -207,6 +220,12 @@ void EgoVehicle::emplace_nearby_vehicle(long nv_id, long relative_lane,
 	nearby_vehicles[nv_id] = std::make_shared<NearbyVehicle>(
 		nv_id, relative_lane, relative_position); 
 	//std::move(nearby_vehicle);
+}
+
+void EgoVehicle::emplace_nearby_vehicle(NearbyVehicle nearby_vehicle)
+{
+	nearby_vehicles[nearby_vehicle.get_id()] = 
+		std::make_shared<NearbyVehicle>(nearby_vehicle);
 }
 
 //std::shared_ptr<NearbyVehicle> EgoVehicle::peek_nearby_vehicles() const
@@ -454,6 +473,7 @@ void EgoVehicle::set_leader_by_id(long new_leader_id)
 
 void EgoVehicle::find_leader()
 {
+	old_leader_id = get_leader_id();
 	// Note: this makes the leader = nullptr
 	std::shared_ptr<const NearbyVehicle> old_leader = std::move(leader);
 
@@ -516,23 +536,17 @@ void EgoVehicle::update_leader(
 {
 	if (has_leader())
 	{
-		//leader_id = leader->get_id();
 		double new_leader_max_brake = leader->get_max_brake();
 		bool is_new_leader_connected = leader->is_connected();
 		if (old_leader == nullptr)
 		{
-			controller->activate_origin_lane_controller(get_velocity(),
-				compute_current_desired_time_headway(*leader),
-				is_new_leader_connected);
+			controller->activate_origin_lane_controller(*this, *leader);
 		}
 		else if((std::abs(new_leader_max_brake
 			- old_leader->get_max_brake()) > 0.5)
 			|| (leader->get_type() != old_leader->get_type()))
 		{
-			controller->update_origin_lane_controller(
-				compute_current_desired_time_headway(*leader),
-				is_new_leader_connected
-			);
+			controller->update_origin_lane_controller(*this, *leader);
 		}
 	}
 }
@@ -584,8 +598,8 @@ void EgoVehicle::set_state(std::unique_ptr<VehicleState> new_state)
 
 	if (verbose)
 	{
-		std::clog << "t=" << get_current_time() << ", veh " << get_id() << "\n";
-		std::clog << "Transition from ";
+		std::clog << ">>>> STATE TRANSITION <<<<\n"
+		<< "\tat t=" << get_current_time() << " from ";
 		if (state == nullptr) std::clog << "null";
 		else std::clog << *state;
 		std::clog << " to " << *new_state << std::endl;
@@ -735,34 +749,31 @@ void EgoVehicle::update_time_headway_to_leader()
 {
 	if (has_leader())
 	{
-		controller->update_origin_lane_controller(
-			compute_current_desired_time_headway(*get_leader()),
-			get_leader()->is_connected()
-		);
+		controller->update_origin_lane_controller(*this, *get_leader());
 	}
 }
 
-void EgoVehicle::increase_time_headway_to_leader()
-{
-	if (has_leader())
-	{
-		controller->update_origin_lane_controller(
-			compute_lane_changing_desired_time_headway(*get_leader()),
-			get_leader()->is_connected()
-		);
-	}
-}
-
-void EgoVehicle::decrease_time_headway_to_leader()
-{
-	if (has_leader())
-	{
-		controller->update_origin_lane_controller(
-			compute_vehicle_following_safe_time_headway(*get_leader()),
-			get_leader()->is_connected()
-		);
-	}
-}
+//void EgoVehicle::increase_time_headway_to_leader()
+//{
+//	if (has_leader())
+//	{
+//		controller->update_origin_lane_controller(
+//			compute_lane_changing_desired_time_headway(*get_leader()),
+//			get_leader()->is_connected()
+//		);
+//	}
+//}
+//
+//void EgoVehicle::decrease_time_headway_to_leader()
+//{
+//	if (has_leader())
+//	{
+//		controller->update_origin_lane_controller(
+//			compute_vehicle_following_safe_time_headway(*get_leader()),
+//			get_leader()->is_connected()
+//		);
+//	}
+//}
 
 void EgoVehicle::reset_origin_lane_velocity_controller()
 {

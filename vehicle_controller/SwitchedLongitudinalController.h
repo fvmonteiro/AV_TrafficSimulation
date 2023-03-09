@@ -54,6 +54,7 @@ public:
 	double get_current_time_headway() const;
 	double get_time_headway_gap(double time_headway, double velocity) const;
 	double get_desired_time_headway_gap(double ego_velocity) const;
+	double get_standstill_distance() const;
 	/* Computes desired gap with a possibly varying time headway */
 	//double compute_desired_gap(double ego_velocity);
 	double get_desired_gap(double ego_velocity) const;

@@ -41,7 +41,7 @@ protected:
 	std::shared_ptr<NearbyVehicle> define_virtual_leader() const override;
 
 private:
-	double min_overtaking_rel_vel{ 50.0 / 3.6 };
+	//double min_overtaking_rel_vel{ 50.0 / 3.6 };
 	std::shared_ptr<Platoon> platoon{ nullptr };
 	// desired velocity when not a part of the platoon
 	//double alone_desired_velocity{ 0.0 };
@@ -51,12 +51,17 @@ private:
 	double max_time_looking_for_platoon{ 1.0 };
 	double lambda_0_platoon{ 0.0 };
 	double lambda_1_platoon{ 0.0 };
+	double lambda_0_lane_change_platoon{ 0.0 };
 	double lambda_1_lane_change_platoon{ 0.0 };
 
 	/* Some constants for the platoon vehicles */
 	double in_platoon_comf_accel{ 0.5 };
 	double in_platoon_rho{ 0.1 };
 
+	void implement_create_controller() override {
+		this->controller = std::make_unique<ControlManager>(*this,
+			is_verbose());
+	};
 	double implement_compute_desired_acceleration(
 		const std::unordered_map<int, TrafficLight>& traffic_lights) override;
 	void implement_analyze_nearby_vehicles() override;

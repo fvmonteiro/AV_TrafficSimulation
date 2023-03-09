@@ -15,8 +15,10 @@ PlatoonVehicle::PlatoonVehicle(long id, double desired_velocity,
 	//controller.add_in_platoon_controller(*this);
 	if (verbose)
 	{
-		std::clog << "lambda1_platoon = " << lambda_1_platoon
-			<< ", lambda1_lc_platoon = " << lambda_1_lane_change_platoon
+		std::clog << "lambda 1 platoon = " << lambda_1_platoon
+			<< ", lambda 0 platoon = " << lambda_0_platoon
+			<< ", lambda 1 lc platoon = " << lambda_1_lane_change_platoon
+			<< ", lambda 0 lc platoon = " << lambda_0_lane_change_platoon
 			<< "\n[PlatoonVehicle] constructor done" << std::endl;
 	}
 }
@@ -140,7 +142,12 @@ std::shared_ptr<NearbyVehicle> PlatoonVehicle
 	/* By default, we try to merge behind the current destination
 	lane leader. */
 	std::shared_ptr<NearbyVehicle> nv = get_modifiable_dest_lane_leader();
-
+	
+	/* The choice of min overtaking rel vel ensure that we only overtake
+	if the veh is in free-flow mode and the dest lane leader is almost 
+	stopped. */
+	double min_vel = 1.5; // = 5.4 km/h
+	double min_overtaking_rel_vel = get_desired_velocity() - min_vel;
 	if (try_to_overtake_destination_lane_leader(min_overtaking_rel_vel))
 	{
 		nv = nullptr;
@@ -421,6 +428,9 @@ void PlatoonVehicle::compute_platoon_safe_gap_parameters()
 	lambda_1_platoon =
 		compute_lambda_1(max_jerk, in_platoon_comf_accel,
 			max_brake, CONNECTED_BRAKE_DELAY);
+	lambda_0_lane_change_platoon =
+		compute_lambda_0(max_jerk, in_platoon_comf_accel,
+			get_lane_change_max_brake(), CONNECTED_BRAKE_DELAY);
 	lambda_1_lane_change_platoon =
 		compute_lambda_1(max_jerk, in_platoon_comf_accel,
 			get_lane_change_max_brake(), CONNECTED_BRAKE_DELAY);

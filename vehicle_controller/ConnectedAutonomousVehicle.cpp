@@ -11,8 +11,10 @@ ConnectedAutonomousVehicle::ConnectedAutonomousVehicle(
 	compute_connected_safe_gap_parameters();
 	if (verbose)
 	{
-		std::clog << "lambda1_connected = " << lambda_1_connected
-			<< ", lambda1_lc_platoon = " << lambda_1_lane_change_connected
+		std::clog << "lambda 1 connected = " << lambda_1_connected
+			<< ", lambda 0 connected = " << lambda_0_connected
+			<< ", lambda 1 lc connected = " << lambda_1_lane_change_connected
+			<< ", lambda 0 lc connected = " << lambda_0_lane_change_connected
 			<< "\n[ConnectedAutonomousVehicle] constructor done" << std::endl;
 	}
 }
@@ -20,6 +22,25 @@ ConnectedAutonomousVehicle::ConnectedAutonomousVehicle(
 bool ConnectedAutonomousVehicle::is_cooperating_to_generate_gap() const {
 	return has_assisted_vehicle();
 	/* Function seems unnecessary, but we might perform other checks here */
+}
+
+std::shared_ptr<NearbyVehicle> ConnectedAutonomousVehicle
+::create_nearby_vehicle_from_another(
+	const ConnectedAutonomousVehicle& cav, long nv_id) const
+{
+	const auto& source_nv = get_nearby_vehicle_by_id(cav.get_id());
+	
+	if (source_nv != nullptr
+		&& cav.get_nearby_vehicle_by_id(nv_id) != nullptr)
+	{
+		NearbyVehicle new_nv(*cav.get_nearby_vehicle_by_id(nv_id));
+		new_nv.offset_from_another(*source_nv);
+		return std::make_shared<NearbyVehicle>(new_nv);
+	}
+	else
+	{
+		return nullptr;
+	}
 }
 
 std::shared_ptr<NearbyVehicle> ConnectedAutonomousVehicle::
@@ -243,9 +264,16 @@ double ConnectedAutonomousVehicle::get_lambda_1(
 double ConnectedAutonomousVehicle::get_lambda_1_lane_change(
 	bool is_leader_connected) const
 {
+	return get_lane_changing_safe_gap_parameters(is_leader_connected).second;
+}
+
+std::pair<double, double> ConnectedAutonomousVehicle
+::get_lane_changing_safe_gap_parameters(bool is_leader_connected) const
+{
 	return is_leader_connected ?
-		lambda_1_lane_change_connected
-		: AutonomousVehicle::get_lambda_1_lane_change();
+		std::make_pair(lambda_0_lane_change_connected,
+			lambda_1_lane_change_connected)
+		: EgoVehicle::get_lane_changing_safe_gap_parameters();
 }
 
 void ConnectedAutonomousVehicle::set_assisted_vehicle_by_id(
@@ -303,7 +331,8 @@ double ConnectedAutonomousVehicle::compute_accepted_lane_change_gap(
 	{
 		accepted_gap = controller->compute_accepted_lane_change_gap_exact(
 			*this, *nearby_vehicle, 
-			get_lambda_1_lane_change(nearby_vehicle->is_connected()), 
+			get_lane_changing_safe_gap_parameters(
+				nearby_vehicle->is_connected()),
 			accepted_risk);
 	}
 
@@ -350,6 +379,9 @@ void ConnectedAutonomousVehicle::compute_connected_safe_gap_parameters()
 	lambda_1_connected =
 		compute_lambda_1(max_jerk, comfortable_acceleration,
 			max_brake, CONNECTED_BRAKE_DELAY);
+	lambda_0_lane_change_connected =
+		compute_lambda_0(max_jerk, comfortable_acceleration,
+			get_lane_change_max_brake(), CONNECTED_BRAKE_DELAY);
 	lambda_1_lane_change_connected =
 		compute_lambda_1(max_jerk, comfortable_acceleration,
 			get_lane_change_max_brake(), CONNECTED_BRAKE_DELAY);

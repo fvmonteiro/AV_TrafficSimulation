@@ -22,6 +22,11 @@ public:
 	surrouding vehicles. */
 
 	bool is_cooperating_to_generate_gap() const;
+	/* A connected nearby vehicle can inform us about a vehicle in its
+	range which we cannot detect. Returns nullptr if the cav is 
+	not in our current list of nearby vehicles. */
+	std::shared_ptr<NearbyVehicle> create_nearby_vehicle_from_another(
+		const ConnectedAutonomousVehicle& cav, long nv_id) const;
 
 protected:
 	/* id of the vehicle in front of which we want to merge */
@@ -35,12 +40,10 @@ protected:
 
 	double get_lambda_1(bool is_leader_connected) const;
 	double get_lambda_1_lane_change(bool is_leader_connected) const;
+	std::pair<double, double> get_lane_changing_safe_gap_parameters(
+		bool is_leader_connected) const;
 
 	void set_assisted_vehicle_by_id(long assisted_vehicle_id);
-
-	/* Returns a nullptr if no virtual leader 
-	[Jan 24, 2023] TODO: not sure if should be private */
-	std::shared_ptr<NearbyVehicle> define_virtual_leader() const override;
 
 private:
 	/* Emergency braking parameter between connected vehicles */
@@ -49,6 +52,7 @@ private:
 	/* Emergency braking parameter between connected vehicles
 	during lane change */
 	double lambda_1_lane_change_connected{ 0.0 }; // [m/s]
+	double lambda_0_lane_change_connected{ 0.0 }; // [m]
 	long assisted_vehicle_id{ 0 };
 	/* Vehicle for which the ego vehicle will help generate a safe
 	lane change gap */
@@ -60,6 +64,7 @@ private:
 		this->controller = std::make_unique<ControlManager>(*this,
 			is_verbose());
 	};
+
 	double implement_compute_desired_acceleration(
 		const std::unordered_map<int, TrafficLight>& traffic_lights) override;
 	bool give_lane_change_control_to_vissim() const override
@@ -86,6 +91,9 @@ private:
 	double compute_accepted_lane_change_gap(
 		std::shared_ptr<const NearbyVehicle> nearby_vehicle) const override;
 
+	/* Returns a nullptr if no virtual leader */
+	std::shared_ptr<NearbyVehicle> define_virtual_leader() const override;
+
 	/* Id of the vehicle in front of which we want to merge
 	IF we are trying to perform a mandatory lane change */
 	virtual void create_lane_change_request();
@@ -97,5 +105,6 @@ private:
 		const std::shared_ptr<NearbyVehicle>& old_follower) override;
 	void update_assisted_vehicle(
 		const std::shared_ptr<NearbyVehicle>& old_assisted_vehicle);
+	
 	void set_max_desired_velocity(bool should_increase);
 };

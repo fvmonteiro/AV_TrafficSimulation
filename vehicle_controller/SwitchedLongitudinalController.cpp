@@ -76,6 +76,11 @@ double SwitchedLongitudinalController::get_desired_time_headway_gap(
 	return gap_controller.get_desired_time_headway_gap(ego_velocity);
 }
 
+double SwitchedLongitudinalController::get_standstill_distance() const
+{
+	return gap_controller.get_standstill_distance();
+}
+
 double SwitchedLongitudinalController::get_desired_gap(double ego_velocity)
 const
 {

@@ -13,7 +13,10 @@ class PlatoonVehicleState : public VehicleState
 protected:
 	PlatoonVehicle* platoon_vehicle{ nullptr };
 	double gap_error_margin{ 1.0 };
-	double waiting_velocity_fraction{ 0.8 };
+	/* Once leader has finished changing lanes, it can travel slower 
+	to wait for other platoon vehicles to catch up. Value 1.0 means
+	the leader does not wait. */
+	double waiting_velocity_fraction{ 1.0 };
 
 	PlatoonVehicleState(std::string strategy_name,
 		std::string state_name, int number)

@@ -8,12 +8,9 @@ AutonomousVehicle::AutonomousVehicle(long id, VehicleType type,
 		AUTONOMOUS_BRAKE_DELAY, true, false,
 		simulation_time_step, creation_time, verbose)
 {
-	compute_lane_change_gap_parameters();
-
 	if (verbose)
 	{
-		std::clog << "lambda1_lc = " << get_lambda_1_lane_change()
-			<< "\n[AutonomousVehicle] constructor done" <<std::endl;
+		std::clog << "[AutonomousVehicle] constructor done" <<std::endl;
 	}
 }
 
@@ -308,15 +305,10 @@ void AutonomousVehicle::update_destination_lane_follower(
 			|| (old_follower->get_category()
 				!= destination_lane_follower->get_category()))
 		{
-			//destination_lane_follower->compute_safe_gap_parameters();
 			controller->update_destination_lane_follower_parameters(
 				*destination_lane_follower);
 			controller->update_destination_lane_follower_time_headway(
 				get_max_brake(), false, *destination_lane_follower);
-			//dest_lane_follower_lambda_0 =
-			//	destination_lane_follower->get_lambda_0();
-			//dest_lane_follower_lambda_1 =
-			//	destination_lane_follower->get_lambda_1();
 		}
 	}
 }
@@ -326,11 +318,6 @@ void AutonomousVehicle::update_destination_lane_leader(
 {
 	if (has_destination_lane_leader())
 	{
-		if (verbose)
-		{
-			std::clog << "\tUpdating the dest lane leader"
-				<< std::endl;
-		}
 		double new_leader_max_brake = 
 			destination_lane_leader->get_max_brake();
 		if (old_leader == nullptr
@@ -339,6 +326,11 @@ void AutonomousVehicle::update_destination_lane_leader(
 			|| (old_leader->get_type()
 				!= destination_lane_leader->get_type()))
 		{
+			if (verbose)
+			{
+				std::clog << "\tUpdating the dest lane leader"
+					<< std::endl;
+			}
 			controller->update_destination_lane_leader_time_headway(
 				compute_lane_changing_desired_time_headway(
 					*destination_lane_leader));
@@ -351,31 +343,26 @@ void AutonomousVehicle::update_virtual_leader(
 {
 	if (has_virtual_leader())
 	{
-		if (verbose)
-		{
-			std::clog << "\tUpdating the virtual leader"
-				<< std::endl;
-		}
+		if (verbose) std::clog << "\tHas a virtual leader\n";
+
 		double new_leader_max_brake = get_virtual_leader()->get_max_brake();
 		bool is_new_leader_connected = get_virtual_leader()->is_connected();
 		if (old_leader == nullptr)
 		{
-			double ego_vel = get_velocity();
-			controller->activate_destination_lane_controller(ego_vel,
-				get_virtual_leader()->compute_velocity(ego_vel),
-				compute_lane_changing_desired_time_headway(
-					*get_virtual_leader()),
-				is_new_leader_connected);
+			if (verbose) std::clog << "Activating dest lane ctrl.\n";
+
+			controller->activate_destination_lane_controller(*this, 
+				*get_virtual_leader());
 		}
 		else if ((std::abs(new_leader_max_brake
 			- old_leader->get_max_brake()) > 0.5)
 			|| (old_leader->get_type()
 				!= get_virtual_leader()->get_type()))
 		{
-			controller->update_destination_lane_controller(get_velocity(),
-				compute_lane_changing_desired_time_headway(
-					*get_virtual_leader()),
-				is_new_leader_connected);
+			if (verbose) std::clog << "Updating dest lane ctrl.\n";
+
+			controller->update_destination_lane_controller(*this,
+				*get_virtual_leader());
 		}
 	}
 }
@@ -453,19 +440,19 @@ bool AutonomousVehicle::implement_check_lane_change_gaps()
 	if (verbose) 
 	{
 		std::clog << "Deciding lane changing safety\n"
-			<< "\tTo orig lane leader:\n";
+			<< "\t- To orig lane leader:\n";
 	}
 	lane_change_gaps_safety.orig_lane_leader_gap = 
 		is_lane_change_gap_safe(get_leader());
 	if (verbose)
 	{
-		std::clog << "\tTo dest lane leader:\n";
+		std::clog << "\t- To dest lane leader:\n";
 	}
 	lane_change_gaps_safety.dest_lane_leader_gap =
 		is_lane_change_gap_safe(destination_lane_leader);
 	if (verbose)
 	{
-		std::clog << "\tTo dest lane follower:\n";
+		std::clog << "\t- To dest lane follower:\n";
 	}
 	/* Besides the regular safety conditions, we add the case
 	where the dest lane follower has completely stopped to give room
@@ -507,7 +494,7 @@ double AutonomousVehicle::compute_accepted_lane_change_gap(
 	else
 	{
 		accepted_gap = controller->compute_accepted_lane_change_gap_exact(
-			*this, *nearby_vehicle, get_lambda_1_lane_change(), 
+			*this, *nearby_vehicle, get_lane_changing_safe_gap_parameters(),
 			accepted_risk);
 		/*double vehicle_following_gap =
 			compute_vehicle_following_gap_for_lane_change(

@@ -169,9 +169,10 @@ private:
 
 	/* Returns a nullptr if no virtual leader */
 	virtual std::shared_ptr<NearbyVehicle> define_virtual_leader() const;
-	void update_virtual_leader(std::shared_ptr<const NearbyVehicle> old_leader);
 	virtual void update_destination_lane_follower(
 		const std::shared_ptr<NearbyVehicle>& old_follower);
+	void update_virtual_leader(
+		std::shared_ptr<const NearbyVehicle> old_leader);
 	void update_destination_lane_leader(
 		const std::shared_ptr<NearbyVehicle>& old_leader);
 	double estimate_nearby_vehicle_time_headway(

@@ -43,10 +43,10 @@ public:
 	};
 
 	ControlManager() = default;
-	//ControlManager(const EgoVehicle& ego_vehicle, bool verbose);
 	ControlManager(const ACCVehicle& acc_vehicle, bool verbose);
 	ControlManager(const AutonomousVehicle& autonomous_vehicle, bool verbose);
 	ControlManager(const ConnectedAutonomousVehicle& cav, bool verbose);
+	ControlManager(const PlatoonVehicle& platoon_vehicle, bool verbose);
 	ControlManager(const TrafficLightALCVehicle& tfalc_vehicle, bool verbose);
 	ControlManager(const VirdiVehicle& virdi_vehicle, bool verbose);
 
@@ -115,24 +115,27 @@ public:
 
 	/* Resets the origin lane controller's velocity and time headway filters
 	and sets the time headway*/
-	void activate_origin_lane_controller(double ego_velocity,
-		double time_headway, bool is_leader_connected);
+	void activate_origin_lane_controller(const EgoVehicle& ego_vehicle,
+		const NearbyVehicle& real_leader);
 	void activate_end_of_lane_controller(double time_headway);
 	/* Sets a new time headway and the connectivity of the origin lane
 	controller */
 	/* Resets the destination lane controller's velocity and time headway filters
 	and sets the time headway*/
-	void activate_destination_lane_controller(double ego_velocity,
+	void activate_destination_lane_controller(
+		const EgoVehicle& ego_vehicle, const NearbyVehicle& virtual_leader
+		/*double ego_velocity,
 		double leader_velocity,
-		double time_headway, bool is_leader_connected);
+		double time_headway, bool is_leader_connected*/);
 	//void activate_in_platoon_controller(double ego_velocity,
 	//	double time_headway);
-	void update_origin_lane_controller(double time_headway,
-		bool is_leader_connected);
+	void update_origin_lane_controller(const EgoVehicle& ego_vehicle, 
+		const NearbyVehicle& real_leader);
 	/* Sets a new time headway and the connectivity of the destination lane
 	controller, and resets its velocity filter. */
-	void update_destination_lane_controller(double ego_velocity,
-		double time_headway, bool is_leader_connected);
+	void update_destination_lane_controller(const EgoVehicle& ego_vehicle,
+		const NearbyVehicle& virtual_leader /*double ego_velocity,
+		double time_headway, bool is_leader_connected*/);
 	//void update_leader_lane_changing_time_headway(double time_headway);
 	void update_destination_lane_follower_parameters(
 		NearbyVehicle& dest_lane_follower);
@@ -144,6 +147,10 @@ public:
 		double time_headway);
 
 	void reset_origin_lane_velocity_controller(double ego_velocity);
+	/* Finds which time headway leads to zero gap error. Useful when 
+	there are new real or virtual leaders */
+	double find_comfortable_time_headway(const EgoVehicle& ego_vehicle,
+		const NearbyVehicle& a_leader, double standstill_distance);
 
 	bool is_in_free_flow_at_origin_lane() const;
 
@@ -181,7 +188,8 @@ public:
 	double compute_accepted_lane_change_gap(const EgoVehicle& ego_vehicle,
 		const NearbyVehicle& nearby_vehicle, double accepted_risk);
 	double compute_accepted_lane_change_gap_exact(const EgoVehicle& ego_vehicle,
-		const NearbyVehicle& nearby_vehicle, double ego_lambda_1, 
+		const NearbyVehicle& nearby_vehicle, 
+		std::pair<double, double> ego_safe_lane_changing_params,
 		double accepted_risk);
 
 	/* Returns the accepted lane change gap, which might is different from
@@ -210,20 +218,23 @@ public:
 	static std::string ALC_type_to_string(
 		ALCType active_longitudinal_controller);
 
+
+protected:
+	ControlManager(bool verbose);
+
 private:
 	/* ------------ Control Parameters ------------ */
 
 	double velocity_filter_gain{ 10.0 };
-	double time_headway_filter_gain{ 0.5 }; // 0.3 original value for CAVs
+	double time_headway_filter_gain{ 0.3 };
+	double platoon_time_headway_filter_gain{ 0.5 };
 	AutonomousGains autonomous_real_following_gains{ 0.2, 1.0 };
 	AutonomousGains autonomous_virtual_following_gains{ 0.4, 1.0 };
-	// Original values for CAVs
-	/*ConnectedGains connected_real_following_gains{ 0.2, 2.3, 0.13, 1.3 };*/
 	// Values focused on platoon vehicles TODO: separate controllers
 	// gains will probably have to be tuned
-	ConnectedGains connected_real_following_gains{ 0.5, 2.2, 0.13, 1.3 };
+	ConnectedGains connected_real_following_gains{ 0.2, 2.3, 0.13, 1.3 };
 	ConnectedGains connected_virtual_following_gains{ 0.4, 2.3, 0.13, 1.3 };
-	ConnectedGains platoon_following_gains{ 0.2, 2.3, 0.13, 1.3 };
+	ConnectedGains platoon_following_gains{ 0.5, 2.2, 0.13, 1.3 };
 	VelocityControllerGains desired_velocity_controller_gains{
 		0.5, 0.1, 0.03 };
 	VelocityControllerGains adjustment_velocity_controller_gains{
@@ -241,7 +252,7 @@ private:
 	std::unordered_map<LongitudinalController::State, color_t>
 		vissim_colors =
 	{
-		{LongitudinalController::State::uninitialized, CYAN}
+		{LongitudinalController::State::uninitialized, BLACK}
 	};
 	std::unordered_map<LongitudinalController::State, color_t>
 		orig_lane_colors =
@@ -279,8 +290,8 @@ private:
 	std::unordered_map<LongitudinalController::State, color_t>
 		in_platoon_colors =
 	{
-		{ LongitudinalController::State::velocity_control, LIGHT_GRAY },
-		{ LongitudinalController::State::vehicle_following, GRAY},
+		{ LongitudinalController::State::velocity_control, DARK_GRAY },
+		{ LongitudinalController::State::vehicle_following, WHITE},
 	};
 	/* -------------------------------------------- */
 
@@ -304,6 +315,7 @@ private:
 	/* indicates which controller is active. Used for debugging and
 	visualization. */
 	ALCType active_longitudinal_controller_type{ ALCType::origin_lane };
+	double origin_lane_controller_time_headway{ 10.0 };
 
 	double origin_lane_leader_max_brake{ 0.0 };
 	double destination_lane_leader_max_brake{ 0.0 };

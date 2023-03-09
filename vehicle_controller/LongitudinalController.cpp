@@ -7,14 +7,14 @@ LongitudinalController::LongitudinalController(
 	bool verbose) :
 	state_to_color_map(state_to_color_map), verbose{ verbose }
 {
-	this->state_to_color_map.insert({ State::uninitialized, WHITE });
+	this->state_to_color_map.insert({ State::uninitialized, BLACK });
 }
 
 color_t LongitudinalController::get_state_color() const
 {
 	if (state_to_color_map.find(get_state()) == state_to_color_map.end())
 	{
-		return WHITE;
+		return BLACK;
 	}
 	return state_to_color_map.at(get_state());
 }

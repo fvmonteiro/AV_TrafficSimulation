@@ -18,7 +18,7 @@ const color_t BLUE = ARGB(255, 0, 0, 255);
 const color_t YELLOW = ARGB(255, 255, 255, 0);
 const color_t MAGENTA = ARGB(255, 255, 0, 255);
 const color_t CYAN = ARGB(255, 0, 255, 255);
-const color_t GRAY = ARGB(255, 128, 128, 128);
+const color_t GRAY = ARGB(255, 128, 128, 128);  // SAME COLOR AS THE ROAD
 
 const color_t DARK_RED = ARGB(255, 128, 0, 0);
 const color_t DARK_GREEN = ARGB(255, 0, 128, 0);
