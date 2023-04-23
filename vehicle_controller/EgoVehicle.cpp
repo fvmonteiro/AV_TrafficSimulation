@@ -192,6 +192,20 @@ void EgoVehicle::set_lane_end_distance(double lane_end_distance,
 	}
 }
 
+void EgoVehicle::set_verbose(bool value)
+{
+	if (value && !verbose)
+	{
+		std::clog << "[EgoVehicle] set to verbose.\n";
+	}
+	else if (!value && verbose)
+	{
+		std::clog << "[EgoVehicle] set to no longer verbose.\n";
+	}
+	verbose = value;
+	controller->set_verbose(value);
+}
+
 void EgoVehicle::set_gap_variation_during_lane_change(int nv_id, double value)
 {
 	gap_variation_during_lane_change[nv_id] = value;
@@ -1227,22 +1241,19 @@ std::ostream& operator<< (std::ostream& out, const EgoVehicle& ego_vehicle)
 	out << "t=" << ego_vehicle.get_current_time()
 		<< ", id=" << ego_vehicle.get_id()
 		<< ", type=" << static_cast<int>(ego_vehicle.get_type())
-		<< ", state="
-		<< *(ego_vehicle.state)
+		<< ", state=" << *(ego_vehicle.state)
 		<< ", vel=" << ego_vehicle.get_velocity()
 		<< ", des accel=" << ego_vehicle.get_desired_acceleration()
 		<< ", accel=" << ego_vehicle.get_acceleration()
 		<< ", lane=" << ego_vehicle.get_lane()
-		<< "\nLane changing:" 
-		<< " pref.="
-		<< ego_vehicle.get_preferred_relative_lane()
-		<< ", vissim suggestion="
-		<< ego_vehicle.get_vissim_lane_suggestion()
+		<< ", platoon=" << ego_vehicle.get_platoon_id()
+		<< "\n\tLane changing:" 
+		<< " pref.=" << ego_vehicle.get_preferred_relative_lane()
+		<< ", vissim suggestion=" << ego_vehicle.get_vissim_lane_suggestion()
 		<< ", desired=" << ego_vehicle.get_desired_lane_change_direction()
 		<< ", decision (our choice)="
 		<< ego_vehicle.get_lane_change_direction()
-		<< ", active="
-		<< ego_vehicle.get_active_lane_change_direction();
+		<< ", active=" << ego_vehicle.get_active_lane_change_direction();
 
 	return out; // return std::ostream so we can chain calls to operator<<
 }

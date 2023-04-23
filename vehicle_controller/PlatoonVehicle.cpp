@@ -366,7 +366,8 @@ bool PlatoonVehicle::implement_analyze_platoons(
 		{
 			if (verbose)
 			{
-				std::clog << "t=" << get_current_time() << " id=" << get_id()
+				std::clog << "\tt=" << get_current_time() 
+					<< " id=" << get_id() 
 					<< ": leaving platoon " << platoon->get_id() << "\n";
 			}
 			platoon->remove_vehicle_by_id(get_id(), false);

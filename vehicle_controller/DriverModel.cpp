@@ -327,7 +327,13 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
             verbose_simulation = long_value > 0;
             break;
         case UDA::logged_vehicle_id:
+            /* If possible, we create the vehicle as verbose. This is done
+            using the logged_vehicles_ids. If the vehicle is create before
+            we have the chance to read logged ids from VISSIM, then using 
+            set_verbose ensures it becomes verbose afterwards. */
             logged_vehicles_ids.insert(long_value);
+            vehicles[current_vehicle_id]->set_verbose(
+                current_vehicle_id == long_value);
             break;
         default: // do nothing
             break;
@@ -834,7 +840,6 @@ DRIVERMODEL_API  int  DriverModelExecuteCommand (long number)
         {
             platoons[platoon_id] =
                 vehicles[current_vehicle_id]->get_platoon();
-            //platoons[platoon_id]->set_strategy(platoon_lc_strategy);
             if (platoon_id == LOGGED_PLATOON_ID)
             {
                 platoons[platoon_id]->set_verbose(true);

@@ -70,6 +70,8 @@ public:
 		get_longitudinal_controller_with_traffic_lights_state();*/
 	//void create_destination_lane_controller(const Vehicle& ego_vehicle);
 
+	void set_verbose(bool value);
+
 	/* Initializing controllers */
 	void add_vissim_controller();
 	void add_origin_lane_controllers(const EgoVehicle& ego_vehicle);

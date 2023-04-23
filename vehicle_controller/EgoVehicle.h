@@ -95,7 +95,6 @@ public:
 	void set_lane_change_direction(RelativeLane value) {
 		this->lane_change_direction = value;
 	};
-	void set_verbose(bool value) { verbose = value; };
 
 	/* Non-trivial Getters and setters ---------------------------------------- */
 
@@ -138,6 +137,7 @@ public:
 	void set_vissim_lane_suggestion(long target_relative_lane);
 	void set_lane_end_distance(double lane_end_distance,
 		long lane_number);
+	void set_verbose(bool value);
 	void read_traffic_light(int traffic_light_id, double distance)
 	{
 		set_traffic_light_information(traffic_light_id, distance);
@@ -153,6 +153,7 @@ public:
 	void set_use_linear_lane_change_gap(long value) {
 		implement_set_use_linear_lane_change_gap(value);
 	}
+
 
 	/* Dealing with nearby vehicles --------------------------------------- */
 

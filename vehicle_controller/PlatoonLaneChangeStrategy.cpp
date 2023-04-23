@@ -292,8 +292,8 @@ std::shared_ptr<NearbyVehicle> LastVehicleFirstStrategy
 			> LastVehicleFirstLaneKeepingState()))
 	{
 		/* We want to prevent the platoon from "running away" */
-		virtual_leader_id = 0;
-			//platoon_vehicle.get_destination_lane_leader_id();
+		//virtual_leader_id = 0;
+		virtual_leader_id = platoon_vehicle.get_destination_lane_leader_id();
 	}
 	return platoon_vehicle.get_nearby_vehicle_by_id(virtual_leader_id);
 }

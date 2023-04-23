@@ -41,12 +41,16 @@ void SynchronousIncreasingGapState
 void SynchronousIncreasingGapState
 ::implement_handle_lane_change_intention()
 {
+	bool verbose = platoon_vehicle->is_verbose()
+		&& platoon_vehicle->get_platoon_id() == 2;
+
 	if (platoon_vehicle->has_finished_increasing_gap())
 	{
 		platoon_vehicle->set_state(
 			std::make_unique<SynchronousLookingForSafeGapState>());
 	}
 	else if (platoon_vehicle->is_last_platoon_vehicle()
+		&& !platoon_vehicle->is_platoon_leader()
 		&& (*platoon_vehicle->get_preceding_vehicle_state()
 			== SynchronousLaneChangingState()))
 	{

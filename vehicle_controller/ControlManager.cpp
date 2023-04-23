@@ -139,6 +139,15 @@ ControlManager::get_longitudinal_controller_state() const
 	}
 }
 
+void ControlManager::set_verbose(bool value)
+{
+	if (value && !verbose)
+	{
+		std::clog << "[ControlManager] set to verbose."
+			<< " Note that underlying long controllers are NOT verbose\n";
+	}
+	verbose = value;
+}
 
 void ControlManager::add_vissim_controller()
 {
