@@ -128,7 +128,7 @@ bool NearbyVehicle::is_cutting_in() const
 				== lane_change_direction.get_opposite())
 			&& ((get_lateral_position()
 				* lane_change_direction.to_int()) > 0);
-		if (moving_into_my_lane) return true;
+		return moving_into_my_lane;
 	}
 	return false;
 }

@@ -275,7 +275,7 @@ public:
 	/* Sets the new state (must be a lane keeping state) and resets the 
 	desired lane change direction and the longitudinal controllers. */
 	void reset_state(std::unique_ptr<VehicleState> new_lane_keeping_state);
-	//bool has_lane_change_intention() const;
+	bool has_lane_change_intention() const;
 	bool is_lane_changing() const override;
 	//State get_previous_state() const;
 	/* Returns the color equivalent to the current state as a long */

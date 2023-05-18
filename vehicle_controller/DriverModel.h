@@ -205,7 +205,7 @@ enum class UDA {
 /*         (+1 = to the left, 0 = none, -1 = to the right) */
 #define  DRIVER_DATA_VEH_ACTIVE_LANE_CHANGE  223
 
-/* long:   target lange */
+/* long:   target lane */
 /*         (+1 = next one left, 0 = current lane, -1 = next one right) */
 #define  DRIVER_DATA_VEH_REL_TARGET_LANE     224
 
@@ -440,7 +440,7 @@ enum class UDA {
 /*         (will be used for NVEH_LANE_CHANGE) */
 #define  DRIVER_DATA_ACTIVE_LANE_CHANGE      804
 
-/* long:   target lange                                                */
+/* long:   target lane                                                */
 /*         (+1 = next one left, 0 = current lane, -1 = next one right) */
 #define  DRIVER_DATA_REL_TARGET_LANE         805
            

@@ -135,11 +135,7 @@ long EgoVehicle::get_leader_id() const
 {
 	return leader_id.back();
 }
-//EgoVehicle::State EgoVehicle::get_state_implementation_v1() const
-//{
-//	return state_implementation_v1.empty() ?
-//		State::lane_keeping : state_implementation_v1.back();
-//}
+
 double EgoVehicle::get_ttc() const
 {
 	return ttc.back();
@@ -712,6 +708,11 @@ bool EgoVehicle::check_lane_change_gaps()
 	return implement_check_lane_change_gaps();
 }
 
+bool EgoVehicle::has_lane_change_intention() const
+{
+	return desired_lane_change_direction != RelativeLane::same;
+}
+
 bool EgoVehicle::is_lane_changing() const
 {
 	return get_active_lane_change_direction() != RelativeLane::same;
@@ -955,7 +956,7 @@ void EgoVehicle::set_desired_lane_change_direction()
 	/* Both preferred_relative_lane and relative_target_lane indicate
 	desire to change lanes. The former indicates preference due to
 	routing, so it takes precedence over the latter. */
-	RelativeLane current_preferred_lane = get_preferred_relative_lane();
+	/*RelativeLane current_preferred_lane = get_preferred_relative_lane();
 	desired_lane_change_direction = RelativeLane::same;
 	if (current_preferred_lane.is_to_the_left())
 	{
@@ -976,7 +977,13 @@ void EgoVehicle::set_desired_lane_change_direction()
 	else
 	{
 		desired_lane_change_direction = RelativeLane::same;
-	}
+	}*/
+
+	/* ONLY FOR SCENARIOS WHERE WE WANT TO FORCE LANE CHANGES */
+	bool should_change_lane = (get_link() == MAIN_LINK_NUMBER)
+		&& (get_lane() == 1);
+	desired_lane_change_direction = should_change_lane ?
+		RelativeLane::left : RelativeLane::same;
 }
 
 /* Methods for printing and debugging ------------------------------------- */

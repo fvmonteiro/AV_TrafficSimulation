@@ -52,11 +52,6 @@ bool Vehicle::is_a_connected_type(VehicleType vehicle_type) const
 		|| vehicle_type == VehicleType::no_lane_change_connected_car);
 }
 
-bool Vehicle::has_lane_change_intention() const 
-{
-	return desired_lane_change_direction != RelativeLane::same;
-}
-
 double Vehicle::compute_max_risk(double leader_max_brake,
 	double follower_max_brake, double desired_velocity, double rho)
 {

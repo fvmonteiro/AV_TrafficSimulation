@@ -30,8 +30,7 @@ public:
 	/* Also sets the estimated maximum braking of the vehicle. */
 	void set_category(long category);
 	
-	
-	bool has_lane_change_intention() const;
+	//bool has_lane_change_intention() const;
 
 protected:
 	virtual ~Vehicle() {};
