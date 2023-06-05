@@ -14,8 +14,6 @@
 #include <string>
 
 #include "Constants.h"
-#include "GapController.h"
-#include "VelocityController.h"
 
 class EgoVehicle;
 class NearbyVehicle;
@@ -30,6 +28,7 @@ public:
 		traffic_light,
 		comf_accel,
 		too_close,
+		creating_gap
 	};
 
 	LongitudinalController() = default;
@@ -48,8 +47,6 @@ public:
 protected:
 	LongitudinalController(std::unordered_map<State, color_t>
 		state_to_color_map, bool verbose);
-	VelocityController velocity_controller;
-	GapController gap_controller;
 	State state{ State::uninitialized }; // event driven logic variable
 	bool verbose{ false };
 

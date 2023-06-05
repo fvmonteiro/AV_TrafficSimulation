@@ -26,7 +26,7 @@ private:
 	double time_headway{ 1.0 }; // [s]
 	double standstill_distance{ 3.0 };  // [m]
 	//double max_speed{ 30.0 };
-	double max_accel{ COMFORTABLE_ACCELERATION }; // [m/s2]
+	//double max_accel{ COMFORTABLE_ACCELERATION }; // [m/s2]
 	double comfortable_braking{ 4.0 }; // [m/s2] absolute value
 	double veh_foll_gain{ 2.0 };
 	double vel_control_gain{ 1.0 };

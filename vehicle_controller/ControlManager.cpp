@@ -13,6 +13,7 @@
 #include "EgoVehicle.h"
 #include "NearbyVehicle.h"
 #include "PlatoonVehicle.h"
+#include "SafeConnectedAutonomousVehicle.h"
 #include "TrafficLightALCVehicle.h"
 #include "VariationLimitedFilter.h"
 
@@ -30,7 +31,7 @@ ControlManager::ControlManager(const EgoVehicle& ego_vehicle,
 
 color_t ControlManager::get_longitudinal_controller_color() const
 {
-	std::unique_ptr<LongitudinalController> active_long_controller =
+	const LongitudinalController* active_long_controller =
 		get_active_long_controller();
 	if (active_long_controller != nullptr)
 	{
@@ -55,7 +56,7 @@ double ControlManager::get_current_desired_time_headway() const
 LongitudinalController::State
 ControlManager::get_longitudinal_controller_state() const
 {
-	std::unique_ptr<LongitudinalController> active_long_controller =
+	const LongitudinalController* active_long_controller =
 		get_active_long_controller();
 	if (active_long_controller != nullptr)
 	{
@@ -139,42 +140,29 @@ void ControlManager::add_traffic_lights_controller()
 	active_longitudinal_controller_type = ALCType::traffic_light_alc;
 }
 
-void ControlManager::add_in_platoon_controller(
-	const PlatoonVehicle& platoon_vehicle)
+void ControlManager::add_safety_critical_controllers(
+	const SafeConnectedAutonomousVehicle& scav)
 {
-	in_platoon_controller = RealLongitudinalController(
-		platoon_vehicle,
-		desired_velocity_controller_gains,
-		autonomous_real_following_gains,
-		platoon_following_gains,
-		velocity_filter_gain, time_headway_filter_gain,
-		in_platoon_colors, long_controllers_verbose
-	);
+	nominal_controller = VelocityController()
 }
 
-std::unique_ptr<LongitudinalController>
-ControlManager::get_active_long_controller() const
+const LongitudinalController* ControlManager::get_active_long_controller() const
 {
 	switch (active_longitudinal_controller_type)
 	{
 	case ALCType::origin_lane:
-		return std::make_unique<RealLongitudinalController>(
-			origin_lane_controller);
+		return &origin_lane_controller;
 	case ALCType::destination_lane:
-		return std::make_unique<VirtualLongitudinalController>(
-			destination_lane_controller);
+		return &destination_lane_controller;
 	case ALCType::cooperative_gap_generation:
-		return std::make_unique< VirtualLongitudinalController>(
-			gap_generating_controller);
+		return &gap_generating_controller;
 	case ALCType::end_of_lane:
-		return std::make_unique<RealLongitudinalController>(
-			end_of_lane_controller);
+		return &end_of_lane_controller;
 	case ALCType::traffic_light_alc:
-		return std::make_unique<LongitudinalControllerWithTrafficLights>(
-			with_traffic_lights_controller);
+		return &with_traffic_lights_controller;
 	case ALCType::vissim:
-		return std::make_unique<VissimLongitudinalController>(
-			vissim_controller);
+		return &vissim_controller;
+	// TODO: safe_longitudinal_controller
 	default:
 		return nullptr;
 	}
@@ -376,8 +364,7 @@ double ControlManager::get_desired_acceleration(
 double ControlManager::get_desired_acceleration(
 	const PlatoonVehicle& platoon_vehicle)
 {
-	std::unordered_map<ALCType, double>
-		possible_accelerations;
+	std::unordered_map<ALCType, double> possible_accelerations;
 	
 	get_origin_lane_desired_acceleration(platoon_vehicle,
 		possible_accelerations);
@@ -414,6 +401,14 @@ double ControlManager::get_desired_acceleration(
 
 	return with_traffic_lights_controller.compute_desired_acceleration(
 		tl_alc_vehicle, nullptr, tl_alc_vehicle.get_desired_velocity());
+}
+
+double ControlManager::get_desired_acceleration(
+	const SafeConnectedAutonomousVehicle& scav)
+{
+	std::unordered_map<ALCType, double> possible_accelerations;
+
+
 }
 
 void ControlManager::print_traffic_lights(const EgoVehicle& ego,
@@ -531,6 +526,7 @@ bool ControlManager::get_destination_lane_desired_acceleration(
 		virtual_leader =
 			autonomous_vehicle.get_destination_lane_leader();
 	}
+
 	if (virtual_leader != nullptr)
 	{
 		if (verbose)
@@ -767,42 +763,6 @@ double ControlManager::get_desired_time_headway_gap(double ego_velocity,
 
 	return time_headway_gap;
 }
-
-//double ControlManager::get_accepted_time_headway_gap(
-//	const AutonomousVehicle& ego_vehicle, const NearbyVehicle& nearby_vehicle)
-//{
-//	double time_headway_gap = 0.0;
-//	double ego_velocity = ego_vehicle.get_velocity();
-//	//bool has_lc_intention = ego_vehicle.has_lane_change_intention();
-//
-//	if (nearby_vehicle.is_ahead())
-//	{
-//		if (nearby_vehicle.get_relative_lane() == RelativeLane::same)
-//		{
-//			time_headway_gap =
-//				origin_lane_controller.get_desired_time_headway_gap(
-//					ego_velocity/*, has_lc_intention*/);
-//		}
-//		else
-//		{
-//			time_headway_gap =
-//				destination_lane_controller.get_desired_time_headway_gap(
-//					ego_velocity/*, has_lc_intention*/);
-//		}
-//		//double gamma = nearby_vehicle.get_max_brake() / ego_vehicle
-//	}
-//	else
-//	{
-//		double dest_lane_follower_time_headway =
-//			destination_lane_controller.get_follower_time_headway();
-//		time_headway_gap =
-//			destination_lane_controller.get_time_headway_gap(
-//				dest_lane_follower_time_headway,
-//				nearby_vehicle.compute_velocity(ego_velocity));
-//	}
-//
-//	return time_headway_gap;
-//}
 
 double ControlManager::get_gap_variation_during_lane_change(
 	const AutonomousVehicle& ego_vehicle,

@@ -18,17 +18,17 @@ struct ConnectedGains {
 };
 
 /* Constant time headway based controller */
-class GapController
+class CTHGapController
 {
 public:
-	GapController() = default;
-	GapController(double simulation_time_step, 
+	CTHGapController() = default;
+	CTHGapController(double simulation_time_step, 
 		const AutonomousGains& autonomous_gains,
 		const ConnectedGains& connected_gains,
 		double velocity_filter_gain, double time_headway_filter_gain,
 		double comfortable_acceleration, double filter_brake_limit,
 		bool verbose);
-	GapController(double simulation_time_step,
+	CTHGapController(double simulation_time_step,
 		const AutonomousGains& autonomous_gains,
 		const ConnectedGains& connected_gains,
 		double velocity_filter_gain, double time_headway_filter_gain,

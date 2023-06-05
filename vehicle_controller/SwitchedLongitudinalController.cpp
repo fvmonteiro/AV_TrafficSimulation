@@ -27,7 +27,7 @@ SwitchedLongitudinalController::SwitchedLongitudinalController(
 	velocity_controller = VelocityController(simulation_time_step,
 		velocity_controller_gains, velocity_filter_gain, 
 		comfortable_acceleration, filter_brake_limit);
-	gap_controller = GapController(simulation_time_step, autonomous_gains,
+	gap_controller = CTHGapController(simulation_time_step, autonomous_gains,
 		connected_gains, velocity_filter_gain, time_headway_filter_gain,
 		comfortable_acceleration, filter_brake_limit, verbose);
 }

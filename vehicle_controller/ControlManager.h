@@ -15,6 +15,7 @@
 #include "SwitchedLongitudinalController.h"
 #include "LongitudinalControllerWithTrafficLights.h"
 #include "RealLongitudinalController.h"
+#include "SafetyCriticalGapController.h"
 #include "Vehicle.h"
 #include "VirtualLongitudinalController.h"
 #include "VissimLongitudinalController.h"
@@ -23,6 +24,7 @@ class EgoVehicle;
 class ACCVehicle;
 class AutonomousVehicle;
 class ConnectedAutonomousVehicle;
+class SafeConnectedAutonomousVehicle;
 class TrafficLightALCVehicle;
 class PlatoonVehicle;
 
@@ -30,14 +32,19 @@ class ControlManager
 {
 public:
 
-	/* Autonomous Longitudinal Controller Type */
+	/* Autonomous Longitudinal Controller Type 
+	[June 2023] Addition of safe controllers - this is getting messy.
+	Must refactor. */
 	enum class ALCType {
 		origin_lane,
 		destination_lane,
 		cooperative_gap_generation,
 		end_of_lane,
 		vissim,
-		traffic_light_alc
+		traffic_light_alc,
+		safe_origin_lane,
+		safe_destination_lane,
+		safe_cooperative_gap_generation
 	};
 
 	ControlManager() = default;
@@ -72,10 +79,11 @@ public:
 	void add_cooperative_lane_change_controller(
 		const ConnectedAutonomousVehicle& cav);
 	void add_traffic_lights_controller();
-	void add_in_platoon_controller(const PlatoonVehicle& platoon_vehicle);
+	void add_safety_critical_controllers(
+		const SafeConnectedAutonomousVehicle& scav);
 
 	/* DEBUGGING FUNCTIONS --------------------------------------------------- */
-	/* These functions are used to easily read data from internal instances and
+	/* Functions used to easily read data from internal instances and
 	methods. */
 
 	/* Each controller should never be accessed directly by external
@@ -146,10 +154,13 @@ public:
 	to help create a gap for an incoming vehicle, and chooses the minimum. */
 	double get_desired_acceleration(const ConnectedAutonomousVehicle& cav);
 	double get_desired_acceleration(const PlatoonVehicle& platoon_vehicle);
-	/* TODO description */
+	/* Copmutes acceleration for non-lane changing vehicles that respect
+	traffic lights (CBFs) */
 	double get_desired_acceleration(
 		const TrafficLightALCVehicle& ego_vehicle,
 		const std::unordered_map<int, TrafficLight>& traffic_lights);
+	double get_desired_acceleration(
+		const SafeConnectedAutonomousVehicle& scav);
 
 	void print_traffic_lights(const EgoVehicle& ego,
 		const std::unordered_map<int, TrafficLight>& traffic_lights) const;
@@ -212,6 +223,7 @@ private:
 		1, 0.1, 0.03 };
 	/* The time headway used by the end-of-lane controller */
 	double time_headway_to_end_of_lane{ 0.5 };
+	double proportional_velocity_controller_gain{ 0.5 };
 
 	/* Colors to make debugging visually easier
 	General rule: bright colors represent vel control,
@@ -219,13 +231,15 @@ private:
 	std::unordered_map<LongitudinalController::State, color_t>
 		vissim_colors =
 	{
-		{LongitudinalController::State::uninitialized, CYAN}
+		{LongitudinalController::State::uninitialized, GRAY}
 	};
 	std::unordered_map<LongitudinalController::State, color_t>
 		orig_lane_colors =
 	{
+		{ LongitudinalController::State::comf_accel, BLUE_GREEN },
 		{ LongitudinalController::State::velocity_control, GREEN },
 		{ LongitudinalController::State::vehicle_following, DARK_GREEN },
+		{ LongitudinalController::State::creating_gap, CYAN}
 	};
 	/* TODO [Nov 11, 2022]: still missing implementation */
 	color_t orig_lane_max_vel_control_color{ BLUE_GREEN };
@@ -238,8 +252,10 @@ private:
 	std::unordered_map<LongitudinalController::State, color_t>
 		dest_lane_colors =
 	{
+		{ LongitudinalController::State::comf_accel, BLUE_GREEN },
 		{ LongitudinalController::State::velocity_control, LIGHT_BLUE },
 		{ LongitudinalController::State::vehicle_following, BLUE },
+		{ LongitudinalController::State::creating_gap, DARK_BLUE}
 	};
 	std::unordered_map<LongitudinalController::State, color_t>
 		gap_generation_colors =
@@ -256,12 +272,6 @@ private:
 		{ LongitudinalController::State::traffic_light, YELLOW},
 		{ LongitudinalController::State::too_close, RED },
 	};
-	std::unordered_map<LongitudinalController::State, color_t>
-		in_platoon_colors =
-	{
-		{ LongitudinalController::State::velocity_control, LIGHT_GRAY },
-		{ LongitudinalController::State::vehicle_following, GRAY},
-	};
 	/* -------------------------------------------- */
 
 	VissimLongitudinalController vissim_controller;
@@ -271,7 +281,14 @@ private:
 	VirtualLongitudinalController gap_generating_controller;
 	LongitudinalControllerWithTrafficLights
 		with_traffic_lights_controller;
-	RealLongitudinalController in_platoon_controller;
+	/* Controllers for the CBF-based longitudinal approach */
+	/* [June 2023] Have a map of gap controllers ? Requires changing
+	organization of ControlMananger and related classes */
+	VelocityController nominal_controller;
+	SafetyCriticalGapController safe_origin_lane_controller;
+	SafetyCriticalGapController safe_destination_lane_controller;
+	SafetyCriticalGapController safe_gap_generating_controller;
+	
 
 	LateralController lateral_controller;
 	/* indicates which controller is active. Used for debugging and
@@ -289,7 +306,7 @@ private:
 	bool verbose{ false };
     bool long_controllers_verbose{ false };
 
-	std::unique_ptr<LongitudinalController>
+	const LongitudinalController* 
 		get_active_long_controller() const;
 	/* Gets the minimum of the accelerations in the map and sets the
 	active longitudinal controller. */

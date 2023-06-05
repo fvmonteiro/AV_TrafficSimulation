@@ -49,5 +49,6 @@ LongitudinalController::state_to_string_map = {
 	{ State::vehicle_following, "vehicle following" },
 	{ State::comf_accel, "comf accel" },
 	{ State::traffic_light, "traffic light" },
-	{ State::too_close, "too close" }
+	{ State::too_close, "too close" },
+	{ State::creating_gap, "creating gap"}
 };

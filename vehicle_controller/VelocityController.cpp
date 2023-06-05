@@ -8,6 +8,7 @@ VelocityController::VelocityController(double simulation_time_step,
 	simulation_time_step{ simulation_time_step }, gains{ gains },
 	desired_velocity_filter{ VariationLimitedFilter(filter_gain,
 		comfortable_acceleration, filter_brake_limit, simulation_time_step)},
+	use_filter{ true },
 	verbose{ verbose } {}
 
 VelocityController::VelocityController(double simulation_time_step,
@@ -15,6 +16,11 @@ VelocityController::VelocityController(double simulation_time_step,
 	double comfortable_acceleration, double filter_brake_limit) :
 	VelocityController(simulation_time_step, gains, filter_gain,
 		comfortable_acceleration, filter_brake_limit, false) {}
+
+/* Simple proportional controller */
+VelocityController::VelocityController(double gain, bool verbose) :
+	use_filter{ false }, gains{ VelocityControllerGains{gain, 0, 0} }
+{}
 
 void VelocityController::reset_filter(double ego_velocity)
 {
@@ -43,10 +49,12 @@ void VelocityController::smooth_reset(const EgoVehicle& ego_vehicle,
 	and smooth vel */
 	double reset_velocity;
 	if ((ego_velocity < velocity_reference)
-		== (ego_velocity < smooth_velocity)) {
+		== (ego_velocity < smooth_velocity)) 
+	{
 		reset_velocity = smooth_velocity;
 	}
-	else {
+	else 
+	{
 		reset_velocity = ego_velocity;
 	}
 	reset_filter(reset_velocity);
@@ -58,13 +66,11 @@ double VelocityController::compute_acceleration(const EgoVehicle& ego_vehicle,
 {
 	double ego_velocity = ego_vehicle.get_velocity();
 	double ego_acceleration = ego_vehicle.get_acceleration();
-	double filtered_velocity_reference =
-		desired_velocity_filter.apply_filter(velocity_reference);
-	double velocity_error = filtered_velocity_reference - ego_velocity;
+	double velocity_error = compute_error(velocity_reference, ego_velocity);
 	double acceleration_error = -ego_acceleration;
 
-	/* We avoid integral windup by only deactivating the integral gain when the
-	input is 'large' */
+	/* We avoid integral windup by only deactivating the integral gain when 
+	the input is 'large' */
 	double comfortable_acceleration =
 		ego_vehicle.get_comfortable_acceleration();
 	error_integral += velocity_error * simulation_time_step;
@@ -81,12 +87,35 @@ double VelocityController::compute_acceleration(const EgoVehicle& ego_vehicle,
 	if (verbose)
 	{
 		std::clog << "\tref=" << velocity_reference
-			<< ", filtered=" << filtered_velocity_reference
 			<< ", vel=" << ego_velocity
 			<< ", ev=" << velocity_error
 			<< ", ea=" << acceleration_error
 			<< std::endl;
 	}
 
+
 	return desired_acceleration;
+}
+
+double VelocityController::compute_error(double velocity_reference, 
+	double ego_velocity)
+{
+	double velocity_error;
+	if (use_filter)
+	{
+		double filtered_velocity_reference =
+			desired_velocity_filter.apply_filter(velocity_reference);
+		velocity_error = filtered_velocity_reference - ego_velocity;
+		if (verbose)
+		{
+			std::clog << "\tv_ref=" << velocity_reference
+				<< ", filtered=" << filtered_velocity_reference
+				<< std::endl;
+		}
+	}
+	else
+	{
+		velocity_error = velocity_reference - ego_velocity;
+	}
+	return velocity_error;
 }

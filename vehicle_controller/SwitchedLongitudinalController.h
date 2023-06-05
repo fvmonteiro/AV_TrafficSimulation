@@ -12,6 +12,7 @@
 #include <string>
 
 #include "Constants.h"
+#include "CTHGapController.h"
 #include "LongitudinalController.h"
 #include "VariationLimitedFilter.h"
 #include "VelocityController.h"
@@ -66,6 +67,9 @@ protected:
 	//State state{ State::uninitialized }; // event driven logic variable
 	double hysteresis_bias{ 10.0 }; // used to avoid state chattering [m]
 	double reference_velocity_margin{ 1.0 }; // [m/s]
+
+	VelocityController velocity_controller;
+	CTHGapController gap_controller;
 
 	/* Computes the gap threshold to decide whether velocity or vehicle
 	following control */

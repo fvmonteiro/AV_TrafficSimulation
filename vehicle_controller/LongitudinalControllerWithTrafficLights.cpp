@@ -28,8 +28,7 @@ implement_compute_desired_acceleration(
 	std::shared_ptr<const NearbyVehicle> leader,
 	double velocity_reference)
 {
-	std::unordered_map<State, double>
-		possible_accelerations;
+	std::unordered_map<State, double> possible_accelerations;
 
 	possible_accelerations[State::comf_accel] = 
 		get_nominal_input(ego_vehicle);
@@ -71,10 +70,6 @@ double LongitudinalControllerWithTrafficLights
 	gap_error = gap - safe_gap;
 	//double gap_error = gap - safe_gap;
 
-	double leader_accel = leader->get_acceleration();
-	double connected_extra_term = leader_accel / comfortable_braking 
-		* leader_vel;
-
 	//if (verbose)
 	//{
 	//	std::clog << "veh type: " << static_cast<int>(ego_vehicle.get_type())
@@ -83,10 +78,14 @@ double LongitudinalControllerWithTrafficLights
 	//		<< ", is connected? " << leader->is_connected()
 	//		<< std::endl;
 	//}
+
 	double desired_acceleration;
 	if (ego_vehicle.get_is_connected() && leader->is_connected())
 	{
 		//if (verbose) std::clog << "connected" << std::endl;
+		double leader_accel = leader->get_acceleration();
+		double connected_extra_term = leader_accel / comfortable_braking
+			* leader_vel;
 		desired_acceleration =
 			(-rel_vel + veh_foll_gain * gap_error + connected_extra_term)
 			* comfortable_braking / (comfortable_braking + ego_vel);

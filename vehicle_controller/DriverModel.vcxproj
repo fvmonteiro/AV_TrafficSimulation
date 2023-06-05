@@ -246,7 +246,6 @@
     <ClCompile Include="ACCVehicle.cpp" />
     <ClCompile Include="ConnectedAutonomousVehicle.cpp" />
     <ClCompile Include="ControlManager.cpp" />
-    <ClCompile Include="InPlatoonLongitudinalController.cpp" />
     <ClCompile Include="LaneChangeGapsSafety.cpp" />
     <ClCompile Include="LastVehicleFirstStates.cpp" />
     <ClCompile Include="LeaderFirstAndInvertStates.cpp" />
@@ -259,6 +258,9 @@
     <ClCompile Include="PlatoonVehicleState.cpp" />
     <ClCompile Include="RelativeLane.cpp" />
     <ClCompile Include="AutonomousVehicle.cpp" />
+    <ClCompile Include="SafeConnectedAutonomousVehicle.cpp" />
+    <ClCompile Include="SafeLongitudinalController.cpp" />
+    <ClCompile Include="SafetyCriticalGapController.cpp" />
     <ClCompile Include="SwitchedLongitudinalController.cpp" />
     <ClCompile Include="SynchronousStates.cpp" />
     <ClCompile Include="TrafficLight.cpp" />
@@ -285,7 +287,7 @@
     <ClCompile Include="SimulationLogger.cpp" />
     <ClCompile Include="EgoVehicle.cpp" />
     <ClCompile Include="Vehicle.cpp" />
-    <ClCompile Include="GapController.cpp" />
+    <ClCompile Include="CTHGapController.cpp" />
     <ClCompile Include="VelocityController.cpp" />
     <ClCompile Include="VariationLimitedFilter.cpp" />
     <ClCompile Include="VissimLongitudinalController.cpp" />
@@ -296,7 +298,6 @@
     <ClInclude Include="ConnectedAutonomousVehicle.h" />
     <ClInclude Include="ControlManager.h" />
     <ClInclude Include="EgoVehicleFactory.h" />
-    <ClInclude Include="InPlatoonLongitudinalController.h" />
     <ClInclude Include="LaneChangeGapsSafety.h" />
     <ClInclude Include="LastVehicleFirstStates.h" />
     <ClInclude Include="LeaderFirstAndInvertStates.h" />
@@ -308,6 +309,9 @@
     <ClInclude Include="PlatoonVehicle.h" />
     <ClInclude Include="PlatoonVehicleState.h" />
     <ClInclude Include="RelativeLane.h" />
+    <ClInclude Include="SafeConnectedAutonomousVehicle.h" />
+    <ClInclude Include="SafeLongitudinalController.h" />
+    <ClInclude Include="SafetyCriticalGapController.h" />
     <ClInclude Include="SwitchedLongitudinalController.h" />
     <ClInclude Include="SynchronousStates.h" />
     <ClInclude Include="TrafficLight.h" />
@@ -324,7 +328,7 @@
     <ClInclude Include="SimulationLogger.h" />
     <ClInclude Include="EgoVehicle.h" />
     <ClInclude Include="Vehicle.h" />
-    <ClInclude Include="GapController.h" />
+    <ClInclude Include="CTHGapController.h" />
     <ClInclude Include="VelocityController.h" />
     <ClInclude Include="VariationLimitedFilter.h" />
     <ClInclude Include="VissimLongitudinalController.h" />

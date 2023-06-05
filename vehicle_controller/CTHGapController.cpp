@@ -2,11 +2,11 @@
 #include <cmath>
 #include <iostream>
 
-#include "GapController.h"
+#include "CTHGapController.h"
 #include "EgoVehicle.h"
 #include "NearbyVehicle.h"
 
-GapController::GapController(double simulation_time_step,
+CTHGapController::CTHGapController(double simulation_time_step,
 	const AutonomousGains& autonomous_gains,
 	const ConnectedGains& connected_gains,
 	double velocity_filter_gain, double time_headway_filter_gain,
@@ -21,27 +21,27 @@ GapController::GapController(double simulation_time_step,
 		100, -100, simulation_time_step)},
 	verbose{ verbose } {}
 
-GapController::GapController(double simulation_time_step,
+CTHGapController::CTHGapController(double simulation_time_step,
 	const AutonomousGains& autonomous_gains,
 	const ConnectedGains& connected_gains,
 	double velocity_filter_gain, double time_headway_filter_gain,
 	double comfortable_acceleration, double filter_brake_limit)
-	: GapController(simulation_time_step, autonomous_gains,
+	: CTHGapController(simulation_time_step, autonomous_gains,
 		connected_gains, velocity_filter_gain, time_headway_filter_gain,
 		comfortable_acceleration, filter_brake_limit,
 		false) {}
 
-double GapController::get_desired_time_headway() const
+double CTHGapController::get_desired_time_headway() const
 {
 	return desired_time_headway;
 }
 
-double GapController::get_current_time_headway() const
+double CTHGapController::get_current_time_headway() const
 {
 	return time_headway_filter.get_current_value();
 }
 
-double GapController::compute_time_headway_gap(double time_headway,
+double CTHGapController::compute_time_headway_gap(double time_headway,
 	double velocity) const
 {
 	/* TODO: for now we assumed the standstill distance (d) is the same for
@@ -49,19 +49,19 @@ double GapController::compute_time_headway_gap(double time_headway,
 	return time_headway * velocity + standstill_distance;
 }
 
-double GapController::get_desired_time_headway_gap(
+double CTHGapController::get_desired_time_headway_gap(
 	double ego_velocity /*, bool has_lane_change_intention */) const
 {
 	return compute_time_headway_gap(get_desired_time_headway(), ego_velocity);
 }
 
-double GapController::get_desired_gap(double ego_velocity) const
+double CTHGapController::get_desired_gap(double ego_velocity) const
 {
 	return compute_time_headway_gap(time_headway_filter.get_current_value(),
 		ego_velocity);
 }
 
-double GapController::compute_desired_gap(double velocity_ego)
+double CTHGapController::compute_desired_gap(double velocity_ego)
 {
 	double desired_time_headway = get_desired_time_headway();
 	double time_headway = time_headway_filter.apply_filter(
@@ -69,7 +69,7 @@ double GapController::compute_desired_gap(double velocity_ego)
 	return compute_time_headway_gap(time_headway, velocity_ego);
 }
 
-double GapController::compute_gap_error(
+double CTHGapController::compute_gap_error(
 	double gap, double reference_gap) const
 {
 	double upper_limit = is_connected ?
@@ -77,13 +77,13 @@ double GapController::compute_gap_error(
 	return std::min(upper_limit, gap - reference_gap);
 };
 
-double GapController::compute_velocity_error(double velocity_ego,
+double CTHGapController::compute_velocity_error(double velocity_ego,
 	double velocity_reference) const
 {
 	return velocity_reference - velocity_ego;
 }
 
-double GapController::estimate_gap_error_derivative(
+double CTHGapController::estimate_gap_error_derivative(
 	double velocity_error, double acceleration) const
 {
 	/* TODO [Oct 29, 2021]: should be changed to e_v - h.a - dh/dt.v */
@@ -91,13 +91,13 @@ double GapController::estimate_gap_error_derivative(
 	return velocity_error - time_headway * acceleration;
 }
 
-double GapController::compute_acceleration_error(
+double CTHGapController::compute_acceleration_error(
 	double acceleration_ego, double acceleration_reference) const
 {
 	return acceleration_reference - acceleration_ego;
 }
 
-double GapController::compute_desired_acceleration(
+double CTHGapController::compute_desired_acceleration(
 	const EgoVehicle& ego_vehicle,
 	std::shared_ptr<const NearbyVehicle> leader)
 {
@@ -185,14 +185,14 @@ double GapController::compute_desired_acceleration(
 	return desired_acceleration;
 }
 
-double GapController::compute_autonomous_input(
+double CTHGapController::compute_autonomous_input(
 	double gap_error, double velocity_error)
 {
 	return autonomous_gains.kg * gap_error
 		+ autonomous_gains.kv * velocity_error;
 }
 
-double GapController::compute_connected_input(
+double CTHGapController::compute_connected_input(
 	double gap_error, double velocity_error, double ego_acceleration,
 	double leader_acceleration)
 {
@@ -212,7 +212,7 @@ double GapController::compute_connected_input(
 		+ connected_gains.ka * acceleration_error;
 }
 
-void GapController::reset_time_headway_filter(double time_headway)
+void CTHGapController::reset_time_headway_filter(double time_headway)
 {
 	//if (verbose)
 	//{
@@ -221,13 +221,13 @@ void GapController::reset_time_headway_filter(double time_headway)
 	time_headway_filter.reset(time_headway);
 }
 
-void GapController::reset_velocity_filter(
+void CTHGapController::reset_velocity_filter(
 	double ego_velocity)
 {
 	velocity_filter.reset(ego_velocity);
 }
 
-void GapController::update_leader_velocity_filter(
+void CTHGapController::update_leader_velocity_filter(
 	double leader_velocity)
 {
 	velocity_filter.apply_filter(leader_velocity);

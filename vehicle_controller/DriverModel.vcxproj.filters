@@ -64,7 +64,7 @@
     <ClCompile Include="VelocityController.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="GapController.cpp">
+    <ClCompile Include="CTHGapController.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Platoon.cpp">
@@ -74,9 +74,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="VissimLongitudinalController.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="InPlatoonLongitudinalController.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="LaneChangeGapsSafety.cpp">
@@ -106,6 +103,9 @@
     <ClCompile Include="NoLaneChangeCAV.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="SafetyCriticalGapController.cpp" />
+    <ClCompile Include="SafeConnectedAutonomousVehicle.cpp" />
+    <ClCompile Include="SafeLongitudinalController.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ControlManager.h">
@@ -177,7 +177,7 @@
     <ClInclude Include="VelocityController.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="GapController.h">
+    <ClInclude Include="CTHGapController.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Platoon.h">
@@ -187,9 +187,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="VissimLongitudinalController.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="InPlatoonLongitudinalController.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="NoLaneChangeCAV.h">
@@ -219,6 +216,9 @@
     <ClInclude Include="LastVehicleFirstStates.h">
       <Filter>StateMachines</Filter>
     </ClInclude>
+    <ClInclude Include="SafetyCriticalGapController.h" />
+    <ClInclude Include="SafeConnectedAutonomousVehicle.h" />
+    <ClInclude Include="SafeLongitudinalController.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Header Files">

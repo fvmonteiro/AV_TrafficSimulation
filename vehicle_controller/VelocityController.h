@@ -5,6 +5,7 @@
 // Forward declaration
 class EgoVehicle;
 
+/* kp, kd, ki */
 struct VelocityControllerGains {
 	double kp{ 0.0 };
 	double kd{ 0.0 };
@@ -25,6 +26,7 @@ public:
 		double filter_gain,
 		double comfortable_acceleration,
 		double filter_brake_limit);
+	VelocityController(double gain, bool verbose);
 
 	double get_reference_value() const { 
 		return desired_velocity_filter.get_current_value(); 
@@ -42,15 +44,15 @@ public:
 
 private:
 	VariationLimitedFilter desired_velocity_filter;
+	bool use_filter{ false };
 
 	double simulation_time_step{ 0.1 };
 	/* Gains */
 	VelocityControllerGains gains;
-	//double ki{ 0.03 }; //0.07
-	//double kp{ 0.5 };
-	//double kd{ 0.1 }; // 0.1
 
 	double error_integral{ 0.0 };
 
 	bool verbose{ false };
+
+	double compute_error(double velocity_reference, double ego_velocity);
 };

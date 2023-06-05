@@ -10,9 +10,6 @@ public:
 		double simulation_time_step, double creation_time,
 		bool verbose);
 
-	/* The "autonomous lane change" of this vehicle is never lane changing.
-	This should be better addressed with polymorphism. */
-
 	int get_next_traffic_light_id() const {
 		return next_traffic_light_id;
 	};
