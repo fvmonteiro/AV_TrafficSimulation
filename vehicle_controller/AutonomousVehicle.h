@@ -1,12 +1,12 @@
 #pragma once
 
-#include "EgoVehicle.h"
+#include "LongitudinallyAutonomousVehicle.h"
 #include "LaneChangeGapsSafety.h"
 
 /* Vehicle with autonomous longitudinal control during lane keeping and
 during adjustments for lane changing. The lane change intention still
 comes from VISSIM, but the vehicle decides when it is safe enough to start */
-class AutonomousVehicle : public EgoVehicle
+class AutonomousVehicle : public LongitudinallyAutonomousVehicle
 {
 public:
 	AutonomousVehicle(long id, double desired_velocity,
@@ -36,9 +36,6 @@ protected:
 	AutonomousVehicle(long id, VehicleType type, double desired_velocity,
 		bool is_connected, double simulation_time_step, double creation_time,
 		bool verbose = false);
-
-	// [Jan 24, 23] Make private?
-	bool implement_check_lane_change_gaps() override;
 
 	double get_lambda_1_lane_change() const { return lambda_1_lane_change; };
 	double get_accepted_risk_to_leaders() const {
@@ -78,7 +75,7 @@ protected:
 	/* ----------------------------------------------------- */
 	
 	bool is_lane_change_gap_safe(
-		std::shared_ptr<const NearbyVehicle> nearby_vehicle) const;
+		const NearbyVehicle* nearby_vehicle) const;
 	bool has_lane_change_conflict() const;
 	/* Non-linear gap based on ego and nearby vehicles states
 	and parameters */
@@ -135,9 +132,10 @@ private:
 	intention, the destination lane leader and follower */
 	void implement_analyze_nearby_vehicles() override;
 	bool give_lane_change_control_to_vissim() const override;
+	bool implement_check_lane_change_gaps() override;
 	long implement_get_lane_change_request() const override { return 0; };
 	double compute_accepted_lane_change_gap(
-		std::shared_ptr<const NearbyVehicle> nearby_vehicle) const override;
+		const NearbyVehicle* nearby_vehicle) const override;
 	std::shared_ptr<NearbyVehicle>
 		implement_get_destination_lane_leader() const override;
 	std::shared_ptr<NearbyVehicle>

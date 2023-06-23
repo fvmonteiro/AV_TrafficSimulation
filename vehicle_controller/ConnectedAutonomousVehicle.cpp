@@ -150,7 +150,7 @@ void ConnectedAutonomousVehicle::deal_with_close_and_slow_assited_vehicle()
 	go backwards, which would lead to a deadlock situation. */
 	if (has_assisted_vehicle()
 		&& (assisted_vehicle->compute_velocity(get_velocity()) < 1)
-		&& compute_gap_to_a_leader(assisted_vehicle) < 1)
+		&& compute_gap_to_a_leader(assisted_vehicle.get()) < 1)
 	{
 		assisted_vehicle = nullptr;
 	}
@@ -296,14 +296,13 @@ compute_vehicle_following_gap_for_lane_change(
 		nearby_vehicle, current_lambda_1);
 }
 
-double ConnectedAutonomousVehicle::implement_compute_desired_acceleration(
-	const std::unordered_map<int, TrafficLight>& traffic_lights)
-{
-	if (verbose) std::clog << "[CAV] get_desired_acceleration" << std::endl;
-	double a_desired_acceleration =
-		controller->get_desired_acceleration(*this);
-	return consider_vehicle_dynamics(a_desired_acceleration);
-}
+//double ConnectedAutonomousVehicle::implement_compute_desired_acceleration(
+//	const std::unordered_map<int, TrafficLight>& traffic_lights)
+//{
+//	double a_desired_acceleration =
+//		controller->compute_desired_acceleration();
+//	return consider_vehicle_dynamics(a_desired_acceleration);
+//}
 
 void ConnectedAutonomousVehicle::compute_connected_safe_gap_parameters()
 {

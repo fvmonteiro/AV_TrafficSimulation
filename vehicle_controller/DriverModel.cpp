@@ -558,7 +558,8 @@ DRIVERMODEL_API  int  DriverModelGetValue (long   type,
             break;
         case UDA::gap_to_leader:
             *double_value = vehicles[current_vehicle_id]->
-                compute_gap_to_a_leader(vehicles[current_vehicle_id]->get_leader());
+                compute_gap_to_a_leader(
+                    vehicles[current_vehicle_id]->get_leader().get());
             break;
         case UDA::reference_gap:
             *double_value = vehicles[current_vehicle_id]->get_reference_gap();
@@ -575,28 +576,28 @@ DRIVERMODEL_API  int  DriverModelGetValue (long   type,
             break;
         case UDA::gap_to_dest_lane_leader:
             *double_value = vehicles[current_vehicle_id]->compute_gap_to_a_leader(
-                vehicles[current_vehicle_id]->get_destination_lane_leader()
+                vehicles[current_vehicle_id]->get_destination_lane_leader().get()
                 );
             break;
         case UDA::transient_gap_to_ld:
             *double_value = vehicles[current_vehicle_id]->
                 compute_transient_gap(
                     vehicles[current_vehicle_id]->
-                    get_destination_lane_leader()
+                    get_destination_lane_leader().get()
                     );
             break;
         case UDA::veh_following_gap_to_ld:
             *double_value = vehicles[current_vehicle_id]->
                 compute_time_headway_gap(
                     vehicles[current_vehicle_id]->
-                    get_destination_lane_leader()
+                    get_destination_lane_leader().get()
                     );
             break;
         case UDA::safe_gap_to_dest_lane_leader:
             *double_value = vehicles[current_vehicle_id]->
                 get_accepted_lane_change_gap(
                     vehicles[current_vehicle_id]->
-                    get_destination_lane_leader()
+                    get_destination_lane_leader().get()
                 );
             break;
         /*case UDA::delta_gap_to_ld:
@@ -621,27 +622,28 @@ DRIVERMODEL_API  int  DriverModelGetValue (long   type,
         case UDA::gap_to_dest_lane_follower:
             *double_value = vehicles[current_vehicle_id]->
                 compute_gap_to_a_follower(vehicles[current_vehicle_id]->
-                    get_destination_lane_follower()
+                    get_destination_lane_follower().get()
                 );
             break;
         case UDA::transient_gap_to_fd:
             *double_value = vehicles[current_vehicle_id]->
                 compute_transient_gap(
-                    vehicles[current_vehicle_id]->get_destination_lane_follower()
+                    vehicles[current_vehicle_id]->
+                    get_destination_lane_follower().get()
                 );
             break;
         case UDA::veh_following_gap_to_fd:
             *double_value = vehicles[current_vehicle_id]->
                 compute_time_headway_gap(
                     vehicles[current_vehicle_id]->
-                    get_destination_lane_follower()
+                    get_destination_lane_follower().get()
                 );
             break;
         case UDA::safe_gap_to_dest_lane_follower:
             *double_value = vehicles[current_vehicle_id]->
                 get_accepted_lane_change_gap(
                     vehicles[current_vehicle_id]->
-                    get_destination_lane_follower()
+                    get_destination_lane_follower().get()
                 );
             break;
         case UDA::dest_follower_time_headway:

@@ -17,7 +17,9 @@
 #include "TrafficLightALCVehicle.h"
 #include "VariationLimitedFilter.h"
 
-VehicleController::VehicleController(bool verbose) :
+VehicleController::VehicleController(const EgoVehicle& ego_vehicle,
+	bool verbose) :
+	ego_vehicle{ &ego_vehicle },
 	lateral_controller{ LateralController(verbose) },
 	verbose{ verbose }
 {
@@ -67,6 +69,11 @@ VehicleController::get_longitudinal_controller_state() const
 	}
 }
 
+void VehicleController::set_traffic_lights(
+	const std::unordered_map<int, TrafficLight>& traffic_lights)
+{
+	this->traffic_lights = &traffic_lights;
+}
 
 void VehicleController::add_vissim_controller()
 {
@@ -74,13 +81,12 @@ void VehicleController::add_vissim_controller()
 		vissim_colors);
 }
 
-void VehicleController::add_origin_lane_controllers(
-	const EgoVehicle& ego_vehicle)
+void VehicleController::add_origin_lane_controllers()
 {
 	if (verbose) std::clog << "Creating origin lane controllers."
 		<< std::endl;
 	origin_lane_controller = RealLongitudinalController(
-		ego_vehicle,
+		*ego_vehicle,
 		desired_velocity_controller_gains,
 		autonomous_real_following_gains,
 		connected_real_following_gains,
@@ -89,7 +95,7 @@ void VehicleController::add_origin_lane_controllers(
 	/* Note: the end of lane controller could have special vel control gains
 	but we want to see how the ego vehicle responds to a stopped vehicle. */
 	end_of_lane_controller = RealLongitudinalController(
-		ego_vehicle,
+		*ego_vehicle,
 		desired_velocity_controller_gains,
 		autonomous_real_following_gains,
 		connected_real_following_gains,
@@ -100,13 +106,12 @@ void VehicleController::add_origin_lane_controllers(
 	activate_end_of_lane_controller(time_headway_to_end_of_lane);
 }
 
-void VehicleController::add_lane_change_adjustment_controller(
-	const AutonomousVehicle& autonomous_vehicle)
+void VehicleController::add_lane_change_adjustment_controller()
 {
 	if (verbose) std::clog << "Creating lane change adjustment controller."
 		<< std::endl;
 	destination_lane_controller = VirtualLongitudinalController(
-		autonomous_vehicle,
+		*ego_vehicle,
 		adjustment_velocity_controller_gains,
 		autonomous_virtual_following_gains,
 		connected_virtual_following_gains,
@@ -114,13 +119,12 @@ void VehicleController::add_lane_change_adjustment_controller(
 		dest_lane_colors, long_controllers_verbose);
 }
 
-void VehicleController::add_cooperative_lane_change_controller(
-	const ConnectedAutonomousVehicle& cav)
+void VehicleController::add_cooperative_lane_change_controller()
 {
 	if (verbose) std::clog << "Creating cooperative lane change controller."
 		<< std::endl;
 	gap_generating_controller = VirtualLongitudinalController(
-		cav,
+		*ego_vehicle,
 		adjustment_velocity_controller_gains,
 		autonomous_virtual_following_gains,
 		connected_virtual_following_gains,
@@ -139,8 +143,7 @@ void VehicleController::add_traffic_lights_controller()
 	active_longitudinal_controller_type = ALCType::traffic_light_alc;
 }
 
-void VehicleController::add_safety_critical_controllers(
-	const SafeConnectedAutonomousVehicle& scav)
+void VehicleController::add_safety_critical_controllers()
 {
 	nominal_controller = VelocityController();
 }
@@ -284,6 +287,12 @@ bool VehicleController::is_in_free_flow_at_origin_lane() const
 		== SwitchedLongitudinalController::State::velocity_control;
 }
 
+double VehicleController::compute_desired_acceleration()
+{
+	/* [June 2023] Call an abstract method */
+	return 0.0;
+}
+
 double VehicleController::get_vissim_desired_acceleration(
 	const EgoVehicle& ego_vehicle)
 {
@@ -302,113 +311,105 @@ double VehicleController::get_vissim_desired_acceleration(
 		ego_vehicle, nullptr, 0);
 }
 
-double VehicleController::get_desired_acceleration(
-	const LongitudinallyAutonomousVehicle& acc_vehicle)
-{
-	if (acc_vehicle.has_lane_change_intention() ||
-		acc_vehicle.is_lane_changing())
-	{
-		return get_vissim_desired_acceleration(acc_vehicle);
-	}
-
-	std::unordered_map<ALCType, double>
-		possible_accelerations;
-	get_origin_lane_desired_acceleration(acc_vehicle,
-		possible_accelerations);
-	get_end_of_lane_desired_acceleration(acc_vehicle,
-		possible_accelerations);
-
-	return choose_minimum_acceleration(possible_accelerations);
-}
-
-double VehicleController::get_desired_acceleration(
-	const AutonomousVehicle& autonomous_vehicle)
-{
-	if (autonomous_vehicle.is_vissim_controlling_lane_change()
-		&& (autonomous_vehicle.has_lane_change_intention()
-			|| autonomous_vehicle.is_lane_changing()))
-	{
-		return get_vissim_desired_acceleration(autonomous_vehicle);
-	}
-
-	std::unordered_map<ALCType, double>
-		possible_accelerations;
-	get_origin_lane_desired_acceleration(autonomous_vehicle,
-		possible_accelerations);
-	get_end_of_lane_desired_acceleration(autonomous_vehicle,
-		possible_accelerations);
-	get_destination_lane_desired_acceleration(autonomous_vehicle,
-		possible_accelerations);
-
-	return choose_minimum_acceleration(possible_accelerations);
-}
-
-double VehicleController::get_desired_acceleration(
-	const ConnectedAutonomousVehicle& cav)
-{
-	std::unordered_map<ALCType, double>
-		possible_accelerations;
-	get_origin_lane_desired_acceleration(cav,
-		possible_accelerations);
-	get_end_of_lane_desired_acceleration(cav,
-		possible_accelerations);
-	get_destination_lane_desired_acceleration(cav,
-		possible_accelerations);
-	get_cooperative_desired_acceleration(cav,
-		possible_accelerations);
-
-	return choose_minimum_acceleration(possible_accelerations);
-}
-
-double VehicleController::get_desired_acceleration(
-	const PlatoonVehicle& platoon_vehicle)
-{
-	std::unordered_map<ALCType, double> possible_accelerations;
-	
-	get_origin_lane_desired_acceleration(platoon_vehicle,
-		possible_accelerations);
-	get_end_of_lane_desired_acceleration(platoon_vehicle,
-		possible_accelerations);
-	if (platoon_vehicle.is_platoon_leader())
-	{
-		get_destination_lane_desired_acceleration(platoon_vehicle,
-			possible_accelerations);
-	}
-	else
-	{
-		get_destination_lane_desired_acceleration_when_in_platoon(
-			platoon_vehicle, possible_accelerations);
-	}
-	get_cooperative_desired_acceleration(platoon_vehicle,
-		possible_accelerations);
-
-	return choose_minimum_acceleration(possible_accelerations);
-}
-
-double VehicleController::get_desired_acceleration(
-	const TrafficLightALCVehicle& tl_alc_vehicle,
-	const std::unordered_map<int, TrafficLight>& traffic_lights)
-{
-	if (verbose) std::clog << "Inside get traffic_light_acc_acceleration\n";
-
-	active_longitudinal_controller_type = ALCType::traffic_light_alc;
-	if (tl_alc_vehicle.has_next_traffic_light())
-	{
-		with_traffic_lights_controller.compute_traffic_light_input_parameters(
-			tl_alc_vehicle, traffic_lights);
-	}
-
-	return with_traffic_lights_controller.compute_desired_acceleration(
-		tl_alc_vehicle, nullptr, tl_alc_vehicle.get_desired_velocity());
-}
-
-double VehicleController::get_desired_acceleration(
-	const SafeConnectedAutonomousVehicle& scav)
-{
-	std::unordered_map<ALCType, double> possible_accelerations;
-
-	return 0.0;
-}
+//double VehicleController::get_desired_acceleration(
+//	const LongitudinallyAutonomousVehicle& acc_vehicle)
+//{
+//	if (acc_vehicle.has_lane_change_intention() ||
+//		acc_vehicle.is_lane_changing())
+//	{
+//		return get_vissim_desired_acceleration(acc_vehicle);
+//	}
+//
+//	std::unordered_map<ALCType, double>
+//		possible_accelerations;
+//	get_origin_lane_desired_acceleration(acc_vehicle,
+//		possible_accelerations);
+//	get_end_of_lane_desired_acceleration(acc_vehicle,
+//		possible_accelerations);
+//
+//	return choose_minimum_acceleration(possible_accelerations);
+//}
+//
+//double VehicleController::get_desired_acceleration(
+//	const AutonomousVehicle& autonomous_vehicle)
+//{
+//	if (autonomous_vehicle.is_vissim_controlling_lane_change()
+//		&& (autonomous_vehicle.has_lane_change_intention()
+//			|| autonomous_vehicle.is_lane_changing()))
+//	{
+//		return get_vissim_desired_acceleration(autonomous_vehicle);
+//	}
+//
+//	std::unordered_map<ALCType, double>
+//		possible_accelerations;
+//	get_origin_lane_desired_acceleration(autonomous_vehicle,
+//		possible_accelerations);
+//	get_end_of_lane_desired_acceleration(autonomous_vehicle,
+//		possible_accelerations);
+//	get_destination_lane_desired_acceleration(autonomous_vehicle,
+//		possible_accelerations);
+//
+//	return choose_minimum_acceleration(possible_accelerations);
+//}
+//
+//double VehicleController::get_desired_acceleration(
+//	const ConnectedAutonomousVehicle& cav)
+//{
+//	std::unordered_map<ALCType, double>
+//		possible_accelerations;
+//	get_origin_lane_desired_acceleration(cav,
+//		possible_accelerations);
+//	get_end_of_lane_desired_acceleration(cav,
+//		possible_accelerations);
+//	get_destination_lane_desired_acceleration(cav,
+//		possible_accelerations);
+//	get_cooperative_desired_acceleration(cav,
+//		possible_accelerations);
+//
+//	return choose_minimum_acceleration(possible_accelerations);
+//}
+//
+//double VehicleController::get_desired_acceleration(
+//	const PlatoonVehicle& platoon_vehicle)
+//{
+//	std::unordered_map<ALCType, double> possible_accelerations;
+//	
+//	get_origin_lane_desired_acceleration(platoon_vehicle,
+//		possible_accelerations);
+//	get_end_of_lane_desired_acceleration(platoon_vehicle,
+//		possible_accelerations);
+//	if (platoon_vehicle.is_platoon_leader())
+//	{
+//		get_destination_lane_desired_acceleration(platoon_vehicle,
+//			possible_accelerations);
+//	}
+//	else
+//	{
+//		get_destination_lane_desired_acceleration_when_in_platoon(
+//			platoon_vehicle, possible_accelerations);
+//	}
+//	get_cooperative_desired_acceleration(platoon_vehicle,
+//		possible_accelerations);
+//
+//	return choose_minimum_acceleration(possible_accelerations);
+//}
+//
+//double VehicleController::get_desired_acceleration(
+//	const TrafficLightALCVehicle& tl_alc_vehicle,
+//	const std::unordered_map<int, TrafficLight>& traffic_lights)
+//{
+//	if (verbose) std::clog << "Inside get traffic_light_acc_acceleration\n";
+//
+//	active_longitudinal_controller_type = ALCType::traffic_light_alc;
+//	if (tl_alc_vehicle.has_next_traffic_light())
+//	{
+//		with_traffic_lights_controller.compute_traffic_light_input_parameters(
+//			tl_alc_vehicle, traffic_lights);
+//	}
+//
+//	return with_traffic_lights_controller.compute_desired_acceleration(
+//		tl_alc_vehicle, nullptr, tl_alc_vehicle.get_desired_velocity());
+//}
 
 void VehicleController::print_traffic_lights(const EgoVehicle& ego,
 	const std::unordered_map<int, TrafficLight>& traffic_lights) const
@@ -417,231 +418,6 @@ void VehicleController::print_traffic_lights(const EgoVehicle& ego,
 	for (auto& pair : traffic_lights) std::clog << "tf id=" << pair.first <<
 		"(" << pair.second.get_id() << "), ";
 	std::clog << std::endl;
-}
-
-bool VehicleController::get_origin_lane_desired_acceleration(
-	const EgoVehicle& ego_vehicle,
-	std::unordered_map<ALCType, double>& possible_accelerations)
-{
-	if (verbose) std::clog << "Origin lane controller" << std::endl;
-	possible_accelerations[ALCType::origin_lane] =
-		origin_lane_controller.compute_desired_acceleration(
-		ego_vehicle, ego_vehicle.get_leader(),
-		ego_vehicle.get_desired_velocity());
-
-	return true;
-}
-
-bool VehicleController::get_end_of_lane_desired_acceleration(
-	const EgoVehicle& ego_vehicle,
-	std::unordered_map<ALCType, double>& possible_accelerations)
-{
-	bool is_active = false;
-
-	/* When the lane change direction equals the preferred relative
-	lane, it means the vehicle is moving into the destination lane.
-	At this point, we don't want to use this controller anymore. */
-	bool is_lane_changing = ego_vehicle.get_preferred_relative_lane()
-		== ego_vehicle.get_active_lane_change_direction();
-	bool is_about_to_start_lane_change =
-			ego_vehicle.get_preferred_relative_lane()
-			== ego_vehicle.get_lane_change_direction();
-	if (!is_lane_changing && !is_about_to_start_lane_change
-		&& (ego_vehicle.get_lane_end_distance() > -1))
-		// -1 because end of lane dist can get small negative values
-	{
-		if (verbose)
-		{
-			std::clog << "End of lane controller"
-				<< std::endl;
-		}
-		/* We simulate a stopped vehicle at the end of
-		the lane to force the vehicle to stop before the end of
-		the lane. */
-		NearbyVehicle virtual_vehicle =
-			create_virtual_stopped_vehicle(ego_vehicle);
-
-		SwitchedLongitudinalController::State old_state =
-			end_of_lane_controller.get_state();
-		/* To avoid sudden high decelerations */
-		if (old_state
-			== SwitchedLongitudinalController::State::uninitialized)
-		{
-			end_of_lane_controller.reset_leader_velocity_filter(
-				ego_vehicle.get_velocity());
-		}
-		double desired_acceleration =
-			end_of_lane_controller.compute_desired_acceleration(
-				ego_vehicle, std::make_shared<NearbyVehicle>(virtual_vehicle),
-				ego_vehicle.get_desired_velocity());
-
-		/* This controller is only active when it's at vehicle
-		following mode */
-		if (end_of_lane_controller.get_state()
-			== SwitchedLongitudinalController::State::vehicle_following)
-		{
-			if (verbose)
-			{
-				std::clog << "active EOL controller. Old state is "
-					<< LongitudinalController::state_to_string(old_state)
-					<< std::endl;
-			}
-			possible_accelerations[ALCType::end_of_lane] =
-				desired_acceleration;
-			is_active = true;
-		}
-	}
-	return is_active;
-}
-
-bool VehicleController::get_destination_lane_desired_acceleration(
-	const AutonomousVehicle& autonomous_vehicle,
-	std::unordered_map<ALCType, double>& possible_accelerations)
-{
-	bool is_active = false;
-	//double origin_lane_reference_velocity;
-
-	bool end_of_lane_controller_is_active =
-		end_of_lane_controller.get_state()
-		== SwitchedLongitudinalController::State::vehicle_following;
-
-	/* We only activate if we want to merge behding ld
-	or if the end of the lane is close */
-	/*if (autonomous_vehicle.merge_behind_destination_lane_leader()
-		|| (autonomous_vehicle.has_destination_lane_leader()
-			&& end_of_lane_controller_is_active))*/
-	/* [Jan 23, 2023] TO DO: changes to reflect the addition of 
-	virtual leader. However, this piece of code is not clean. We should 
-	be able to get the virtual leader directly from autonomous_vehicle */
-	std::shared_ptr<const NearbyVehicle> virtual_leader = nullptr;
-	if (autonomous_vehicle.has_virtual_leader())
-	{
-		virtual_leader =
-			autonomous_vehicle.get_virtual_leader();
-	}
-	else if (autonomous_vehicle.has_destination_lane_leader()
-		&& end_of_lane_controller_is_active)
-	{
-		virtual_leader =
-			autonomous_vehicle.get_destination_lane_leader();
-	}
-
-	if (virtual_leader != nullptr)
-	{
-		if (verbose)
-		{
-			std::clog << "Dest. lane controller"
-				<< std::endl;
-		}
-		/*std::shared_ptr<const NearbyVehicle> virtual_leader =
-			autonomous_vehicle.get_virtual_leader();*/
-		double ego_velocity = autonomous_vehicle.get_velocity();
-		double reference_velocity = determine_low_velocity_reference(
-			ego_velocity, *virtual_leader);
-
-		if (verbose)
-		{
-			std::clog << "low ref vel=" << reference_velocity << std::endl;
-		}
-
-		/* If the ego vehicle is braking hard due to conditions on
-		the current lane, the destination lane controller, which
-		uses comfortable constraints, must be updated. */
-		if ((active_longitudinal_controller_type
-			!= ALCType::destination_lane)
-			&& destination_lane_controller.is_outdated(ego_velocity))
-		{
-			destination_lane_controller.reset_velocity_controller(
-				ego_velocity);
-		}
-
-		possible_accelerations[ALCType::destination_lane] =
-			destination_lane_controller.compute_desired_acceleration(
-				autonomous_vehicle, virtual_leader, reference_velocity);
-		is_active = true;
-	}
-	return is_active;
-}
-
-bool VehicleController::get_cooperative_desired_acceleration(
-	const ConnectedAutonomousVehicle& cav,
-	std::unordered_map<ALCType, double>& possible_accelerations)
-{
-	bool is_active = false;
-
-	if (cav.is_cooperating_to_generate_gap())
-	{
-		if (verbose)
-		{
-			std::clog << "Gap generating controller"
-				<< std::endl;
-		}
-		std::shared_ptr<const NearbyVehicle> assisted_vehicle =
-			cav.get_assisted_vehicle();
-		double ego_velocity = cav.get_velocity();
-		double reference_velocity = determine_low_velocity_reference(
-			ego_velocity, *assisted_vehicle);
-
-		/* If the ego vehicle is braking hard due to conditions on
-		the current lane, the gap generating controller, which
-		uses comfortable constraints, must be updated. */
-		if ((active_longitudinal_controller_type
-			!= ALCType::cooperative_gap_generation)
-			&& gap_generating_controller.is_outdated(ego_velocity))
-		{
-			gap_generating_controller.reset_velocity_controller(
-				ego_velocity);
-		}
-
-		possible_accelerations[ALCType::cooperative_gap_generation] =
-			gap_generating_controller.compute_desired_acceleration(
-				cav, assisted_vehicle, reference_velocity);
-		is_active = true;
-	}
-	return is_active;
-}
-
-bool VehicleController
-::get_destination_lane_desired_acceleration_when_in_platoon(
-	const PlatoonVehicle& platoon_vehicle,
-	std::unordered_map<ALCType, double>& possible_accelerations)
-{
-	/* TODO: reorganize
-	Almost copy of get_destination_lane_desired_acceleration
-	*/
-	bool is_active = false;
-	if (platoon_vehicle.has_virtual_leader()
-		/*&& platoon_vehicle.can_start_adjustment_to_virtual_leader()*/)
-	{
-		std::shared_ptr<const NearbyVehicle> virtual_leader =
-			platoon_vehicle.get_virtual_leader();
-		double ego_velocity = platoon_vehicle.get_velocity();
-		double reference_velocity = determine_low_velocity_reference(
-			ego_velocity, *virtual_leader);
-
-		if (verbose)
-		{
-			std::clog << "Dest. lane controller" << std::endl;
-			std::clog << "low ref vel=" << reference_velocity << std::endl;
-		}
-
-		/* If the ego vehicle is braking hard due to conditions on
-		the current lane, the destination lane controller, which
-		uses comfortable constraints, must be updated. */
-		if ((active_longitudinal_controller_type
-			!= ALCType::destination_lane)
-			&& destination_lane_controller.is_outdated(ego_velocity))
-		{
-			destination_lane_controller.reset_velocity_controller(
-				ego_velocity);
-		}
-
-		possible_accelerations[ALCType::destination_lane] =
-			destination_lane_controller.compute_desired_acceleration(
-				platoon_vehicle, virtual_leader, reference_velocity);
-		is_active = true;
-	}
-	return is_active;
 }
 
 double VehicleController::choose_minimum_acceleration(
@@ -663,18 +439,6 @@ double VehicleController::choose_minimum_acceleration(
 	if (verbose) std::clog << "des accel=" << desired_acceleration << std::endl;
 
 	return desired_acceleration;
-}
-
-NearbyVehicle VehicleController::create_virtual_stopped_vehicle(
-	const EgoVehicle& ego_vehicle)
-{
-	NearbyVehicle virtual_vehicle = NearbyVehicle(1, RelativeLane::same, 1);
-	virtual_vehicle.set_relative_velocity(
-		ego_vehicle.get_velocity());
-	virtual_vehicle.set_distance(
-		ego_vehicle.get_lane_end_distance());
-	virtual_vehicle.set_length(0.0);
-	return virtual_vehicle;
 }
 
 double VehicleController::determine_low_velocity_reference(double ego_velocity,
@@ -711,12 +475,11 @@ double VehicleController::determine_low_velocity_reference(double ego_velocity,
 }
 
 double VehicleController::compute_desired_lane_change_gap(
-	const AutonomousVehicle& ego_vehicle,
 	const NearbyVehicle& nearby_vehicle,
 	bool will_accelerate) const
 {
 	double safe_time_headway_gap = get_desired_time_headway_gap(
-		ego_vehicle.get_velocity(),
+		ego_vehicle->get_velocity(),
 		/*ego_vehicle.has_lane_change_intention(),*/
 		nearby_vehicle);
 	/* TODO: the function calls do not make much sense here.
@@ -725,7 +488,7 @@ double VehicleController::compute_desired_lane_change_gap(
 	/*double collision_free_gap = ego_vehicle.compute_exact_collision_free_gap(
 		nearby_vehicle);*/
 	double transient_gap = lateral_controller.compute_transient_gap(
-		ego_vehicle, nearby_vehicle, will_accelerate);
+		*ego_vehicle, nearby_vehicle, will_accelerate);
 
 	return safe_time_headway_gap /*collision_free_gap*/ + transient_gap;
 }
@@ -764,12 +527,11 @@ double VehicleController::get_desired_time_headway_gap(double ego_velocity,
 }
 
 double VehicleController::get_gap_variation_during_lane_change(
-	const AutonomousVehicle& ego_vehicle,
 	const NearbyVehicle& nearby_vehicle,
 	bool will_accelerate) const
 {
 	return lateral_controller.compute_transient_gap(
-		ego_vehicle, nearby_vehicle, will_accelerate);
+		*ego_vehicle, nearby_vehicle, will_accelerate);
 }
 
 std::string VehicleController::ALC_type_to_string(

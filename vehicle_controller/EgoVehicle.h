@@ -210,7 +210,7 @@ public:
 	/* Computes the bumper-to-bumper distance between vehicles.
 	Returns MAX_DISTANCE if nearby_vehicle is a nullptr. */
 	double compute_gap_to_a_leader(
-		std::shared_ptr<const NearbyVehicle> nearby_vehicle) const;
+		const NearbyVehicle* nearby_vehicle) const;
 	/* Computes the bumper-to-bumper distance between vehicles.
 	Returns MAX_DISTANCE if nearby_vehicle is empty. */
 	double compute_gap_to_a_follower(
@@ -218,7 +218,7 @@ public:
 	/* Computes the bumper-to-bumper distance between vehicles.
 	Returns MAX_DISTANCE if nearby_vehicle is a nullptr. */
 	double compute_gap_to_a_follower(
-		std::shared_ptr<const NearbyVehicle> nearby_vehicle) const;
+		const NearbyVehicle* nearby_vehicle) const;
 
 	/* Computes the absolute bumper-to-bumper distance between vehicles.
 	Returns MAX_DISTANCE if nearby_vehicle is empty. */
@@ -299,7 +299,7 @@ public:
 	//void decide_lane_change_direction();
 
 	double get_accepted_lane_change_gap(
-		std::shared_ptr<const NearbyVehicle> nearby_vehicle);
+		const NearbyVehicle* nearby_vehicle);
 
 	/*double compute_accepted_lane_change_gap(
 		std::shared_ptr<NearbyVehicle> nearby_vehicle, double accepted_risk);*/
@@ -314,11 +314,11 @@ public:
 	/* Returns the desired time headway gap between the ego vehicle and the 
 	nearby vehicle based on their relative positions. */
 	double compute_time_headway_gap(
-		std::shared_ptr<const NearbyVehicle> nearby_vehicle) const;
+		const NearbyVehicle* nearby_vehicle) const;
 	/* Returns the transient lane changing gap between ego vehicle
 	and other. */
 	double compute_transient_gap(
-		std::shared_ptr<const NearbyVehicle> nearby_vehicle);
+		const NearbyVehicle* nearby_vehicle);
 	void update_origin_lane_controller();
 	void reset_origin_lane_velocity_controller();
 
@@ -330,7 +330,7 @@ public:
 		const EgoVehicle& vehicle);
 
 protected:
-	std::unique_ptr<VehicleController> controller;
+	std::unique_ptr<VehicleController> controller{ nullptr };
 	/* Keeps track of stopped time waiting for lane change */
 	double lane_change_waiting_time{ 0.0 };
 	std::unique_ptr<VehicleState> state{ nullptr };
@@ -341,11 +341,15 @@ protected:
 						  vehicle */
 
 	EgoVehicle(long id, VehicleType type, double desired_velocity,
-		double brake_delay, bool is_lane_change_autonomous, bool is_connected,
+		double brake_delay, bool is_connected,
 		double simulation_time_step, double creation_time, bool verbose);
 
 	virtual double compute_vehicle_following_safe_time_headway(
 		const NearbyVehicle& nearby_vehicle) const;
+
+	/* [June 2023] TODO: return const? Not yet possible but maybe after 
+	refactoring */
+	VehicleController* get_controller() const { return controller.get(); };
 
 	double get_rho() const { return rho; };
 	/* Checks whether vehicle is lane changing and returns proper value
@@ -377,7 +381,7 @@ private:
 	virtual bool implement_has_next_traffic_light() const { return false; };
 	//virtual void compute_lane_change_risks() {};
 	virtual double compute_accepted_lane_change_gap(
-		std::shared_ptr<const NearbyVehicle> nearby_vehicle) const = 0;
+		const NearbyVehicle* nearby_vehicle) const = 0;
 	virtual std::shared_ptr<NearbyVehicle>
 		implement_get_destination_lane_leader() const = 0;
 	virtual std::shared_ptr<NearbyVehicle>
@@ -453,8 +457,6 @@ private:
 	/* Value of active lane change in VISSIM:
 	+1 = to the left, 0 = none, -1 = to the right */
 	std::vector<RelativeLane> active_lane_change_direction;
-	/* Determines if we use our lane change decision model or VISSIM's */
-	bool is_lane_change_autonomous{ true };
 	bool is_connected{ false };
 	/* Distance to the end of the lane. Used to avoid missing exits in case
 	vehicle couldn't lane change earlier. */

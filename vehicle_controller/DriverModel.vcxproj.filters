@@ -1,84 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="VehicleController.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="DriverModel.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="EgoVehicle.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="LateralController.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="LongitudinalController.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="NearbyVehicle.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="SimulationLogger.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Vehicle.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="RealLongitudinalController.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="VirtualLongitudinalController.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="VariationLimitedFilter.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="TrafficLight.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="RelativeLane.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="TrafficLightFileReader.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="LongitudinalControllerWithTrafficLights.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="LongitudinallyAutonomousVehicle.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="ConnectedAutonomousVehicle.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="PlatoonVehicle.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="AutonomousVehicle.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="SwitchedLongitudinalController.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="VelocityController.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="CTHGapController.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Platoon.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="TrafficLightALCVehicle.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="VissimLongitudinalController.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="LaneChangeGapsSafety.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="VehicleState.cpp">
       <Filter>StateMachines</Filter>
     </ClCompile>
@@ -100,103 +22,134 @@
     <ClCompile Include="LeaderFirstAndInvertStates.cpp">
       <Filter>StateMachines</Filter>
     </ClCompile>
-    <ClCompile Include="NoLaneChangeCAV.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="AutonomousVehicle.cpp">
+      <Filter>Vehicles</Filter>
     </ClCompile>
-    <ClCompile Include="SafetyCriticalGapController.cpp" />
-    <ClCompile Include="SafeConnectedAutonomousVehicle.cpp" />
-    <ClCompile Include="SafeLongitudinalController.cpp" />
-    <ClCompile Include="LongAVController.cpp" />
-    <ClCompile Include="AVController.cpp" />
-    <ClCompile Include="CAVController.cpp" />
+    <ClCompile Include="ConnectedAutonomousVehicle.cpp">
+      <Filter>Vehicles</Filter>
+    </ClCompile>
+    <ClCompile Include="EgoVehicle.cpp">
+      <Filter>Vehicles</Filter>
+    </ClCompile>
+    <ClCompile Include="PlatoonVehicle.cpp">
+      <Filter>Vehicles</Filter>
+    </ClCompile>
+    <ClCompile Include="Vehicle.cpp">
+      <Filter>Vehicles</Filter>
+    </ClCompile>
+    <ClCompile Include="NearbyVehicle.cpp">
+      <Filter>Vehicles</Filter>
+    </ClCompile>
+    <ClCompile Include="TrafficLightALCVehicle.cpp">
+      <Filter>Vehicles</Filter>
+    </ClCompile>
+    <ClCompile Include="CTHGapController.cpp">
+      <Filter>Controllers</Filter>
+    </ClCompile>
+    <ClCompile Include="LateralController.cpp">
+      <Filter>Controllers</Filter>
+    </ClCompile>
+    <ClCompile Include="LongitudinalController.cpp">
+      <Filter>Controllers</Filter>
+    </ClCompile>
+    <ClCompile Include="LongitudinalControllerWithTrafficLights.cpp">
+      <Filter>Controllers</Filter>
+    </ClCompile>
+    <ClCompile Include="RealLongitudinalController.cpp">
+      <Filter>Controllers</Filter>
+    </ClCompile>
+    <ClCompile Include="SwitchedLongitudinalController.cpp">
+      <Filter>Controllers</Filter>
+    </ClCompile>
+    <ClCompile Include="VehicleController.cpp">
+      <Filter>Controllers</Filter>
+    </ClCompile>
+    <ClCompile Include="VelocityController.cpp">
+      <Filter>Controllers</Filter>
+    </ClCompile>
+    <ClCompile Include="VirtualLongitudinalController.cpp">
+      <Filter>Controllers</Filter>
+    </ClCompile>
+    <ClCompile Include="VissimLongitudinalController.cpp">
+      <Filter>Controllers</Filter>
+    </ClCompile>
+    <ClCompile Include="LongitudinallyAutonomousVehicle.cpp">
+      <Filter>Vehicles</Filter>
+    </ClCompile>
+    <ClCompile Include="NoLaneChangeCAV.cpp">
+      <Filter>Vehicles</Filter>
+    </ClCompile>
+    <ClCompile Include="AVController.cpp">
+      <Filter>Controllers</Filter>
+    </ClCompile>
+    <ClCompile Include="CAVController.cpp">
+      <Filter>Controllers</Filter>
+    </ClCompile>
+    <ClCompile Include="LongAVController.cpp">
+      <Filter>Controllers</Filter>
+    </ClCompile>
+    <ClCompile Include="SafetyCriticalGapController.cpp">
+      <Filter>Controllers</Filter>
+    </ClCompile>
+    <ClCompile Include="SafeLongitudinalController.cpp">
+      <Filter>Controllers</Filter>
+    </ClCompile>
+    <ClCompile Include="SafeConnectedAutonomousVehicle.cpp">
+      <Filter>Vehicles</Filter>
+    </ClCompile>
+    <ClCompile Include="Platoon.cpp">
+      <Filter>Vehicles</Filter>
+    </ClCompile>
+    <ClCompile Include="DriverModel.cpp">
+      <Filter>Support and Main</Filter>
+    </ClCompile>
+    <ClCompile Include="LaneChangeGapsSafety.cpp">
+      <Filter>Support and Main</Filter>
+    </ClCompile>
+    <ClCompile Include="RelativeLane.cpp">
+      <Filter>Support and Main</Filter>
+    </ClCompile>
+    <ClCompile Include="SimulationLogger.cpp">
+      <Filter>Support and Main</Filter>
+    </ClCompile>
+    <ClCompile Include="TrafficLight.cpp">
+      <Filter>Support and Main</Filter>
+    </ClCompile>
+    <ClCompile Include="TrafficLightFileReader.cpp">
+      <Filter>Support and Main</Filter>
+    </ClCompile>
+    <ClCompile Include="VariationLimitedFilter.cpp">
+      <Filter>Support and Main</Filter>
+    </ClCompile>
+    <ClCompile Include="TrafficLightLongAVController.cpp">
+      <Filter>Controllers</Filter>
+    </ClCompile>
+    <ClCompile Include="PlatoonVehicleController.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="VehicleController.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="DriverModel.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="EgoVehicle.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="LateralController.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="LongitudinalController.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="NearbyVehicle.h">
-      <Filter>Header Files</Filter>
+      <Filter>Support and Main</Filter>
     </ClInclude>
     <ClInclude Include="SimulationLogger.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Vehicle.h">
-      <Filter>Header Files</Filter>
+      <Filter>Support and Main</Filter>
     </ClInclude>
     <ClInclude Include="Constants.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="VirtualLongitudinalController.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="RealLongitudinalController.h">
-      <Filter>Header Files</Filter>
+      <Filter>Support and Main</Filter>
     </ClInclude>
     <ClInclude Include="RelativeLane.h">
-      <Filter>Header Files</Filter>
+      <Filter>Support and Main</Filter>
     </ClInclude>
     <ClInclude Include="VariationLimitedFilter.h">
-      <Filter>Header Files</Filter>
+      <Filter>Support and Main</Filter>
     </ClInclude>
     <ClInclude Include="TrafficLight.h">
-      <Filter>Header Files</Filter>
+      <Filter>Support and Main</Filter>
     </ClInclude>
     <ClInclude Include="TrafficLightFileReader.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="LongitudinalControllerWithTrafficLights.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="EgoVehicleFactory.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="LongitudinallyAutonomousVehicle.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="ConnectedAutonomousVehicle.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="PlatoonVehicle.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="AutonomousVehicle.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="SwitchedLongitudinalController.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="VelocityController.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="CTHGapController.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Platoon.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="TrafficLightALCVehicle.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="VissimLongitudinalController.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="NoLaneChangeCAV.h">
-      <Filter>Header Files</Filter>
+      <Filter>Support and Main</Filter>
     </ClInclude>
     <ClInclude Include="LaneChangeGapsSafety.h">
-      <Filter>Header Files</Filter>
+      <Filter>Support and Main</Filter>
     </ClInclude>
     <ClInclude Include="VehicleState.h">
       <Filter>StateMachines</Filter>
@@ -219,22 +172,104 @@
     <ClInclude Include="LastVehicleFirstStates.h">
       <Filter>StateMachines</Filter>
     </ClInclude>
-    <ClInclude Include="SafetyCriticalGapController.h" />
-    <ClInclude Include="SafeConnectedAutonomousVehicle.h" />
-    <ClInclude Include="SafeLongitudinalController.h" />
-    <ClInclude Include="LongAVController.h" />
-    <ClInclude Include="AVController.h" />
-    <ClInclude Include="CAVController.h" />
+    <ClInclude Include="AutonomousVehicle.h">
+      <Filter>Vehicles</Filter>
+    </ClInclude>
+    <ClInclude Include="ConnectedAutonomousVehicle.h">
+      <Filter>Vehicles</Filter>
+    </ClInclude>
+    <ClInclude Include="EgoVehicle.h">
+      <Filter>Vehicles</Filter>
+    </ClInclude>
+    <ClInclude Include="EgoVehicleFactory.h">
+      <Filter>Vehicles</Filter>
+    </ClInclude>
+    <ClInclude Include="NearbyVehicle.h">
+      <Filter>Vehicles</Filter>
+    </ClInclude>
+    <ClInclude Include="PlatoonVehicle.h">
+      <Filter>Vehicles</Filter>
+    </ClInclude>
+    <ClInclude Include="TrafficLightALCVehicle.h">
+      <Filter>Vehicles</Filter>
+    </ClInclude>
+    <ClInclude Include="Vehicle.h">
+      <Filter>Vehicles</Filter>
+    </ClInclude>
+    <ClInclude Include="CTHGapController.h">
+      <Filter>Controllers</Filter>
+    </ClInclude>
+    <ClInclude Include="LateralController.h">
+      <Filter>Controllers</Filter>
+    </ClInclude>
+    <ClInclude Include="LongitudinalController.h">
+      <Filter>Controllers</Filter>
+    </ClInclude>
+    <ClInclude Include="LongitudinalControllerWithTrafficLights.h">
+      <Filter>Controllers</Filter>
+    </ClInclude>
+    <ClInclude Include="RealLongitudinalController.h">
+      <Filter>Controllers</Filter>
+    </ClInclude>
+    <ClInclude Include="SwitchedLongitudinalController.h">
+      <Filter>Controllers</Filter>
+    </ClInclude>
+    <ClInclude Include="VehicleController.h">
+      <Filter>Controllers</Filter>
+    </ClInclude>
+    <ClInclude Include="VelocityController.h">
+      <Filter>Controllers</Filter>
+    </ClInclude>
+    <ClInclude Include="VirtualLongitudinalController.h">
+      <Filter>Controllers</Filter>
+    </ClInclude>
+    <ClInclude Include="VissimLongitudinalController.h">
+      <Filter>Controllers</Filter>
+    </ClInclude>
+    <ClInclude Include="LongitudinallyAutonomousVehicle.h">
+      <Filter>Vehicles</Filter>
+    </ClInclude>
+    <ClInclude Include="NoLaneChangeCAV.h">
+      <Filter>Vehicles</Filter>
+    </ClInclude>
+    <ClInclude Include="AVController.h">
+      <Filter>Controllers</Filter>
+    </ClInclude>
+    <ClInclude Include="CAVController.h">
+      <Filter>Controllers</Filter>
+    </ClInclude>
+    <ClInclude Include="LongAVController.h">
+      <Filter>Controllers</Filter>
+    </ClInclude>
+    <ClInclude Include="SafetyCriticalGapController.h">
+      <Filter>Controllers</Filter>
+    </ClInclude>
+    <ClInclude Include="SafeLongitudinalController.h">
+      <Filter>Controllers</Filter>
+    </ClInclude>
+    <ClInclude Include="SafeConnectedAutonomousVehicle.h">
+      <Filter>Vehicles</Filter>
+    </ClInclude>
+    <ClInclude Include="Platoon.h">
+      <Filter>Vehicles</Filter>
+    </ClInclude>
+    <ClInclude Include="TrafficLightLongAVController.h">
+      <Filter>Controllers</Filter>
+    </ClInclude>
+    <ClInclude Include="PlatoonVehicleController.h" />
   </ItemGroup>
   <ItemGroup>
-    <Filter Include="Header Files">
-      <UniqueIdentifier>{d52b57e8-60a7-45f2-9236-04fdef4a1538}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files">
-      <UniqueIdentifier>{26718a99-b736-4bc6-a73a-bc5f180869a2}</UniqueIdentifier>
-    </Filter>
     <Filter Include="StateMachines">
       <UniqueIdentifier>{832747f0-8314-4dc8-8583-49e2215bfc0f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Vehicles">
+      <UniqueIdentifier>{e36692f4-4d70-49b1-9f74-ff74475408b0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Controllers">
+      <UniqueIdentifier>{f050b42e-f8e9-4726-a57c-27f2f0cf58f5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Support and Main">
+      <UniqueIdentifier>{d52b57e8-60a7-45f2-9236-04fdef4a1538}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

@@ -99,7 +99,7 @@ double CTHGapController::compute_acceleration_error(
 
 double CTHGapController::compute_desired_acceleration(
 	const EgoVehicle& ego_vehicle,
-	std::shared_ptr<const NearbyVehicle> leader)
+	const NearbyVehicle* leader)
 {
 	if (leader == nullptr)
 	{

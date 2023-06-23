@@ -1,7 +1,7 @@
 #include "PlatoonVehicle.h"
 #include "Platoon.h"
 #include "PlatoonLaneChangeStrategy.h"
-#include "CAVController.h"
+#include "PlatoonVehicleController.h"
 
 PlatoonVehicle::PlatoonVehicle(long id, double desired_velocity,
 	double simulation_time_step, double creation_time,
@@ -12,8 +12,8 @@ PlatoonVehicle::PlatoonVehicle(long id, double desired_velocity,
 	//alone_desired_velocity{ desired_velocity }
 {
 	compute_platoon_safe_gap_parameters();
-	this->controller = std::make_unique<CAVController>(
-		CAVController(*this, verbose));
+	this->controller = std::make_unique<PlatoonVehicleController>(
+		PlatoonVehicleController(*this, verbose));
 	if (verbose)
 	{
 		std::clog << "lambda1_platoon = " << lambda_1_platoon
@@ -59,8 +59,8 @@ bool PlatoonVehicle::has_finished_increasing_gap() const
 	bool is_gap_error_non_negative = true;
 	if (has_leader())
 	{
-		double safe_gap = compute_time_headway_gap(get_leader());
-		double gap = compute_gap_to_a_leader(get_leader());
+		double safe_gap = compute_time_headway_gap(get_leader().get());
+		double gap = compute_gap_to_a_leader(get_leader().get());
 		double gap_error = gap - safe_gap;
 		is_gap_error_non_negative = gap_error / safe_gap > (-0.05);
 	}
@@ -77,8 +77,8 @@ bool PlatoonVehicle::has_finished_closing_gap() const
 	bool is_gap_error_small = true;
 	if (has_leader())
 	{
-		double safe_gap = compute_time_headway_gap(get_leader());
-		double gap = compute_gap_to_a_leader(get_leader());
+		double safe_gap = compute_time_headway_gap(get_leader().get());
+		double gap = compute_gap_to_a_leader(get_leader().get());
 		double gap_error = gap - safe_gap;
 		is_gap_error_small = gap_error / safe_gap < 0.05;
 	}
@@ -170,13 +170,13 @@ bool PlatoonVehicle::is_vehicle_in_sight(long nearby_vehicle_id) const
 	return get_nearby_vehicle_by_id(nearby_vehicle_id) != nullptr;
 }
 
-double PlatoonVehicle::implement_compute_desired_acceleration(
-	const std::unordered_map<int, TrafficLight>& traffic_lights)
-{
-	double a_desired_acceleration =
-		controller->get_desired_acceleration(*this);
-	return consider_vehicle_dynamics(a_desired_acceleration);
-}
+//double PlatoonVehicle::implement_compute_desired_acceleration(
+//	const std::unordered_map<int, TrafficLight>& traffic_lights)
+//{
+//	double a_desired_acceleration =
+//		controller->compute_desired_acceleration();
+//	return consider_vehicle_dynamics(a_desired_acceleration);
+//}
 
 double PlatoonVehicle::compute_vehicle_following_safe_time_headway(
 	const NearbyVehicle& nearby_vehicle) const

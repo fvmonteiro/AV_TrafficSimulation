@@ -248,6 +248,8 @@
     <ClCompile Include="LongAVController.cpp" />
     <ClCompile Include="LongitudinallyAutonomousVehicle.cpp" />
     <ClCompile Include="ConnectedAutonomousVehicle.cpp" />
+    <ClCompile Include="PlatoonVehicleController.cpp" />
+    <ClCompile Include="TrafficLightLongAVController.cpp" />
     <ClCompile Include="VehicleController.cpp" />
     <ClCompile Include="LaneChangeGapsSafety.cpp" />
     <ClCompile Include="LastVehicleFirstStates.cpp" />
@@ -302,6 +304,8 @@
     <ClInclude Include="LongitudinallyAutonomousVehicle.h" />
     <ClInclude Include="AutonomousVehicle.h" />
     <ClInclude Include="ConnectedAutonomousVehicle.h" />
+    <ClInclude Include="PlatoonVehicleController.h" />
+    <ClInclude Include="TrafficLightLongAVController.h" />
     <ClInclude Include="VehicleController.h" />
     <ClInclude Include="EgoVehicleFactory.h" />
     <ClInclude Include="LaneChangeGapsSafety.h" />

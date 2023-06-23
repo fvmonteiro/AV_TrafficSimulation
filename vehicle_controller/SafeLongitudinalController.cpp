@@ -24,7 +24,7 @@ double SafeLongitudinalController::implement_get_gap_error() const
 
 double SafeLongitudinalController::implement_compute_desired_acceleration(
 	const EgoVehicle& ego_vehicle,
-	std::shared_ptr<const NearbyVehicle> leader,
+	const NearbyVehicle* leader,
 	double velocity_reference)
 {
 	std::unordered_map<State, double> possible_accelerations;
@@ -38,7 +38,7 @@ double SafeLongitudinalController::implement_compute_desired_acceleration(
 	{
 		possible_accelerations[State::vehicle_following] =
 			gap_controller.compute_safe_acceleration(ego_vehicle,
-				ego_vehicle.get_leader());
+				ego_vehicle.get_leader().get());
 	}
 
 	return choose_acceleration(ego_vehicle, possible_accelerations);

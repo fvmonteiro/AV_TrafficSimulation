@@ -44,7 +44,7 @@ public:
     //void set_reference_velocity(double ego_velocity, double adjustment_speed_factor);
 
     void determine_controller_state(const EgoVehicle& ego_vehicle,
-        std::shared_ptr<const NearbyVehicle> leader,
+        const NearbyVehicle* leader,
         double reference_velocity, double gap_control_input) override;
     bool is_active() const;
     /* Checks whether the filtered reference velocity is greater than

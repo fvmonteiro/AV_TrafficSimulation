@@ -15,7 +15,7 @@ public:
 	}
 
 	double compute_safe_acceleration(const EgoVehicle& ego_vehicle,
-		std::shared_ptr<const NearbyVehicle> leader);
+		const NearbyVehicle* leader);
 
 private:
 	double rho, gamma; // class K function parameters
@@ -24,7 +24,7 @@ private:
 	double compute_finite_time_cbf_class_k_function(double cbf_value);
 	/* Computes and stores the current gap error value */
 	void compute_gap_error(const EgoVehicle& ego_vehicle,
-		std::shared_ptr<const NearbyVehicle> leader);
+		const NearbyVehicle* leader);
 
 	// PLACE HOLDERS: not sure how to get the proper values here
 	double get_time_headway() { 

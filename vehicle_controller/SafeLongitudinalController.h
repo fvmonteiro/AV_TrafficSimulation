@@ -24,7 +24,7 @@ private:
 	double implement_get_gap_error() const override;
 	double implement_compute_desired_acceleration(
 		const EgoVehicle& ego_vehicle,
-		std::shared_ptr<const NearbyVehicle> leader,
+		const NearbyVehicle* leader,
 		double velocity_reference) override;
 
 	double choose_acceleration(const EgoVehicle& ego_vehicle,

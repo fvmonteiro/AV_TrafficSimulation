@@ -37,12 +37,12 @@ private:
 	double implement_get_gap_error() const override;
 	double implement_compute_desired_acceleration(
 		const EgoVehicle& ego_vehicle,
-		std::shared_ptr<const NearbyVehicle> leader,
+		const NearbyVehicle* leader,
 		double velocity_reference) override;
 
 	double get_nominal_input(const EgoVehicle& ego_vehicle);
 	double compute_vehicle_following_input(const EgoVehicle& ego_vehicle,
-		std::shared_ptr<const NearbyVehicle> leader);
+		const NearbyVehicle* leader);
 	double compute_velocity_control_input(const EgoVehicle& ego_vehicle,
 		double velocity_reference);
 	double compute_traffic_light_input(

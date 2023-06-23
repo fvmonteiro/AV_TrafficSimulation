@@ -19,9 +19,8 @@ AutonomousVehicle::AutonomousVehicle(long id, VehicleType type,
 	double desired_velocity, bool is_connected,
 	double simulation_time_step, double creation_time,
 	bool verbose) :
-	EgoVehicle(id, type, desired_velocity,
-		AUTONOMOUS_BRAKE_DELAY, true, false,
-		simulation_time_step, creation_time, verbose)
+	LongitudinallyAutonomousVehicle(id, type, desired_velocity,
+		false, simulation_time_step, creation_time, verbose)
 {
 	compute_lane_change_gap_parameters();
 	if (verbose)
@@ -80,7 +79,7 @@ LaneChangeGapsSafety AutonomousVehicle::get_lane_change_gaps_safety() const
 }
 
 bool AutonomousVehicle::is_lane_change_gap_safe(
-	std::shared_ptr<const NearbyVehicle> nearby_vehicle) const
+	const NearbyVehicle* nearby_vehicle) const
 {
 	if (nearby_vehicle == nullptr) return true;
 	double margin = 0.1;
@@ -398,7 +397,7 @@ double AutonomousVehicle::implement_compute_desired_acceleration(
 	const std::unordered_map<int, TrafficLight>& traffic_lights)
 {
 	double a_desired_acceleration =
-		controller->get_desired_acceleration(*this);
+		controller->compute_desired_acceleration();
 	return consider_vehicle_dynamics(a_desired_acceleration);
 }
 
@@ -420,13 +419,13 @@ bool AutonomousVehicle::implement_check_lane_change_gaps()
 			<< "\tTo orig lane leader:\n";
 	}
 	lane_change_gaps_safety.orig_lane_leader_gap = 
-		is_lane_change_gap_safe(get_leader());
+		is_lane_change_gap_safe(get_leader().get());
 	if (verbose)
 	{
 		std::clog << "\tTo dest lane leader:\n";
 	}
 	lane_change_gaps_safety.dest_lane_leader_gap =
-		is_lane_change_gap_safe(destination_lane_leader);
+		is_lane_change_gap_safe(destination_lane_leader.get());
 	if (verbose)
 	{
 		std::clog << "\tTo dest lane follower:\n";
@@ -435,7 +434,7 @@ bool AutonomousVehicle::implement_check_lane_change_gaps()
 	where the dest lane follower has completely stopped to give room
 	to the lane changing vehicle */
 	lane_change_gaps_safety.dest_lane_follower_gap = 
-		is_lane_change_gap_safe(destination_lane_follower)
+		is_lane_change_gap_safe(destination_lane_follower.get())
 		|| ((destination_lane_follower->
 			compute_velocity(get_velocity()) <= 1.0)
 			&& (destination_lane_follower->get_distance() <= -2.0));
@@ -446,7 +445,7 @@ bool AutonomousVehicle::implement_check_lane_change_gaps()
 }
 
 double AutonomousVehicle::compute_accepted_lane_change_gap(
-	std::shared_ptr<const NearbyVehicle> nearby_vehicle) const
+	const NearbyVehicle* nearby_vehicle) const
 {
 	if (nearby_vehicle == nullptr) return 0.0;
 
@@ -470,7 +469,7 @@ double AutonomousVehicle::compute_accepted_lane_change_gap(
 	}
 
 	double gap_variation_during_lc =
-		controller->get_gap_variation_during_lane_change(*this,
+		controller->get_gap_variation_during_lane_change(
 			*nearby_vehicle, false);
 	double accepted_gap = accepted_vehicle_following_gap
 		+ gap_variation_during_lc;

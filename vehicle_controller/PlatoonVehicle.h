@@ -59,8 +59,8 @@ private:
 	double in_platoon_comf_accel{ 0.5 };
 	double in_platoon_rho{ 0.05 };
 
-	double implement_compute_desired_acceleration(
-		const std::unordered_map<int, TrafficLight>& traffic_lights) override;
+	/*double implement_compute_desired_acceleration(
+		const std::unordered_map<int, TrafficLight>& traffic_lights) override;*/
 	void implement_analyze_nearby_vehicles() override;
 	/* Returns true if the vehicle creates a platoon for itself. */
 	bool implement_analyze_platoons(

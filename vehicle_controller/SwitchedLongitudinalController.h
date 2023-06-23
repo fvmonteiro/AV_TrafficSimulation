@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include <memory>
 #include <string>
 
 #include "Constants.h"
@@ -60,7 +59,7 @@ public:
 	double get_desired_gap(double ego_velocity) const;
 	void set_desired_time_headway(double time_headway);
 
-	void compute_max_risk_to_leader(bool is_lane_changing);
+	//void compute_max_risk_to_leader(bool is_lane_changing);
 
 
 protected:
@@ -79,13 +78,13 @@ protected:
 private:
 	double implement_get_gap_error() const override;
 	double implement_compute_desired_acceleration(const EgoVehicle& ego_vehicle,
-		std::shared_ptr<const NearbyVehicle> leader,
+		const NearbyVehicle* leader,
 		double velocity_reference) override;
 
 	/* Determines and sets the current state of the longitudinal controller
 	TODO: should this class provide a default implementation?*/
 	virtual void determine_controller_state(const EgoVehicle& ego_vehicle,
-		std::shared_ptr<const NearbyVehicle> leader,
+		const NearbyVehicle* leader,
 		double reference_velocity, double gap_control_input) = 0;
 
 	//double simulation_time_step{ 0.01 };

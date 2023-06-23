@@ -4,7 +4,7 @@
 
 double SafetyCriticalGapController::compute_safe_acceleration(
 	const EgoVehicle& ego_vehicle,
-	std::shared_ptr<const NearbyVehicle> leader)
+	const NearbyVehicle* leader)
 {
 	double ego_vel = ego_vehicle.get_velocity();
 	double leader_vel = leader->compute_velocity(ego_vel);
@@ -34,7 +34,7 @@ double SafetyCriticalGapController::compute_finite_time_cbf_class_k_function(
 
 void SafetyCriticalGapController::compute_gap_error(
 	const EgoVehicle& ego_vehicle, 
-	std::shared_ptr<const NearbyVehicle> leader)
+	const NearbyVehicle* leader)
 {
 	double gap = ego_vehicle.compute_gap_to_a_leader(leader);
 	double ego_vel = ego_vehicle.get_velocity();

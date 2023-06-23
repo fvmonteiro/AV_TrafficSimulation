@@ -25,7 +25,7 @@ implement_get_gap_error() const
 double LongitudinalControllerWithTrafficLights::
 implement_compute_desired_acceleration(
 	const EgoVehicle& ego_vehicle,
-	std::shared_ptr<const NearbyVehicle> leader,
+	const NearbyVehicle* leader,
 	double velocity_reference)
 {
 	std::unordered_map<State, double> possible_accelerations;
@@ -38,7 +38,7 @@ implement_compute_desired_acceleration(
 	{
 		possible_accelerations[State::vehicle_following] =
 			compute_vehicle_following_input(ego_vehicle,
-				ego_vehicle.get_leader());
+				ego_vehicle.get_leader().get());
 	}
 	if (ego_vehicle.has_next_traffic_light())
 	{
@@ -57,7 +57,7 @@ double LongitudinalControllerWithTrafficLights::get_nominal_input(
 
 double LongitudinalControllerWithTrafficLights
 ::compute_vehicle_following_input(const EgoVehicle& ego_vehicle,
-	std::shared_ptr<const NearbyVehicle> leader)
+	const NearbyVehicle* leader)
 {	
 	//std::shared_ptr<NearbyVehicle> leader = ego_vehicle.get_leader();
 	double gap = ego_vehicle.compute_gap_to_a_leader(leader);
@@ -165,7 +165,8 @@ double LongitudinalControllerWithTrafficLights::choose_acceleration(
 	}
 
 	// TODO: h1 is already computed in the vehicle_following_input method.
-	double gap = ego_vehicle.compute_gap_to_a_leader(ego_vehicle.get_leader());
+	double gap = ego_vehicle.compute_gap_to_a_leader(
+		ego_vehicle.get_leader().get());
 	double ego_vel = ego_vehicle.get_velocity();
 	double leader_vel = ego_vehicle.get_leader()->compute_velocity(ego_vel);
 	double gap_error = gap - time_headway * ego_vel - standstill_distance;

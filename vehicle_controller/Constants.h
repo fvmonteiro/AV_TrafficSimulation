@@ -74,6 +74,8 @@ enum class VehicleType {
 	traffic_light_alc_car = 130,
 	traffic_light_calc_car = 135,
 	platoon_car = 140,
+	safe_autonomous_car = 150, // not done yet
+	safe_connected_car = 155, //
 	truck = 200,
 	bus = 300
 };

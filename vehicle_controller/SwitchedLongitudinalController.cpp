@@ -112,7 +112,7 @@ double SwitchedLongitudinalController::implement_get_gap_error() const
 
 double SwitchedLongitudinalController::implement_compute_desired_acceleration(
 	const EgoVehicle& ego_vehicle,
-	std::shared_ptr<const NearbyVehicle> leader,
+	const NearbyVehicle* leader,
 	double velocity_reference) 
 {
 	double desired_acceleration;

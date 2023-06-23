@@ -70,7 +70,7 @@ public:
 	double get_desired_gap(double ego_velocity) const;
 
 	double compute_desired_acceleration(const EgoVehicle& ego_vehicle, 
-		std::shared_ptr<const NearbyVehicle> leader);
+		const NearbyVehicle* leader);
 
 	void reset_time_headway_filter(double time_headway);
 	void reset_velocity_filter(double ego_velocity);

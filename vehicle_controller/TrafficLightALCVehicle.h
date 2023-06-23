@@ -26,7 +26,7 @@ protected:
 		double simulation_time_step,
 		double creation_time, bool verbose = false) :
 		EgoVehicle(id, type, desired_velocity,
-			AUTONOMOUS_BRAKE_DELAY, true, is_connected,
+			AUTONOMOUS_BRAKE_DELAY, is_connected,
 			simulation_time_step, creation_time, verbose) {}
 
 private:
@@ -51,7 +51,7 @@ private:
 		return nullptr;
 	};
 	double compute_accepted_lane_change_gap(
-		std::shared_ptr<const NearbyVehicle> nearby_vehicle) const override {
+		const NearbyVehicle* nearby_vehicle) const override {
 		return 0.0;
 	};
 	std::shared_ptr<NearbyVehicle>
