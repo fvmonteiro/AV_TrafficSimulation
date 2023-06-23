@@ -1,4 +1,19 @@
 #include "AutonomousVehicle.h"
+#include "AVController.h"
+
+AutonomousVehicle::AutonomousVehicle(long id, double desired_velocity,
+	double simulation_time_step, double creation_time,
+	bool verbose) : AutonomousVehicle(id,
+		VehicleType::autonomous_car, desired_velocity, false,
+		simulation_time_step, creation_time, verbose) 
+{
+	this->controller = std::make_unique<AVController>(
+		AVController(*this, verbose));
+	if (verbose)
+	{
+		std::clog << "[AutonomousVehicle] constructor done\n";
+	}
+}
 
 AutonomousVehicle::AutonomousVehicle(long id, VehicleType type,
 	double desired_velocity, bool is_connected,
@@ -9,14 +24,9 @@ AutonomousVehicle::AutonomousVehicle(long id, VehicleType type,
 		simulation_time_step, creation_time, verbose)
 {
 	compute_lane_change_gap_parameters();
-	controller.add_vissim_controller();
-	controller.add_origin_lane_controllers(*this);
-	controller.add_lane_change_adjustment_controller(*this);
-
 	if (verbose)
 	{
-		std::clog << "lambda1_lc = " << get_lambda_1_lane_change()
-			<< "\n[AutonomousVehicle] constructor done" <<std::endl;
+		std::clog << "lambda1_lc = " << get_lambda_1_lane_change() << "\n";
 	}
 }
 
@@ -44,7 +54,7 @@ bool AutonomousVehicle::has_virtual_leader() const
 //	double ego_velocity = get_velocity();
 //
 //	/* Get the possible max vel at the origin lane */
-//	if (controller.is_in_free_flow_at_origin_lane())
+//	if (controller->is_in_free_flow_at_origin_lane())
 //	{
 //		origin_lane_reference_velocity =
 //			get_desired_velocity();
@@ -257,7 +267,7 @@ bool AutonomousVehicle::try_to_overtake_destination_lane_leader(
 	double dest_lane_leader_vel =
 		get_destination_lane_leader()->compute_velocity(ego_velocity);
 	double origin_lane_desired_velocity =
-		(controller.is_in_free_flow_at_origin_lane() || !has_leader()) ?
+		(controller->is_in_free_flow_at_origin_lane() || !has_leader()) ?
 		get_desired_velocity()
 		: get_leader()->compute_velocity(ego_velocity);
 
@@ -294,7 +304,7 @@ void AutonomousVehicle::update_destination_lane_follower(
 			|| (old_follower->get_category()
 				!= destination_lane_follower->get_category()))
 		{
-			controller.update_destination_lane_follower_time_headway(
+			controller->update_destination_lane_follower_time_headway(
 				estimate_nearby_vehicle_time_headway(
 					*destination_lane_follower));
 			dest_lane_follower_lambda_0 =
@@ -315,7 +325,7 @@ void AutonomousVehicle::update_virtual_leader(
 		if (old_leader == nullptr)
 		{
 			double ego_vel = get_velocity();
-			controller.activate_destination_lane_controller(ego_vel,
+			controller->activate_destination_lane_controller(ego_vel,
 				get_virtual_leader()->compute_velocity(ego_vel),
 				compute_lane_changing_desired_time_headway(
 					*get_virtual_leader()),
@@ -326,7 +336,7 @@ void AutonomousVehicle::update_virtual_leader(
 			|| (old_leader->get_type()
 				!= get_virtual_leader()->get_type()))
 		{
-			controller.update_destination_lane_controller(get_velocity(),
+			controller->update_destination_lane_controller(get_velocity(),
 				compute_lane_changing_desired_time_headway(
 					*get_virtual_leader()),
 				is_new_leader_connected);
@@ -388,7 +398,7 @@ double AutonomousVehicle::implement_compute_desired_acceleration(
 	const std::unordered_map<int, TrafficLight>& traffic_lights)
 {
 	double a_desired_acceleration =
-		controller.get_desired_acceleration(*this);
+		controller->get_desired_acceleration(*this);
 	return consider_vehicle_dynamics(a_desired_acceleration);
 }
 
@@ -460,7 +470,7 @@ double AutonomousVehicle::compute_accepted_lane_change_gap(
 	}
 
 	double gap_variation_during_lc =
-		controller.get_gap_variation_during_lane_change(*this,
+		controller->get_gap_variation_during_lane_change(*this,
 			*nearby_vehicle, false);
 	double accepted_gap = accepted_vehicle_following_gap
 		+ gap_variation_during_lc;
@@ -484,7 +494,7 @@ double AutonomousVehicle::compute_time_headway_gap_for_lane_change(
 	safety towards the destination lane leader (which might be different 
 	from the virtual leader) */
 	double accepted_time_headway_gap =
-		controller.get_desired_time_headway_gap(get_velocity(),
+		controller->get_desired_time_headway_gap(get_velocity(),
 			nearby_vehicle);
 
 	double accepted_risk = nearby_vehicle.is_ahead() ?
@@ -763,11 +773,11 @@ void AutonomousVehicle::update_headways_with_risk(const EgoVehicle& ego_vehicle)
 
 	///* TODO: include difference to check whether vehicles are connected */
 
-	//if (destination_lane_controller.update_accepted_risk(
+	//if (destination_lane_controller->update_accepted_risk(
 	//	ego_vehicle.get_time(), ego_vehicle)) {
 
 	//	if (ego_vehicle.has_destination_lane_leader()) {
-	//		destination_lane_controller.update_time_headway(
+	//		destination_lane_controller->update_time_headway(
 	//			ego_parameters.lambda_1, ego_parameters.lambda_1_lane_change,
 	//			ego_vehicle.get_destination_lane_leader()->get_max_brake());
 	//	}
@@ -790,7 +800,7 @@ void AutonomousVehicle::update_headways_with_risk(const EgoVehicle& ego_vehicle)
 	//			ego_parameters.desired_velocity;
 	//		double ego_max_brake = ego_parameters.max_brake;
 	//		dest_lane_follower->compute_safe_gap_parameters();
-	//		destination_lane_controller.estimate_follower_time_headway(
+	//		destination_lane_controller->estimate_follower_time_headway(
 	//			*dest_lane_follower, ego_max_brake,
 	//			estimated_follower_free_flow_velocity);
 	//	}

@@ -10,10 +10,7 @@ public:
 
 	ConnectedAutonomousVehicle(long id, double desired_velocity,
 		double simulation_time_step, double creation_time,
-		bool verbose = false) :
-		ConnectedAutonomousVehicle(id, VehicleType::connected_car,
-			desired_velocity, simulation_time_step, creation_time,
-			verbose) {};
+		bool verbose = false);
 
 	/* The connected vehicle brake delay also depends on the other vehicle
 	type. If the other vehicle is not connected, the ego connected vehicle

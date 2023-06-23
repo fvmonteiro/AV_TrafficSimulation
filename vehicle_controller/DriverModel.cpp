@@ -15,7 +15,6 @@
 #include "EgoVehicle.h"
 #include "EgoVehicleFactory.h"
 #include "Platoon.h"
-#include "PlatoonVehicle.h"
 #include "SimulationLogger.h"
 #include "TrafficLight.h"
 #include "TrafficLightFileReader.h"

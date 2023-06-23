@@ -12,7 +12,7 @@
 #include <string>
 #include <sstream>
 
-#include "ControlManager.h"
+//#include "Vehiclecontroller->h"
 #include "EgoVehicle.h"
 #include "Platoon.h"
 
@@ -30,7 +30,6 @@ EgoVehicle::EgoVehicle(long id, VehicleType type, double desired_velocity,
 	tau_d{ std::exp(-simulation_time_step / tau) }
 {
 	compute_safe_gap_parameters();
-	bool verbose_control_manager = verbose;
 	set_state(std::make_unique<SingleVehicleLaneKeepingState>());
 
 	if (verbose)
@@ -42,14 +41,11 @@ EgoVehicle::EgoVehicle(long id, VehicleType type, double desired_velocity,
 			<< ", des. vel. = " << desired_velocity
 			<< ", lambda 1 = " << get_lambda_1()
 			<< ", lambda 0 = " << get_lambda_0();
-			if (!verbose_control_manager)
-			{
-				std::clog << "\nNOTE: control manager is NOT verbose.";
-			}
 			std::clog << std::endl;
 	}
 
-	this->controller = ControlManager(*this, verbose_control_manager);
+	/*this->controller = std::make_unique<VehicleController>(
+		VehicleController(verbose_control_manager));*/
 }
 
 EgoVehicle::~EgoVehicle()
@@ -164,17 +160,17 @@ double EgoVehicle::get_current_max_brake() const
 
 double EgoVehicle::get_safe_time_headway() const
 {
-	return controller.get_safe_time_headway();
+	return controller->get_safe_time_headway();
 }
 
 double EgoVehicle::get_gap_error() const
 {
-	return controller.get_gap_error();
+	return controller->get_gap_error();
 }
 
 double EgoVehicle::get_current_desired_time_headway() const
 {
-	return controller.get_current_desired_time_headway();
+	return controller->get_current_desired_time_headway();
 }
 
 double EgoVehicle::get_gap_variation_to(
@@ -342,7 +338,7 @@ double EgoVehicle::get_time_headway_to_assisted_vehicle() const
 {
 	if (has_assisted_vehicle())
 	{
-		return controller.get_gap_generation_lane_controller().
+		return controller->get_gap_generation_lane_controller().
 			get_desired_time_headway();
 	}
 	/* We return a high value when there's no assisted vehicle because,
@@ -404,7 +400,7 @@ long EgoVehicle::get_assisted_veh_id() const
 }
 double EgoVehicle::get_dest_follower_time_headway() const
 {
-	return controller.get_destination_lane_controller().
+	return controller->get_destination_lane_controller().
 		get_follower_time_headway();
 }
 
@@ -602,7 +598,7 @@ void EgoVehicle::update_leader(
 		bool is_new_leader_connected = leader->is_connected();
 		if (old_leader == nullptr)
 		{
-			controller.activate_origin_lane_controller(get_velocity(),
+			controller->activate_origin_lane_controller(get_velocity(),
 				compute_current_desired_time_headway(*leader),
 				is_new_leader_connected);
 		}
@@ -610,7 +606,7 @@ void EgoVehicle::update_leader(
 			- old_leader->get_max_brake()) > 0.5)
 			|| (leader->get_type() != old_leader->get_type()))
 		{
-			controller.update_origin_lane_controller(
+			controller->update_origin_lane_controller(
 				compute_current_desired_time_headway(*leader),
 				is_new_leader_connected
 			);
@@ -719,7 +715,7 @@ bool EgoVehicle::is_lane_changing() const
 
 long EgoVehicle::get_color_by_controller_state()
 {
-	return controller.get_longitudinal_controller_color();
+	return controller->get_longitudinal_controller_color();
 }
 
 
@@ -776,7 +772,7 @@ double EgoVehicle::get_accepted_lane_change_gap(
 
 double EgoVehicle::get_reference_gap()
 {
-	return controller.get_reference_gap(get_velocity());
+	return controller->get_reference_gap(get_velocity());
 }
 
 double EgoVehicle::compute_time_headway_gap(
@@ -785,7 +781,7 @@ double EgoVehicle::compute_time_headway_gap(
 	double time_headway_gap = 0.0;
 	if (nearby_vehicle != nullptr)
 	{
-		time_headway_gap = controller.get_desired_time_headway_gap(
+		time_headway_gap = controller->get_desired_time_headway_gap(
 			get_velocity(), /*has_lane_change_intention(),*/
 			*nearby_vehicle);
 	}
@@ -798,7 +794,7 @@ double EgoVehicle::compute_transient_gap(
 	double transient_gap = 0.0;
 	if (nearby_vehicle != nullptr)
 	{
-		transient_gap = controller.get_lateral_controller().
+		transient_gap = controller->get_lateral_controller().
 			compute_transient_gap(*this, *nearby_vehicle, false);
 	}
 	return transient_gap;
@@ -808,7 +804,7 @@ void EgoVehicle::update_origin_lane_controller()
 {
 	if (has_leader())
 	{
-		controller.update_origin_lane_controller(
+		controller->update_origin_lane_controller(
 			compute_current_desired_time_headway(*get_leader()),
 			get_leader()->is_connected()
 		);
@@ -817,7 +813,7 @@ void EgoVehicle::update_origin_lane_controller()
 
 void EgoVehicle::reset_origin_lane_velocity_controller()
 {
-	controller.reset_origin_lane_velocity_controller(
+	controller->reset_origin_lane_velocity_controller(
 		get_velocity());
 }
 

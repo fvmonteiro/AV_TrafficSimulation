@@ -243,9 +243,12 @@
     </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="ACCVehicle.cpp" />
+    <ClCompile Include="AVController.cpp" />
+    <ClCompile Include="CAVController.cpp" />
+    <ClCompile Include="LongAVController.cpp" />
+    <ClCompile Include="LongitudinallyAutonomousVehicle.cpp" />
     <ClCompile Include="ConnectedAutonomousVehicle.cpp" />
-    <ClCompile Include="ControlManager.cpp" />
+    <ClCompile Include="VehicleController.cpp" />
     <ClCompile Include="LaneChangeGapsSafety.cpp" />
     <ClCompile Include="LastVehicleFirstStates.cpp" />
     <ClCompile Include="LeaderFirstAndInvertStates.cpp" />
@@ -293,10 +296,13 @@
     <ClCompile Include="VissimLongitudinalController.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="ACCVehicle.h" />
+    <ClInclude Include="AVController.h" />
+    <ClInclude Include="CAVController.h" />
+    <ClInclude Include="LongAVController.h" />
+    <ClInclude Include="LongitudinallyAutonomousVehicle.h" />
     <ClInclude Include="AutonomousVehicle.h" />
     <ClInclude Include="ConnectedAutonomousVehicle.h" />
-    <ClInclude Include="ControlManager.h" />
+    <ClInclude Include="VehicleController.h" />
     <ClInclude Include="EgoVehicleFactory.h" />
     <ClInclude Include="LaneChangeGapsSafety.h" />
     <ClInclude Include="LastVehicleFirstStates.h" />

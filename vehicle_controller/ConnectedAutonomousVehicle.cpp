@@ -1,4 +1,21 @@
 #include "ConnectedAutonomousVehicle.h"
+#include "CAVController.h"
+
+ConnectedAutonomousVehicle::ConnectedAutonomousVehicle(
+	long id, double desired_velocity,
+	double simulation_time_step, double creation_time,
+	bool verbose) :
+	ConnectedAutonomousVehicle(id, VehicleType::connected_car,
+		desired_velocity, simulation_time_step, creation_time,
+		verbose)
+{
+	this->controller = std::make_unique<CAVController>(
+		CAVController(*this, verbose));
+	if (verbose)
+	{
+		std::clog << "[ConnectedAutonomousVehicle] constructor done\n";
+	}
+}
 
 ConnectedAutonomousVehicle::ConnectedAutonomousVehicle(
 	long id, VehicleType type, double desired_velocity,
@@ -9,12 +26,11 @@ ConnectedAutonomousVehicle::ConnectedAutonomousVehicle(
 {
 	original_desired_velocity = get_desired_velocity();
 	compute_connected_safe_gap_parameters();
-	controller.add_cooperative_lane_change_controller(*this);
 	if (verbose)
 	{
 		std::clog << "lambda1_connected = " << lambda_1_connected
 			<< ", lambda1_lc_platoon = " << lambda_1_lane_change_connected
-			<< "\n[ConnectedAutonomousVehicle] constructor done" << std::endl;
+			<< "\n";
 	}
 }
 
@@ -147,7 +163,7 @@ void ConnectedAutonomousVehicle::update_destination_lane_follower(
 	{
 		std::shared_ptr<NearbyVehicle>& dest_lane_follower =
 			get_modifiable_dest_lane_follower();
-		controller.update_destination_lane_follower_time_headway(
+		controller->update_destination_lane_follower_time_headway(
 			dest_lane_follower->get_h_to_incoming_vehicle());
 
 		/* We need to compute fd's lambda1 here cause it's used later in
@@ -177,7 +193,7 @@ void ConnectedAutonomousVehicle::update_assisted_vehicle(
 					*assisted_vehicle, 0
 					/* assisted_vehicle->get_max_lane_change_risk_to_follower()*/
 				));
-			controller.update_gap_generation_controller(
+			controller->update_gap_generation_controller(
 				get_velocity(), h_to_assisted_vehicle);
 		}
 	}
@@ -285,7 +301,7 @@ double ConnectedAutonomousVehicle::implement_compute_desired_acceleration(
 {
 	if (verbose) std::clog << "[CAV] get_desired_acceleration" << std::endl;
 	double a_desired_acceleration =
-		controller.get_desired_acceleration(*this);
+		controller->get_desired_acceleration(*this);
 	return consider_vehicle_dynamics(a_desired_acceleration);
 }
 

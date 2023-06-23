@@ -1,7 +1,7 @@
-
 #include "PlatoonVehicle.h"
 #include "Platoon.h"
 #include "PlatoonLaneChangeStrategy.h"
+#include "CAVController.h"
 
 PlatoonVehicle::PlatoonVehicle(long id, double desired_velocity,
 	double simulation_time_step, double creation_time,
@@ -12,7 +12,8 @@ PlatoonVehicle::PlatoonVehicle(long id, double desired_velocity,
 	//alone_desired_velocity{ desired_velocity }
 {
 	compute_platoon_safe_gap_parameters();
-	//controller.add_in_platoon_controller(*this);
+	this->controller = std::make_unique<CAVController>(
+		CAVController(*this, verbose));
 	if (verbose)
 	{
 		std::clog << "lambda1_platoon = " << lambda_1_platoon
@@ -173,7 +174,7 @@ double PlatoonVehicle::implement_compute_desired_acceleration(
 	const std::unordered_map<int, TrafficLight>& traffic_lights)
 {
 	double a_desired_acceleration =
-		controller.get_desired_acceleration(*this);
+		controller->get_desired_acceleration(*this);
 	return consider_vehicle_dynamics(a_desired_acceleration);
 }
 
@@ -241,8 +242,8 @@ bool PlatoonVehicle::was_my_cooperation_request_accepted() const
 	{
 		/* lane_change_request might be in the nearby vehicle
 		list of some other platoon vehicle, but not ours */
-		std::shared_ptr<NearbyVehicle> cooperating_vehicle =
-			get_nearby_vehicle_by_id(lane_change_request);
+		const NearbyVehicle* cooperating_vehicle =
+			get_nearby_vehicle_by_id(lane_change_request).get();
 		if (cooperating_vehicle != nullptr)
 		{
 			long id_of_vehicle_being_assisted =

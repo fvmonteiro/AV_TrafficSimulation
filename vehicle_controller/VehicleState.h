@@ -81,7 +81,7 @@ private:
 
 	/* Derived classes might need to use some concrete implementation of
 	EgoVehicle. They can cast it in this function. */
-	virtual void set_specific_type_of_vehicle(EgoVehicle* ego_vehicle) {};
+	virtual void set_specific_type_of_vehicle() {};
 	virtual void implement_handle_lane_keeping_intention() = 0;
 	virtual void implement_handle_lane_change_intention() = 0;
 };

@@ -11,9 +11,7 @@ class AutonomousVehicle : public EgoVehicle
 public:
 	AutonomousVehicle(long id, double desired_velocity,
 		double simulation_time_step, double creation_time,
-		bool verbose = false) : AutonomousVehicle(id,
-			VehicleType::autonomous_car, desired_velocity, false,
-			simulation_time_step, creation_time, verbose) {} ;
+		bool verbose = false);
 	
 	/* Vehicle behind which we want to merge (not necessarily the same as
 	the destination lane leader) */

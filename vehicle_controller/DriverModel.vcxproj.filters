@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="ControlManager.cpp">
+    <ClCompile Include="VehicleController.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="DriverModel.cpp">
@@ -46,7 +46,7 @@
     <ClCompile Include="LongitudinalControllerWithTrafficLights.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ACCVehicle.cpp">
+    <ClCompile Include="LongitudinallyAutonomousVehicle.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ConnectedAutonomousVehicle.cpp">
@@ -106,9 +106,12 @@
     <ClCompile Include="SafetyCriticalGapController.cpp" />
     <ClCompile Include="SafeConnectedAutonomousVehicle.cpp" />
     <ClCompile Include="SafeLongitudinalController.cpp" />
+    <ClCompile Include="LongAVController.cpp" />
+    <ClCompile Include="AVController.cpp" />
+    <ClCompile Include="CAVController.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="ControlManager.h">
+    <ClInclude Include="VehicleController.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="DriverModel.h">
@@ -159,7 +162,7 @@
     <ClInclude Include="EgoVehicleFactory.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="ACCVehicle.h">
+    <ClInclude Include="LongitudinallyAutonomousVehicle.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ConnectedAutonomousVehicle.h">
@@ -219,6 +222,9 @@
     <ClInclude Include="SafetyCriticalGapController.h" />
     <ClInclude Include="SafeConnectedAutonomousVehicle.h" />
     <ClInclude Include="SafeLongitudinalController.h" />
+    <ClInclude Include="LongAVController.h" />
+    <ClInclude Include="AVController.h" />
+    <ClInclude Include="CAVController.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Header Files">

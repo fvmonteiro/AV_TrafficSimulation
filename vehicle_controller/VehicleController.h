@@ -1,5 +1,5 @@
 /*==========================================================================*/
-/*  ControlManager.h    											        */
+/*  VehicleController.h    											        */
 /*  State-machine that determines the actual vehicle longitudinal and		*/
 /*  lateral inputs															*/
 /*                                                                          */
@@ -21,14 +21,14 @@
 #include "VissimLongitudinalController.h"
 
 class EgoVehicle;
-class ACCVehicle;
+class LongitudinallyAutonomousVehicle;
 class AutonomousVehicle;
 class ConnectedAutonomousVehicle;
 class SafeConnectedAutonomousVehicle;
 class TrafficLightALCVehicle;
 class PlatoonVehicle;
 
-class ControlManager 
+class VehicleController 
 {
 public:
 
@@ -47,8 +47,9 @@ public:
 		safe_cooperative_gap_generation
 	};
 
-	ControlManager() = default;
-	ControlManager(const EgoVehicle& ego_vehicle, bool verbose);
+	/* [Jun 2023] Make protected after latest refactoring */
+	VehicleController() = default;
+	VehicleController(bool verbose);
 	//ControlManager(const EgoVehicle& ego_vehicle);
 
 	//std::vector<State> get_states() { return states; };
@@ -144,7 +145,7 @@ public:
 
 	/* Active ACC during lane keeping; human (vissim) control if there is
 	lane change intention*/
-	double get_desired_acceleration(const ACCVehicle& acc_vehicle);
+	double get_desired_acceleration(const LongitudinallyAutonomousVehicle& acc_vehicle);
 	/* Computes ACC desired acceleration plus the acceleration during lane
 	change adjustments and lateral movement. Gives control to human (vissim)
 	if the vehicle is waiting for too long to find a gap. */

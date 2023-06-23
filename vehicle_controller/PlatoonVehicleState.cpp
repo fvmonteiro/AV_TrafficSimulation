@@ -6,10 +6,16 @@
 #include "PlatoonVehicle.h"
 #include "Platoon.h"
 
-void PlatoonVehicleState::set_specific_type_of_vehicle(
-	EgoVehicle* ego_vehicle)
+void PlatoonVehicleState::set_specific_type_of_vehicle()
 {
 	this->platoon_vehicle = dynamic_cast<PlatoonVehicle*>(ego_vehicle);
+		//dynamic_cast<PlatoonVehicle*>(ego_vehicle);
+	if (platoon_vehicle == nullptr)
+	{
+		std::clog << "[PlatoonVehicleState] Incorrect dynamic cast.\n"
+			<< "The ego vehicle passed as parameter is not a platoon vehicle" 
+			<< std::endl;
+	}
 }
 
 bool PlatoonVehicleState::are_other_platoon_gaps_closed(long veh_id,

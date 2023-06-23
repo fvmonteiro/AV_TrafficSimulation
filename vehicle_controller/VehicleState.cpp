@@ -12,7 +12,7 @@ VehicleState::VehicleState(std::string strategy_name, std::string state_name,
 void VehicleState::set_ego_vehicle(EgoVehicle* ego_vehicle)
 {
 	this->ego_vehicle = ego_vehicle;
-	set_specific_type_of_vehicle(ego_vehicle);
+	set_specific_type_of_vehicle();
 }
 
 bool VehicleState::is_ego_vehicle_set() const

@@ -5,11 +5,11 @@
 /* Vehicle with autonomous longitudinal control during lane keeping.
 Whenever there's lane change intention, the control is handed over
 to VISSIM */
-class ACCVehicle : public EgoVehicle
+class LongitudinallyAutonomousVehicle : public EgoVehicle
 {
 public:
 
-	ACCVehicle(long id, double desired_velocity,
+	LongitudinallyAutonomousVehicle(long id, double desired_velocity,
 		double simulation_time_step, double creation_time,
 		bool verbose);
 

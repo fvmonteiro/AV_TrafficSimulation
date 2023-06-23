@@ -26,5 +26,5 @@ protected:
 		lane_changing_state);
 
 private:
-	void set_specific_type_of_vehicle(EgoVehicle* ego_vehicle) override;
+	void set_specific_type_of_vehicle() override;
 };

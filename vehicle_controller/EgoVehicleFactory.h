@@ -2,7 +2,7 @@
 
 #include <memory>
 
-#include "ACCVehicle.h"
+#include "LongitudinallyAutonomousVehicle.h"
 #include "AutonomousVehicle.h"
 #include "ConnectedAutonomousVehicle.h"
 #include "NoLaneChangeCAV.h"
@@ -20,8 +20,8 @@ public:
 	{
 		switch (VehicleType(type))
 		{
-		case VehicleType::acc_car:
-			return std::make_shared<ACCVehicle>(id, desired_velocity,
+		case VehicleType::long_autonomous_car:
+			return std::make_shared<LongitudinallyAutonomousVehicle>(id, desired_velocity,
 				simulation_time_step, creation_time, verbose);
 		case VehicleType::autonomous_car:
 			return std::make_shared<AutonomousVehicle>(id, desired_velocity,
