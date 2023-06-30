@@ -59,8 +59,9 @@ bool PlatoonVehicle::has_finished_increasing_gap() const
 	bool is_gap_error_non_negative = true;
 	if (has_leader())
 	{
-		double safe_gap = compute_time_headway_gap(get_leader().get());
-		double gap = compute_gap_to_a_leader(get_leader().get());
+		double safe_gap = controller->get_desired_time_headway_gap(
+			*get_leader());
+		double gap = compute_gap_to_a_leader(*get_leader());
 		double gap_error = gap - safe_gap;
 		is_gap_error_non_negative = gap_error / safe_gap > (-0.05);
 	}
@@ -77,8 +78,9 @@ bool PlatoonVehicle::has_finished_closing_gap() const
 	bool is_gap_error_small = true;
 	if (has_leader())
 	{
-		double safe_gap = compute_time_headway_gap(get_leader().get());
-		double gap = compute_gap_to_a_leader(get_leader().get());
+		double safe_gap = controller->get_desired_time_headway_gap(
+			*get_leader());
+		double gap = compute_gap_to_a_leader(*get_leader());
 		double gap_error = gap - safe_gap;
 		is_gap_error_small = gap_error / safe_gap < 0.05;
 	}

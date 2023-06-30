@@ -194,7 +194,7 @@ void ConnectedAutonomousVehicle::update_assisted_vehicle(
 					/* assisted_vehicle->get_max_lane_change_risk_to_follower()*/
 				));
 			controller->update_gap_generation_controller(
-				get_velocity(), h_to_assisted_vehicle);
+				h_to_assisted_vehicle);
 		}
 	}
 }

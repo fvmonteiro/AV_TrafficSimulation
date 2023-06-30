@@ -21,7 +21,7 @@ bool PlatoonVehicleController
 			platoon_vehicle->get_virtual_leader().get();
 		double ego_velocity = platoon_vehicle->get_velocity();
 		double reference_velocity = determine_low_velocity_reference(
-			ego_velocity, *virtual_leader);
+			*virtual_leader);
 
 		if (verbose)
 		{

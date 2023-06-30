@@ -15,7 +15,15 @@ protected:
 
 private:
 	const ConnectedAutonomousVehicle* connected_av{ nullptr };
+	std::unordered_map<LongitudinalController::State, color_t>
+		gap_generation_colors =
+	{
+		{ LongitudinalController::State::velocity_control, YELLOW },
+		{ LongitudinalController::State::vehicle_following, DARK_YELLOW },
+	};
 
 	double implement_compute_desired_acceleration() override;
+
+	void add_cooperative_lane_change_controller();
 };
 

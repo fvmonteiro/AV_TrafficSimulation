@@ -23,6 +23,10 @@ private:
 	
 	double implement_compute_desired_acceleration(
 		const std::unordered_map<int, TrafficLight>& traffic_lights) override;
+	void update_leader(
+		std::shared_ptr<const NearbyVehicle>& old_leader) override;
+	/* Follows VISSIM's recommendation */
+	bool implement_check_lane_change_gaps() override;
 
 	double compute_lane_changing_desired_time_headway(
 		const NearbyVehicle& nearby_vehicle) const override
@@ -33,9 +37,6 @@ private:
 	{
 		return true;
 	};
-
-	/* Follows VISSIM's recommendation */
-	bool implement_check_lane_change_gaps() override;
 
 	long implement_get_lane_change_request() const override { return 0; };
 	double compute_accepted_lane_change_gap(

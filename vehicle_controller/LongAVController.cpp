@@ -10,6 +10,24 @@ LongAVController::LongAVController(
 	add_origin_lane_controllers();
 }
 
+double LongAVController::get_vissim_desired_acceleration(
+	const EgoVehicle& ego_vehicle)
+{
+	/* We need to ensure the velocity filter keeps active
+	while VISSIM has control of the car to guarantee a smooth
+	movement when taking back control */
+	if (ego_vehicle.has_leader())
+	{
+		origin_lane_controller.update_leader_velocity_filter(
+			ego_vehicle.get_leader()->compute_velocity(
+				ego_vehicle.get_velocity()));
+	}
+
+	active_longitudinal_controller_type = ALCType::vissim;
+	return vissim_controller.compute_desired_acceleration(
+		ego_vehicle, nullptr, 0);
+}
+
 bool LongAVController::get_origin_lane_desired_acceleration(
 	std::unordered_map<ALCType, double>& possible_accelerations)
 {
@@ -98,6 +116,48 @@ double LongAVController::implement_compute_desired_acceleration()
 	get_end_of_lane_desired_acceleration(possible_accelerations);
 
 	return choose_minimum_acceleration(possible_accelerations);
+}
+
+void LongAVController::add_vissim_controller()
+{
+	vissim_controller = VissimLongitudinalController(
+		vissim_colors);
+}
+
+void LongAVController::add_origin_lane_controllers()
+{
+	if (verbose) std::clog << "Creating origin lane controllers."
+		<< std::endl;
+	origin_lane_controller = RealLongitudinalController(
+		*longitudinal_av,
+		desired_velocity_controller_gains,
+		autonomous_real_following_gains,
+		connected_real_following_gains,
+		velocity_filter_gain, time_headway_filter_gain,
+		orig_lane_colors, long_controllers_verbose);
+	/* Note: the end of lane controller could have special vel control gains
+	but we want to see how the ego vehicle responds to a stopped vehicle. */
+	end_of_lane_controller = RealLongitudinalController(
+		*longitudinal_av,
+		desired_velocity_controller_gains,
+		autonomous_real_following_gains,
+		connected_real_following_gains,
+		velocity_filter_gain, time_headway_filter_gain,
+		end_of_lane_colors, long_controllers_verbose);
+	/* The end of the lane is seen as a stopped vehicle. We set some
+	time headway to that "vehicle". */
+	activate_end_of_lane_controller(time_headway_to_end_of_lane);
+}
+
+void LongAVController::activate_origin_lane_controller(
+	double time_headway, bool is_leader_connected)
+{
+	origin_lane_controller.reset_leader_velocity_filter(
+		longitudinal_av->get_velocity());
+	/* NOTE: include 'if (time_headway_filter.get_is_initialized())' ?
+	And force initial value to be the non-lane-changing one? */
+	origin_lane_controller.reset_time_headway_filter(time_headway);
+	update_origin_lane_controller(time_headway, is_leader_connected);
 }
 
 NearbyVehicle LongAVController::create_virtual_stopped_vehicle()

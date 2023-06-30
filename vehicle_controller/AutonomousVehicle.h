@@ -26,6 +26,12 @@ public:
 	bool are_all_lane_change_gaps_safe() const;
 	LaneChangeGapsSafety get_lane_change_gaps_safety() const;
 
+	/* State-machine related methods ----------------------------------------- */
+
+	/* Sets the new state (must be a lane keeping state) and resets the
+	desired lane change direction and the longitudinal controllers. */
+	void reset_state(std::unique_ptr<VehicleState> new_lane_keeping_state);
+
 protected:
 	LaneChangeGapsSafety lane_change_gaps_safety;
 	/* Necessary when computing lane change gaps with risk */
@@ -145,6 +151,8 @@ private:
 	long implement_get_virtual_leader_id() const override;
 	double compute_lane_changing_desired_time_headway(
 		const NearbyVehicle& nearby_vehicle) const override;
+
+	void pass_this_to_state() override;
 
 	/* Time-headway based gap (hv + d) minus a term based on
 	accepted risk */

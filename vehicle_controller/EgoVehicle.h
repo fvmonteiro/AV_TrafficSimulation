@@ -272,9 +272,6 @@ public:
 
 	void update_state();
 	void set_state(std::unique_ptr<VehicleState> new_state);
-	/* Sets the new state (must be a lane keeping state) and resets the 
-	desired lane change direction and the longitudinal controllers. */
-	void reset_state(std::unique_ptr<VehicleState> new_lane_keeping_state);
 	//bool has_lane_change_intention() const;
 	bool is_lane_changing() const override;
 	//State get_previous_state() const;
@@ -311,7 +308,7 @@ public:
 	TODO [Nov 17]: double check if it needs to be public*/
 	double compute_current_desired_time_headway(
 		const NearbyVehicle& nearby_vehicle) const;
-	/* Returns the desired time headway gap between the ego vehicle and the 
+	/* Returns the desired time headway gap between the ego vehicle and the
 	nearby vehicle based on their relative positions. */
 	double compute_time_headway_gap(
 		const NearbyVehicle* nearby_vehicle) const;
@@ -407,12 +404,15 @@ private:
 		return false;
 	};
 	virtual void set_desired_lane_change_direction();
+	/* Default: does nothing. Derived classes may implement further actions */
+	virtual void update_leader(
+		std::shared_ptr<const NearbyVehicle>& old_leader) {};
 
 	virtual double compute_lane_changing_desired_time_headway(
 		const NearbyVehicle& nearby_vehicle) const = 0;
 
 	bool check_if_is_leader(const NearbyVehicle& nearby_vehicle) const;
-	void update_leader(std::shared_ptr<const NearbyVehicle>& old_leader);
+	
 
 	/* Estimated parameters used for safe gap computations (no direct
 	equivalent in VISSIM's simulation dynamics) --------------------------- */

@@ -6,15 +6,9 @@
 /*  Version of 2021-xx-xx                             Fernando V. Monteiro  */
 /*==========================================================================*/
 
-#include "LongitudinallyAutonomousVehicle.h"
-#include "AutonomousVehicle.h"
-#include "ConnectedAutonomousVehicle.h"
 #include "VehicleController.h"
 #include "EgoVehicle.h"
 #include "NearbyVehicle.h"
-#include "PlatoonVehicle.h"
-#include "SafeConnectedAutonomousVehicle.h"
-#include "TrafficLightALCVehicle.h"
 #include "VariationLimitedFilter.h"
 
 VehicleController::VehicleController(const EgoVehicle& ego_vehicle,
@@ -46,12 +40,16 @@ color_t VehicleController::get_longitudinal_controller_color() const
 
 double VehicleController::get_safe_time_headway() const
 {
-	return origin_lane_controller.get_desired_time_headway();
+	return implement_get_safe_time_headway();
+	// TODO: copy to derived classes
+	//return origin_lane_controller.get_desired_time_headway();
 }
 
 double VehicleController::get_current_desired_time_headway() const
 {
-	return origin_lane_controller.get_current_time_headway();
+	return implement_get_current_desired_time_headway();
+	// TODO: copy to derived classes
+	//return origin_lane_controller.get_current_time_headway();
 }
 
 LongitudinalController::State
@@ -73,79 +71,6 @@ void VehicleController::set_traffic_lights(
 	const std::unordered_map<int, TrafficLight>& traffic_lights)
 {
 	this->traffic_lights = &traffic_lights;
-}
-
-void VehicleController::add_vissim_controller()
-{
-	vissim_controller = VissimLongitudinalController(
-		vissim_colors);
-}
-
-void VehicleController::add_origin_lane_controllers()
-{
-	if (verbose) std::clog << "Creating origin lane controllers."
-		<< std::endl;
-	origin_lane_controller = RealLongitudinalController(
-		*ego_vehicle,
-		desired_velocity_controller_gains,
-		autonomous_real_following_gains,
-		connected_real_following_gains,
-		velocity_filter_gain, time_headway_filter_gain,
-		orig_lane_colors, long_controllers_verbose);
-	/* Note: the end of lane controller could have special vel control gains
-	but we want to see how the ego vehicle responds to a stopped vehicle. */
-	end_of_lane_controller = RealLongitudinalController(
-		*ego_vehicle,
-		desired_velocity_controller_gains,
-		autonomous_real_following_gains,
-		connected_real_following_gains,
-		velocity_filter_gain, time_headway_filter_gain,
-		end_of_lane_colors, long_controllers_verbose);
-	/* The end of the lane is seen as a stopped vehicle. We set some
-	time headway to that "vehicle". */
-	activate_end_of_lane_controller(time_headway_to_end_of_lane);
-}
-
-void VehicleController::add_lane_change_adjustment_controller()
-{
-	if (verbose) std::clog << "Creating lane change adjustment controller."
-		<< std::endl;
-	destination_lane_controller = VirtualLongitudinalController(
-		*ego_vehicle,
-		adjustment_velocity_controller_gains,
-		autonomous_virtual_following_gains,
-		connected_virtual_following_gains,
-		velocity_filter_gain, time_headway_filter_gain,
-		dest_lane_colors, long_controllers_verbose);
-}
-
-void VehicleController::add_cooperative_lane_change_controller()
-{
-	if (verbose) std::clog << "Creating cooperative lane change controller."
-		<< std::endl;
-	gap_generating_controller = VirtualLongitudinalController(
-		*ego_vehicle,
-		adjustment_velocity_controller_gains,
-		autonomous_virtual_following_gains,
-		connected_virtual_following_gains,
-		velocity_filter_gain, time_headway_filter_gain,
-		gap_generation_colors, long_controllers_verbose);
-	/* the gap generating controller is only activated when there are
-	two connected vehicles, so we can set its connection here*/
-	gap_generating_controller.connect_gap_controller(true);
-}
-
-void VehicleController::add_traffic_lights_controller()
-{
-	with_traffic_lights_controller =
-		LongitudinalControllerWithTrafficLights(tl_alc_colors,
-			long_controllers_verbose);
-	active_longitudinal_controller_type = ALCType::traffic_light_alc;
-}
-
-void VehicleController::add_safety_critical_controllers()
-{
-	nominal_controller = VelocityController();
 }
 
 const LongitudinalController* VehicleController::get_active_long_controller() const
@@ -172,10 +97,12 @@ const LongitudinalController* VehicleController::get_active_long_controller() co
 
 /* DEBUGGING FUNCTIONS --------------------------------------------------- */
 
-double VehicleController::get_reference_gap(double ego_velocity) const
+double VehicleController::get_reference_gap() const
 {
-	return origin_lane_controller.get_desired_gap(ego_velocity);
-};
+	return implement_get_reference_gap();
+	// TODO: copy to derived class
+	//return origin_lane_controller.get_desired_gap(ego_vehicle->get_velocity());
+}
 
 double VehicleController::get_gap_error() const
 {
@@ -196,23 +123,13 @@ double VehicleController::compute_drac(double relative_velocity, double gap)
 	return -100;
 }
 
-void VehicleController::activate_origin_lane_controller(double ego_velocity,
-	double time_headway, bool is_leader_connected)
-{
-	origin_lane_controller.reset_leader_velocity_filter(ego_velocity);
-	/* NOTE: include 'if (time_headway_filter.get_is_initialized())' ?
-	And force initial value to be the non-lane-changing one? */
-	origin_lane_controller.reset_time_headway_filter(time_headway);
-	update_origin_lane_controller(time_headway, is_leader_connected);
-}
-
 void VehicleController::activate_end_of_lane_controller(double time_headway)
 {
 	end_of_lane_controller.reset_time_headway_filter(time_headway);
 	end_of_lane_controller.set_desired_time_headway(time_headway);
 }
 
-void VehicleController::activate_destination_lane_controller(double ego_velocity,
+void VehicleController::activate_destination_lane_controller(
 	double leader_velocity,
 	double time_headway, bool is_leader_connected)
 {
@@ -221,17 +138,8 @@ void VehicleController::activate_destination_lane_controller(double ego_velocity
 	/* NOTE: include 'if (time_headway_filter.get_is_initialized())' ?
 	And force initial value to be the non-lane-changing one? */
 	destination_lane_controller.reset_time_headway_filter(time_headway);
-	update_destination_lane_controller(ego_velocity, time_headway,
-		is_leader_connected);
+	update_destination_lane_controller(time_headway, is_leader_connected);
 }
-
-//void ControlManager::activate_in_platoon_controller(double ego_velocity,
-//	double time_headway)
-//{
-//	in_platoon_controller.reset_leader_velocity_filter(ego_velocity);
-//	in_platoon_controller.reset_time_headway_filter(time_headway);
-//	in_platoon_controller.set_desired_time_headway(time_headway);
-//}
 
 void VehicleController::update_origin_lane_controller(
 	double time_headway, bool is_leader_connected)
@@ -245,7 +153,7 @@ void VehicleController::update_origin_lane_controller(
 	origin_lane_controller.connect_gap_controller(is_leader_connected);
 }
 
-void VehicleController::update_destination_lane_controller(double ego_velocity,
+void VehicleController::update_destination_lane_controller(
 	double time_headway, bool is_leader_connected)
 {
 	destination_lane_controller.smooth_start_leader_velocity_filter();
@@ -260,7 +168,7 @@ void VehicleController::update_destination_lane_follower_time_headway(
 	destination_lane_controller.set_follower_time_headway(time_headway);
 }
 
-void VehicleController::update_gap_generation_controller(double ego_velocity,
+void VehicleController::update_gap_generation_controller(
 	double time_headway)
 {
 	/* NOTE: include 'if (time_headway_filter.get_is_initialized())' ?
@@ -268,17 +176,16 @@ void VehicleController::update_gap_generation_controller(double ego_velocity,
 	gap_generating_controller.reset_time_headway_filter(time_headway);
 	gap_generating_controller.set_desired_time_headway(time_headway);
 	gap_generating_controller.reset_leader_velocity_filter(
-		ego_velocity);
+		ego_vehicle->get_velocity());
 }
 
-void VehicleController::reset_origin_lane_velocity_controller(
-	double ego_velocity)
+void VehicleController::reset_origin_lane_velocity_controller()
 {
 	//if (verbose)
 	//{
 	//	std::clog << "Resetting orig lane ctrl vel ctrl." << std::endl;
 	//}
-	origin_lane_controller.reset_velocity_controller(ego_velocity);
+	origin_lane_controller.reset_velocity_controller(ego_vehicle->get_velocity());
 }
 
 bool VehicleController::is_in_free_flow_at_origin_lane() const
@@ -291,24 +198,6 @@ double VehicleController::compute_desired_acceleration()
 {
 	/* [June 2023] Call an abstract method */
 	return 0.0;
-}
-
-double VehicleController::get_vissim_desired_acceleration(
-	const EgoVehicle& ego_vehicle)
-{
-	/* We need to ensure the velocity filter keeps active
-	while VISSIM has control of the car to guarantee a smooth
-	movement when taking back control */
-	if (ego_vehicle.has_leader())
-	{
-		origin_lane_controller.update_leader_velocity_filter(
-			ego_vehicle.get_leader()->compute_velocity(
-				ego_vehicle.get_velocity()));
-	}
-
-	active_longitudinal_controller_type = ALCType::vissim;
-	return vissim_controller.compute_desired_acceleration(
-		ego_vehicle, nullptr, 0);
 }
 
 //double VehicleController::get_desired_acceleration(
@@ -441,9 +330,10 @@ double VehicleController::choose_minimum_acceleration(
 	return desired_acceleration;
 }
 
-double VehicleController::determine_low_velocity_reference(double ego_velocity,
+double VehicleController::determine_low_velocity_reference(
 	const NearbyVehicle& nearby_vehicle) const
 {
+	double ego_velocity = ego_vehicle->get_velocity();
 	double leader_velocity =
 		nearby_vehicle.compute_velocity(ego_velocity);
 	/* The fraction of the leader speed has to vary. Otherwise, vehicles
@@ -479,8 +369,6 @@ double VehicleController::compute_desired_lane_change_gap(
 	bool will_accelerate) const
 {
 	double safe_time_headway_gap = get_desired_time_headway_gap(
-		ego_vehicle->get_velocity(),
-		/*ego_vehicle.has_lane_change_intention(),*/
 		nearby_vehicle);
 	/* TODO: the function calls do not make much sense here.
 	You call this method from the ego vehicle, and then call an ego vehicle
@@ -493,11 +381,11 @@ double VehicleController::compute_desired_lane_change_gap(
 	return safe_time_headway_gap /*collision_free_gap*/ + transient_gap;
 }
 
-double VehicleController::get_desired_time_headway_gap(double ego_velocity,
+double VehicleController::get_desired_time_headway_gap(
 	const NearbyVehicle& nearby_vehicle) const
 {
 	double time_headway_gap = 0.0;
-	//double ego_velocity = ego_vehicle.get_velocity();
+	double ego_velocity = ego_vehicle->get_velocity();
 	if (nearby_vehicle.is_ahead())
 	{
 		if (nearby_vehicle.get_relative_lane() == RelativeLane::same)

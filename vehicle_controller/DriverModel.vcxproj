@@ -243,6 +243,7 @@
     </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="AutonomousVehicleStates.cpp" />
     <ClCompile Include="AVController.cpp" />
     <ClCompile Include="CAVController.cpp" />
     <ClCompile Include="LongAVController.cpp" />
@@ -298,6 +299,7 @@
     <ClCompile Include="VissimLongitudinalController.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="AutonomousVehicleStates.h" />
     <ClInclude Include="AVController.h" />
     <ClInclude Include="CAVController.h" />
     <ClInclude Include="LongAVController.h" />

@@ -49,7 +49,7 @@ bool AVController::get_destination_lane_desired_acceleration(
 			autonomous_vehicle.get_virtual_leader();*/
 		double ego_velocity = autonomous_vehicle->get_velocity();
 		double reference_velocity = determine_low_velocity_reference(
-			ego_velocity, *virtual_leader);
+			*virtual_leader);
 
 		if (verbose)
 		{
@@ -75,8 +75,6 @@ bool AVController::get_destination_lane_desired_acceleration(
 	return is_active;
 }
 
-
-
 double AVController::implement_compute_desired_acceleration()
 {
 	if (autonomous_vehicle->is_vissim_controlling_lane_change()
@@ -93,4 +91,17 @@ double AVController::implement_compute_desired_acceleration()
 	get_destination_lane_desired_acceleration(possible_accelerations);
 
 	return choose_minimum_acceleration(possible_accelerations);
+}
+
+void AVController::add_lane_change_adjustment_controller()
+{
+	if (verbose) std::clog << "Creating lane change adjustment controller."
+		<< std::endl;
+	destination_lane_controller = VirtualLongitudinalController(
+		*autonomous_vehicle,
+		adjustment_velocity_controller_gains,
+		autonomous_virtual_following_gains,
+		connected_virtual_following_gains,
+		velocity_filter_gain, time_headway_filter_gain,
+		dest_lane_colors, long_controllers_verbose);
 }

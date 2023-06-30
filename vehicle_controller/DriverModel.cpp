@@ -695,11 +695,6 @@ DRIVERMODEL_API  int  DriverModelGetValue (long   type,
         {
             std::string state_name =
                 vehicles[current_vehicle_id]->get_state()->get_state_name();
-            /*std::clog << "*string_value size " << sizeof * string_value
-                << ", string_value size " << sizeof string_value
-                << ", *string_value strlen " << strlen(*string_value)
-                << ", state_name size " << sizeof state_name.c_str()
-                << ", state_name strlen " << strlen(state_name.c_str()) << "\n";*/
             strcpy(*string_value, state_name.c_str());
             break;
         }

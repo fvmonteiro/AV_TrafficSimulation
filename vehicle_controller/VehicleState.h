@@ -95,8 +95,10 @@ bool operator>= (const VehicleState& s1, const VehicleState& s2);
 bool operator<= (const VehicleState & s1, const VehicleState & s2);
 
 /* ------------------------------------------------------------------------ */
-/* Single Vehicle States -------------------------------------------------- */
+/* Ego Vehicle States -------------------------------------------------- */
 /* ------------------------------------------------------------------------ */
+
+/* The base EgoVehicle only has one possible state: lane keeping. */
 
 class SingleVehicleLaneKeepingState : public VehicleState
 {
@@ -104,27 +106,7 @@ public:
 	SingleVehicleLaneKeepingState()
 		: VehicleState("single veh.", "lane keeping", 1) {}
 private:
-	void implement_handle_lane_keeping_intention() override;
-	void implement_handle_lane_change_intention() override;
-};
-
-class SingleVehicleLongidutinalAdjustmentState : public VehicleState
-{
-public:
-	SingleVehicleLongidutinalAdjustmentState()
-		: VehicleState("single veh.", "intention to lc", 2) {}
-private:
-	void implement_handle_lane_keeping_intention() override;
-	void implement_handle_lane_change_intention() override;
-};
-
-class SingleVehicleLaneChangingState : public VehicleState
-{
-public:
-	SingleVehicleLaneChangingState()
-		: VehicleState("single veh.", "lane changing", 3) {}
-private:
-	void implement_handle_lane_keeping_intention() override;
-	void implement_handle_lane_change_intention() override;
+	void implement_handle_lane_keeping_intention() override {};
+	void implement_handle_lane_change_intention() override {};
 };
 

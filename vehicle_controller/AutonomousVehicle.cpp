@@ -22,6 +22,9 @@ AutonomousVehicle::AutonomousVehicle(long id, VehicleType type,
 	LongitudinallyAutonomousVehicle(id, type, desired_velocity,
 		false, simulation_time_step, creation_time, verbose)
 {
+
+	MUST ASSIGN NEW AV STATE HERE!
+
 	compute_lane_change_gap_parameters();
 	if (verbose)
 	{
@@ -45,29 +48,6 @@ bool AutonomousVehicle::has_virtual_leader() const
 	return virtual_leader != nullptr;
 }
 
-//bool AutonomousVehicle::merge_behind_virtual_leader() const
-//{
-//	if (!has_virtual_leader()) return false;
-//
-//	double origin_lane_reference_velocity;
-//	double ego_velocity = get_velocity();
-//
-//	/* Get the possible max vel at the origin lane */
-//	if (controller->is_in_free_flow_at_origin_lane())
-//	{
-//		origin_lane_reference_velocity =
-//			get_desired_velocity();
-//	}
-//	else
-//	{
-//		origin_lane_reference_velocity = get_leader()
-//			->compute_velocity(ego_velocity);
-//	}
-//
-//	return (get_virtual_leader()->compute_velocity(ego_velocity)
-//				> origin_lane_reference_velocity - min_overtaking_rel_vel);
-//}
-
 bool AutonomousVehicle::are_all_lane_change_gaps_safe() const
 {
 	return lane_change_gaps_safety.is_lane_change_safe();
@@ -76,6 +56,24 @@ bool AutonomousVehicle::are_all_lane_change_gaps_safe() const
 LaneChangeGapsSafety AutonomousVehicle::get_lane_change_gaps_safety() const
 {
 	return lane_change_gaps_safety;
+}
+
+void AutonomousVehicle::reset_state(
+	std::unique_ptr<VehicleState> new_lane_keeping_state)
+{
+	// TODO: poor condition checking: hard coding variables
+	if (new_lane_keeping_state->get_state_number() != 1)
+	{
+		std::clog << "[WARNING] t=" << get_time()
+			<< ", veh " << get_id() << ": reseting vehicle state to "
+			<< *new_lane_keeping_state
+			<< ", which is not a lane keeping state." << std::endl;
+	}
+
+	set_lane_change_direction(RelativeLane::same);
+	reset_lane_change_waiting_time();
+	update_origin_lane_controller();
+	set_state(std::move(new_lane_keeping_state));
 }
 
 bool AutonomousVehicle::is_lane_change_gap_safe(
@@ -324,7 +322,7 @@ void AutonomousVehicle::update_virtual_leader(
 		if (old_leader == nullptr)
 		{
 			double ego_vel = get_velocity();
-			controller->activate_destination_lane_controller(ego_vel,
+			controller->activate_destination_lane_controller(
 				get_virtual_leader()->compute_velocity(ego_vel),
 				compute_lane_changing_desired_time_headway(
 					*get_virtual_leader()),
@@ -335,7 +333,7 @@ void AutonomousVehicle::update_virtual_leader(
 			|| (old_leader->get_type()
 				!= get_virtual_leader()->get_type()))
 		{
-			controller->update_destination_lane_controller(get_velocity(),
+			controller->update_destination_lane_controller(
 				compute_lane_changing_desired_time_headway(
 					*get_virtual_leader()),
 				is_new_leader_connected);
@@ -364,6 +362,11 @@ double AutonomousVehicle::compute_lane_changing_desired_time_headway(
 	{
 		return h_lc;
 	}*/
+}
+
+void AutonomousVehicle::pass_this_to_state()
+{
+	state->set_ego_vehicle(this);
 }
 
 /* TODO: not yet sure whether this function should belong in this class
@@ -493,7 +496,7 @@ double AutonomousVehicle::compute_time_headway_gap_for_lane_change(
 	safety towards the destination lane leader (which might be different 
 	from the virtual leader) */
 	double accepted_time_headway_gap =
-		controller->get_desired_time_headway_gap(get_velocity(),
+		controller->get_desired_time_headway_gap(
 			nearby_vehicle);
 
 	double accepted_risk = nearby_vehicle.is_ahead() ?

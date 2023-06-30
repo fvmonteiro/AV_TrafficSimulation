@@ -22,3 +22,11 @@ double TrafficLightLongAVController::implement_compute_desired_acceleration()
 	return with_traffic_lights_controller.compute_desired_acceleration(
 		*traffic_light_av, nullptr, traffic_light_av->get_desired_velocity());
 }
+
+void TrafficLightLongAVController::add_traffic_lights_controller()
+{
+	with_traffic_lights_controller =
+		LongitudinalControllerWithTrafficLights(tl_alc_colors,
+			long_controllers_verbose);
+	active_longitudinal_controller_type = ALCType::traffic_light_alc;
+}

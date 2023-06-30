@@ -568,6 +568,10 @@ void EgoVehicle::find_leader()
 			leader = id_veh_pair.second;
 		}
 	}
+
+	if (has_leader()) leader_id.push_back(leader->get_id());
+	else leader_id.push_back(0);
+
 	update_leader(old_leader);
 }
 
@@ -584,36 +588,6 @@ bool EgoVehicle::check_if_is_leader(const NearbyVehicle& nearby_vehicle) const
 		}
 	}
 	return false;
-}
-
-void EgoVehicle::update_leader(
-	std::shared_ptr<const NearbyVehicle>& old_leader)
-{
-	if (has_leader())
-	{
-		leader_id.push_back(leader->get_id());
-		double new_leader_max_brake = leader->get_max_brake();
-		bool is_new_leader_connected = leader->is_connected();
-		if (old_leader == nullptr)
-		{
-			get_controller()->activate_origin_lane_controller(get_velocity(),
-				compute_current_desired_time_headway(*leader),
-				is_new_leader_connected);
-		}
-		else if((std::abs(new_leader_max_brake
-			- old_leader->get_max_brake()) > 0.5)
-			|| (leader->get_type() != old_leader->get_type()))
-		{
-			get_controller()->update_origin_lane_controller(
-				compute_current_desired_time_headway(*leader),
-				is_new_leader_connected
-			);
-		}
-	}
-	else
-	{
-		leader_id.push_back(0);
-	}
 }
 
 double EgoVehicle::compute_current_desired_time_headway(
@@ -663,24 +637,6 @@ void EgoVehicle::set_state(std::unique_ptr<VehicleState> new_state)
 	}
 	state = std::move(new_state);
 	pass_this_to_state();
-}
-
-void EgoVehicle::reset_state(
-	std::unique_ptr<VehicleState> new_lane_keeping_state)
-{
-	// TODO: poor condition checking: hard coding variables
-	if (new_lane_keeping_state->get_state_number() != 1)
-	{
-		std::clog << "[WARNING] t=" << get_time()
-			<< ", veh " << get_id() << ": reseting vehicle state to "
-			<< *new_lane_keeping_state
-			<< ", which is not a lane keeping state." << std::endl;
-	}
-
-	set_lane_change_direction(RelativeLane::same);
-	reset_lane_change_waiting_time();
-	update_origin_lane_controller();
-	set_state(std::move(new_lane_keeping_state));
 }
 
 void EgoVehicle::update_lane_change_waiting_time()
@@ -769,7 +725,7 @@ double EgoVehicle::get_accepted_lane_change_gap(
 
 double EgoVehicle::get_reference_gap()
 {
-	return get_controller()->get_reference_gap(get_velocity());
+	return get_controller()->get_reference_gap();
 }
 
 double EgoVehicle::compute_time_headway_gap(
@@ -779,7 +735,6 @@ double EgoVehicle::compute_time_headway_gap(
 	if (nearby_vehicle != nullptr)
 	{
 		time_headway_gap = get_controller()->get_desired_time_headway_gap(
-			get_velocity(), /*has_lane_change_intention(),*/
 			*nearby_vehicle);
 	}
 	return time_headway_gap;
@@ -810,8 +765,7 @@ void EgoVehicle::update_origin_lane_controller()
 
 void EgoVehicle::reset_origin_lane_velocity_controller()
 {
-	get_controller()->reset_origin_lane_velocity_controller(
-		get_velocity());
+	get_controller()->reset_origin_lane_velocity_controller();
 }
 
 /* Computation of surrogate safety measurements --------------------------- */

@@ -29,7 +29,6 @@ public:
 	State get_current_state() const { return current_state; };
 
 
-
 	/* TODO: are these functions an issue? We don't want vehicles being able
 	to set the state of the traffic light. Or does passing them as const 
 	always avoid that? */
