@@ -6,6 +6,7 @@ class PlatoonVehicle;
 class PlatoonVehicleController : public CAVController
 {
 public:
+    PlatoonVehicleController() = default;
     PlatoonVehicleController(const PlatoonVehicle& platoon_vehicle,
         bool verbose);
 

@@ -7,8 +7,14 @@ class LongitudinallyAutonomousVehicle;
 class LongAVController : public VehicleController
 {
 public:
+    LongAVController() = default;
     LongAVController(const LongitudinallyAutonomousVehicle& longitudinal_av,
         bool verbose);
+
+    /* Resets the origin lane controller's velocity and time headway filters
+    and sets the time headway*/
+    void activate_origin_lane_controller(double time_headway,
+        bool is_leader_connected);
 
 protected:
     /* ------------ Control Parameters ------------ */
@@ -43,11 +49,6 @@ private:
     
     void add_vissim_controller();
     void add_origin_lane_controllers();
-
-    /* Resets the origin lane controller's velocity and time headway filters
-    and sets the time headway*/
-    void activate_origin_lane_controller(double time_headway, 
-        bool is_leader_connected);
 
     NearbyVehicle create_virtual_stopped_vehicle();
 

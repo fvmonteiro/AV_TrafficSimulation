@@ -6,6 +6,7 @@ class TrafficLightALCVehicle;
 class TrafficLightLongAVController :  public VehicleController
 {
 public:
+	TrafficLightLongAVController() = default;
 	TrafficLightLongAVController(const TrafficLightALCVehicle& tl_av,
 		bool verbose);
 

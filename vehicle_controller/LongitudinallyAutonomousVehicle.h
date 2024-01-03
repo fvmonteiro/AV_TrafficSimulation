@@ -1,6 +1,7 @@
 #pragma once
 
 #include "EgoVehicle.h"
+#include "LongAVController.h"
 
 /* Vehicle with autonomous longitudinal control during lane keeping.
 Whenever there's lane change intention, the control is handed over
@@ -20,13 +21,24 @@ protected:
 		double creation_time, bool verbose = false);
 
 private:
-	
+	LongAVController long_av_controller;
+
+	VehicleController* get_controller() override;
+	const VehicleController* get_controller_const() const override;
 	double implement_compute_desired_acceleration(
 		const std::unordered_map<int, TrafficLight>& traffic_lights) override;
 	void update_leader(
 		std::shared_ptr<const NearbyVehicle>& old_leader) override;
 	/* Follows VISSIM's recommendation */
 	bool implement_check_lane_change_gaps() override;
+
+	virtual LongAVController* get_long_av_controller() {
+		return &long_av_controller;
+	};
+	virtual const LongAVController* get_long_av_controller_const() 
+		const {
+		return &long_av_controller;
+	};
 
 	double compute_lane_changing_desired_time_headway(
 		const NearbyVehicle& nearby_vehicle) const override
@@ -64,4 +76,5 @@ private:
 	void implement_set_accepted_lane_change_risk_to_follower(
 		double value) override {};
 	void implement_set_use_linear_lane_change_gap(long value) override {};
+
 };

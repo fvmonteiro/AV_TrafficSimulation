@@ -6,6 +6,7 @@ class ConnectedAutonomousVehicle;
 class CAVController : public AVController
 {
 public:
+	CAVController() = default;
 	CAVController(const ConnectedAutonomousVehicle& cav, bool verbose);
 
 protected:

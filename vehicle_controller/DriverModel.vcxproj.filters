@@ -124,7 +124,10 @@
     <ClCompile Include="TrafficLightLongAVController.cpp">
       <Filter>Controllers</Filter>
     </ClCompile>
-    <ClCompile Include="PlatoonVehicleController.cpp" />
+    <ClCompile Include="AutonomousVehicleStates.cpp" />
+    <ClCompile Include="PlatoonVehicleController.cpp">
+      <Filter>Controllers</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="DriverModel.h">
@@ -256,7 +259,10 @@
     <ClInclude Include="TrafficLightLongAVController.h">
       <Filter>Controllers</Filter>
     </ClInclude>
-    <ClInclude Include="PlatoonVehicleController.h" />
+    <ClInclude Include="AutonomousVehicleStates.h" />
+    <ClInclude Include="PlatoonVehicleController.h">
+      <Filter>Controllers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="StateMachines">

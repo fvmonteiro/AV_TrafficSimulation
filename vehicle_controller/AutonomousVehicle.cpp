@@ -1,4 +1,5 @@
 #include "AutonomousVehicle.h"
+#include "AutonomousVehicleStates.h"
 #include "AVController.h"
 
 AutonomousVehicle::AutonomousVehicle(long id, double desired_velocity,
@@ -7,8 +8,7 @@ AutonomousVehicle::AutonomousVehicle(long id, double desired_velocity,
 		VehicleType::autonomous_car, desired_velocity, false,
 		simulation_time_step, creation_time, verbose) 
 {
-	this->controller = std::make_unique<AVController>(
-		AVController(*this, verbose));
+	av_controller = AVController(*this, verbose);
 	if (verbose)
 	{
 		std::clog << "[AutonomousVehicle] constructor done\n";
@@ -22,9 +22,7 @@ AutonomousVehicle::AutonomousVehicle(long id, VehicleType type,
 	LongitudinallyAutonomousVehicle(id, type, desired_velocity,
 		false, simulation_time_step, creation_time, verbose)
 {
-
-	MUST ASSIGN NEW AV STATE HERE!
-
+	set_state(std::make_unique<AutonomousVehicleLaneKeepingState>());
 	compute_lane_change_gap_parameters();
 	if (verbose)
 	{
@@ -264,7 +262,7 @@ bool AutonomousVehicle::try_to_overtake_destination_lane_leader(
 	double dest_lane_leader_vel =
 		get_destination_lane_leader()->compute_velocity(ego_velocity);
 	double origin_lane_desired_velocity =
-		(controller->is_in_free_flow_at_origin_lane() || !has_leader()) ?
+		(get_av_controller_const()->is_in_free_flow_at_origin_lane() || !has_leader()) ?
 		get_desired_velocity()
 		: get_leader()->compute_velocity(ego_velocity);
 
@@ -301,7 +299,7 @@ void AutonomousVehicle::update_destination_lane_follower(
 			|| (old_follower->get_category()
 				!= destination_lane_follower->get_category()))
 		{
-			controller->update_destination_lane_follower_time_headway(
+			get_av_controller()->update_destination_lane_follower_time_headway(
 				estimate_nearby_vehicle_time_headway(
 					*destination_lane_follower));
 			dest_lane_follower_lambda_0 =
@@ -322,7 +320,7 @@ void AutonomousVehicle::update_virtual_leader(
 		if (old_leader == nullptr)
 		{
 			double ego_vel = get_velocity();
-			controller->activate_destination_lane_controller(
+			get_av_controller()->activate_destination_lane_controller(
 				get_virtual_leader()->compute_velocity(ego_vel),
 				compute_lane_changing_desired_time_headway(
 					*get_virtual_leader()),
@@ -333,7 +331,7 @@ void AutonomousVehicle::update_virtual_leader(
 			|| (old_leader->get_type()
 				!= get_virtual_leader()->get_type()))
 		{
-			controller->update_destination_lane_controller(
+			get_av_controller()->update_destination_lane_controller(
 				compute_lane_changing_desired_time_headway(
 					*get_virtual_leader()),
 				is_new_leader_connected);
@@ -396,11 +394,22 @@ double AutonomousVehicle::estimate_nearby_vehicle_time_headway(
 			max_brake, get_rho(), 0/*accepted_lane_change_risk_to_follower*/));
 }
 
+LongAVController* AutonomousVehicle::get_long_av_controller()
+{
+	return get_av_controller();
+}
+
+const LongAVController* AutonomousVehicle
+::get_long_av_controller_const() const
+{
+	return get_av_controller_const();
+};
+
 double AutonomousVehicle::implement_compute_desired_acceleration(
 	const std::unordered_map<int, TrafficLight>& traffic_lights)
 {
 	double a_desired_acceleration =
-		controller->compute_desired_acceleration();
+		get_av_controller()->compute_desired_acceleration();
 	return consider_vehicle_dynamics(a_desired_acceleration);
 }
 
@@ -472,7 +481,7 @@ double AutonomousVehicle::compute_accepted_lane_change_gap(
 	}
 
 	double gap_variation_during_lc =
-		controller->get_gap_variation_during_lane_change(
+		get_av_controller_const()->get_gap_variation_during_lane_change(
 			*nearby_vehicle, false);
 	double accepted_gap = accepted_vehicle_following_gap
 		+ gap_variation_during_lc;
@@ -496,7 +505,7 @@ double AutonomousVehicle::compute_time_headway_gap_for_lane_change(
 	safety towards the destination lane leader (which might be different 
 	from the virtual leader) */
 	double accepted_time_headway_gap =
-		controller->get_desired_time_headway_gap(
+		get_av_controller_const()->get_desired_time_headway_gap(
 			nearby_vehicle);
 
 	double accepted_risk = nearby_vehicle.is_ahead() ?

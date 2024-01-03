@@ -158,17 +158,17 @@ double EgoVehicle::get_current_max_brake() const
 
 double EgoVehicle::get_safe_time_headway() const
 {
-	return get_controller()->get_safe_time_headway();
+	return get_controller_const()->get_safe_time_headway();
 }
 
 double EgoVehicle::get_gap_error() const
 {
-	return get_controller()->get_gap_error();
+	return get_controller_const()->get_gap_error();
 }
 
 double EgoVehicle::get_current_desired_time_headway() const
 {
-	return get_controller()->get_current_desired_time_headway();
+	return get_controller_const()->get_current_desired_time_headway();
 }
 
 double EgoVehicle::get_gap_variation_to(
@@ -336,7 +336,7 @@ double EgoVehicle::get_time_headway_to_assisted_vehicle() const
 {
 	if (has_assisted_vehicle())
 	{
-		return get_controller()->get_gap_generation_lane_controller().
+		return get_controller_const()->get_gap_generation_lane_controller().
 			get_desired_time_headway();
 	}
 	/* We return a high value when there's no assisted vehicle because,
@@ -398,7 +398,7 @@ long EgoVehicle::get_assisted_veh_id() const
 }
 double EgoVehicle::get_dest_follower_time_headway() const
 {
-	return get_controller()->get_destination_lane_controller().
+	return get_controller_const()->get_destination_lane_controller().
 		get_follower_time_headway();
 }
 
@@ -734,8 +734,8 @@ double EgoVehicle::compute_time_headway_gap(
 	double time_headway_gap = 0.0;
 	if (nearby_vehicle != nullptr)
 	{
-		time_headway_gap = get_controller()->get_desired_time_headway_gap(
-			*nearby_vehicle);
+		time_headway_gap = get_controller_const()
+			->get_desired_time_headway_gap(*nearby_vehicle);
 	}
 	return time_headway_gap;
 }

@@ -1,5 +1,4 @@
 #include "TrafficLightALCVehicle.h"
-#include "TrafficLightLongAVController.h"
 
 TrafficLightALCVehicle::TrafficLightALCVehicle(long id,
 	double desired_velocity, double simulation_time_step,
@@ -8,8 +7,7 @@ TrafficLightALCVehicle::TrafficLightALCVehicle(long id,
 		desired_velocity, false, simulation_time_step, creation_time,
 		verbose)
 {
-	controller = std::make_unique<TrafficLightLongAVController>(
-		TrafficLightLongAVController(*this, verbose));
+	long_controller_with_tf = TrafficLightLongAVController(*this, verbose);
 }
 
 bool TrafficLightALCVehicle::implement_has_next_traffic_light() const 
@@ -29,12 +27,23 @@ void TrafficLightALCVehicle::set_traffic_light_information(
 	distance_to_next_traffic_light = distance;
 }
 
+VehicleController* TrafficLightALCVehicle::get_controller()
+{
+	return get_long_controller_with_tf();
+}
+
+const VehicleController* TrafficLightALCVehicle
+::get_controller_const() const
+{
+	return get_long_controller_with_tf_const();
+}
+
 double TrafficLightALCVehicle::implement_compute_desired_acceleration(
 	const std::unordered_map<int, TrafficLight>& traffic_lights)
 {
-	controller->set_traffic_lights(traffic_lights);
+	get_long_controller_with_tf()->set_traffic_lights(traffic_lights);
 	double a_desired_acceleration =
-		controller->compute_desired_acceleration();
+		get_long_controller_with_tf()->compute_desired_acceleration();
 	return a_desired_acceleration;
 }
 

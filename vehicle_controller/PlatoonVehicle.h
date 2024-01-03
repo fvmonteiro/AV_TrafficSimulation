@@ -1,6 +1,7 @@
 #pragma once
 
 #include "ConnectedAutonomousVehicle.h"
+#include "PlatoonVehicleController.h"
 
 class PlatoonVehicle : public ConnectedAutonomousVehicle
 {
@@ -59,6 +60,10 @@ private:
 	double in_platoon_comf_accel{ 0.5 };
 	double in_platoon_rho{ 0.05 };
 
+	PlatoonVehicleController platoon_vehicle_controller;
+
+	CAVController* get_cav_controller() override;
+	const CAVController* get_cav_controller_const() const override;
 	/*double implement_compute_desired_acceleration(
 		const std::unordered_map<int, TrafficLight>& traffic_lights) override;*/
 	void implement_analyze_nearby_vehicles() override;
@@ -79,6 +84,14 @@ private:
 	/* Chooses the desired destination lane follower */
 	void create_lane_change_request() override;
 	bool was_my_cooperation_request_accepted() const override;
+
+	PlatoonVehicleController* get_platoon_vehicle_controller() {
+		return &platoon_vehicle_controller;
+	};
+	const PlatoonVehicleController*
+		get_platoon_vehicle_controller_const() const {
+		return &platoon_vehicle_controller;
+	};
 
 	// Check if vehicles in our platoon need gap generation
 	void find_cooperation_request_from_platoon();

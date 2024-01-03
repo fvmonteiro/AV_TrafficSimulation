@@ -327,7 +327,7 @@ public:
 		const EgoVehicle& vehicle);
 
 protected:
-	std::unique_ptr<VehicleController> controller{ nullptr };
+	//std::unique_ptr<VehicleController> controller{ nullptr };
 	/* Keeps track of stopped time waiting for lane change */
 	double lane_change_waiting_time{ 0.0 };
 	std::unique_ptr<VehicleState> state{ nullptr };
@@ -343,10 +343,6 @@ protected:
 
 	virtual double compute_vehicle_following_safe_time_headway(
 		const NearbyVehicle& nearby_vehicle) const;
-
-	/* [June 2023] TODO: return const? Not yet possible but maybe after 
-	refactoring */
-	VehicleController* get_controller() const { return controller.get(); };
 
 	double get_rho() const { return rho; };
 	/* Checks whether vehicle is lane changing and returns proper value
@@ -364,6 +360,19 @@ protected:
 	void find_leader();
 	
 private:
+	
+	/* Error included intentionally.Change approach - EgoVehicle should 
+	* contain a (unique, shared?) pointer to VehicleController. Derived 
+	* classes can have methods to access the specific type of controller.
+	* This should help deal with the issue that the controller pointer 
+	* must be constant on some methods, and not constant on others.
+	*/
+	//Hello. Look at me!
+	/* [June 2023] TODO: return const? Not yet possible but maybe after
+	refactoring 
+	[Jan 2024] Or make the const version protected/public? */
+	virtual VehicleController* get_controller() = 0;
+	virtual const VehicleController* get_controller_const() const = 0;
 	/* Computes the longitudinal controller input */
 	virtual double implement_compute_desired_acceleration(
 		const std::unordered_map<int, TrafficLight>& traffic_lights) = 0;

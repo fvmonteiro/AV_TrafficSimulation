@@ -1,6 +1,7 @@
 #pragma once
 
 #include "EgoVehicle.h"
+#include "TrafficLightLongAVController.h"
 
 class TrafficLightALCVehicle : public EgoVehicle
 {
@@ -30,6 +31,10 @@ protected:
 			simulation_time_step, creation_time, verbose) {}
 
 private:
+	TrafficLightLongAVController long_controller_with_tf;
+
+	VehicleController* get_controller() override;
+	const VehicleController* get_controller_const() const override;
 	double implement_compute_desired_acceleration(
 		const std::unordered_map<int, TrafficLight>& traffic_lights) override;
 	bool implement_has_next_traffic_light() const override;
@@ -70,6 +75,13 @@ private:
 	void implement_set_accepted_lane_change_risk_to_follower(
 		double value) override {};
 	void implement_set_use_linear_lane_change_gap(long value) {};
+	virtual TrafficLightLongAVController* get_long_controller_with_tf() {
+		return &long_controller_with_tf;
+	};
+	virtual const TrafficLightLongAVController* 
+		get_long_controller_with_tf_const() const {
+		return &long_controller_with_tf;
+	};
 
 	/* Traffic lights -------------------------------------------------------- */
 	void TrafficLightALCVehicle::set_traffic_light_information(

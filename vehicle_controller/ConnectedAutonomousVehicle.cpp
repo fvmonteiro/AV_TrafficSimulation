@@ -9,8 +9,7 @@ ConnectedAutonomousVehicle::ConnectedAutonomousVehicle(
 		desired_velocity, simulation_time_step, creation_time,
 		verbose)
 {
-	this->controller = std::make_unique<CAVController>(
-		CAVController(*this, verbose));
+	this->cav_controller = CAVController(*this, verbose);
 	if (verbose)
 	{
 		std::clog << "[ConnectedAutonomousVehicle] constructor done\n";
@@ -48,6 +47,17 @@ implement_get_assisted_vehicle() const
 long ConnectedAutonomousVehicle::implement_get_lane_change_request() const
 {
 	return lane_change_request;
+}
+
+AVController* ConnectedAutonomousVehicle::get_av_controller()
+{
+	return get_cav_controller();
+}
+
+const AVController* ConnectedAutonomousVehicle
+::get_av_controller_const() const
+{
+	return get_cav_controller_const();
 }
 
 void ConnectedAutonomousVehicle::implement_analyze_nearby_vehicles()
@@ -163,7 +173,7 @@ void ConnectedAutonomousVehicle::update_destination_lane_follower(
 	{
 		std::shared_ptr<NearbyVehicle>& dest_lane_follower =
 			get_modifiable_dest_lane_follower();
-		controller->update_destination_lane_follower_time_headway(
+		get_cav_controller()->update_destination_lane_follower_time_headway(
 			dest_lane_follower->get_h_to_incoming_vehicle());
 
 		/* We need to compute fd's lambda1 here cause it's used later in
@@ -193,7 +203,7 @@ void ConnectedAutonomousVehicle::update_assisted_vehicle(
 					*assisted_vehicle, 0
 					/* assisted_vehicle->get_max_lane_change_risk_to_follower()*/
 				));
-			controller->update_gap_generation_controller(
+			get_cav_controller()->update_gap_generation_controller(
 				h_to_assisted_vehicle);
 		}
 	}

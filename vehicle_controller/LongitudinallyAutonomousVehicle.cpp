@@ -1,5 +1,4 @@
 #include "LongitudinallyAutonomousVehicle.h"
-#include "LongAVController.h"
 
 LongitudinallyAutonomousVehicle::LongitudinallyAutonomousVehicle(
 	long id, double desired_velocity,
@@ -8,8 +7,7 @@ LongitudinallyAutonomousVehicle::LongitudinallyAutonomousVehicle(
 	LongitudinallyAutonomousVehicle(id, VehicleType::long_autonomous_car,
 		desired_velocity, false, simulation_time_step, creation_time, verbose)
 {
-	this->controller = std::make_unique<LongAVController>(
-		LongAVController(*this, verbose));
+	long_av_controller = LongAVController(*this, verbose);
 
 	if (verbose)
 	{
@@ -25,11 +23,23 @@ LongitudinallyAutonomousVehicle::LongitudinallyAutonomousVehicle(
 		AUTONOMOUS_BRAKE_DELAY, is_connected,
 		simulation_time_step, creation_time, verbose) {};
 
+VehicleController* LongitudinallyAutonomousVehicle
+::get_controller()
+{
+	return get_long_av_controller();
+}
+
+const VehicleController* LongitudinallyAutonomousVehicle::
+get_controller_const() const
+{
+	return get_long_av_controller_const();
+}
+
 double LongitudinallyAutonomousVehicle::implement_compute_desired_acceleration(
 	const std::unordered_map<int, TrafficLight>& traffic_lights)
 {
 	double a_desired_acceleration =
-		controller->compute_desired_acceleration();
+		get_long_av_controller()->compute_desired_acceleration();
 	return consider_vehicle_dynamics(a_desired_acceleration);
 }
 
@@ -42,7 +52,7 @@ void LongitudinallyAutonomousVehicle::update_leader(
 		bool is_new_leader_connected = get_leader()->is_connected();
 		if (old_leader == nullptr)
 		{
-			controller->activate_origin_lane_controller(
+			get_long_av_controller()->activate_origin_lane_controller(
 				compute_current_desired_time_headway(*get_leader()),
 				is_new_leader_connected);
 		}
@@ -50,7 +60,7 @@ void LongitudinallyAutonomousVehicle::update_leader(
 			- old_leader->get_max_brake()) > 0.5)
 			|| (get_leader()->get_type() != old_leader->get_type()))
 		{
-			controller->update_origin_lane_controller(
+			get_long_av_controller()->update_origin_lane_controller(
 				compute_current_desired_time_headway(*get_leader()),
 				is_new_leader_connected
 			);

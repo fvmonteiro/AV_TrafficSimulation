@@ -1,6 +1,7 @@
 #pragma once
 
 #include "AutonomousVehicle.h"
+#include "CAVController.h"
 
 /* Vehicle similar to AutonomousVehicle, but can also request cooperation
 or cooperate with others to generate safe lane changing gaps. */
@@ -51,7 +52,10 @@ private:
 	lane change gap */
 	std::shared_ptr<NearbyVehicle> assisted_vehicle{ nullptr };
 	double original_desired_velocity{ 0.0 };
+	CAVController cav_controller;
 
+	AVController* get_av_controller() override;
+	const AVController* get_av_controller_const() const override;
 	//double implement_compute_desired_acceleration(
 	//	const std::unordered_map<int, TrafficLight>& traffic_lights) override;
 	bool give_lane_change_control_to_vissim() const override
@@ -76,6 +80,12 @@ private:
 	//bool implement_check_lane_change_gaps() override;
 	long implement_get_lane_change_request() const override;
 
+	virtual CAVController* get_cav_controller() {
+		return &cav_controller;
+	};
+	virtual const CAVController* get_cav_controller_const() const {
+		return &cav_controller;
+	};
 	/* Id of the vehicle in front of which we want to merge
 	IF we are trying to perform a mandatory lane change */
 	virtual void create_lane_change_request();

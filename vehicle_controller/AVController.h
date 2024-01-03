@@ -6,6 +6,7 @@ class AutonomousVehicle;
 class AVController : public LongAVController
 {
 public:
+	AVController() = default;
     AVController(const AutonomousVehicle& av, bool verbose);
 
 protected:

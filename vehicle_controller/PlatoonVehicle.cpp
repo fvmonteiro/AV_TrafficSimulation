@@ -12,8 +12,8 @@ PlatoonVehicle::PlatoonVehicle(long id, double desired_velocity,
 	//alone_desired_velocity{ desired_velocity }
 {
 	compute_platoon_safe_gap_parameters();
-	this->controller = std::make_unique<PlatoonVehicleController>(
-		PlatoonVehicleController(*this, verbose));
+	this->platoon_vehicle_controller = 
+		PlatoonVehicleController(*this, verbose);
 	if (verbose)
 	{
 		std::clog << "lambda1_platoon = " << lambda_1_platoon
@@ -59,7 +59,8 @@ bool PlatoonVehicle::has_finished_increasing_gap() const
 	bool is_gap_error_non_negative = true;
 	if (has_leader())
 	{
-		double safe_gap = controller->get_desired_time_headway_gap(
+		double safe_gap = get_platoon_vehicle_controller_const()
+			->get_desired_time_headway_gap(
 			*get_leader());
 		double gap = compute_gap_to_a_leader(*get_leader());
 		double gap_error = gap - safe_gap;
@@ -78,7 +79,8 @@ bool PlatoonVehicle::has_finished_closing_gap() const
 	bool is_gap_error_small = true;
 	if (has_leader())
 	{
-		double safe_gap = controller->get_desired_time_headway_gap(
+		double safe_gap = get_platoon_vehicle_controller_const()
+			->get_desired_time_headway_gap(
 			*get_leader());
 		double gap = compute_gap_to_a_leader(*get_leader());
 		double gap_error = gap - safe_gap;
@@ -273,6 +275,17 @@ void PlatoonVehicle::set_desired_lane_change_direction()
 		&& (get_lane() == 1);
 	desired_lane_change_direction = should_change_lane ?
 		RelativeLane::left : RelativeLane::same;
+}
+
+CAVController* PlatoonVehicle::get_cav_controller()
+{
+	return get_platoon_vehicle_controller();
+}
+
+const CAVController* PlatoonVehicle::get_cav_controller_const() 
+const
+{
+	return get_platoon_vehicle_controller_const();
 }
 
 void PlatoonVehicle::implement_analyze_nearby_vehicles()

@@ -1,7 +1,8 @@
 #pragma once
 
-#include "LongitudinallyAutonomousVehicle.h"
+#include "AVController.h"
 #include "LaneChangeGapsSafety.h"
+#include "LongitudinallyAutonomousVehicle.h"
 
 /* Vehicle with autonomous longitudinal control during lane keeping and
 during adjustments for lane changing. The lane change intention still
@@ -63,7 +64,6 @@ protected:
 		return destination_lane_leader_leader;
 	};
 
-
 	void find_destination_lane_vehicles();
 	bool try_to_overtake_destination_lane_leader() const;
 	bool try_to_overtake_destination_lane_leader(double min_rel_vel) const;
@@ -91,6 +91,8 @@ protected:
 private:
 	double min_overtaking_rel_vel{ 10.0 / 3.6 };
 	double max_lane_change_waiting_time{ 60.0 }; // [s]
+
+	AVController av_controller;
 
 	/* Relevant members for lane changing ------------------------------------ */
 
@@ -128,7 +130,14 @@ private:
 	//double intermediate_risk_to_leader{ 0.0 }; // [m/s]
 	//double max_risk_to_follower{ 0.0 }; // [m/s]
 
-
+	LongAVController* get_long_av_controller() override;
+	const LongAVController* get_long_av_controller_const() const override;
+	virtual AVController* get_av_controller() {
+		return &av_controller;
+	};
+	virtual const AVController* get_av_controller_const() const {
+		return &av_controller;
+	};
 	/* Finds the current leader and, if the vehicle has lane change
 	intention, the destination lane leader and follower */
 	//void find_relevant_nearby_vehicles() override;
