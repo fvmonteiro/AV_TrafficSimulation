@@ -1,0 +1,47 @@
+#include <string>
+#include "PlatoonLaneChangeOrder.h"
+
+PlatoonLaneChangeOrder::PlatoonLaneChangeOrder(
+	std::vector<std::vector<int>>lc_order, 
+	std::vector<int> coop_order, float cost)
+{
+	for (auto& inner_vector : lc_order)
+	{
+		std::unordered_set<int> s(inner_vector.begin(),
+			inner_vector.end());
+		this->lc_order.push_back(s);
+	}
+	this->coop_order = coop_order;
+	this->cost = cost;
+}
+
+std::string PlatoonLaneChangeOrder::to_string() const
+{
+	std::string text = "lc order : [";
+	for (std::unordered_set<int> veh_set : lc_order)
+	{
+		text += "[";
+		for (int veh_id : veh_set)
+		{
+			text += std::to_string(veh_id) + ", ";
+		}
+		text.erase(text.size() - 2);
+		text += "], ";
+	}
+	text.erase(text.size() - 2);
+	text += "]; coop order: [";
+	for (int veh_id : coop_order)
+	{
+		text += std::to_string(veh_id) + ", ";
+	}
+	text.erase(text.size() - 2);
+	text += "]; cost=" + std::to_string(cost);
+	return text;
+}
+
+std::ostream& operator<<(std::ostream& out,
+	PlatoonLaneChangeOrder const& plcs)
+{
+	out << plcs.to_string();
+	return out;
+}
