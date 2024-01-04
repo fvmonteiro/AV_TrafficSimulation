@@ -254,11 +254,13 @@
     <ClCompile Include="LongitudinalControllerWithTrafficLights.cpp" />
     <ClCompile Include="NoLaneChangeCAV.cpp" />
     <ClCompile Include="Platoon.cpp" />
+    <ClCompile Include="PlatoonLaneChangeOrder.cpp" />
     <ClCompile Include="PlatoonLaneChangeStrategy.cpp" />
     <ClCompile Include="PlatoonVehicle.cpp" />
     <ClCompile Include="PlatoonVehicleState.cpp" />
     <ClCompile Include="RelativeLane.cpp" />
     <ClCompile Include="AutonomousVehicle.cpp" />
+    <ClCompile Include="PlatoonLCStrategyManager.cpp" />
     <ClCompile Include="SwitchedLongitudinalController.cpp" />
     <ClCompile Include="SynchronousStates.cpp" />
     <ClCompile Include="TrafficLight.cpp" />
@@ -306,10 +308,12 @@
     <ClInclude Include="LongitudinalControllerWithTrafficLights.h" />
     <ClInclude Include="NoLaneChangeCAV.h" />
     <ClInclude Include="Platoon.h" />
+    <ClInclude Include="PlatoonLaneChangeOrder.h" />
     <ClInclude Include="PlatoonLaneChangeStrategy.h" />
     <ClInclude Include="PlatoonVehicle.h" />
     <ClInclude Include="PlatoonVehicleState.h" />
     <ClInclude Include="RelativeLane.h" />
+    <ClInclude Include="PlatoonLCStrategyManager.h" />
     <ClInclude Include="SwitchedLongitudinalController.h" />
     <ClInclude Include="SynchronousStates.h" />
     <ClInclude Include="TrafficLight.h" />

@@ -10,7 +10,9 @@ class PlatoonVehicle;
 
 class PlatoonVehicleState : public VehicleState
 {
+
 protected:
+	const std::string name{ "platoon vehicle" };
 	PlatoonVehicle* platoon_vehicle{ nullptr };
 	double gap_error_margin{ 1.0 };
 	/* Once leader has finished changing lanes, it can travel slower 
@@ -30,4 +32,39 @@ protected:
 
 private:
 	void set_specific_type_of_vehicle(EgoVehicle* ego_vehicle) override;
+};
+
+
+/* ------------------------------------------------------------------------ */
+/* Concrete States -------------------------------------------------------- */
+/* ------------------------------------------------------------------------ */
+
+class PlatoonVehicleLaneKeepingState : public PlatoonVehicleState
+{
+public:
+	PlatoonVehicleLaneKeepingState()
+		: PlatoonVehicleState(name, "lane keeping", 1) {}
+private:
+	void implement_handle_lane_keeping_intention() override;
+	void implement_handle_lane_change_intention() override;
+};
+
+class PlatoonVehicleLongAdjustmentState : public PlatoonVehicleState
+{
+public:
+	PlatoonVehicleLongAdjustmentState()
+		: PlatoonVehicleState(name, "long adjustment", 2) {}
+private:
+	void implement_handle_lane_keeping_intention() override;
+	void implement_handle_lane_change_intention() override;
+};
+
+class PlatoonVehicleLaneChangingState : public PlatoonVehicleState
+{
+public:
+	PlatoonVehicleLaneChangingState()
+		: PlatoonVehicleState(name, "lane changing", 3) {}
+private:
+	void implement_handle_lane_keeping_intention() override;
+	void implement_handle_lane_change_intention() override;
 };

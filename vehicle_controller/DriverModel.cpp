@@ -16,6 +16,7 @@
 #include "EgoVehicleFactory.h"
 #include "Platoon.h"
 #include "PlatoonVehicle.h"
+#include "PlatoonLCStrategyManager.h"
 #include "SimulationLogger.h"
 #include "TrafficLight.h"
 #include "TrafficLightFileReader.h"
@@ -39,6 +40,8 @@ double current_desired_velocity{ 0 };
 long current_nearby_vehicle_id{ 0 };
 long platoon_id{ 1 };
 int platoon_lc_strategy{ 0 };
+PlatoonLCStrategyManager platoon_lc_strategy_manager {
+    PlatoonLCStrategyManager(2, "time") };
 
 /*==========================================================================*/
 
@@ -56,6 +59,7 @@ BOOL APIENTRY DllMain (HANDLE  hModule,
           /*simulation_logger.write_to_persistent_log(
               std::to_string(vehicles.size()) + " vehicles in memory "
                 + "(before start)");*/
+          std::clog << platoon_lc_strategy_manager << std::endl;
           break;
       case DLL_THREAD_ATTACH:
           break;
@@ -106,7 +110,8 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
         }
         return 1;
     case DRIVER_DATA_TIMESTEP               :
-        if (simulation_time_step < 0) {
+        if (simulation_time_step < 0) 
+        {
             simulation_time_step = double_value;
         }
         return 1;

@@ -33,11 +33,11 @@ public:
 	a platoon */
 	std::shared_ptr<NearbyVehicle> define_virtual_leader_when_alone() const;
 	bool is_vehicle_in_sight(long nearby_vehicle_id) const;
+	bool can_start_lane_change();
 
 protected:
 
-	/* Returns a nullptr if no virtual leader 
-	[Jan 24, 2023] TODO: most likely can be private */
+	/* Returns a nullptr if no virtual leader */
 	std::shared_ptr<NearbyVehicle> define_virtual_leader() const override;
 
 private:

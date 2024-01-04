@@ -41,3 +41,107 @@ bool PlatoonVehicleState::has_platoon_changed_lanes(
 	}
 	return true;
 }
+
+
+/* ------------------------------------------------------------------------ */
+/* Concrete States -------------------------------------------------------- */
+/* ------------------------------------------------------------------------ */
+
+/* [Jan 24] Copying code from Python implementation. For now, let's keep a 
+track of the 'original' code and why changes were made. */
+
+void PlatoonVehicleLaneKeepingState
+::implement_handle_lane_keeping_intention() {}
+
+void PlatoonVehicleLaneKeepingState
+::implement_handle_lane_change_intention()
+{
+	/* In Python, the preparation for long adjustments included requesting 
+	cooperation and setting the lane change end time to inf. 
+	The cooperation requests in this code are set at every simulation step
+	in the method that updated nearby vehicles. And the lane change end
+	times are computed after the simulation is done. */
+	//platoon_vehicle->prepare_to_start_long_adjustments();
+	platoon_vehicle->set_state(
+		std::make_unique<PlatoonVehicleLongAdjustmentState>());
+}
+
+/* ------------------------------------------------------------------------ */
+
+void PlatoonVehicleLongAdjustmentState
+::implement_handle_lane_keeping_intention()
+{
+	/* This should not happen in our scenarios */
+	unexpected_transition_message(this, false);
+}
+
+void PlatoonVehicleLongAdjustmentState
+::implement_handle_lane_change_intention()
+{
+	// From VehicleState
+	/*if (ego_vehicle->check_lane_change_gaps())
+	{
+		ego_vehicle->set_lane_change_direction(
+			ego_vehicle->get_desired_lane_change_direction());
+		ego_vehicle->reset_lane_change_waiting_time();
+		ego_vehicle->set_state(
+			std::make_unique<SingleVehicleLaneChangingState>());
+	}
+	else
+	{
+		ego_vehicle->update_lane_change_waiting_time();
+	}*/
+
+	// From LastVehicleFirstStates
+	/*if (platoon_vehicle->check_lane_change_gaps()
+		&& (!platoon_vehicle->has_virtual_leader() ||
+			(platoon_vehicle->get_destination_lane_leader_id()
+				== platoon_vehicle->get_virtual_leader_id())))
+	{
+		platoon_vehicle->set_state(
+			std::make_unique<LastVehicleFirstLaneChangingState>());
+	}*/
+
+	if (platoon_vehicle->can_start_lane_change())
+	{
+		/* In Python, the preparation to start a lane change included
+		setting the start time and setting up a lane change controller.
+		We may need to save the start time. */
+		//platoon_vehicle->prepare_to_start_lane_change();
+		platoon_vehicle->set_state(
+			std::make_unique<PlatoonVehicleLaneChangingState>());
+	}
+}
+
+/* ------------------------------------------------------------------------ */
+
+void PlatoonVehicleLaneChangingState
+::implement_handle_lane_keeping_intention()
+{
+	// Same as single vehicle case except for the next state
+	if (!platoon_vehicle->is_lane_changing())
+	{
+		platoon_vehicle->set_lane_change_direction(RelativeLane::same);
+		platoon_vehicle->reset_lane_change_waiting_time();
+		//platoon_vehicle->update_time_headway_to_leader();
+		//platoon_vehicle->reset_origin_lane_velocity_controller();
+		platoon_vehicle->set_state(
+			std::make_unique<PlatoonVehicleLaneKeepingState>());
+	}
+}
+
+void PlatoonVehicleLaneChangingState
+::implement_handle_lane_change_intention()
+{
+	// NOTE: this state-action pair is the same for all strategies
+	if (platoon_vehicle->is_lane_changing())
+	{
+		platoon_vehicle->set_lane_change_direction(
+			platoon_vehicle->get_active_lane_change_direction());
+	}
+	else
+	{
+		platoon_vehicle->set_lane_change_direction(
+			platoon_vehicle->get_desired_lane_change_direction());
+	}
+}

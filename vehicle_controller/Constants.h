@@ -48,6 +48,9 @@ const double HUMAN_BRAKE_DELAY{ 0.75 }; // [s]
 
 const long MAIN_LINK_NUMBER{ 3 };
 
+const std::string STRATEGY_MAPS_FOLDER{ "C:\\Users\\fvall\\Documents"
+	"\\Research\\data\\strategy_maps\\" };
+
 /* Categories set by VISSIM */
 enum class VehicleCategory {
 	undefined,

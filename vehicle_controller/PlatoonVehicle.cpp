@@ -136,8 +136,10 @@ PlatoonVehicle::get_following_vehicle_in_platoon() const
 std::shared_ptr<NearbyVehicle> PlatoonVehicle
 ::define_virtual_leader_when_alone() const
 {
+	
 	/* Note: this is a copy of 
 	ConnectedAutonomousVehicle::define_virtual_leader() */
+	//return ConnectedAutonomousVehicle::define_virtual_leader();
 
 	/* By default, we try to merge behind the current destination
 	lane leader. */
@@ -174,6 +176,27 @@ std::shared_ptr<NearbyVehicle> PlatoonVehicle
 bool PlatoonVehicle::is_vehicle_in_sight(long nearby_vehicle_id) const
 {
 	return get_nearby_vehicle_by_id(nearby_vehicle_id) != nullptr;
+}
+
+bool PlatoonVehicle::can_start_lane_change()
+{
+	/* TODO: the current safety check may be too conservative
+	for our desired simulations */
+	bool is_safe = check_lane_change_gaps();
+	bool is_my_turn;
+	if (is_in_a_platoon())
+	{
+		if (is_platoon_leader())
+		{
+			get_platoon()->set_possible_maneuver_initial_states();
+		}
+		is_my_turn = get_platoon()->can_vehicle_start_lane_change(get_id());
+	}
+	else
+	{
+		is_my_turn = true;
+	}
+	return is_safe && is_my_turn;
 }
 
 double PlatoonVehicle::implement_compute_desired_acceleration(

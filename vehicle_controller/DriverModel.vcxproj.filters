@@ -67,9 +67,6 @@
     <ClCompile Include="GapController.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Platoon.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="TrafficLightALCVehicle.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -91,9 +88,6 @@
     <ClCompile Include="PlatoonVehicleState.cpp">
       <Filter>StateMachines</Filter>
     </ClCompile>
-    <ClCompile Include="PlatoonLaneChangeStrategy.cpp">
-      <Filter>StateMachines</Filter>
-    </ClCompile>
     <ClCompile Include="LeaderFirstStates.cpp">
       <Filter>StateMachines</Filter>
     </ClCompile>
@@ -111,6 +105,18 @@
     </ClCompile>
     <ClCompile Include="VirdiVehicle.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="PlatoonLaneChangeOrder.cpp">
+      <Filter>Platoons</Filter>
+    </ClCompile>
+    <ClCompile Include="PlatoonLCStrategyManager.cpp">
+      <Filter>Platoons</Filter>
+    </ClCompile>
+    <ClCompile Include="Platoon.cpp">
+      <Filter>Platoons</Filter>
+    </ClCompile>
+    <ClCompile Include="PlatoonLaneChangeStrategy.cpp">
+      <Filter>Platoons</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -186,9 +192,6 @@
     <ClInclude Include="GapController.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Platoon.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="TrafficLightALCVehicle.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -213,9 +216,6 @@
     <ClInclude Include="PlatoonVehicleState.h">
       <Filter>StateMachines</Filter>
     </ClInclude>
-    <ClInclude Include="PlatoonLaneChangeStrategy.h">
-      <Filter>StateMachines</Filter>
-    </ClInclude>
     <ClInclude Include="LeaderFirstStates.h">
       <Filter>StateMachines</Filter>
     </ClInclude>
@@ -231,6 +231,18 @@
     <ClInclude Include="VanAremLongitudinalController.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="PlatoonLaneChangeOrder.h">
+      <Filter>Platoons</Filter>
+    </ClInclude>
+    <ClInclude Include="PlatoonLCStrategyManager.h">
+      <Filter>Platoons</Filter>
+    </ClInclude>
+    <ClInclude Include="Platoon.h">
+      <Filter>Platoons</Filter>
+    </ClInclude>
+    <ClInclude Include="PlatoonLaneChangeStrategy.h">
+      <Filter>Platoons</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Header Files">
@@ -241,6 +253,9 @@
     </Filter>
     <Filter Include="StateMachines">
       <UniqueIdentifier>{832747f0-8314-4dc8-8583-49e2215bfc0f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Platoons">
+      <UniqueIdentifier>{d5a68358-bc9b-4cb4-93c8-d587e7b854f5}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>
