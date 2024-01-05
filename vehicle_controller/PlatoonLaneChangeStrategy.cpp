@@ -82,6 +82,8 @@ bool SynchronousStrategy::implement_can_vehicle_leave_platoon(
 		&& *platoon_vehicle.get_state() != SynchronousLaneChangingState()
 		&& (platoon_vehicle.get_preceding_vehicle_id() 
 			!= platoon_vehicle.get_leader_id());
+
+	/* Jan 2024: very similar to the same function in leader first strat */
 }
 
 std::unique_ptr<VehicleState> SynchronousStrategy

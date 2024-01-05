@@ -475,10 +475,7 @@ double AutonomousVehicle::compute_accepted_lane_change_gap(
 
 	double accepted_gap;
 	double accepted_risk = 0.0;
-	// Only to be used during initial checks
-	/*double gap1, gap2;
-	gap1 = compute_time_headway_gap_for_lane_change(*nearby_vehicle);
-	gap2 = compute_vehicle_following_gap_for_lane_change(*nearby_vehicle);*/
+
 	
 	if (verbose)
 	{
@@ -496,13 +493,6 @@ double AutonomousVehicle::compute_accepted_lane_change_gap(
 		accepted_gap = controller->compute_accepted_lane_change_gap_exact(
 			*this, *nearby_vehicle, get_lane_changing_safe_gap_parameters(),
 			accepted_risk);
-		/*double vehicle_following_gap =
-			compute_vehicle_following_gap_for_lane_change(
-				*nearby_vehicle);
-		double gap_variation_during_lc =
-			controller->get_gap_variation_during_lane_change(*this,
-				*nearby_vehicle, false);
-		accepted_gap = vehicle_following_gap + gap_variation_during_lc;*/
 	}
 
 	return std::max(accepted_gap, 1.0);

@@ -49,7 +49,7 @@ void LateralController::set_destination_lane_follower_time_headway(
 }
 
 double LateralController::compute_time_headway_gap(double ego_velocity,
-	const NearbyVehicle& nearby_vehicle, double accepted_risk)
+	const NearbyVehicle& nearby_vehicle, double accepted_risk) const
 {
 	double time_headway, follower_velocity;
 	if (nearby_vehicle.is_ahead())

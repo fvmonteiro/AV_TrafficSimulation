@@ -13,14 +13,15 @@ void PlatoonVehicleState::set_specific_type_of_vehicle(
 }
 
 bool PlatoonVehicleState::are_other_platoon_gaps_closed(long veh_id,
-	std::unique_ptr<PlatoonVehicleState> lane_keeping_state)
+	int lane_keeping_state_number)
 {
 	for (auto& item :
 		platoon_vehicle->get_platoon()->get_vehicles_by_position())
 	{
 		auto& veh = item.second;
 		if (veh->get_id() != veh_id
-			&& *veh->get_state() != *lane_keeping_state)
+			&& veh->get_state()->get_state_number() 
+			!= lane_keeping_state_number)
 		{
 			return false;
 		}
@@ -78,30 +79,6 @@ void PlatoonVehicleLongAdjustmentState
 void PlatoonVehicleLongAdjustmentState
 ::implement_handle_lane_change_intention()
 {
-	// From VehicleState
-	/*if (ego_vehicle->check_lane_change_gaps())
-	{
-		ego_vehicle->set_lane_change_direction(
-			ego_vehicle->get_desired_lane_change_direction());
-		ego_vehicle->reset_lane_change_waiting_time();
-		ego_vehicle->set_state(
-			std::make_unique<SingleVehicleLaneChangingState>());
-	}
-	else
-	{
-		ego_vehicle->update_lane_change_waiting_time();
-	}*/
-
-	// From LastVehicleFirstStates
-	/*if (platoon_vehicle->check_lane_change_gaps()
-		&& (!platoon_vehicle->has_virtual_leader() ||
-			(platoon_vehicle->get_destination_lane_leader_id()
-				== platoon_vehicle->get_virtual_leader_id())))
-	{
-		platoon_vehicle->set_state(
-			std::make_unique<LastVehicleFirstLaneChangingState>());
-	}*/
-
 	if (platoon_vehicle->can_start_lane_change())
 	{
 		/* In Python, the preparation to start a lane change included

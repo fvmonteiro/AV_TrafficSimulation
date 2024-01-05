@@ -15,7 +15,7 @@ class NearbyVehicle;
 class EgoVehicle;
 
 /* Given lane change intention existis, the lateral controller defines 
-whether the maneuver can can place. TODO: rename*/
+whether the maneuver can take place. TODO: rename*/
 class LateralController {
 public:
 
@@ -34,7 +34,7 @@ public:
 	void set_destination_lane_follower_time_headway(double new_time_headway);
 
 	double compute_time_headway_gap(double ego_velocity, 
-		const NearbyVehicle& nearby_vehicle, double accepted_risk);
+		const NearbyVehicle& nearby_vehicle, double accepted_risk) const;
 	double compute_vehicle_following_gap_for_lane_change(
 		const EgoVehicle& ego_vehicle, const NearbyVehicle& nearby_vehicle,
 		std::pair<double, double> ego_safe_lane_changing_params,

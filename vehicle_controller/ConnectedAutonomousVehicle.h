@@ -36,14 +36,16 @@ protected:
 		double desired_velocity, double simulation_time_step,
 		double creation_time, bool verbose);
 
-	void find_cooperation_requests();
-
 	double get_lambda_1(bool is_leader_connected) const;
 	double get_lambda_1_lane_change(bool is_leader_connected) const;
 	std::pair<double, double> get_lane_changing_safe_gap_parameters(
 		bool is_leader_connected) const;
 
+	void find_cooperation_requests();
 	void set_assisted_vehicle_by_id(long assisted_vehicle_id);
+
+	/* Returns a nullptr if no virtual leader */
+	std::shared_ptr<NearbyVehicle> define_virtual_leader() const override;
 
 private:
 	/* Emergency braking parameter between connected vehicles */
@@ -90,9 +92,6 @@ private:
 	long implement_get_lane_change_request() const override;
 	double compute_accepted_lane_change_gap(
 		std::shared_ptr<const NearbyVehicle> nearby_vehicle) const override;
-
-	/* Returns a nullptr if no virtual leader */
-	std::shared_ptr<NearbyVehicle> define_virtual_leader() const override;
 
 	/* Id of the vehicle in front of which we want to merge
 	IF we are trying to perform a mandatory lane change */

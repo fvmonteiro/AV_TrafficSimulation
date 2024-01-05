@@ -729,7 +729,7 @@ double EgoVehicle::get_accepted_lane_change_gap(
 	return compute_accepted_lane_change_gap(nearby_vehicle);
 }
 
-double EgoVehicle::get_reference_gap()
+double EgoVehicle::get_reference_gap() const
 {
 	return controller->get_reference_gap(get_velocity());
 }
@@ -851,102 +851,6 @@ double EgoVehicle::compute_drac(const NearbyVehicle& nearby_vehicle)
 	}
 	return -1.0;
 }
-
-/* TODO: move to autonomous vehicle class */
-//double EgoVehicle::compute_collision_severity_risk(
-//	const NearbyVehicle& nearby_vehicle) const
-//{
-//	double current_max_brake = get_current_max_brake();
-//	/* TODO: must change to get the appropriate lambda 1 */
-//	double current_lambda_1 = get_lambda_1();
-//
-//	double jerk_delay = (comfortable_acceleration + current_max_brake) / max_jerk;
-//	double ego_vel = get_velocity();
-//
-//	double leader_max_brake = nearby_vehicle.get_max_brake();
-//	double relative_vel = nearby_vehicle.get_relative_velocity();
-//	double leader_vel = nearby_vehicle.compute_velocity(ego_vel);
-//
-//	double gamma = leader_max_brake / current_max_brake;
-//	double gamma_threshold = leader_vel / (ego_vel + current_lambda_1);
-//
-//	std::vector<double> gap_thresholds(4);
-//	gap_thresholds[0] = brake_delay
-//		* (brake_delay * (comfortable_acceleration + leader_max_brake) / 2
-//			+ relative_vel);
-//	gap_thresholds[1] = (brake_delay + jerk_delay)
-//		* (current_lambda_1 + relative_vel
-//			- (brake_delay + jerk_delay)
-//			* (current_max_brake - leader_max_brake) / 2)
-//		+ get_lambda_0();
-//	gap_thresholds[2] = leader_vel / leader_max_brake
-//		* (current_lambda_1 + relative_vel
-//			- leader_vel / leader_max_brake
-//			* (current_max_brake - leader_max_brake) / 2)
-//		+ get_lambda_0();
-//	gap_thresholds[3] = compute_collision_free_gap(nearby_vehicle);
-//
-//	double gap = compute_gap(nearby_vehicle);
-//
-//	if (verbose && (gap < gap_thresholds[3])) {
-//		std::clog << "Collision prone situation\n"
-//			<< "\tgamma = " << gamma << ", gamma_t = " << gamma_threshold
-//			<< "\n\tgap = " << gap << ", thresholds: ";
-//		for (double g : gap_thresholds) {
-//			std::clog << g << ", ";
-//		}
-//		std::clog << std::endl;
-//	}
-//
-//	double result = 0;
-//	if (gap < gap_thresholds[0]) {
-//		result = std::pow(relative_vel, 2)
-//			+ 2 * (comfortable_acceleration + leader_max_brake) * gap;
-//	}
-//	else if (gap < gap_thresholds[1]) {
-//		/* The solution for this case requires solving a 3rd degree equation.
-//		To avoid that, we will approximate it as the mean of the previous
-//		and following case. We will also record how often this case
-//		happens to see if it's important to properly code the solution. */
-//		result = std::pow(relative_vel, 2)
-//			+ 2 * (comfortable_acceleration + leader_max_brake) * gap;
-//		result += std::pow(relative_vel + current_lambda_1, 2)
-//			+ 2 * (leader_max_brake - current_max_brake)
-//			* (gap - get_lambda_0());
-//		result /= 2;
-//		std::clog << "t=" << get_time()
-//			<< ", id=" << get_id()
-//			<< ", collision severity complicated case"
-//			<< std::endl;
-//	}
-//	else if (((gamma >= gamma_threshold) && (gap < gap_thresholds[2]))
-//		|| (gamma < gamma_threshold) && (gap < gap_thresholds[3])) {
-//		result = std::pow(relative_vel + current_lambda_1, 2)
-//			+ 2 * (leader_max_brake - current_max_brake)
-//			* (gap - get_lambda_0());
-//	}
-//	else if ((gamma >= gamma_threshold) && (gap < gap_thresholds[3])) {
-//		result = std::pow(ego_vel + current_lambda_1, 2)
-//			- 2 * current_max_brake
-//			* (std::pow(leader_vel, 2) / 2 / leader_max_brake
-//				+ gap - get_lambda_0());
-//	}
-//	result = std::sqrt(result);
-//
-//	if (verbose) {
-//		std::clog << "\trisk = " << result << std::endl;
-//	}
-//
-//	return result;
-//}
-
-//double EgoVehicle::compute_collision_severity_risk_to_leader()
-//{
-//	if (has_leader()) {
-//		return compute_collision_severity_risk(*get_leader());
-//	}
-//	return 0.0;
-//}
 
 void EgoVehicle::set_desired_lane_change_direction()
 {

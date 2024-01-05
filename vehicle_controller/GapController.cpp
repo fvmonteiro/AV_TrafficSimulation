@@ -44,8 +44,6 @@ double GapController::get_current_time_headway() const
 double GapController::compute_time_headway_gap(double time_headway,
 	double velocity) const
 {
-	/* TODO: for now we assumed the standstill distance (d) is the same for
-	all cases. */
 	return time_headway * velocity + standstill_distance;
 }
 

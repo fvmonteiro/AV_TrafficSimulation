@@ -45,9 +45,6 @@ protected:
 		bool is_connected, double simulation_time_step, double creation_time,
 		bool verbose = false);
 
-	// [Jan 24, 23] Make private?
-	bool implement_check_lane_change_gaps() override;
-
 	//double get_lambda_1_lane_change() const { return lambda_1_lane_change; };
 	double get_accepted_risk_to_leaders() const {
 		return accepted_lane_change_risk_to_leaders;
@@ -74,11 +71,11 @@ protected:
 	bool try_to_overtake_destination_lane_leader(
 		double min_rel_vel) const;
 	bool try_to_overtake_destination_lane_leader_based_on_time() const;
-	/*[Feb 7, 2023] The four methods below can probably become private */
+	
 	void set_virtual_leader(
 		std::shared_ptr<NearbyVehicle> new_virtual_leader);
-	/*void set_destination_lane_follower_by_id(
-		long new_follower_id);*/
+	/* Returns a nullptr if no virtual leader */
+	virtual std::shared_ptr<NearbyVehicle> define_virtual_leader() const;
 
 	/* ----------------------------------------------------- */
 	
@@ -154,6 +151,7 @@ private:
 	long implement_get_virtual_leader_id() const override;
 	double compute_lane_changing_desired_time_headway(
 		const NearbyVehicle& nearby_vehicle) const override;
+	bool implement_check_lane_change_gaps() override;
 
 	/* Time-headway based gap (hv + d) minus a term based on
 	accepted risk NO LONGER IN USE [Feb 24, 2023]*/
@@ -167,8 +165,6 @@ private:
 	double compute_gap_variation_during_lane_change(
 		const NearbyVehicle& nearby_vehicle) const;
 
-	/* Returns a nullptr if no virtual leader */
-	virtual std::shared_ptr<NearbyVehicle> define_virtual_leader() const;
 	virtual void update_destination_lane_follower(
 		const std::shared_ptr<NearbyVehicle>& old_follower);
 	void update_virtual_leader(

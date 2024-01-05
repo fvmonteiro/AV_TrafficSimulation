@@ -135,7 +135,7 @@ implement_handle_lane_keeping_intention()
 		double platoon_desired_vel =
 			platoon_vehicle->get_platoon()->get_desired_velocity();
 		if (are_other_platoon_gaps_closed(platoon_vehicle->get_id(),
-			std::make_unique<LeaderFirstAndInvertLaneKeepingState>()))
+			LeaderFirstAndInvertLaneKeepingState().get_state_number()))
 		{
 			platoon_vehicle->set_desired_velocity(platoon_desired_vel);
 			platoon_vehicle->get_platoon()->reorder_vehicles();

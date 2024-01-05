@@ -205,7 +205,7 @@ public:
 	Returns MAX_DISTANCE if nearby_vehicle is a nullptr. */
 	double compute_gap_to_a_follower(
 		std::shared_ptr<const NearbyVehicle> nearby_vehicle) const;
-	/* Returns 0 if there is no leader */
+	/* 'Exact' nonlinear safe gap. Returns 0 if there is no leader */
 	double compute_safe_gap_to_leader();
 
 	/* Computes the absolute bumper-to-bumper distance between vehicles.
@@ -247,6 +247,7 @@ public:
 	};
 
 	/* Computation of surrogate safety measurements ----------------------- */
+	/* 'Exact' nonlinear safe gap */
 	double compute_safe_gap_to_a_leader(const NearbyVehicle& a_leader) const;
 	double compute_risky_gap_to_leader(const NearbyVehicle& a_leader, 
 		double accepted_risk) const;
@@ -293,12 +294,10 @@ public:
 	double get_accepted_lane_change_gap(
 		std::shared_ptr<const NearbyVehicle> nearby_vehicle);
 
-	/*double compute_accepted_lane_change_gap(
-		std::shared_ptr<NearbyVehicle> nearby_vehicle, double accepted_risk);*/
 	/* Methods to access internal values. Used for quicker debugging --------- */
 
 	/* Returns the current reference gap to the leader */
-	double get_reference_gap();
+	double get_reference_gap() const;
 	/* Computes the desired time headway based on lane change intention
 	TODO [Nov 17]: double check if it needs to be public*/
 	double compute_current_desired_time_headway(
@@ -335,7 +334,7 @@ protected:
 	double lane_change_waiting_time{ 0.0 };
 	std::unique_ptr<VehicleState> state{ nullptr };
 
-	bool verbose = false; /* when true, will print results to
+	bool verbose{ false }; /* when true, will print results to
 						  the default log file and
 						  create a specific log file for this
 						  vehicle */
