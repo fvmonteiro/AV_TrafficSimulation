@@ -25,6 +25,7 @@ public:
 
 	long get_preceding_vehicle_id() const;
 	long get_following_vehicle_id() const;
+	double get_desired_velocity_from_platoon() const;
 	const VehicleState* get_preceding_vehicle_state() const;
 	const VehicleState* get_following_vehicle_state() const;
 	const PlatoonVehicle* get_preceding_vehicle_in_platoon() const;
@@ -73,6 +74,8 @@ private:
 		const NearbyVehicle& nearby_vehicle) const override;
 	double compute_lane_changing_desired_time_headway(
 		const NearbyVehicle& nearby_vehicle) const override;
+	double compute_accepted_lane_change_gap(
+		std::shared_ptr<const NearbyVehicle> nearby_vehicle) const override;
 	/* SCENARIO SPECIFIC: the platoon vehicles always start at the in ramp, 
 	and they try to change lanes as soon as they enter the highway */
 	void set_desired_lane_change_direction() override;

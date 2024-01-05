@@ -67,16 +67,25 @@ ControlManager::ControlManager(const ConnectedAutonomousVehicle& cav,
 ControlManager::ControlManager(const PlatoonVehicle& platoon_vehicle,
 	bool verbose) : ControlManager(verbose)
 {
-	if (verbose)
-	{
-		std::clog << "Creating Platoon Vehicle control manager\n";
-	}
-	connected_real_following_gains = platoon_following_gains;
-	time_headway_filter_gain = platoon_time_headway_filter_gain;
-	orig_lane_colors = in_platoon_colors;
-	add_origin_lane_controllers(platoon_vehicle);
-	add_lane_change_adjustment_controller(platoon_vehicle);
-	add_cooperative_lane_change_controller(platoon_vehicle);
+	if (verbose) std::clog << "Creating Platoon Vehicle control manager\n";
+
+	origin_lane_controller = RealLongitudinalController(platoon_vehicle,
+		platoon_vehicle_velocity_gains, platoon_vehicle_autonomous_gains,
+		platoon_vehicle_connected_gains, platoon_velocity_filter_gain,
+		platoon_time_headway_filter_gain, in_platoon_colors, 
+		long_controllers_verbose);
+	real_leader_controller = &origin_lane_controller;
+
+	virtual_leader_controller = RealLongitudinalController(platoon_vehicle,
+		platoon_vehicle_velocity_gains, platoon_vehicle_autonomous_gains,
+		platoon_vehicle_connected_gains, platoon_velocity_filter_gain,
+		platoon_time_headway_filter_gain, in_platoon_colors,
+		long_controllers_verbose);
+
+
+	available_controllers[ALCType::real_leader] = real_leader_controller;
+	available_controllers[ALCType::virtual_leader] = 
+		&virtual_leader_controller;
 }
 
 ControlManager::ControlManager(const TrafficLightALCVehicle& ego_vehicle,
@@ -265,18 +274,18 @@ void ControlManager::add_van_arem_controllers(
 	}
 }
 
-void ControlManager::add_in_platoon_controller(
-	const PlatoonVehicle& platoon_vehicle)
-{
-	in_platoon_controller = RealLongitudinalController(
-		platoon_vehicle,
-		desired_velocity_controller_gains,
-		autonomous_real_following_gains,
-		platoon_following_gains,
-		velocity_filter_gain, time_headway_filter_gain,
-		in_platoon_colors, long_controllers_verbose
-	);
-}
+//void ControlManager::add_in_platoon_controller(
+//	const PlatoonVehicle& platoon_vehicle)
+//{
+//	in_platoon_controller = RealLongitudinalController(
+//		platoon_vehicle,
+//		desired_velocity_controller_gains,
+//		autonomous_real_following_gains,
+//		platoon_following_gains,
+//		velocity_filter_gain, time_headway_filter_gain,
+//		in_platoon_colors, long_controllers_verbose
+//	);
+//}
 
 const LongitudinalController*
 ControlManager::get_active_long_controller() const
@@ -287,29 +296,6 @@ ControlManager::get_active_long_controller() const
 		return available_controllers.at(active_longitudinal_controller_type);
 	}
 	return nullptr;
-	//switch (active_longitudinal_controller_type)
-	//{
-	//case ALCType::origin_lane:
-	//	return std::make_unique<RealLongitudinalController>(
-	//		origin_lane_controller);
-	//case ALCType::destination_lane:
-	//	return std::make_unique<VirtualLongitudinalController>(
-	//		destination_lane_controller);
-	//case ALCType::cooperative_gap_generation:
-	//	return std::make_unique< VirtualLongitudinalController>(
-	//		gap_generating_controller);
-	//case ALCType::end_of_lane:
-	//	return std::make_unique<RealLongitudinalController>(
-	//		end_of_lane_controller);
-	//case ALCType::traffic_light_alc:
-	//	return std::make_unique<LongitudinalControllerWithTrafficLights>(
-	//		with_traffic_lights_controller);
-	//case ALCType::vissim:
-	//	return std::make_unique<VissimLongitudinalController>(
-	//		vissim_controller);
-	//default:
-	//	return nullptr;
-	//}
 }
 
 /* DEBUGGING FUNCTIONS --------------------------------------------------- */
@@ -421,6 +407,25 @@ void ControlManager::update_origin_lane_controller(
 		real_leader.is_connected());
 }
 
+void ControlManager::update_origin_lane_controller(
+	const PlatoonVehicle& platoon_vehicle, const NearbyVehicle& real_leader)
+{
+	//origin_lane_controller_time_headway =
+	//	real_leader_controller->get_current_time_headway();
+	double safe_h = platoon_vehicle.compute_current_desired_time_headway(
+		real_leader);
+	if (verbose)
+	{
+		std::clog << "Setting real leader controller h_r = "
+			<< safe_h << std::endl;
+	}
+	//origin_lane_controller.reset_time_headway_filter(new_h);
+	lateral_controller.set_time_headway_to_leader(safe_h);
+	real_leader_controller->set_desired_time_headway(safe_h);
+	real_leader_controller->connect_gap_controller(
+		real_leader.is_connected());
+}
+
 void ControlManager::update_destination_lane_controller(
 	const EgoVehicle& ego_vehicle, const NearbyVehicle& virtual_leader)
 {
@@ -474,7 +479,7 @@ void ControlManager::update_destination_lane_follower_time_headway(
 	double dest_lane_follower_time_headway = are_vehicles_connected ?
 		dest_lane_follower.get_h_to_incoming_vehicle()
 		: dest_lane_follower.estimate_desired_time_headway(ego_max_brake, 0);
-
+	
 	if (verbose)
 	{
 		std::clog << "\tUpdating fd's h."
@@ -621,25 +626,25 @@ double ControlManager::get_desired_acceleration(
 double ControlManager::get_desired_acceleration(
 	const PlatoonVehicle& platoon_vehicle)
 {
-	std::unordered_map<ALCType, double>
-		possible_accelerations;
+	std::unordered_map<ALCType, double> possible_accelerations;
 	
-	get_origin_lane_desired_acceleration(platoon_vehicle,
-		possible_accelerations);
-	get_end_of_lane_desired_acceleration(platoon_vehicle,
-		possible_accelerations);
-	if (platoon_vehicle.is_platoon_leader())
-	{
-		get_destination_lane_desired_acceleration(platoon_vehicle,
-			possible_accelerations);
-	}
-	else
-	{
-		get_destination_lane_desired_acceleration_when_in_platoon(
-			platoon_vehicle, possible_accelerations);
-	}
-	get_cooperative_desired_acceleration(platoon_vehicle,
-		possible_accelerations);
+	double real_leader_accel = 
+		real_leader_controller->compute_desired_acceleration(
+			platoon_vehicle, platoon_vehicle.get_leader(),
+			platoon_vehicle.get_desired_velocity_from_platoon());
+	real_leader_accel = std::min(
+		std::max(real_leader_accel, -platoon_vehicle.get_max_brake()),
+		platoon_vehicle.get_comfortable_acceleration());
+	possible_accelerations[ALCType::real_leader] = real_leader_accel;
+		
+	double virtual_leader_accel = 
+		virtual_leader_controller.compute_desired_acceleration(
+		platoon_vehicle, platoon_vehicle.get_leader(),
+		platoon_vehicle.get_desired_velocity());
+	virtual_leader_accel = std::min(
+		std::max(real_leader_accel, -platoon_vehicle.get_comfortable_brake()),
+		platoon_vehicle.get_comfortable_acceleration());
+	possible_accelerations[ALCType::virtual_leader] = virtual_leader_accel;
 
 	return choose_minimum_acceleration(possible_accelerations);
 }
@@ -1037,26 +1042,6 @@ double ControlManager::determine_low_velocity_reference(double ego_velocity,
 	return reference_velocity;
 }
 
-//double ControlManager::compute_desired_lane_change_gap(
-//	const AutonomousVehicle& ego_vehicle,
-//	const NearbyVehicle& nearby_vehicle,
-//	bool will_accelerate) const
-//{
-//	double safe_time_headway_gap = get_desired_time_headway_gap(
-//		ego_vehicle.get_velocity(),
-//		/*ego_vehicle.has_lane_change_intention(),*/
-//		nearby_vehicle);
-//	/* TODO: the function calls do not make much sense here.
-//	You call this method from the ego vehicle, and then call an ego vehicle
-//	method in here.*/
-//	/*double collision_free_gap = ego_vehicle.compute_exact_collision_free_gap(
-//		nearby_vehicle);*/
-//	double transient_gap = lateral_controller.compute_transient_gap(
-//		ego_vehicle, nearby_vehicle, will_accelerate);
-//
-//	return safe_time_headway_gap /*collision_free_gap*/ + transient_gap;
-//}
-
 double ControlManager::compute_accepted_lane_change_gap(
 	const EgoVehicle& ego_vehicle, const NearbyVehicle& nearby_vehicle,
 	double accepted_risk)
@@ -1195,6 +1180,10 @@ std::string ControlManager::ALC_type_to_string(
 		return "traffic light alc";
 	case ALCType::vissim:
 		return "vissim controller";
+	case ALCType::real_leader:
+		return "real leader controller";
+	case ALCType::virtual_leader:
+		return "virtual leader controller";
 	default:
 		return "unknown active longitudinal controller";
 	}

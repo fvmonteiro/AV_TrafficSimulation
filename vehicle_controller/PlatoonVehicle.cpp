@@ -89,12 +89,16 @@ bool PlatoonVehicle::has_finished_closing_gap() const
 	//	&& (is_gap_error_small || is_platoon_leader());
 }
 
-//bool PlatoonVehicle::can_start_adjustment_to_virtual_leader() const
-//{
-//	return !is_in_a_platoon()
-//		|| platoon->can_vehicle_start_adjustment_to_virtual_leader(
-//			get_id());
-//}
+double PlatoonVehicle::get_desired_velocity_from_platoon() const
+{
+	if (is_in_a_platoon() && is_platoon_leader()
+		&& has_lane_change_intention() && get_platoon()->has_lane_change_started())
+	{
+		return get_platoon()->get_destination_lane_leader()
+			->compute_velocity(get_velocity());
+	}
+	return get_desired_velocity();
+}
 
 const VehicleState* PlatoonVehicle::get_preceding_vehicle_state() const
 {
@@ -180,8 +184,6 @@ bool PlatoonVehicle::is_vehicle_in_sight(long nearby_vehicle_id) const
 
 bool PlatoonVehicle::can_start_lane_change()
 {
-	/* TODO: the current safety check may be too conservative
-	for our desired simulations */
 	bool is_safe = check_lane_change_gaps();
 	bool is_my_turn;
 	if (is_in_a_platoon())
@@ -204,7 +206,8 @@ double PlatoonVehicle::implement_compute_desired_acceleration(
 {
 	double a_desired_acceleration =
 		controller->get_desired_acceleration(*this);
-	return consider_vehicle_dynamics(a_desired_acceleration);
+	return a_desired_acceleration;
+	//return consider_vehicle_dynamics(a_desired_acceleration);
 }
 
 double PlatoonVehicle::compute_vehicle_following_safe_time_headway(
@@ -237,17 +240,22 @@ double PlatoonVehicle::compute_lane_changing_desired_time_headway(
 	double rho;
 	if (nearby_vehicle.get_type() == VehicleType::platoon_car)
 	{
-		current_lambda_1 = lambda_1_lane_change_platoon;
+		current_lambda_1 = lambda_1_platoon;
+		/*Not lambda_1_lane_change_platoon because we are not interessed 
+		in this detail of safety for platoons */
 		rho = in_platoon_rho;
 	}
 	else
 	{
 		current_lambda_1 = ConnectedAutonomousVehicle::
-			get_lambda_1_lane_change(nearby_vehicle.is_connected());
+			get_lambda_1(nearby_vehicle.is_connected());
+			/* Not get_lambda_1_lane_change(nearby_vehicle.is_connected());
+			for the same reason as above. */
 		rho = get_rho();
 	}
 	double h_lc = compute_time_headway_with_risk(get_desired_velocity(),
-		get_lane_change_max_brake(), nearby_vehicle.get_max_brake(),
+		/*get_lane_change_max_brake()*/
+		get_max_brake(), nearby_vehicle.get_max_brake(),
 		current_lambda_1, rho, 0);
 	return h_lc;
 }
@@ -292,6 +300,16 @@ std::shared_ptr<NearbyVehicle> PlatoonVehicle
 	return is_in_a_platoon() ? 
 		get_platoon()->define_virtual_leader(*this)
 		: define_virtual_leader_when_alone();
+}
+
+double PlatoonVehicle::compute_accepted_lane_change_gap(
+	std::shared_ptr<const NearbyVehicle> nearby_vehicle) const
+{
+	/* TODO [must check if working]: use simple lane keeping reference gaps */
+	if (nearby_vehicle == nullptr) return 0.0;
+
+	double accepted_gap = controller->get_lateral_controller()
+		.compute_time_headway_gap(get_velocity(), *nearby_vehicle, 0.0);
 }
 
 void PlatoonVehicle::set_desired_lane_change_direction()

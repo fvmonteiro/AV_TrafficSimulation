@@ -19,6 +19,8 @@ public:
 		bool verbose);
 	~Platoon();
 
+	/* Simple getters and setters */
+
 	int get_id() const { return id; };
 	double get_desired_velocity() const { return desired_velocity; };
 	double get_velocity_at_lane_change_start() const {
@@ -26,6 +28,15 @@ public:
 	size_t get_size() const { return vehicles_by_position.size(); };
 	const std::unordered_map<int, PlatoonVehicle*>&
 		get_vehicles_by_position() const { return vehicles_by_position; };
+	void set_verbose(bool verbose) { this->verbose = verbose; };
+	void set_velocity_at_lane_change_start(double velocity) {
+		velocity_at_lane_change_start = velocity;
+	};
+	void set_lane_change_start_time(double time) {
+		lane_change_start_time = std::min(lane_change_start_time, time);
+	};
+
+	/* Other getters and setters */
 
 	long get_leader_id() const;
 	long get_last_veh_id() const;
@@ -41,20 +52,24 @@ public:
 	const PlatoonVehicle* get_vehicle_by_id(long veh_id) const;
 	long get_destination_lane_vehicle_behind_the_leader() const;
 	long get_destination_lane_vehicle_behind_last_vehicle() const;
+	/* The vehicle behind which the platoon wants to move */
+	std::shared_ptr<const NearbyVehicle> get_destination_lane_leader() const;
 
-	void set_verbose(bool verbose) { this->verbose = verbose; };
-	void set_velocity_at_lane_change_start(double velocity) {
-		velocity_at_lane_change_start = velocity;
-	};
 	void set_strategy(int strategy_number);
+	void set_possible_maneuver_initial_states();
+
+	/* Remaining public methods */
 
 	bool is_empty() const;
 	bool is_vehicle_in_platoon(long veh_id) const;
+	/* True if at least one vehicle started a lane change */
+	bool has_lane_change_started() const;
 	void add_leader(PlatoonVehicle* new_vehicle);
 	void add_last_vehicle(PlatoonVehicle* new_vehicle);
 	void remove_vehicle_by_id(long veh_id, bool is_out_of_simulation);
 	bool can_vehicle_leave_platoon(
 		const PlatoonVehicle& platoon_vehicle) const;
+	bool can_vehicle_start_lane_change(long veh_id);
 	/* Returns true if the platoon is stopped right before the mandatory
 	lane change point, i.e., stuck waiting to start lane change.*/
 	bool is_stuck() const;
@@ -83,6 +98,7 @@ private:
 	int last_veh_idx{ 0 };
 	double desired_velocity{ 0.0 };
 	double velocity_at_lane_change_start{ 0.0 };
+	double lane_change_start_time{ INFINITY };
 	bool verbose{ false };
 	std::unique_ptr<PlatoonLaneChangeStrategy> lane_change_strategy{ 
 		//nullptr };

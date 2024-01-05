@@ -33,13 +33,19 @@ class ControlManager
 public:
 
 	/* Autonomous Longitudinal Controller Type */
-	enum class ALCType {
+	enum class ALCType 
+	{
+		// Coop lane change paper
 		origin_lane,
 		destination_lane,
 		cooperative_gap_generation,
 		end_of_lane,
 		vissim,
-		traffic_light_alc
+		// Traffic light ALC paper
+		traffic_light_alc,
+		// Platoon paper
+		real_leader,
+		virtual_leader
 	};
 
 	ControlManager() = default;
@@ -49,11 +55,6 @@ public:
 	ControlManager(const PlatoonVehicle& platoon_vehicle, bool verbose);
 	ControlManager(const TrafficLightALCVehicle& tfalc_vehicle, bool verbose);
 	ControlManager(const VirdiVehicle& virdi_vehicle, bool verbose);
-
-	//std::vector<State> get_states() { return states; };
-	//ALCType get_active_alc_type() const {
-	//	return active_longitudinal_controller_type;
-	//}
 
 	color_t get_longitudinal_controller_color() const;
 	/* Safe value depends on whether or not the vehicle has lane
@@ -81,14 +82,10 @@ public:
 		const ConnectedAutonomousVehicle& cav);
 	void add_traffic_lights_controller();
 	void add_van_arem_controllers(const VirdiVehicle& virdi_vehicle);
-	void add_in_platoon_controller(const PlatoonVehicle& platoon_vehicle);
+	//void add_in_platoon_controller(const PlatoonVehicle& platoon_vehicle);
 
-	/* DEBUGGING FUNCTIONS --------------------------------------------------- */
-	/* These functions are used to easily read data from internal instances and
-	methods. */
+	/* Access to internal controllers ---------------------------------------- */
 
-	/* Each controller should never be accessed directly by external
-	functions. */
 	const RealLongitudinalController& get_origin_lane_controller() const {
 		return origin_lane_controller;
 	}
@@ -96,18 +93,20 @@ public:
 		const {
 		return gap_generating_controller;
 	};
-	/* Each controller should never be accessed directly by external
-	functions. */
 	const VirtualLongitudinalController& get_destination_lane_controller() 
 		const {
 		return destination_lane_controller;
 	};
-	/* Each controller should never be accessed directly by external
-	functions. */
 	const LateralController& get_lateral_controller() const {
 		return lateral_controller;
 	};
-	double get_reference_gap(double ego_velocity) const; /* could be const */
+	const RealLongitudinalController* get_real_leader_controller() const {
+		return real_leader_controller;
+	}
+	const RealLongitudinalController& get_virtual_leader_controller() const {
+		return virtual_leader_controller;
+	}
+	double get_reference_gap(double ego_velocity) const;
 
 	/* ----------------------------------------------------------------------- */
 
@@ -125,13 +124,14 @@ public:
 	/* Resets the destination lane controller's velocity and time headway filters
 	and sets the time headway*/
 	void activate_destination_lane_controller(
-		const EgoVehicle& ego_vehicle, const NearbyVehicle& virtual_leader
-		/*double ego_velocity,
-		double leader_velocity,
-		double time_headway, bool is_leader_connected*/);
+		const EgoVehicle& ego_vehicle, const NearbyVehicle& virtual_leader);
 	//void activate_in_platoon_controller(double ego_velocity,
 	//	double time_headway);
 	void update_origin_lane_controller(const EgoVehicle& ego_vehicle, 
+		const NearbyVehicle& real_leader);
+	/* TODO: instead of overloading the method, we should deal with this 
+	via polymorphism, but that'll be a long refactoring process */
+	void update_origin_lane_controller(const PlatoonVehicle& platoon_vehicle,
 		const NearbyVehicle& real_leader);
 	/* Sets a new time headway and the connectivity of the destination lane
 	controller, and resets its velocity filter. */
@@ -225,18 +225,18 @@ protected:
 	ControlManager(bool verbose);
 
 private:
-	/* ------------ Control Parameters ------------ */
+	/* ------------------------- Control Parameters ----------------------- */
 
+	/* Cooperative Lane Changing paper ------------------------------------ */
 	double velocity_filter_gain{ 10.0 };
 	double time_headway_filter_gain{ 0.3 };
-	double platoon_time_headway_filter_gain{ 0.5 };
 	AutonomousGains autonomous_real_following_gains{ 0.2, 1.0 };
 	AutonomousGains autonomous_virtual_following_gains{ 0.4, 1.0 };
 	// Values focused on platoon vehicles TODO: separate controllers
 	// gains will probably have to be tuned
 	ConnectedGains connected_real_following_gains{ 0.2, 2.3, 0.13, 1.3 };
 	ConnectedGains connected_virtual_following_gains{ 0.4, 2.3, 0.13, 1.3 };
-	ConnectedGains platoon_following_gains{ 0.5, 2.2, 0.13, 1.3 };
+	
 	VelocityControllerGains desired_velocity_controller_gains{
 		0.5, 0.1, 0.03 };
 	VelocityControllerGains adjustment_velocity_controller_gains{
@@ -244,13 +244,20 @@ private:
 	/* The time headway used by the end-of-lane controller */
 	double time_headway_to_end_of_lane{ 0.5 };
 
-	VelocityControllerGains van_arem_vel_ctrl_gains{ 1.0, 0.0, 0.0 };
-	ConnectedGains van_arem_gap_ctrl_gains{ 0.1, 0.58, 0.0, 1.0 };
-	double virdi_max_jerk = 0.5;
+	VissimLongitudinalController vissim_controller;
+	RealLongitudinalController origin_lane_controller;
+	RealLongitudinalController end_of_lane_controller;
+	VirtualLongitudinalController destination_lane_controller;
+	VirtualLongitudinalController gap_generating_controller;
 
-	/* Colors to make debugging visually easier
-	General rule: bright colors represent vel control,
-	darker colors represent vehicle following. */
+	/* "Virdi" paper (for comparison) */
+	ConnectedGains van_arem_gap_ctrl_gains{ 0.1, 0.58, 0.0, 1.0 };
+	VelocityControllerGains van_arem_vel_ctrl_gains{ 1.0, 0.0, 0.0 };
+	double virdi_max_jerk = 0.5;
+	std::unordered_map<ALCType, VanAremLongitudinalController>
+		van_arem_controllers;  // for comparison
+
+	/* colors */
 	std::unordered_map<LongitudinalController::State, color_t>
 		vissim_colors =
 	{
@@ -280,6 +287,10 @@ private:
 		{ LongitudinalController::State::velocity_control, YELLOW },
 		{ LongitudinalController::State::vehicle_following, DARK_YELLOW },
 	};
+	
+	/* Traffic Light ALC paper -------------------------------------------- */
+	LongitudinalControllerWithTrafficLights with_traffic_lights_controller;
+
 	std::unordered_map<LongitudinalController::State, color_t>
 		tl_alc_colors =
 	{
@@ -289,24 +300,28 @@ private:
 		{ LongitudinalController::State::traffic_light, YELLOW},
 		{ LongitudinalController::State::too_close, RED },
 	};
+
+	/* Platoon LC paper --------------------------------------------------- */
+	double platoon_velocity_filter_gain{ 0.0 };     /* hoping to make them */ 
+	double platoon_time_headway_filter_gain{ 0.0 }; /* pass all filters    */
+	AutonomousGains platoon_vehicle_autonomous_gains{ 0.2, 0.5 };
+	ConnectedGains platoon_vehicle_connected_gains{ 0.2, 0.5, 0.0, 0.0 };
+	VelocityControllerGains platoon_vehicle_velocity_gains{ 0.5, 0.0, 0.0 };
+
 	std::unordered_map<LongitudinalController::State, color_t>
 		in_platoon_colors =
 	{
 		{ LongitudinalController::State::velocity_control, DARK_GRAY },
 		{ LongitudinalController::State::vehicle_following, WHITE},
 	};
-	/* -------------------------------------------- */
+	RealLongitudinalController* real_leader_controller; /* copy of 
+	origin_lane_controller, but we want a different name in the platoon
+	scenario */
+	RealLongitudinalController virtual_leader_controller;
+  /*^^^^ Not a mistake. The virtual leader controller in the platoon
+  LC paper has the RealLongitudinalController behavior*/
 
-	VissimLongitudinalController vissim_controller;
-	RealLongitudinalController origin_lane_controller;
-	RealLongitudinalController end_of_lane_controller;
-	VirtualLongitudinalController destination_lane_controller;
-	VirtualLongitudinalController gap_generating_controller;
-	LongitudinalControllerWithTrafficLights
-		with_traffic_lights_controller;
-	RealLongitudinalController in_platoon_controller;
-	std::unordered_map<ALCType, VanAremLongitudinalController>
-		van_arem_controllers;
+    /* -------------------------------------------------------------------- */
 
 	/* Used to keep track of which controller is active, which helps
 	in debugging (sloppy solution) */

@@ -49,6 +49,11 @@ bool Platoon::is_vehicle_in_platoon(long veh_id) const
 		!= vehicle_id_to_position.end());
 }
 
+bool Platoon::has_lane_change_started() const
+{
+	return !std::isinf(lane_change_start_time);
+}
+
 long Platoon::get_last_veh_id() const
 {
 	return is_empty() ? 0 : get_last_vehicle()->get_id();
@@ -222,6 +227,27 @@ long Platoon::get_destination_lane_vehicle_behind_the_leader() const
 long Platoon::get_destination_lane_vehicle_behind_last_vehicle() const
 {
 	return get_last_vehicle()->get_destination_lane_follower_id();
+}
+
+std::shared_ptr<const NearbyVehicle> Platoon
+::get_destination_lane_leader() const
+{
+	/* We would like to find the non-platoon vehicle behind which 
+	the platoon is merging. This involves figuring out the front-most
+	platoon vehicle that can change lanes, and reading its dest lane
+	leader or orig lane leader based on whether it has already finished
+	the maneuver.
+	The current implementation approximates that by finding the current
+	virtual leader of the lane changing vehicle(s) */
+
+	for (const auto& item : vehicles_by_position)
+	{
+		if (item.second->has_virtual_leader())
+		{
+			return item.second->get_virtual_leader();
+		}
+	}
+	return nullptr;
 }
 
 void Platoon::remove_vehicle_by_position(int idx_in_platoon, long veh_id,
