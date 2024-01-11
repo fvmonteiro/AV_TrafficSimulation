@@ -4,6 +4,7 @@
 #include <unordered_map>
 
 #include "PlatoonLaneChangeStrategy.h"
+#include "PlatoonLaneChangeOrder.h"
 
 class PlatoonVehicle;
 
@@ -33,7 +34,8 @@ public:
 		velocity_at_lane_change_start = velocity;
 	};
 	void set_lane_change_start_time(double time) {
-		lane_change_start_time = std::min(lane_change_start_time, time);
+		lane_change_start_time = 
+			lane_change_start_time < time ? lane_change_start_time : time;
 	};
 
 	/* Other getters and setters */
@@ -100,13 +102,13 @@ private:
 	double velocity_at_lane_change_start{ 0.0 };
 	double lane_change_start_time{ INFINITY };
 	bool verbose{ false };
-	std::unique_ptr<PlatoonLaneChangeStrategy> lane_change_strategy{ 
-		//nullptr };
-		std::make_unique<NoStrategy>() };
 	/* Keys are the vehicle position in the platoon */
-	std::unordered_map<int, PlatoonVehicle*> 
+	std::unordered_map<int, PlatoonVehicle*>
 		vehicles_by_position;
 	std::unordered_map<long, int> vehicle_id_to_position;
+	std::unique_ptr<PlatoonLaneChangeStrategy> lane_change_strategy{ 
+		std::make_unique<NoStrategy>() };
+	PlatoonLaneChangeOrder lane_change_order;
 
 	void remove_vehicle_by_position(int idx_in_platoon, long veh_id,
 		bool is_out_of_simulation);

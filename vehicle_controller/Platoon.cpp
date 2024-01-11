@@ -73,18 +73,6 @@ long Platoon::get_following_vehicle_id(long veh_id) const
 	return following_vehicle != nullptr ? following_vehicle->get_id() : 0;
 }
 
-//std::shared_ptr<PlatoonVehicle> Platoon::get_preceding_vehicle(
-//	const PlatoonVehicle& platoon_vehicle) const
-//{
-//	return get_preceding_vehicle(platoon_vehicle.get_id());
-//}
-
-//PlatoonLaneChangeStrategy::LaneChangeState Platoon::get_lane_change_state(
-//	long veh_id) const
-//{
-//	return vehicles_lane_change_states.at(veh_id);
-//}
-
 void Platoon::set_strategy(int strategy_number)
 {
 	std::unique_ptr<PlatoonLaneChangeStrategy> old_strategy =
@@ -127,6 +115,101 @@ void Platoon::set_strategy(int strategy_number)
 	lane_change_strategy->reset_state_of_all_vehicles();
 
 }
+
+void Platoon::set_possible_maneuver_initial_states()
+{
+	if (has_lane_change_started) return;
+	const PlatoonVehicle* platoon_leader = get_platoon_leader();
+	if (platoon_leader->has_leader())
+	{
+		const NearbyVehicle* orig_lane_leader =
+			platoon_leader->get_leader().get();
+		// TODO [major] create a struct/typedef to store states
+	}
+	else
+	{
+		// empty state
+	}
+
+	for (std::pair<int, PlatoonVehicle*> pos_and_veh : vehicles_by_position)
+	{
+		PlatoonVehicle* veh = pos_and_veh.second;
+		if (veh->get_is_lane_change_gap_suitable())
+		{
+			if (veh->has_destination_lane_leader())
+			{
+				// get states from ld
+			}
+			else
+			{
+				// empty state
+			}
+			if (veh->has_destination_lane_follower())
+			{
+				// get states from fd
+			}
+			else
+			{
+				// empty state
+			}
+			set_maneuver_initial_state(veh->get_id(), /*[lo, ld, fd] states*/);
+		}
+		else
+		{
+			set_empty_maneuver_initial_state(veh->get_id());
+		}
+	}
+}
+
+/*
+def set_maneuver_initial_state(
+		self, ego_id: int, lo_states: Sequence[float],
+		ld_states: Sequence[float], fd_states: Sequence[float]):
+	# TODO: avoid hard coding array indices
+
+	p1 = self.get_platoon_leader()
+	# TODO: lazy workaround. We need to include the no leader
+	#  possibilities in the graph
+	if len(lo_states) == 0:
+		lo_states = p1.get_states().copy()
+		lo_states[0] += p1.compute_lane_keeping_desired_gap()
+	else:
+		lo_states = np.copy(lo_states)
+	if len(ld_states) == 0:
+		ld_states = lo_states.copy()
+		ld_states[1] = p1.get_target_y()
+	else:
+		ld_states = np.copy(ld_states)
+	if len(fd_states) == 0:
+		pN = self.get_last_platoon_vehicle()
+		fd_states = pN.get_states().copy()
+		fd_states[0] -= pN.compute_safe_lane_change_gap()
+		fd_states[1] = pN.get_target_y()
+	else:
+		fd_states = np.copy(fd_states)
+
+	# We center all around the leader
+	leader_x = p1.get_x()
+	leader_y = p1.get_y()
+
+	platoon_states = []
+	for veh in self.vehicles:
+		veh_states = veh.get_states().copy()
+		veh_states[0] -= leader_x
+		veh_states[1] -= leader_y
+		platoon_states.extend(veh_states)
+
+	lo_states[0] -= leader_x
+	lo_states[1] -= leader_y
+	ld_states[0] -= leader_x
+	ld_states[1] -= leader_y
+	fd_states[0] -= leader_x
+	fd_states[1] -= leader_y
+
+	ego_position = self._id_to_position_map[ego_id]
+	self.lane_change_strategy.set_maneuver_initial_state(
+		ego_position, lo_states, platoon_states, ld_states, fd_states)
+*/
 
 void Platoon::add_leader(PlatoonVehicle* new_vehicle)
 {
@@ -351,6 +434,13 @@ bool Platoon::can_vehicle_leave_platoon(
 	which might be a single vehicle platoon */
 	return !platoon_vehicle.is_platoon_leader() 
 		&& lane_change_strategy->can_vehicle_leave_platoon(platoon_vehicle);
+}
+
+bool Platoon::can_vehicle_start_lane_change(long veh_id)
+{
+	int veh_position = vehicle_id_to_position[veh_id];
+	return lane_change_order.can_vehicle_start_lane_change(veh_position,
+		vehicles_by_position);
 }
 
 bool Platoon::is_stuck() const
