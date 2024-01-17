@@ -25,17 +25,18 @@ public:
 	long get_destination_lane_leader_leader_id() const;
 	bool has_virtual_leader() const;
 	//bool merge_behind_virtual_leader() const;
-	bool are_all_lane_change_gaps_safe() const;
+	/* True if the three relevant surrounding gaps are 
+	safe for lane change */
+	bool are_surrounding_gaps_safe_for_lane_change() const;
+	/* True if the space between dest lane leader and follower
+	is large enough. The vehicle may still need to adjust to
+	safely merge into that space */
+	bool get_is_space_suitable_for_lane_change() const;
 	LaneChangeGapsSafety get_lane_change_gaps_safety() const;
 
 protected:
 	LaneChangeGapsSafety lane_change_gaps_safety;
-	// [Feb 24, 2023] Move these two to the Lateral Controller class
-	/* Necessary when computing lane change gaps with risk */
-	//double dest_lane_follower_lambda_0{ 0.0 };
-	///* Necessary when computing lane change gaps with risk */
-	//double dest_lane_follower_lambda_1{ 0.0 };
-
+	
 	/* Defines if the lane change acceptance decision is based on the
 	exact risk computation or on the risk estimation based on the time
 	headway */
@@ -77,17 +78,13 @@ protected:
 	/* Returns a nullptr if no virtual leader */
 	virtual std::shared_ptr<NearbyVehicle> define_virtual_leader() const;
 
-	/* ----------------------------------------------------- */
-	
-	bool is_lane_change_gap_safe(
-		std::shared_ptr<const NearbyVehicle> nearby_vehicle) const;
-	bool has_lane_change_conflict() const;
 	/* Non-linear gap based on ego and nearby vehicles states
 	and parameters */
 	//double compute_vehicle_following_gap_for_lane_change(
 	//	const NearbyVehicle& nearby_vehicle, double current_lambda_1) const;
 
 private:
+	bool is_space_suitable_for_lane_change{ false };
 	double min_overtaking_rel_vel{ 10.0	/ 3.6}; // [m/s]
 	double min_overtaking_time{ 10.0 };// s
 	double max_lane_change_waiting_time{ 60.0 }; // [s]
@@ -152,6 +149,10 @@ private:
 	double compute_lane_changing_desired_time_headway(
 		const NearbyVehicle& nearby_vehicle) const override;
 	bool implement_check_lane_change_gaps() override;
+
+	bool is_lane_change_gap_safe(
+		std::shared_ptr<const NearbyVehicle> nearby_vehicle) const;
+	bool has_lane_change_conflict() const;
 
 	/* Time-headway based gap (hv + d) minus a term based on
 	accepted risk NO LONGER IN USE [Feb 24, 2023]*/

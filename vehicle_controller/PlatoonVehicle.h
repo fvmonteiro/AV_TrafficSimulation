@@ -25,6 +25,7 @@ public:
 
 	long get_preceding_vehicle_id() const;
 	long get_following_vehicle_id() const;
+	long get_suitable_destination_lane_leader_id() const;
 	double get_desired_velocity_from_platoon() const;
 	const VehicleState* get_preceding_vehicle_state() const;
 	const VehicleState* get_following_vehicle_state() const;
@@ -86,6 +87,8 @@ private:
 	void create_lane_change_request() override;
 	bool was_my_cooperation_request_accepted() const override;
 
+	double compute_reference_vehicle_following_gap(
+		std::shared_ptr<const NearbyVehicle> nearby_vehicle) const;
 	// Check if vehicles in our platoon need gap generation
 	void find_cooperation_request_from_platoon();
 	void create_platoon(long platoon_id, int platoon_lc_strategy);

@@ -1,9 +1,32 @@
 #pragma once
 
+#include <array>
 #include <vector>
 
 #include "Constants.h"
 #include "RelativeLane.h"
+
+//using StateVectorType = std::array<double, 4>;
+
+struct StateVector
+{
+	double x{ 0.0 };  // [m]
+	double y{ 0.0 };  // [m]
+	double theta{ 0.0 };  // [rad]
+	double v{ 0.0 };  // [m/s]
+	bool is_empty{ true };
+
+	StateVector() = default;
+	StateVector(double x, double y, double theta, double v)
+		: x{ x }, y{ y }, theta{ theta }, v{ v }, is_empty{ false } {};
+
+	void offset(double off_x, double off_y)
+	{
+		x -= off_x;
+		y -= off_y;
+	};
+};
+
 
 class Vehicle
 {
@@ -18,6 +41,9 @@ public:
 	long get_id() const { return id; };
 	double get_length() const { return length; };
 	double get_width() const { return width; };
+	/* angle relative to the middle of the lane [rad]
+	(positive = turning left) */
+	double get_orientation_angle() const{ return orientation_angle; };
 	double get_lambda_1() const { return lambda_1; };
 	double get_lambda_0() const { return lambda_0; };
 	VehicleCategory get_category() const { return category; };
@@ -26,11 +52,11 @@ public:
 		return desired_lane_change_direction;
 	};
 
-	void set_length(double length) { this->length = length; };
-	void set_width(double width) { this->width = width; };
+	void set_length(double value) { length = value; };
+	void set_width(double value) { width = value; };
+	void set_orientation_angle(double value) { orientation_angle = value; };
 	/* Also sets the estimated maximum braking of the vehicle. */
 	void set_category(long category);
-	
 	
 	bool has_lane_change_intention() const;
 
@@ -84,6 +110,7 @@ private:
 	long id;
 	double length{ 0.0 }; // [m]
 	double width{ 0.0 }; // [m]
+	double orientation_angle{ 0.0 }; // [rad]
 	/* Parameter related to the emergency braking scenario [m] */
 	double lambda_0{ 0.0 };
 	/* Parameter related to the emergency braking scenario [m/s] */

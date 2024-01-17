@@ -47,6 +47,7 @@ const double AUTONOMOUS_BRAKE_DELAY{ 0.2 }; // [s]
 const double HUMAN_BRAKE_DELAY{ 0.75 }; // [s]
 
 const long MAIN_LINK_NUMBER{ 3 };
+const double LANE_WIDTH{ 3.6 }; // [m]
 
 const std::string STRATEGY_MAPS_FOLDER{ "C:\\Users\\fvall\\Documents"
 	"\\Research\\data\\strategy_maps\\" };

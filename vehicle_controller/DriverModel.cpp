@@ -227,6 +227,7 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
         vehicles[current_vehicle_id]->set_distance_traveled(double_value);
         return 1;
     case DRIVER_DATA_VEH_LANE_ANGLE         :
+        vehicles[current_vehicle_id]->set_orientation_angle(double_value);
         return 1;
     case DRIVER_DATA_VEH_LATERAL_POSITION   :
         vehicles[current_vehicle_id]->set_lateral_position(double_value);
@@ -353,6 +354,9 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
         }
         return 1;
     case DRIVER_DATA_NVEH_LANE_ANGLE        :
+        vehicles[current_vehicle_id]
+            ->get_nearby_vehicle_by_id(current_nearby_vehicle_id)
+            ->set_orientation_angle(double_value);
         return 1;
     case DRIVER_DATA_NVEH_LATERAL_POSITION  :
         vehicles[current_vehicle_id]

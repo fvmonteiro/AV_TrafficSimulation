@@ -31,8 +31,10 @@ public:
 	double get_current_time() const { return current_time; };
 	double get_desired_velocity() const { return desired_velocity; };
 	long get_lane() const { return lane; };
-	double get_distance_traveled() const { return distance_traveled; }
+	double get_distance_traveled() const { return distance_traveled; };
 	long get_link() const { return link; };
+	/* distance of the front end from the middle of the lane [m]
+	(positive = left of the middle, negative = right) */
 	double get_lateral_position() const { return lateral_position; }
 	RelativeLane get_preferred_relative_lane() const {
 		return preferred_relative_lane;
@@ -124,7 +126,13 @@ public:
 		std::shared_ptr<const NearbyVehicle> nearby_vehicle) const;
 	double get_collision_free_gap_to(
 		std::shared_ptr<const NearbyVehicle> nearby_vehicle) const;
+	/* Returns the state of the Finite State Machine */
 	const VehicleState* get_state() const;
+	/* Lateral position w.r.t. the right boundary of right-most lane */
+	double get_road_reference_lateral_position() const;
+	/* Returns distance traveled, current lane, orientation angle,
+	and speed */
+	StateVector get_state_vector() const;
 
 	/* Sets the active lane change direction given by VISSIM */
 	void set_active_lane_change_direction(long direction);

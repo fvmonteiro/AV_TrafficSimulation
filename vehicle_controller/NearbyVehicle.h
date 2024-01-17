@@ -91,6 +91,9 @@ public:
 	distance, velocity) based on another nearby vehicle. */
 	void offset_from_another(const NearbyVehicle& other_vehicle);
 
+	double get_relative_lateral_position() const;
+	StateVector get_relative_state_vector() const;
+	StateVector get_absolute_state_vector(StateVector ego_states) const;
 	bool is_connected() const;
 	double compute_velocity(double ego_velocity) const;
 	bool is_on_same_lane() const;

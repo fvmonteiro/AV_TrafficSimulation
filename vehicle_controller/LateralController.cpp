@@ -303,7 +303,7 @@ double LateralController::compute_lateral_collision_time(
 		else // compute left coordinate
 		{ 
 			y_ego += width / 2 * cos_theta;
-			if (y_ego >= lane_width - other_width / 2)
+			if (y_ego >= LANE_WIDTH - other_width / 2)
 			{
 				collision_time_found = true;
 			}
@@ -332,7 +332,7 @@ void LateralController::estimate_lane_change_kinematics()
 	while (time < lane_change_duration) 
 	{
 		lane_change_lateral_acceleration.push_back(
-			2 * M_PI * lane_width / (lane_change_duration*lane_change_duration)
+			2 * M_PI * LANE_WIDTH / (lane_change_duration*lane_change_duration)
 			* std::sin(2*M_PI*time/lane_change_duration)
 		);
 		lane_change_lateral_velocity.push_back(

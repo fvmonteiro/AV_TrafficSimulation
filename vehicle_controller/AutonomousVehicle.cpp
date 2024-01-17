@@ -30,100 +30,19 @@ bool AutonomousVehicle::has_virtual_leader() const
 	return virtual_leader != nullptr;
 }
 
-//bool AutonomousVehicle::merge_behind_virtual_leader() const
-//{
-//	if (!has_virtual_leader()) return false;
-//
-//	double origin_lane_reference_velocity;
-//	double ego_velocity = get_velocity();
-//
-//	/* Get the possible max vel at the origin lane */
-//	if (controller->is_in_free_flow_at_origin_lane())
-//	{
-//		origin_lane_reference_velocity =
-//			get_desired_velocity();
-//	}
-//	else
-//	{
-//		origin_lane_reference_velocity = get_leader()
-//			->compute_velocity(ego_velocity);
-//	}
-//
-//	return (get_virtual_leader()->compute_velocity(ego_velocity)
-//				> origin_lane_reference_velocity - min_overtaking_rel_vel);
-//}
-
-bool AutonomousVehicle::are_all_lane_change_gaps_safe() const
+bool AutonomousVehicle::are_surrounding_gaps_safe_for_lane_change() const
 {
 	return lane_change_gaps_safety.is_lane_change_safe();
+}
+
+bool AutonomousVehicle::get_is_space_suitable_for_lane_change() const
+{
+	return is_space_suitable_for_lane_change;
 }
 
 LaneChangeGapsSafety AutonomousVehicle::get_lane_change_gaps_safety() const
 {
 	return lane_change_gaps_safety;
-}
-
-bool AutonomousVehicle::is_lane_change_gap_safe(
-	std::shared_ptr<const NearbyVehicle> nearby_vehicle) const
-{
-	if (nearby_vehicle == nullptr) return true;
-	double margin = 0.1;
-
-	//set_gap_variation_during_lane_change(nearby_vehicle->get_id(),
-	//	compute_gap_variation_during_lane_change(*nearby_vehicle));
-	//set_collision_free_gap(nearby_vehicle->get_id(),
-	//	compute_collision_free_gap_during_lane_change(*nearby_vehicle));
-	double gap = nearby_vehicle->is_ahead() ?
-		compute_gap_to_a_leader(nearby_vehicle)
-		: compute_gap_to_a_follower(nearby_vehicle);
-		
-	if (verbose)
-	{
-		std::clog << "\tg=" << gap<< "\n";
-	}
-
-	double accepted_gap = compute_accepted_lane_change_gap(
-		nearby_vehicle);
-	
-	return gap + margin >= accepted_gap;
-}
-
-bool AutonomousVehicle::has_lane_change_conflict() const
-{
-	/* If there's no lane change intention, there's no conflict */
-	if (!has_lane_change_intention()) return false;
-
-	for (auto const& id_veh_pair : get_nearby_vehicles())
-	{
-		auto const& nv = id_veh_pair.second;
-		if (nv->is_lane_changing())
-		{
-			RelativeLane& nv_lane = nv->get_relative_lane();
-			RelativeLane& nv_lc_direction = nv->get_lane_change_direction();
-
-			// Vehicles on the same lane
-			if (nv_lane == RelativeLane::same)
-			{
-				if (nv_lc_direction == desired_lane_change_direction)
-				{
-					return true;
-				}
-			}
-			// Vehicles on other lanes
-			else
-			{
-				bool nv_moving_towards_ego =
-					!nv_lane.on_same_side(nv_lc_direction);
-				bool ego_moving_towards_nv =
-					nv_lane.on_same_side(desired_lane_change_direction);
-				if (nv_moving_towards_ego && ego_moving_towards_nv)
-				{
-					return true;
-				}
-			}
-		}
-	}
-	return false;
 }
 
 void AutonomousVehicle::set_virtual_leader(
@@ -437,35 +356,117 @@ bool AutonomousVehicle::implement_check_lane_change_gaps()
 		return get_vissim_lane_suggestion() != RelativeLane::same;
 	}
 
-	if (verbose) 
-	{
-		std::clog << "Deciding lane changing safety\n"
+	double gap_to_lo, gap_to_ld, gap_to_fd;
+	double safe_gap_to_lo, safe_gap_to_ld, safe_gap_to_fd;
+	double margin = 0.1;
+
+
+	if (verbose) std::clog << "Deciding lane changing safety\n"
 			<< "\t- To orig lane leader:\n";
-	}
-	lane_change_gaps_safety.orig_lane_leader_gap = 
-		is_lane_change_gap_safe(get_leader());
-	if (verbose)
-	{
-		std::clog << "\t- To dest lane leader:\n";
-	}
+
+	gap_to_lo = compute_gap_to_a_leader(get_leader());  // possibly MAX_DIST
+	safe_gap_to_lo = compute_accepted_lane_change_gap(
+			get_leader()); // possibly 0.0
+	lane_change_gaps_safety.orig_lane_leader_gap =
+		gap_to_lo + margin >= safe_gap_to_lo;
+	/*lane_change_gaps_safety.orig_lane_leader_gap = 
+		is_lane_change_gap_safe(get_leader());*/
+
+	if (verbose) std::clog << "\t- To dest lane leader:\n";
+
+	gap_to_ld = compute_gap_to_a_leader(destination_lane_leader);
+	safe_gap_to_ld = compute_accepted_lane_change_gap(
+		destination_lane_leader);
 	lane_change_gaps_safety.dest_lane_leader_gap =
-		is_lane_change_gap_safe(destination_lane_leader);
-	if (verbose)
-	{
-		std::clog << "\t- To dest lane follower:\n";
-	}
+		gap_to_ld + margin >= safe_gap_to_ld;
+	/*lane_change_gaps_safety.dest_lane_leader_gap =
+		is_lane_change_gap_safe(destination_lane_leader);*/
+	
+	if (verbose) std::clog << "\t- To dest lane follower:\n";
+	
 	/* Besides the regular safety conditions, we add the case
 	where the dest lane follower has completely stopped to give room
 	to the lane changing vehicle */
+	gap_to_fd = compute_gap_to_a_follower(destination_lane_follower);
+	safe_gap_to_fd = compute_accepted_lane_change_gap(
+		destination_lane_follower);
 	lane_change_gaps_safety.dest_lane_follower_gap = 
-		is_lane_change_gap_safe(destination_lane_follower)
+		(gap_to_fd + margin >= safe_gap_to_fd)
 		|| ((destination_lane_follower->
 			compute_velocity(get_velocity()) <= 1.0)
 			&& (destination_lane_follower->get_distance() <= -2.0));
+	/*lane_change_gaps_safety.dest_lane_follower_gap = 
+		is_lane_change_gap_safe(destination_lane_follower)
+		|| ((destination_lane_follower->
+			compute_velocity(get_velocity()) <= 1.0)
+			&& (destination_lane_follower->get_distance() <= -2.0)); */
+
 	lane_change_gaps_safety.no_conflict =
 		!has_lane_change_conflict();
 
+	is_space_suitable_for_lane_change =
+		(gap_to_ld + gap_to_fd + margin)
+		>= (safe_gap_to_fd + safe_gap_to_ld + get_length());
 	return lane_change_gaps_safety.is_lane_change_safe();
+}
+
+bool AutonomousVehicle::is_lane_change_gap_safe(
+	std::shared_ptr<const NearbyVehicle> nearby_vehicle) const
+{
+	if (nearby_vehicle == nullptr) return true;
+
+	double margin = 0.1;
+	double gap = nearby_vehicle->is_ahead() ?
+		compute_gap_to_a_leader(nearby_vehicle)
+		: compute_gap_to_a_follower(nearby_vehicle);
+
+	if (verbose)
+	{
+		std::clog << "\tg=" << gap << "\n";
+	}
+
+	double accepted_gap = compute_accepted_lane_change_gap(
+		nearby_vehicle);
+
+	return gap + margin >= accepted_gap;
+}
+
+bool AutonomousVehicle::has_lane_change_conflict() const
+{
+	/* If there's no lane change intention, there's no conflict */
+	if (!has_lane_change_intention()) return false;
+
+	for (auto const& id_veh_pair : get_nearby_vehicles())
+	{
+		auto const& nv = id_veh_pair.second;
+		if (nv->is_lane_changing())
+		{
+			RelativeLane& nv_lane = nv->get_relative_lane();
+			RelativeLane& nv_lc_direction = nv->get_lane_change_direction();
+
+			// Vehicles on the same lane
+			if (nv_lane == RelativeLane::same)
+			{
+				if (nv_lc_direction == desired_lane_change_direction)
+				{
+					return true;
+				}
+			}
+			// Vehicles on other lanes
+			else
+			{
+				bool nv_moving_towards_ego =
+					!nv_lane.on_same_side(nv_lc_direction);
+				bool ego_moving_towards_nv =
+					nv_lane.on_same_side(desired_lane_change_direction);
+				if (nv_moving_towards_ego && ego_moving_towards_nv)
+				{
+					return true;
+				}
+			}
+		}
+	}
+	return false;
 }
 
 double AutonomousVehicle::compute_accepted_lane_change_gap(

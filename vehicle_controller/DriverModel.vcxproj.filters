@@ -118,6 +118,7 @@
     <ClCompile Include="SimulationLogger.cpp">
       <Filter>Main and Support</Filter>
     </ClCompile>
+    <ClCompile Include="PlatoonLaneChangeApproach.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="VehicleState.h">
@@ -243,6 +244,7 @@
     <ClInclude Include="VariationLimitedFilter.h">
       <Filter>Main and Support</Filter>
     </ClInclude>
+    <ClInclude Include="PlatoonLaneChangeApproach.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="StateMachines">

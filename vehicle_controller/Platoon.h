@@ -4,7 +4,7 @@
 #include <unordered_map>
 
 #include "PlatoonLaneChangeStrategy.h"
-#include "PlatoonLaneChangeOrder.h"
+#include "PlatoonLaneChangeApproach.h"
 
 class PlatoonVehicle;
 
@@ -44,14 +44,16 @@ public:
 	long get_last_veh_id() const;
 	long get_preceding_vehicle_id(long veh_id) const;
 	long get_following_vehicle_id(long veh_id) const;
+	/* Returns a nullptr if vehicle not found in platoon */
+	const PlatoonVehicle* get_a_vehicle_by_position(int veh_pos) const;
+	/* Returns a nullptr if vehicle not found in platoon */
+	const PlatoonVehicle* get_vehicle_by_id(long veh_id) const;
 	const PlatoonVehicle* get_preceding_vehicle(
 		long veh_id) const;
 	const PlatoonVehicle* get_following_vehicle(
 		long veh_id) const;
 	const PlatoonVehicle* get_platoon_leader() const;
 	const PlatoonVehicle* get_last_vehicle() const;
-	/* Returns a nullptr if vehicle not found in platoon */
-	const PlatoonVehicle* get_vehicle_by_id(long veh_id) const;
 	long get_destination_lane_vehicle_behind_the_leader() const;
 	long get_destination_lane_vehicle_behind_last_vehicle() const;
 	/* The vehicle behind which the platoon wants to move */
@@ -59,11 +61,13 @@ public:
 
 	void set_strategy(int strategy_number);
 	void set_possible_maneuver_initial_states();
+	void set_maneuver_initial_state(long ego_id, StateVector lo_states,
+		StateVector ld_states, StateVector fd_states);
 
 	/* Remaining public methods */
 
 	bool is_empty() const;
-	bool is_vehicle_in_platoon(long veh_id) const;
+	bool is_vehicle_id_in_platoon(long veh_id) const;
 	/* True if at least one vehicle started a lane change */
 	bool has_lane_change_started() const;
 	void add_leader(PlatoonVehicle* new_vehicle);
@@ -108,7 +112,7 @@ private:
 	std::unordered_map<long, int> vehicle_id_to_position;
 	std::unique_ptr<PlatoonLaneChangeStrategy> lane_change_strategy{ 
 		std::make_unique<NoStrategy>() };
-	PlatoonLaneChangeOrder lane_change_order;
+	PlatoonLaneChangeApproach lane_change_approach;
 
 	void remove_vehicle_by_position(int idx_in_platoon, long veh_id,
 		bool is_out_of_simulation);

@@ -53,7 +53,6 @@ private:
 	TODO: could we compute the trajectory only once for all vehicles? */
 	double sampling_time{ 0.01 }; // [s] can be different from VISSIM
 	double lane_change_duration{ 5.0 }; // [s]
-	double lane_width{ 3.6  }; // [m]
 	double time_headway_to_leader{ 0.0 }; // [s]
 	double time_headway_to_destination_lane_leader{ 0.0 }; // [s]
 	double time_headway_to_destination_lane_follower{ 0.0 }; // [s]

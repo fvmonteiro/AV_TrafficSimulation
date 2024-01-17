@@ -254,6 +254,7 @@
     <ClCompile Include="LongitudinalControllerWithTrafficLights.cpp" />
     <ClCompile Include="NoLaneChangeCAV.cpp" />
     <ClCompile Include="Platoon.cpp" />
+    <ClCompile Include="PlatoonLaneChangeApproach.cpp" />
     <ClCompile Include="PlatoonLaneChangeOrder.cpp" />
     <ClCompile Include="PlatoonLaneChangeStrategy.cpp" />
     <ClCompile Include="PlatoonVehicle.cpp" />
@@ -308,6 +309,7 @@
     <ClInclude Include="LongitudinalControllerWithTrafficLights.h" />
     <ClInclude Include="NoLaneChangeCAV.h" />
     <ClInclude Include="Platoon.h" />
+    <ClInclude Include="PlatoonLaneChangeApproach.h" />
     <ClInclude Include="PlatoonLaneChangeOrder.h" />
     <ClInclude Include="PlatoonLaneChangeStrategy.h" />
     <ClInclude Include="PlatoonVehicle.h" />

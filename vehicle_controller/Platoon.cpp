@@ -23,35 +23,9 @@ Platoon::~Platoon()
 	}
 }
 
-const PlatoonVehicle* Platoon::get_platoon_leader() const
-{
-	return is_empty() ? nullptr : vehicles_by_position.at(leader_idx);
-}
-
-const PlatoonVehicle* Platoon::get_last_vehicle() const
-{
-	return is_empty() ? nullptr : vehicles_by_position.at(last_veh_idx);
-}
-
 long Platoon::get_leader_id() const
 {
 	return is_empty() ? 0 : get_platoon_leader()->get_id();
-}
-
-bool Platoon::is_empty() const
-{
-	return vehicles_by_position.size() == 0;
-}
-
-bool Platoon::is_vehicle_in_platoon(long veh_id) const
-{
-	return (vehicle_id_to_position.find(veh_id) 
-		!= vehicle_id_to_position.end());
-}
-
-bool Platoon::has_lane_change_started() const
-{
-	return !std::isinf(lane_change_start_time);
 }
 
 long Platoon::get_last_veh_id() const
@@ -71,6 +45,45 @@ long Platoon::get_following_vehicle_id(long veh_id) const
 	const PlatoonVehicle* following_vehicle =
 		get_following_vehicle(veh_id);
 	return following_vehicle != nullptr ? following_vehicle->get_id() : 0;
+}
+
+const PlatoonVehicle* Platoon::get_a_vehicle_by_position(int veh_pos) const
+{
+	return vehicles_by_position.find(veh_pos) != vehicles_by_position.end() ?
+		vehicles_by_position.at(veh_pos) : nullptr;
+}
+
+const PlatoonVehicle* Platoon::get_vehicle_by_id(long veh_id) const
+{
+	return is_vehicle_id_in_platoon(veh_id) ?
+		vehicles_by_position.at(vehicle_id_to_position.at(veh_id))
+		: nullptr;
+}
+
+const PlatoonVehicle* Platoon::get_platoon_leader() const
+{
+	return is_empty() ? nullptr : vehicles_by_position.at(leader_idx);
+}
+
+const PlatoonVehicle* Platoon::get_last_vehicle() const
+{
+	return is_empty() ? nullptr : vehicles_by_position.at(last_veh_idx);
+}
+
+bool Platoon::is_empty() const
+{
+	return vehicles_by_position.size() == 0;
+}
+
+bool Platoon::is_vehicle_id_in_platoon(long veh_id) const
+{
+	return (vehicle_id_to_position.find(veh_id) 
+		!= vehicle_id_to_position.end());
+}
+
+bool Platoon::has_lane_change_started() const
+{
+	return !std::isinf(lane_change_start_time);
 }
 
 void Platoon::set_strategy(int strategy_number)
@@ -118,98 +131,94 @@ void Platoon::set_strategy(int strategy_number)
 
 void Platoon::set_possible_maneuver_initial_states()
 {
-	if (has_lane_change_started) return;
+	if (has_lane_change_started()) return;
+
 	const PlatoonVehicle* platoon_leader = get_platoon_leader();
+	StateVector lo_states;
+	StateVector ld_states;
+	StateVector fd_states; // (if necessary)
 	if (platoon_leader->has_leader())
 	{
-		const NearbyVehicle* orig_lane_leader =
-			platoon_leader->get_leader().get();
-		// TODO [major] create a struct/typedef to store states
-	}
-	else
-	{
-		// empty state
+		lo_states = platoon_leader->get_leader()
+			->get_absolute_state_vector(platoon_leader->get_state_vector());
 	}
 
 	for (std::pair<int, PlatoonVehicle*> pos_and_veh : vehicles_by_position)
 	{
 		PlatoonVehicle* veh = pos_and_veh.second;
-		if (veh->get_is_lane_change_gap_suitable())
+		if (veh->get_is_space_suitable_for_lane_change())
 		{
 			if (veh->has_destination_lane_leader())
 			{
-				// get states from ld
-			}
-			else
-			{
-				// empty state
+				ld_states = veh->get_destination_lane_leader()
+					->get_absolute_state_vector(veh->get_state_vector());
 			}
 			if (veh->has_destination_lane_follower())
 			{
-				// get states from fd
+				fd_states = veh->get_destination_lane_follower()
+					->get_absolute_state_vector(veh->get_state_vector());
 			}
-			else
-			{
-				// empty state
-			}
-			set_maneuver_initial_state(veh->get_id(), /*[lo, ld, fd] states*/);
+			set_maneuver_initial_state(veh->get_id(), lo_states, 
+				ld_states, fd_states);
 		}
 		else
 		{
-			set_empty_maneuver_initial_state(veh->get_id());
+			lane_change_approach.set_empty_maneuver_initial_state(veh->get_id());
 		}
 	}
 }
 
-/*
-def set_maneuver_initial_state(
-		self, ego_id: int, lo_states: Sequence[float],
-		ld_states: Sequence[float], fd_states: Sequence[float]):
-	# TODO: avoid hard coding array indices
+void Platoon::set_maneuver_initial_state(long ego_id, StateVector lo_states,
+	StateVector ld_states, StateVector fd_states)
+{
+	const PlatoonVehicle* platoon_leader = get_platoon_leader();
 
-	p1 = self.get_platoon_leader()
-	# TODO: lazy workaround. We need to include the no leader
-	#  possibilities in the graph
-	if len(lo_states) == 0:
-		lo_states = p1.get_states().copy()
-		lo_states[0] += p1.compute_lane_keeping_desired_gap()
-	else:
-		lo_states = np.copy(lo_states)
-	if len(ld_states) == 0:
-		ld_states = lo_states.copy()
-		ld_states[1] = p1.get_target_y()
-	else:
-		ld_states = np.copy(ld_states)
-	if len(fd_states) == 0:
-		pN = self.get_last_platoon_vehicle()
-		fd_states = pN.get_states().copy()
-		fd_states[0] -= pN.compute_safe_lane_change_gap()
-		fd_states[1] = pN.get_target_y()
-	else:
-		fd_states = np.copy(fd_states)
+	// First we deal with 'empty' states
+	/* TODO [Jan 16 2024]: change how to deal with no leaders once these 
+	situations are included in the graph */
+	if (lo_states.is_empty)
+	{
+		lo_states = platoon_leader->get_state_vector();
+		lo_states.x += MAX_DISTANCE;
+	}
+	if (ld_states.is_empty)
+	{
+		ld_states = platoon_leader->get_state_vector();
+		ld_states.x += MAX_DISTANCE;
+		ld_states.y += 
+			platoon_leader->get_desired_lane_change_direction().to_int() 
+			* LANE_WIDTH;
+	}
+	if (fd_states.is_empty)
+	{
+		const PlatoonVehicle* last_vehicle = get_last_vehicle();
+		fd_states = last_vehicle->get_state_vector();
+		fd_states.x -= MAX_DISTANCE;
+		fd_states.y +=
+			platoon_leader->get_desired_lane_change_direction().to_int()
+			* LANE_WIDTH;
+	}
 
-	# We center all around the leader
-	leader_x = p1.get_x()
-	leader_y = p1.get_y()
+	// Next we center all vehicles' states around the leader
+	double leader_x = platoon_leader->get_state_vector().x;
+	double leader_y = platoon_leader->get_state_vector().y;
 
-	platoon_states = []
-	for veh in self.vehicles:
-		veh_states = veh.get_states().copy()
-		veh_states[0] -= leader_x
-		veh_states[1] -= leader_y
-		platoon_states.extend(veh_states)
+	std::vector<StateVector> platoon_states;
+	for (const auto& item : vehicles_by_position)
+	{
+		StateVector veh_state_vector = item.second->get_state_vector();
+		veh_state_vector.offset(leader_x, leader_y);
+		platoon_states.push_back(veh_state_vector);
+	}
 
-	lo_states[0] -= leader_x
-	lo_states[1] -= leader_y
-	ld_states[0] -= leader_x
-	ld_states[1] -= leader_y
-	fd_states[0] -= leader_x
-	fd_states[1] -= leader_y
+	lo_states.offset(leader_x, leader_y);
+	ld_states.offset(leader_x, leader_y);
+	fd_states.offset(leader_x, leader_y);
 
-	ego_position = self._id_to_position_map[ego_id]
-	self.lane_change_strategy.set_maneuver_initial_state(
-		ego_position, lo_states, platoon_states, ld_states, fd_states)
-*/
+	int ego_position = vehicle_id_to_position[ego_id];
+	lane_change_approach.set_maneuver_initial_state(ego_position, lo_states,
+		platoon_states, ld_states, fd_states);
+}
 
 void Platoon::add_leader(PlatoonVehicle* new_vehicle)
 {
@@ -262,13 +271,6 @@ void Platoon::remove_vehicle_by_id(long veh_id, bool is_out_of_simulation)
 	}
 }
 
-const PlatoonVehicle* Platoon::get_vehicle_by_id(long veh_id) const
-{
-	return is_vehicle_in_platoon(veh_id) ?
-		vehicles_by_position.at(vehicle_id_to_position.at(veh_id)) 
-		: nullptr;
-}
-
 long Platoon::get_destination_lane_vehicle_behind_the_leader() const
 {
 	/* We're looking for the vehicle at the destination lane that's 
@@ -296,7 +298,7 @@ long Platoon::get_destination_lane_vehicle_behind_the_leader() const
 			const auto& veh = vehicles_by_position.at(i);
 			dest_lane_follower_id = veh->get_destination_lane_leader_id();
 			if (dest_lane_follower_id == 0
-				|| is_vehicle_in_platoon(dest_lane_follower_id)
+				|| is_vehicle_id_in_platoon(dest_lane_follower_id)
 				|| dest_lane_follower_id == platoon_leader_dest_lane_leader)
 			{
 				dest_lane_follower_id = veh->get_destination_lane_follower_id();
@@ -439,8 +441,7 @@ bool Platoon::can_vehicle_leave_platoon(
 bool Platoon::can_vehicle_start_lane_change(long veh_id)
 {
 	int veh_position = vehicle_id_to_position[veh_id];
-	return lane_change_order.can_vehicle_start_lane_change(veh_position,
-		vehicles_by_position);
+	return lane_change_approach.can_vehicle_start_lane_change(veh_position);
 }
 
 bool Platoon::is_stuck() const

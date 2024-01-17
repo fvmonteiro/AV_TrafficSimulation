@@ -76,6 +76,27 @@ void NearbyVehicle::offset_from_another(const NearbyVehicle& other_vehicle)
 	relative_velocity += other_vehicle.get_relative_velocity();
 }
 
+double NearbyVehicle::get_relative_lateral_position() const
+{
+	return get_relative_lane().to_int() * LANE_WIDTH 
+		+ get_lateral_position();
+}
+
+StateVector NearbyVehicle::get_relative_state_vector() const
+{
+	return StateVector{ get_distance(),
+		get_relative_lateral_position(),
+		get_orientation_angle(), get_relative_velocity() };
+}
+
+StateVector NearbyVehicle::get_absolute_state_vector(
+	StateVector ego_states) const
+{
+	return StateVector{ get_distance() + ego_states.x,
+		get_relative_lateral_position() + ego_states.y,
+		get_orientation_angle(), compute_velocity(ego_states.v) };
+}
+
 bool NearbyVehicle::is_connected() const 
 {
 	/* The nearby vehicle type is only set to connected if the ego vehicle

@@ -131,6 +131,12 @@ long PlatoonVehicle::get_following_vehicle_id() const
 	return follower == nullptr ? 0 : follower->get_id();
 }
 
+long PlatoonVehicle::get_suitable_destination_lane_leader_id() const
+{
+	return get_is_space_suitable_for_lane_change() ?
+		get_destination_lane_leader_id() : 0;
+}
+
 const PlatoonVehicle*
 PlatoonVehicle::get_following_vehicle_in_platoon() const
 {
@@ -285,7 +291,7 @@ bool PlatoonVehicle::was_my_cooperation_request_accepted() const
 		{
 			long id_of_vehicle_being_assisted =
 				cooperating_vehicle->get_assisted_vehicle_id();
-			if (platoon->is_vehicle_in_platoon(id_of_vehicle_being_assisted))
+			if (platoon->is_vehicle_id_in_platoon(id_of_vehicle_being_assisted))
 			{
 				return true;
 			}
@@ -306,10 +312,7 @@ double PlatoonVehicle::compute_accepted_lane_change_gap(
 	std::shared_ptr<const NearbyVehicle> nearby_vehicle) const
 {
 	/* TODO [must check if working]: use simple lane keeping reference gaps */
-	if (nearby_vehicle == nullptr) return 0.0;
-
-	double accepted_gap = controller->get_lateral_controller()
-		.compute_time_headway_gap(get_velocity(), *nearby_vehicle, 0.0);
+	return compute_reference_vehicle_following_gap(nearby_vehicle);
 }
 
 void PlatoonVehicle::set_desired_lane_change_direction()
@@ -328,6 +331,14 @@ void PlatoonVehicle::implement_analyze_nearby_vehicles()
 	create_lane_change_request();
 }
 
+double PlatoonVehicle::compute_reference_vehicle_following_gap(
+	std::shared_ptr<const NearbyVehicle> nearby_vehicle) const
+{
+	nearby_vehicle == nullptr ? 0.0
+		: controller->get_lateral_controller().compute_time_headway_gap(
+			get_velocity(), *nearby_vehicle, 0.0);
+}
+
 void PlatoonVehicle::find_cooperation_request_from_platoon()
 {
 	/*if (is_in_a_platoon())
@@ -342,7 +353,7 @@ void PlatoonVehicle::find_cooperation_request_from_platoon()
 		for (auto const& id_veh_pair : get_nearby_vehicles())
 		{
 			auto const& nearby_vehicle = id_veh_pair.second;
-			if (platoon->is_vehicle_in_platoon(nearby_vehicle->get_id())
+			if (platoon->is_vehicle_id_in_platoon(nearby_vehicle->get_id())
 				&& (nearby_vehicle->get_lane_change_request_veh_id() 
 					== get_id()))
 			{
