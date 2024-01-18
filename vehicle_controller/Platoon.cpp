@@ -90,6 +90,8 @@ void Platoon::set_strategy(int strategy_number)
 {
 	std::unique_ptr<PlatoonLaneChangeStrategy> old_strategy =
 		std::move(lane_change_strategy);
+	std::unique_ptr<PlatoonLaneChangeApproach> old_approach=
+		std::move(lane_change_approach);
 
 	switch (Strategy(strategy_number))
 	{
@@ -98,16 +100,20 @@ void Platoon::set_strategy(int strategy_number)
 		break;
 	case Platoon::synchronous_strategy:
 		lane_change_strategy = std::make_unique<SynchronousStrategy>();
+		lane_change_approach = std::make_unique<SynchoronousApproach>();
 		break;
 	case Platoon::leader_first_strategy:
 		lane_change_strategy = std::make_unique<LeaderFirstStrategy>();
+		lane_change_approach = std::make_unique<LeaderFirstApproach>();
 		break;
 	case Platoon::last_vehicle_first_strategy:
 		lane_change_strategy = std::make_unique<LastVehicleFirstStrategy>();
+		lane_change_approach = std::make_unique<LastVehicleFirstApproach>();
 		break;
 	case Platoon::leader_first_invert_strategy:
 		lane_change_strategy = 
 			std::make_unique<LeaderFirstAndInvertStrategy>();
+		lane_change_approach = std::make_unique<LeaderFirstReverseApproach>();
 		break;
 	default:
 		std::clog << "ERROR: Platoon lane change strategy not coded\n";
@@ -122,9 +128,16 @@ void Platoon::set_strategy(int strategy_number)
 		if (old_strategy == nullptr) std::clog << "none";
 		else std::clog << *old_strategy;
 		std::clog << " to " << *lane_change_strategy << std::endl;
+
+		std::clog << "Platoon " << *this << "\n";
+		std::clog << "LC Approach change from ";
+		if (old_approach== nullptr) std::clog << "none";
+		else std::clog << old_approach->get_name();
+		std::clog << " to " << lane_change_approach->get_name() << std::endl;
 	}
 
 	lane_change_strategy->set_platoon(this);
+	lane_change_approach->set_platoon(this);
 	lane_change_strategy->reset_state_of_all_vehicles();
 
 }
@@ -136,7 +149,7 @@ void Platoon::set_possible_maneuver_initial_states()
 	const PlatoonVehicle* platoon_leader = get_platoon_leader();
 	StateVector lo_states;
 	StateVector ld_states;
-	StateVector fd_states; // (if necessary)
+	StateVector fd_states; // (not necessary)
 	if (platoon_leader->has_leader())
 	{
 		lo_states = platoon_leader->get_leader()
@@ -163,7 +176,7 @@ void Platoon::set_possible_maneuver_initial_states()
 		}
 		else
 		{
-			lane_change_approach.set_empty_maneuver_initial_state(veh->get_id());
+			lane_change_approach->set_empty_maneuver_initial_state(veh->get_id());
 		}
 	}
 }
@@ -216,7 +229,7 @@ void Platoon::set_maneuver_initial_state(long ego_id, StateVector lo_states,
 	fd_states.offset(leader_x, leader_y);
 
 	int ego_position = vehicle_id_to_position[ego_id];
-	lane_change_approach.set_maneuver_initial_state(ego_position, lo_states,
+	lane_change_approach->set_maneuver_initial_state(ego_position, lo_states,
 		platoon_states, ld_states, fd_states);
 }
 
@@ -441,7 +454,7 @@ bool Platoon::can_vehicle_leave_platoon(
 bool Platoon::can_vehicle_start_lane_change(long veh_id)
 {
 	int veh_position = vehicle_id_to_position[veh_id];
-	return lane_change_approach.can_vehicle_start_lane_change(veh_position);
+	return lane_change_approach->can_vehicle_start_lane_change(veh_position);
 }
 
 bool Platoon::is_stuck() const

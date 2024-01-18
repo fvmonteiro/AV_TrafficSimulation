@@ -316,6 +316,7 @@
     <ClInclude Include="PlatoonVehicleState.h" />
     <ClInclude Include="RelativeLane.h" />
     <ClInclude Include="PlatoonLCStrategyManager.h" />
+    <ClInclude Include="StateVector.h" />
     <ClInclude Include="SwitchedLongitudinalController.h" />
     <ClInclude Include="SynchronousStates.h" />
     <ClInclude Include="TrafficLight.h" />

@@ -12,11 +12,12 @@ struct PlatoonLaneChangeOrder
 {
 	LCOrder lc_order{};
 	CoopOrder coop_order{};
-	float cost{ 0.0 };
+	float cost{ -1.0 };
 	PlatoonLaneChangeOrder() = default;
-	PlatoonLaneChangeOrder(std::vector<std::vector<int>>lc_order,
-		std::vector<int> coop_order, float cost);
-	long number_of_steps() { return coop_order.size(); };
+	PlatoonLaneChangeOrder(LCOrder lc_order, CoopOrder coop_order);
+	PlatoonLaneChangeOrder(std::vector<std::vector<int>> lc_order,
+		CoopOrder coop_order, float cost);
+	int number_of_steps() { return static_cast<int>(coop_order.size()); };
 
 	std::string to_string() const;
 };

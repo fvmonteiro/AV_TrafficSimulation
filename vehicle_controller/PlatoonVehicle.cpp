@@ -194,10 +194,10 @@ bool PlatoonVehicle::can_start_lane_change()
 	bool is_my_turn;
 	if (is_in_a_platoon())
 	{
-		if (is_platoon_leader())
-		{
-			get_platoon()->set_possible_maneuver_initial_states();
-		}
+		//if (is_platoon_leader())
+		//{
+		//	get_platoon()->set_possible_maneuver_initial_states();
+		//}
 		is_my_turn = get_platoon()->can_vehicle_start_lane_change(get_id());
 	}
 	else
@@ -334,7 +334,7 @@ void PlatoonVehicle::implement_analyze_nearby_vehicles()
 double PlatoonVehicle::compute_reference_vehicle_following_gap(
 	std::shared_ptr<const NearbyVehicle> nearby_vehicle) const
 {
-	nearby_vehicle == nullptr ? 0.0
+	return nearby_vehicle == nullptr ? 0.0
 		: controller->get_lateral_controller().compute_time_headway_gap(
 			get_velocity(), *nearby_vehicle, 0.0);
 }

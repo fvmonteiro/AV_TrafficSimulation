@@ -1,13 +1,12 @@
 #include <algorithm>
+#include <numeric>
 
 #include "Platoon.h"
 #include "PlatoonLaneChangeApproach.h"
 #include "PlatoonVehicle.h"
 
-PlatoonLaneChangeApproach::PlatoonLaneChangeApproach(int id, std::string name,
-	const Platoon* platoon) : id(id), name(name), platoon(platoon),
-	last_dest_lane_vehicle_pos(platoon->get_size())
-{}
+PlatoonLaneChangeApproach::PlatoonLaneChangeApproach(int id, std::string name) 
+	: id(id), name(name) {}
 
 long PlatoonLaneChangeApproach::get_desired_destination_lane_leader_id(
 	int ego_position)
@@ -18,6 +17,7 @@ long PlatoonLaneChangeApproach::get_desired_destination_lane_leader_id(
 	if (!ego_vehicle->has_lane_change_intention() || !is_initialized
 		|| !is_vehicle_turn_to_lane_change(ego_position)) return 0;
 
+	int virtual_leader_id;
 	/* The first vehicles to simultaneously change lanes do so behind the
     destination lane leader of the front-most vehicle (same as for
     single vehicle lane change) */
@@ -28,21 +28,26 @@ long PlatoonLaneChangeApproach::get_desired_destination_lane_leader_id(
 			platoon_lane_change_order.lc_order[0].end());
 		const PlatoonVehicle* front_most_veh =
 			platoon->get_a_vehicle_by_position(first_lc_pos);
-		return front_most_veh->get_suitable_destination_lane_leader_id();
-	}
-
-	int coop_pos = get_current_coop_vehicle_position();
-	if (coop_pos == -1)
-	{
-		// Merge behind the platoon vehicle farther back in the dest lane
-		return platoon->get_a_vehicle_by_position(
-			last_dest_lane_vehicle_pos)->get_id();
+		virtual_leader_id = 
+			front_most_veh->get_suitable_destination_lane_leader_id();
 	}
 	else
 	{
-		//Get the vehicle ahead the vehicle which helps generate the gap
-		return platoon->get_a_vehicle_by_position(coop_pos)->get_leader_id();
+		int coop_pos = get_current_coop_vehicle_position();
+		if (coop_pos == -1)
+		{
+			virtual_leader_id = platoon->get_a_vehicle_by_position(
+				last_dest_lane_vehicle_pos)->get_id();
+		}
+		else
+		{
+			//Get the vehicle ahead the vehicle which helps generate the gap
+			virtual_leader_id = platoon->get_a_vehicle_by_position(coop_pos)
+				->get_leader_id();
+		}
 	}
+
+	return virtual_leader_id;
 }
 
 long PlatoonLaneChangeApproach::get_assisted_vehicle_id(int ego_position)
@@ -54,6 +59,19 @@ long PlatoonLaneChangeApproach::get_assisted_vehicle_id(int ego_position)
 		|| ego_position != get_current_coop_vehicle_position()) return 0;
 	int rear_most_pos = get_rearmost_lane_changing_vehicle_position();
 	return platoon->get_a_vehicle_by_position(rear_most_pos)->get_id();
+}
+
+void PlatoonLaneChangeApproach::set_platoon_lane_change_order(
+	LCOrder lc_order, CoopOrder coop_order)
+{
+	maneuver_step = 0;
+	platoon_lane_change_order = PlatoonLaneChangeOrder(lc_order, coop_order);
+
+	std::clog << "Order set to: " << platoon_lane_change_order << "\n";
+
+	last_dest_lane_vehicle_pos =
+		get_rearmost_lane_changing_vehicle_position();
+	is_initialized = true;
 }
 
 void PlatoonLaneChangeApproach::set_platoon_lane_change_order(
@@ -158,4 +176,71 @@ int PlatoonLaneChangeApproach
 		}
 	}
 	return rear_most_pos;
+}
+
+/* ------------------------------------------------------------------------ */
+/* Concrete Approaches ---------------------------------------------------- */
+/* ------------------------------------------------------------------------ */
+
+void SynchoronousApproach::decide_lane_change_order()
+{
+	/*std::vector<int> l1(platoon->get_size());
+	std::iota(l1.begin(), l1.end(), 0);*/
+	std::unordered_set<int> lc_set_1;
+	CoopOrder coop_order;
+	for (int i = 0; i < platoon->get_size(); i++)
+	{
+		lc_set_1.insert(i);
+		coop_order.push_back(-1);
+	}
+	LCOrder lc_order = { lc_set_1 };
+	set_platoon_lane_change_order(lc_order, coop_order);
+}
+
+void LeaderFirstApproach::decide_lane_change_order()
+{
+	LCOrder lc_order;
+	CoopOrder coop_order;
+	for (int i = 0; i < platoon->get_size(); i++)
+	{
+		std::unordered_set<int> lc_set;
+		lc_set.insert(i);
+		lc_order.push_back(lc_set);
+		coop_order.push_back(-1);
+	}
+	set_platoon_lane_change_order(lc_order, coop_order);
+}
+
+void LastVehicleFirstApproach::decide_lane_change_order()
+{
+	LCOrder lc_order;
+	CoopOrder coop_order;
+	int n = platoon->get_size();
+	for (int i = 0; i < n; i++)
+	{
+		if (lc_order.empty()) coop_order.push_back(-1);
+		else coop_order.push_back(*lc_order.back().begin());
+
+		std::unordered_set<int> lc_set;
+		lc_set.insert(n - i - 1);
+		lc_order.push_back(lc_set);
+	}
+	set_platoon_lane_change_order(lc_order, coop_order);
+}
+
+void LeaderFirstReverseApproach::decide_lane_change_order()
+{
+	LCOrder lc_order;
+	CoopOrder coop_order;
+	int n = platoon->get_size();
+	for (int i = 0; i < n; i++)
+	{
+		if (lc_order.empty()) coop_order.push_back(-1);
+		else coop_order.push_back(*lc_order.back().begin());
+
+		std::unordered_set<int> lc_set;
+		lc_set.insert(i);
+		lc_order.push_back(lc_set);
+	}
+	set_platoon_lane_change_order(lc_order, coop_order);
 }

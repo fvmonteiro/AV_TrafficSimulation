@@ -59,7 +59,7 @@ BOOL APIENTRY DllMain (HANDLE  hModule,
           /*simulation_logger.write_to_persistent_log(
               std::to_string(vehicles.size()) + " vehicles in memory "
                 + "(before start)");*/
-          std::clog << platoon_lc_strategy_manager << std::endl;
+          //std::clog << platoon_lc_strategy_manager << std::endl;
           break;
       case DLL_THREAD_ATTACH:
           break;

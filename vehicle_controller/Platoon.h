@@ -26,7 +26,8 @@ public:
 	double get_desired_velocity() const { return desired_velocity; };
 	double get_velocity_at_lane_change_start() const {
 		return velocity_at_lane_change_start; };
-	size_t get_size() const { return vehicles_by_position.size(); };
+	int get_size() const { 
+		return static_cast<int>(vehicles_by_position.size()); };
 	const std::unordered_map<int, PlatoonVehicle*>&
 		get_vehicles_by_position() const { return vehicles_by_position; };
 	void set_verbose(bool verbose) { this->verbose = verbose; };
@@ -112,7 +113,8 @@ private:
 	std::unordered_map<long, int> vehicle_id_to_position;
 	std::unique_ptr<PlatoonLaneChangeStrategy> lane_change_strategy{ 
 		std::make_unique<NoStrategy>() };
-	PlatoonLaneChangeApproach lane_change_approach;
+	std::unique_ptr<PlatoonLaneChangeApproach> lane_change_approach{ 
+		nullptr };
 
 	void remove_vehicle_by_position(int idx_in_platoon, long veh_id,
 		bool is_out_of_simulation);
