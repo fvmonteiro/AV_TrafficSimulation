@@ -124,7 +124,7 @@ private:
 
 
 	void implement_create_controller() override {
-		this->controller = std::make_unique<ControlManager>(*this,
+		this->controller = std::make_unique<VehicleController>(*this,
 			is_verbose());
 	};
 	/* Finds the current leader and, if the vehicle has lane change

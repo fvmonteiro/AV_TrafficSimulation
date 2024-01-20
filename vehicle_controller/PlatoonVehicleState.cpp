@@ -10,6 +10,11 @@ void PlatoonVehicleState::set_specific_type_of_vehicle(
 	EgoVehicle* ego_vehicle)
 {
 	this->platoon_vehicle = dynamic_cast<PlatoonVehicle*>(ego_vehicle);
+	if (!this->platoon_vehicle)
+	{
+		std::clog << "=== ERROR ===\nFailed to cast ego vehicle to "
+			"platoon vehicle\n ===============";
+	}
 }
 
 bool PlatoonVehicleState::are_other_platoon_gaps_closed(long veh_id,

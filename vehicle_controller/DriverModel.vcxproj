@@ -244,8 +244,9 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="ACCVehicle.cpp" />
+    <ClCompile Include="ACCVehicleController.cpp" />
     <ClCompile Include="ConnectedAutonomousVehicle.cpp" />
-    <ClCompile Include="ControlManager.cpp" />
+    <ClCompile Include="VehicleController.cpp" />
     <ClCompile Include="InPlatoonLongitudinalController.cpp" />
     <ClCompile Include="LaneChangeGapsSafety.cpp" />
     <ClCompile Include="LastVehicleFirstStates.cpp" />
@@ -297,9 +298,10 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ACCVehicle.h" />
+    <ClInclude Include="ACCVehicleController.h" />
     <ClInclude Include="AutonomousVehicle.h" />
     <ClInclude Include="ConnectedAutonomousVehicle.h" />
-    <ClInclude Include="ControlManager.h" />
+    <ClInclude Include="VehicleController.h" />
     <ClInclude Include="EgoVehicleFactory.h" />
     <ClInclude Include="InPlatoonLongitudinalController.h" />
     <ClInclude Include="LaneChangeGapsSafety.h" />

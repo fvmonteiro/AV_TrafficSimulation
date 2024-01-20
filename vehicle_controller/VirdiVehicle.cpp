@@ -15,7 +15,7 @@ VirdiVehicle::VirdiVehicle(long id, double desired_velocity,
 
 void VirdiVehicle::implement_create_controller() 
 {
-	this->controller = std::make_unique<ControlManager>(*this,
+	this->controller = std::make_unique<VehicleController>(*this,
 		is_verbose());
 }
 

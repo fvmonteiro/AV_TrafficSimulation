@@ -61,7 +61,7 @@ private:
 	double in_platoon_rho{ 0.1 };
 
 	void implement_create_controller() override {
-		this->controller = std::make_unique<ControlManager>(*this,
+		this->controller = std::make_unique<VehicleController>(*this,
 			is_verbose());
 	};
 	double implement_compute_desired_acceleration(

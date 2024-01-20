@@ -12,7 +12,6 @@
 #include <string>
 #include <sstream>
 
-#include "ControlManager.h"
 #include "EgoVehicle.h"
 #include "Platoon.h"
 

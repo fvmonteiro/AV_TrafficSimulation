@@ -10,7 +10,7 @@
 #include <memory>
 #include <vector>
 
-#include "ControlManager.h"
+#include "VehicleController.h"
 #include "NearbyVehicle.h"
 #include "TrafficLight.h"
 #include "Vehicle.h"
@@ -337,7 +337,7 @@ public:
 		const EgoVehicle& vehicle);
 
 protected:
-	std::unique_ptr<ControlManager> controller{ nullptr };
+	std::unique_ptr<VehicleController> controller{ nullptr };
 	/* Keeps track of stopped time waiting for lane change */
 	double lane_change_waiting_time{ 0.0 };
 	std::unique_ptr<VehicleState> state{ nullptr };

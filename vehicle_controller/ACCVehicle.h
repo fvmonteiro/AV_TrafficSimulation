@@ -1,5 +1,6 @@
 #pragma once
 
+#include "ACCVehicleController.h"
 #include "EgoVehicle.h"
 
 /* Vehicle with autonomous longitudinal control during lane keeping.
@@ -15,7 +16,7 @@ public:
 
 private:
 	void implement_create_controller() override {
-		this->controller = std::make_unique<ControlManager>(*this,
+		this->controller = std::make_unique<ACCVehicleController>(*this,
 			is_verbose());
 	};
 	double implement_compute_desired_acceleration(
@@ -59,4 +60,5 @@ private:
 	void implement_set_accepted_lane_change_risk_to_follower(
 		double value) override {};
 	void implement_set_use_linear_lane_change_gap(long value) override {};
+
 };

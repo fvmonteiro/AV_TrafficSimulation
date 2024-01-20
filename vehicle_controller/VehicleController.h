@@ -28,7 +28,7 @@ class TrafficLightALCVehicle;
 class PlatoonVehicle;
 class VirdiVehicle;
 
-class ControlManager 
+class VehicleController 
 {
 public:
 
@@ -48,13 +48,13 @@ public:
 		virtual_leader
 	};
 
-	ControlManager() = default;
-	ControlManager(const ACCVehicle& acc_vehicle, bool verbose);
-	ControlManager(const AutonomousVehicle& autonomous_vehicle, bool verbose);
-	ControlManager(const ConnectedAutonomousVehicle& cav, bool verbose);
-	ControlManager(const PlatoonVehicle& platoon_vehicle, bool verbose);
-	ControlManager(const TrafficLightALCVehicle& tfalc_vehicle, bool verbose);
-	ControlManager(const VirdiVehicle& virdi_vehicle, bool verbose);
+	VehicleController() = default;
+	VehicleController(const ACCVehicle& acc_vehicle, bool verbose);
+	VehicleController(const AutonomousVehicle& autonomous_vehicle, bool verbose);
+	VehicleController(const ConnectedAutonomousVehicle& cav, bool verbose);
+	VehicleController(const PlatoonVehicle& platoon_vehicle, bool verbose);
+	VehicleController(const TrafficLightALCVehicle& tfalc_vehicle, bool verbose);
+	VehicleController(const VirdiVehicle& virdi_vehicle, bool verbose);
 
 	color_t get_longitudinal_controller_color() const;
 	/* Safe value depends on whether or not the vehicle has lane
@@ -222,7 +222,7 @@ public:
 
 
 protected:
-	ControlManager(bool verbose);
+	VehicleController(bool verbose);
 
 private:
 	/* ------------------------- Control Parameters ----------------------- */
