@@ -7,8 +7,8 @@
 #include "ConnectedAutonomousVehicle.h"
 #include "NoLaneChangeCAV.h"
 #include "PlatoonVehicle.h"
-#include "TrafficLightALCVehicle.h"
-#include "VirdiVehicle.h"
+//#include "TrafficLightALCVehicle.h"
+//#include "VirdiVehicle.h"
 //#include "Platoon.h"
 
 class EgoVehicleFactory
@@ -47,21 +47,21 @@ public:
 				desired_velocity, simulation_time_step, 
 				creation_time, verbose);
 			break;
-		case VehicleType::traffic_light_alc_car:
-			ego_vehicle = std::make_shared<TrafficLightALCVehicle>(id,
-				desired_velocity, simulation_time_step, 
-				creation_time, verbose);
-			break;
-		case VehicleType::traffic_light_calc_car:
-			ego_vehicle = std::make_shared<TrafficLightCALCVehicle>(id,
-				desired_velocity, simulation_time_step, 
-				creation_time, verbose);
-			break;
-		case VehicleType::virdi_car:
-			ego_vehicle = std::make_shared<VirdiVehicle>(id,
-				desired_velocity, simulation_time_step,
-				creation_time, verbose);
-			break;
+		//case VehicleType::traffic_light_alc_car:
+		//	ego_vehicle = std::make_shared<TrafficLightALCVehicle>(id,
+		//		desired_velocity, simulation_time_step, 
+		//		creation_time, verbose);
+		//	break;
+		//case VehicleType::traffic_light_calc_car:
+		//	ego_vehicle = std::make_shared<TrafficLightCALCVehicle>(id,
+		//		desired_velocity, simulation_time_step, 
+		//		creation_time, verbose);
+		//	break;
+		//case VehicleType::virdi_car:
+		//	ego_vehicle = std::make_shared<VirdiVehicle>(id,
+		//		desired_velocity, simulation_time_step,
+		//		creation_time, verbose);
+		//	break;
 		default:
 			std::clog << "Trying to create unknown vehicle type\n"
 				<< "\ttime=" << creation_time

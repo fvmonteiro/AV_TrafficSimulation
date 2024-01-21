@@ -337,7 +337,6 @@ public:
 		const EgoVehicle& vehicle);
 
 protected:
-	std::unique_ptr<VehicleController> controller{ nullptr };
 	/* Keeps track of stopped time waiting for lane change */
 	double lane_change_waiting_time{ 0.0 };
 	std::unique_ptr<VehicleState> state{ nullptr };
@@ -366,6 +365,7 @@ protected:
 	is lane changing */
 	std::pair<double, double> get_current_safe_gap_parameters() const;
 	std::pair<double, double> get_lane_changing_safe_gap_parameters() const;
+	void set_controller(VehicleController* controller);
 	void set_gap_variation_during_lane_change(int nv_id, double value);
 	void set_collision_free_gap(int nv_id, double value);
 
@@ -440,6 +440,9 @@ private:
 	double desired_lane_angle{ 0.0 };
 	RelativeLane vissim_lane_suggestion{ RelativeLane::same };
 	long turning_indicator{ 0 };
+
+	/* Controller --------------------------------------------------------- */
+	VehicleController* controller{ nullptr };
 
 	/* Safe lane change decision parameters ------------------------------- */
 	/* Variables are only needed if we want to be able to see values in

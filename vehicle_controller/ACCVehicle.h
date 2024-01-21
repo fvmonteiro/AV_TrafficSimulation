@@ -14,11 +14,14 @@ public:
 		double simulation_time_step, double creation_time,
 		bool verbose);
 
+protected:
+	void set_controller(ACCVehicleController* controller);
+
 private:
-	void implement_create_controller() override {
-		this->controller = std::make_unique<ACCVehicleController>(*this,
-			is_verbose());
-	};
+	std::unique_ptr<ACCVehicleController> controller_exclusive{ nullptr };
+	ACCVehicleController* acc_vehicle_controller;
+
+	void implement_create_controller() override;
 	double implement_compute_desired_acceleration(
 		const std::unordered_map<int, TrafficLight>& traffic_lights) override;
 	double compute_lane_changing_desired_time_headway(

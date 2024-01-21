@@ -13,9 +13,9 @@
 #include "EgoVehicle.h"
 #include "NearbyVehicle.h"
 #include "PlatoonVehicle.h"
-#include "TrafficLightALCVehicle.h"
+//#include "TrafficLightALCVehicle.h"
 #include "VariationLimitedFilter.h"
-#include "VirdiVehicle.h"
+//#include "VirdiVehicle.h"
 
 VehicleController::VehicleController(bool verbose)
 	: lateral_controller{ LateralController(verbose) },
@@ -28,86 +28,86 @@ VehicleController::VehicleController(bool verbose)
 	}
 }
 
-VehicleController::VehicleController(const ACCVehicle& acc_vehicle,
-	bool verbose) : VehicleController(verbose)
-{
-	if (verbose)
-	{
-		std::clog << "Creating ACC control manager\n";
-	}
-	add_vissim_controller();
-	add_origin_lane_controllers(acc_vehicle);
-}
+//VehicleController::VehicleController(const ACCVehicle& acc_vehicle,
+//	bool verbose) : VehicleController(verbose)
+//{
+//	if (verbose)
+//	{
+//		std::clog << "Creating ACC control manager\n";
+//	}
+//	add_vissim_controller();
+//	add_origin_lane_controllers(acc_vehicle);
+//}
 
-VehicleController::VehicleController(const AutonomousVehicle& autonomous_vehicle,
-	bool verbose) : VehicleController(verbose)
-{
-	if (verbose)
-	{
-		std::clog << "Creating AV control manager\n";
-	}
-	add_vissim_controller();
-	add_origin_lane_controllers(autonomous_vehicle);
-	add_lane_change_adjustment_controller(autonomous_vehicle);
-}
+//VehicleController::VehicleController(const AutonomousVehicle& autonomous_vehicle,
+//	bool verbose) : VehicleController(verbose)
+//{
+//	if (verbose)
+//	{
+//		std::clog << "Creating AV control manager\n";
+//	}
+//	add_vissim_controller();
+//	add_origin_lane_controllers(autonomous_vehicle);
+//	add_lane_change_adjustment_controller(autonomous_vehicle);
+//}
 
-VehicleController::VehicleController(const ConnectedAutonomousVehicle& cav,
-	bool verbose) : VehicleController(verbose)
-{
-	if (verbose)
-	{
-		std::clog << "Creating CAV control manager\n";
-	}
-	add_origin_lane_controllers(cav);
-	add_lane_change_adjustment_controller(cav);
-	add_cooperative_lane_change_controller(cav);
+//VehicleController::VehicleController(const ConnectedAutonomousVehicle& cav,
+//	bool verbose) : VehicleController(verbose)
+//{
+//	if (verbose)
+//	{
+//		std::clog << "Creating CAV control manager\n";
+//	}
+//	add_origin_lane_controllers(cav);
+//	add_lane_change_adjustment_controller(cav);
+//	add_cooperative_lane_change_controller(cav);
+//
+//}
 
-}
+//VehicleController::VehicleController(const PlatoonVehicle& platoon_vehicle,
+//	bool verbose) : VehicleController(verbose)
+//{
+//	if (verbose) std::clog << "Creating Platoon Vehicle control manager\n";
+//
+//	origin_lane_controller = RealLongitudinalController(platoon_vehicle,
+//		platoon_vehicle_velocity_gains, platoon_vehicle_autonomous_gains,
+//		platoon_vehicle_connected_gains, platoon_velocity_filter_gain,
+//		platoon_time_headway_filter_gain, in_platoon_colors, 
+//		long_controllers_verbose);
+//	real_leader_controller = &origin_lane_controller;
+//
+//	virtual_leader_controller = RealLongitudinalController(platoon_vehicle,
+//		platoon_vehicle_velocity_gains, platoon_vehicle_autonomous_gains,
+//		platoon_vehicle_connected_gains, platoon_velocity_filter_gain,
+//		platoon_time_headway_filter_gain, in_platoon_colors,
+//		long_controllers_verbose);
+//
+//
+//	available_controllers[ALCType::real_leader] = real_leader_controller;
+//	available_controllers[ALCType::virtual_leader] = 
+//		&virtual_leader_controller;
+//}
 
-VehicleController::VehicleController(const PlatoonVehicle& platoon_vehicle,
-	bool verbose) : VehicleController(verbose)
-{
-	if (verbose) std::clog << "Creating Platoon Vehicle control manager\n";
+//VehicleController::VehicleController(const TrafficLightALCVehicle& ego_vehicle,
+//	bool verbose) : VehicleController(verbose)
+//{
+//	if (verbose)
+//	{
+//		std::clog << "Creating TL-ALC control manager\n";
+//	}
+//	add_traffic_lights_controller();
+//}
 
-	origin_lane_controller = RealLongitudinalController(platoon_vehicle,
-		platoon_vehicle_velocity_gains, platoon_vehicle_autonomous_gains,
-		platoon_vehicle_connected_gains, platoon_velocity_filter_gain,
-		platoon_time_headway_filter_gain, in_platoon_colors, 
-		long_controllers_verbose);
-	real_leader_controller = &origin_lane_controller;
-
-	virtual_leader_controller = RealLongitudinalController(platoon_vehicle,
-		platoon_vehicle_velocity_gains, platoon_vehicle_autonomous_gains,
-		platoon_vehicle_connected_gains, platoon_velocity_filter_gain,
-		platoon_time_headway_filter_gain, in_platoon_colors,
-		long_controllers_verbose);
-
-
-	available_controllers[ALCType::real_leader] = real_leader_controller;
-	available_controllers[ALCType::virtual_leader] = 
-		&virtual_leader_controller;
-}
-
-VehicleController::VehicleController(const TrafficLightALCVehicle& ego_vehicle,
-	bool verbose) : VehicleController(verbose)
-{
-	if (verbose)
-	{
-		std::clog << "Creating TL-ALC control manager\n";
-	}
-	add_traffic_lights_controller();
-}
-
-VehicleController::VehicleController(const VirdiVehicle& virdi_vehicle,
-	bool verbose) : VehicleController(verbose)
-{
-	if (verbose)
-	{
-		std::clog << "Creating Virdi control manager\n";
-	}
-	add_van_arem_controllers(virdi_vehicle);
-	
-}
+//VehicleController::VehicleController(const VirdiVehicle& virdi_vehicle,
+//	bool verbose) : VehicleController(verbose)
+//{
+//	if (verbose)
+//	{
+//		std::clog << "Creating Virdi control manager\n";
+//	}
+//	add_van_arem_controllers(virdi_vehicle);
+//	
+//}
 
 color_t VehicleController::get_longitudinal_controller_color() const
 {
@@ -231,48 +231,48 @@ void VehicleController::add_cooperative_lane_change_controller(
 		&gap_generating_controller;
 }
 
-void VehicleController::add_traffic_lights_controller()
-{
-	with_traffic_lights_controller =
-		LongitudinalControllerWithTrafficLights(tl_alc_colors,
-			long_controllers_verbose);
-	active_longitudinal_controller_type = ALCType::traffic_light_alc;
+//void VehicleController::add_traffic_lights_controller()
+//{
+//	with_traffic_lights_controller =
+//		LongitudinalControllerWithTrafficLights(tl_alc_colors,
+//			long_controllers_verbose);
+//	active_longitudinal_controller_type = ALCType::traffic_light_alc;
+//
+//	available_controllers[ALCType::traffic_light_alc] =
+//		&with_traffic_lights_controller;
+//}
 
-	available_controllers[ALCType::traffic_light_alc] =
-		&with_traffic_lights_controller;
-}
-
-void VehicleController::add_van_arem_controllers(
-	const VirdiVehicle& virdi_vehicle)
-{
-	double max_jerk_per_interval = 
-		virdi_max_jerk * virdi_vehicle.get_simulation_time_step();
-	van_arem_controllers[ALCType::origin_lane] =
-		VanAremLongitudinalController(
-			van_arem_vel_ctrl_gains, van_arem_gap_ctrl_gains,
-			virdi_vehicle.get_max_brake(), INFINITY,
-			orig_lane_colors, verbose);
-	van_arem_controllers[ALCType::end_of_lane] =
-		VanAremLongitudinalController(
-			van_arem_vel_ctrl_gains, van_arem_gap_ctrl_gains,
-			virdi_vehicle.get_max_brake(), INFINITY,
-			end_of_lane_colors, verbose);
-	van_arem_controllers[ALCType::destination_lane] =
-		VanAremLongitudinalController(
-			van_arem_vel_ctrl_gains, van_arem_gap_ctrl_gains,
-			virdi_vehicle.get_max_brake(), max_jerk_per_interval,
-			dest_lane_colors, verbose);
-	van_arem_controllers[ALCType::cooperative_gap_generation] =
-		VanAremLongitudinalController(
-			van_arem_vel_ctrl_gains, van_arem_gap_ctrl_gains,
-			virdi_vehicle.get_max_brake(), max_jerk_per_interval,
-			gap_generation_colors, verbose);
-
-	for (auto const& item : van_arem_controllers)
-	{
-		available_controllers[item.first] = &item.second;
-	}
-}
+//void VehicleController::add_van_arem_controllers(
+//	const VirdiVehicle& virdi_vehicle)
+//{
+//	double max_jerk_per_interval = 
+//		virdi_max_jerk * virdi_vehicle.get_simulation_time_step();
+//	van_arem_controllers[ALCType::origin_lane] =
+//		VanAremLongitudinalController(
+//			van_arem_vel_ctrl_gains, van_arem_gap_ctrl_gains,
+//			virdi_vehicle.get_max_brake(), INFINITY,
+//			orig_lane_colors, verbose);
+//	van_arem_controllers[ALCType::end_of_lane] =
+//		VanAremLongitudinalController(
+//			van_arem_vel_ctrl_gains, van_arem_gap_ctrl_gains,
+//			virdi_vehicle.get_max_brake(), INFINITY,
+//			end_of_lane_colors, verbose);
+//	van_arem_controllers[ALCType::destination_lane] =
+//		VanAremLongitudinalController(
+//			van_arem_vel_ctrl_gains, van_arem_gap_ctrl_gains,
+//			virdi_vehicle.get_max_brake(), max_jerk_per_interval,
+//			dest_lane_colors, verbose);
+//	van_arem_controllers[ALCType::cooperative_gap_generation] =
+//		VanAremLongitudinalController(
+//			van_arem_vel_ctrl_gains, van_arem_gap_ctrl_gains,
+//			virdi_vehicle.get_max_brake(), max_jerk_per_interval,
+//			gap_generation_colors, verbose);
+//
+//	for (auto const& item : van_arem_controllers)
+//	{
+//		available_controllers[item.first] = &item.second;
+//	}
+//}
 
 //void ControlManager::add_in_platoon_controller(
 //	const PlatoonVehicle& platoon_vehicle)
@@ -649,50 +649,50 @@ double VehicleController::get_desired_acceleration(
 	return choose_minimum_acceleration(possible_accelerations);
 }
 
-double VehicleController::get_desired_acceleration(
-	const TrafficLightALCVehicle& tl_alc_vehicle,
-	const std::unordered_map<int, TrafficLight>& traffic_lights)
-{
-	if (verbose) std::clog << "Inside get traffic_light_acc_acceleration\n";
-
-	active_longitudinal_controller_type = ALCType::traffic_light_alc;
-	if (tl_alc_vehicle.has_next_traffic_light())
-	{
-		with_traffic_lights_controller.compute_traffic_light_input_parameters(
-			tl_alc_vehicle, traffic_lights);
-	}
-
-	return with_traffic_lights_controller.compute_desired_acceleration(
-		tl_alc_vehicle, nullptr, tl_alc_vehicle.get_desired_velocity());
-}
-
-double VehicleController::get_desired_acceleration(
-	const VirdiVehicle& virdi_vehicle)
-{
-	std::unordered_map<ALCType, double>
-		possible_accelerations;
-	double vel_reference = virdi_vehicle.get_desired_velocity();
-
-	possible_accelerations[ALCType::origin_lane] =
-		van_arem_controllers.at(ALCType::origin_lane).
-		compute_desired_acceleration(
-			virdi_vehicle, virdi_vehicle.get_leader(), vel_reference);
-	possible_accelerations[ALCType::end_of_lane] =
-		get_end_of_lane_desired_acceleration(virdi_vehicle);
-	possible_accelerations[ALCType::destination_lane] = 
-		van_arem_controllers.at(ALCType::destination_lane).
-		compute_desired_acceleration(
-			virdi_vehicle, virdi_vehicle.get_destination_lane_leader(),
-			vel_reference);
-	possible_accelerations[ALCType::cooperative_gap_generation] = 
-		van_arem_controllers.at(ALCType::cooperative_gap_generation)
-		.compute_desired_acceleration(
-			virdi_vehicle, virdi_vehicle.get_assisted_vehicle(), 
-			vel_reference);
-	
-	double des_accel = choose_minimum_acceleration(possible_accelerations);
-	return des_accel;
-}
+//double VehicleController::get_desired_acceleration(
+//	const TrafficLightALCVehicle& tl_alc_vehicle,
+//	const std::unordered_map<int, TrafficLight>& traffic_lights)
+//{
+//	if (verbose) std::clog << "Inside get traffic_light_acc_acceleration\n";
+//
+//	active_longitudinal_controller_type = ALCType::traffic_light_alc;
+//	if (tl_alc_vehicle.has_next_traffic_light())
+//	{
+//		with_traffic_lights_controller.compute_traffic_light_input_parameters(
+//			tl_alc_vehicle, traffic_lights);
+//	}
+//
+//	return with_traffic_lights_controller.compute_desired_acceleration(
+//		tl_alc_vehicle, nullptr, tl_alc_vehicle.get_desired_velocity());
+//}
+//
+//double VehicleController::get_desired_acceleration(
+//	const VirdiVehicle& virdi_vehicle)
+//{
+//	std::unordered_map<ALCType, double>
+//		possible_accelerations;
+//	double vel_reference = virdi_vehicle.get_desired_velocity();
+//
+//	possible_accelerations[ALCType::origin_lane] =
+//		van_arem_controllers.at(ALCType::origin_lane).
+//		compute_desired_acceleration(
+//			virdi_vehicle, virdi_vehicle.get_leader(), vel_reference);
+//	possible_accelerations[ALCType::end_of_lane] =
+//		get_end_of_lane_desired_acceleration(virdi_vehicle);
+//	possible_accelerations[ALCType::destination_lane] = 
+//		van_arem_controllers.at(ALCType::destination_lane).
+//		compute_desired_acceleration(
+//			virdi_vehicle, virdi_vehicle.get_destination_lane_leader(),
+//			vel_reference);
+//	possible_accelerations[ALCType::cooperative_gap_generation] = 
+//		van_arem_controllers.at(ALCType::cooperative_gap_generation)
+//		.compute_desired_acceleration(
+//			virdi_vehicle, virdi_vehicle.get_assisted_vehicle(), 
+//			vel_reference);
+//	
+//	double des_accel = choose_minimum_acceleration(possible_accelerations);
+//	return des_accel;
+//}
 
 void VehicleController::print_traffic_lights(const EgoVehicle& ego,
 	const std::unordered_map<int, TrafficLight>& traffic_lights) const
@@ -930,38 +930,38 @@ bool VehicleController
 	return is_active;
 }
 
-double VehicleController::get_end_of_lane_desired_acceleration(
-	const VirdiVehicle& virdi_vehicle)
-{
-	/* When the lane change direction equals the preferred relative
-	lane, it means the vehicle is moving into the destination lane.
-	At this point, we don't want to use this controller anymore. */
-	bool is_lane_changing = virdi_vehicle.get_preferred_relative_lane()
-		== virdi_vehicle.get_active_lane_change_direction();
-	bool is_about_to_start_lane_change =
-		virdi_vehicle.get_preferred_relative_lane()
-		== virdi_vehicle.get_lane_change_direction();
-	double des_accel;
-	if (!is_lane_changing && !is_about_to_start_lane_change
-		&& (virdi_vehicle.get_lane_end_distance() > -1))
-	{
-		/* We simulate a stopped vehicle at the end of
-		the lane to force the vehicle to stop before the end of
-		the lane. */
-		NearbyVehicle virtual_vehicle =
-			create_virtual_stopped_vehicle(virdi_vehicle);
-		des_accel = van_arem_controllers.at(ALCType::end_of_lane).
-			compute_desired_acceleration(
-			virdi_vehicle, std::make_shared<NearbyVehicle>(virtual_vehicle),
-			virdi_vehicle.get_desired_velocity()
-		);
-	}
-	else
-	{
-		des_accel = INFINITY;
-	}
-	return des_accel;
-}
+//double VehicleController::get_end_of_lane_desired_acceleration(
+//	const VirdiVehicle& virdi_vehicle)
+//{
+//	/* When the lane change direction equals the preferred relative
+//	lane, it means the vehicle is moving into the destination lane.
+//	At this point, we don't want to use this controller anymore. */
+//	bool is_lane_changing = virdi_vehicle.get_preferred_relative_lane()
+//		== virdi_vehicle.get_active_lane_change_direction();
+//	bool is_about_to_start_lane_change =
+//		virdi_vehicle.get_preferred_relative_lane()
+//		== virdi_vehicle.get_lane_change_direction();
+//	double des_accel;
+//	if (!is_lane_changing && !is_about_to_start_lane_change
+//		&& (virdi_vehicle.get_lane_end_distance() > -1))
+//	{
+//		/* We simulate a stopped vehicle at the end of
+//		the lane to force the vehicle to stop before the end of
+//		the lane. */
+//		NearbyVehicle virtual_vehicle =
+//			create_virtual_stopped_vehicle(virdi_vehicle);
+//		des_accel = van_arem_controllers.at(ALCType::end_of_lane).
+//			compute_desired_acceleration(
+//			virdi_vehicle, std::make_shared<NearbyVehicle>(virtual_vehicle),
+//			virdi_vehicle.get_desired_velocity()
+//		);
+//	}
+//	else
+//	{
+//		des_accel = INFINITY;
+//	}
+//	return des_accel;
+//}
 
 double VehicleController::choose_minimum_acceleration(
 	std::unordered_map<ALCType, double>& possible_accelerations)

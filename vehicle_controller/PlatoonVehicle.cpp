@@ -207,11 +207,17 @@ bool PlatoonVehicle::can_start_lane_change()
 	return is_safe && is_my_turn;
 }
 
+void PlatoonVehicle::implement_create_controller() {
+	this->controller_exclusive = 
+		std::make_unique<PlatoonVehicleController>(*this, is_verbose());
+	set_controller(controller_exclusive.get());
+}
+
 double PlatoonVehicle::implement_compute_desired_acceleration(
 	const std::unordered_map<int, TrafficLight>& traffic_lights)
 {
 	double a_desired_acceleration =
-		controller->get_desired_acceleration(*this);
+		platoon_vehicle_controller->get_desired_acceleration(*this);
 	return a_desired_acceleration;
 	//return consider_vehicle_dynamics(a_desired_acceleration);
 }
@@ -308,6 +314,12 @@ std::shared_ptr<NearbyVehicle> PlatoonVehicle
 		: define_virtual_leader_when_alone();
 }
 
+void PlatoonVehicle::set_controller(PlatoonVehicleController* a_controller)
+{
+	platoon_vehicle_controller = a_controller;
+	ConnectedAutonomousVehicle::set_controller(a_controller);
+}
+
 double PlatoonVehicle::compute_accepted_lane_change_gap(
 	std::shared_ptr<const NearbyVehicle> nearby_vehicle) const
 {
@@ -335,7 +347,7 @@ double PlatoonVehicle::compute_reference_vehicle_following_gap(
 	std::shared_ptr<const NearbyVehicle> nearby_vehicle) const
 {
 	return nearby_vehicle == nullptr ? 0.0
-		: controller->get_lateral_controller().compute_time_headway_gap(
+		: platoon_vehicle_controller->get_lateral_controller().compute_time_headway_gap(
 			get_velocity(), *nearby_vehicle, 0.0);
 }
 

@@ -13,20 +13,21 @@
 
 #include "LateralController.h"
 #include "SwitchedLongitudinalController.h"
-#include "LongitudinalControllerWithTrafficLights.h"
+//#include "LongitudinalControllerWithTrafficLights.h"
 #include "RealLongitudinalController.h"
 #include "VanAremLongitudinalController.h"
 #include "Vehicle.h"
 #include "VirtualLongitudinalController.h"
 #include "VissimLongitudinalController.h"
+#include "TrafficLight.h"
 
 class EgoVehicle;
 class ACCVehicle;
 class AutonomousVehicle;
 class ConnectedAutonomousVehicle;
-class TrafficLightALCVehicle;
+//class TrafficLightALCVehicle;
 class PlatoonVehicle;
-class VirdiVehicle;
+//class VirdiVehicle;
 
 class VehicleController 
 {
@@ -49,12 +50,12 @@ public:
 	};
 
 	VehicleController() = default;
-	VehicleController(const ACCVehicle& acc_vehicle, bool verbose);
-	VehicleController(const AutonomousVehicle& autonomous_vehicle, bool verbose);
-	VehicleController(const ConnectedAutonomousVehicle& cav, bool verbose);
-	VehicleController(const PlatoonVehicle& platoon_vehicle, bool verbose);
-	VehicleController(const TrafficLightALCVehicle& tfalc_vehicle, bool verbose);
-	VehicleController(const VirdiVehicle& virdi_vehicle, bool verbose);
+	//VehicleController(const ACCVehicle& acc_vehicle, bool verbose);
+	//VehicleController(const AutonomousVehicle& autonomous_vehicle, bool verbose);
+	//VehicleController(const ConnectedAutonomousVehicle& cav, bool verbose);
+	//VehicleController(const PlatoonVehicle& platoon_vehicle, bool verbose);
+	//VehicleController(const TrafficLightALCVehicle& tfalc_vehicle, bool verbose);
+	//VehicleController(const VirdiVehicle& virdi_vehicle, bool verbose);
 
 	color_t get_longitudinal_controller_color() const;
 	/* Safe value depends on whether or not the vehicle has lane
@@ -80,8 +81,8 @@ public:
 		const AutonomousVehicle& autonomous_vehicle);
 	void add_cooperative_lane_change_controller(
 		const ConnectedAutonomousVehicle& cav);
-	void add_traffic_lights_controller();
-	void add_van_arem_controllers(const VirdiVehicle& virdi_vehicle);
+	//void add_traffic_lights_controller();
+	//void add_van_arem_controllers(const VirdiVehicle& virdi_vehicle);
 	//void add_in_platoon_controller(const PlatoonVehicle& platoon_vehicle);
 
 	/* Access to internal controllers ---------------------------------------- */
@@ -169,10 +170,10 @@ public:
 	double get_desired_acceleration(const ConnectedAutonomousVehicle& cav);
 	double get_desired_acceleration(const PlatoonVehicle& platoon_vehicle);
 	/* TODO description */
-	double get_desired_acceleration(
+	/*double get_desired_acceleration(
 		const TrafficLightALCVehicle& ego_vehicle,
 		const std::unordered_map<int, TrafficLight>& traffic_lights);
-	double get_desired_acceleration(const VirdiVehicle& virdi_vehicle);
+	double get_desired_acceleration(const VirdiVehicle& virdi_vehicle);*/
 	void print_traffic_lights(const EgoVehicle& ego,
 		const std::unordered_map<int, TrafficLight>& traffic_lights) const;
 
@@ -289,7 +290,7 @@ private:
 	};
 	
 	/* Traffic Light ALC paper -------------------------------------------- */
-	LongitudinalControllerWithTrafficLights with_traffic_lights_controller;
+	//LongitudinalControllerWithTrafficLights with_traffic_lights_controller;
 
 	std::unordered_map<LongitudinalController::State, color_t>
 		tl_alc_colors =
@@ -314,7 +315,7 @@ private:
 		{ LongitudinalController::State::velocity_control, DARK_GRAY },
 		{ LongitudinalController::State::vehicle_following, WHITE},
 	};
-	RealLongitudinalController* real_leader_controller; /* copy of 
+	RealLongitudinalController* real_leader_controller{ nullptr }; /* copy of
 	origin_lane_controller, but we want a different name in the platoon
 	scenario */
 	RealLongitudinalController virtual_leader_controller;
@@ -385,6 +386,6 @@ private:
 	looking for an appropriate lane change gap. Without this,
 	vehicles might miss a desired exit.	Returns infinity if there is no
 	leader */
-	double get_end_of_lane_desired_acceleration(
-		const VirdiVehicle& virdi_vehicle);
+	/*double get_end_of_lane_desired_acceleration(
+		const VirdiVehicle& virdi_vehicle);*/
 };

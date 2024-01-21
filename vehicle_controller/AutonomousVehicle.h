@@ -1,5 +1,6 @@
 #pragma once
 
+#include "AVController.h"
 #include "EgoVehicle.h"
 #include "LaneChangeGapsSafety.h"
 
@@ -66,7 +67,7 @@ protected:
 		return destination_lane_leader_leader;
 	};
 
-
+	void set_controller(AVController* a_controller);
 	void find_destination_lane_vehicles();
 	bool try_to_overtake_destination_lane_leader() const;
 	bool try_to_overtake_destination_lane_leader(
@@ -88,6 +89,8 @@ private:
 	double min_overtaking_rel_vel{ 10.0	/ 3.6}; // [m/s]
 	double min_overtaking_time{ 10.0 };// s
 	double max_lane_change_waiting_time{ 60.0 }; // [s]
+	std::unique_ptr<AVController> controller_exclusive{ nullptr };
+	AVController* av_controller;
 
 	/* Relevant members for lane changing ------------------------------------ */
 
@@ -123,10 +126,7 @@ private:
 	//double max_risk_to_follower{ 0.0 }; // [m/s]
 
 
-	void implement_create_controller() override {
-		this->controller = std::make_unique<VehicleController>(*this,
-			is_verbose());
-	};
+	void implement_create_controller() override;
 	/* Finds the current leader and, if the vehicle has lane change
 	intention, the destination lane leader and follower */
 	//void find_relevant_nearby_vehicles() override;

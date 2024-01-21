@@ -143,7 +143,7 @@ bool AutonomousVehicle::try_to_overtake_destination_lane_leader(
 	double dest_lane_leader_vel =
 		get_destination_lane_leader()->compute_velocity(ego_velocity);
 	double origin_lane_desired_velocity =
-		(controller->is_in_free_flow_at_origin_lane() || !has_leader()) ?
+		(av_controller->is_in_free_flow_at_origin_lane() || !has_leader()) ?
 		get_desired_velocity()
 		: get_leader()->compute_velocity(ego_velocity);
 
@@ -186,7 +186,7 @@ try_to_overtake_destination_lane_leader_based_on_time() const
 	double dest_lane_leader_vel =
 		get_destination_lane_leader()->compute_velocity(ego_vel);
 	double orig_lane_desired_vel =
-		(controller->is_in_free_flow_at_origin_lane() || !has_leader()) ?
+		(av_controller->is_in_free_flow_at_origin_lane() || !has_leader()) ?
 		get_desired_velocity()
 		: get_leader()->compute_velocity(ego_vel);
 
@@ -224,9 +224,9 @@ void AutonomousVehicle::update_destination_lane_follower(
 			|| (old_follower->get_category()
 				!= destination_lane_follower->get_category()))
 		{
-			controller->update_destination_lane_follower_parameters(
+			av_controller->update_destination_lane_follower_parameters(
 				*destination_lane_follower);
-			controller->update_destination_lane_follower_time_headway(
+			av_controller->update_destination_lane_follower_time_headway(
 				get_max_brake(), false, *destination_lane_follower);
 		}
 	}
@@ -250,7 +250,7 @@ void AutonomousVehicle::update_destination_lane_leader(
 				std::clog << "\tUpdating the dest lane leader"
 					<< std::endl;
 			}
-			controller->update_destination_lane_leader_time_headway(
+			av_controller->update_destination_lane_leader_time_headway(
 				compute_lane_changing_desired_time_headway(
 					*destination_lane_leader));
 		}
@@ -270,7 +270,7 @@ void AutonomousVehicle::update_virtual_leader(
 		{
 			if (verbose) std::clog << "Activating dest lane ctrl.\n";
 
-			controller->activate_destination_lane_controller(*this, 
+			av_controller->activate_destination_lane_controller(*this, 
 				*get_virtual_leader());
 		}
 		else if ((std::abs(new_leader_max_brake
@@ -280,7 +280,7 @@ void AutonomousVehicle::update_virtual_leader(
 		{
 			if (verbose) std::clog << "Updating dest lane ctrl.\n";
 
-			controller->update_destination_lane_controller(*this,
+			av_controller->update_destination_lane_controller(*this,
 				*get_virtual_leader());
 		}
 	}
@@ -336,11 +336,24 @@ double AutonomousVehicle::estimate_nearby_vehicle_time_headway(
 		nearby_vehicle.estimate_desired_time_headway(max_brake, 0));
 }
 
+void AutonomousVehicle::set_controller(AVController* a_controller)
+{
+	this->av_controller = a_controller;
+	EgoVehicle::set_controller(av_controller);
+}
+
+void AutonomousVehicle::implement_create_controller()
+{
+	this->controller_exclusive = std::make_unique<AVController>(
+		*this, is_verbose());
+	this->set_controller(controller_exclusive.get());
+}
+
 double AutonomousVehicle::implement_compute_desired_acceleration(
 	const std::unordered_map<int, TrafficLight>& traffic_lights)
 {
 	double a_desired_acceleration =
-		controller->get_desired_acceleration(*this);
+		av_controller->get_desired_acceleration(*this);
 	return consider_vehicle_dynamics(a_desired_acceleration);
 }
 
@@ -486,12 +499,12 @@ double AutonomousVehicle::compute_accepted_lane_change_gap(
 
 	if (use_linear_lane_change_gap)
 	{
-		accepted_gap = controller->compute_accepted_lane_change_gap(*this,
+		accepted_gap = av_controller->compute_accepted_lane_change_gap(*this,
 				*nearby_vehicle, accepted_risk);
 	}
 	else
 	{
-		accepted_gap = controller->compute_accepted_lane_change_gap_exact(
+		accepted_gap = av_controller->compute_accepted_lane_change_gap_exact(
 			*this, *nearby_vehicle, get_lane_changing_safe_gap_parameters(),
 			accepted_risk);
 	}
@@ -510,7 +523,7 @@ double AutonomousVehicle::compute_time_headway_gap_for_lane_change(
 	if (verbose) std::clog << "[WARNING] USING OUTDATED METHOD\n";
 
 	double accepted_time_headway_gap =
-		controller->get_desired_time_headway_gap(get_velocity(),
+		av_controller->get_desired_time_headway_gap(get_velocity(),
 			nearby_vehicle);
 
 	double accepted_risk = nearby_vehicle.is_ahead() ?

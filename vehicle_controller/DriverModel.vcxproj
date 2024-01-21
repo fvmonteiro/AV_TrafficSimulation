@@ -245,14 +245,16 @@
   <ItemGroup>
     <ClCompile Include="ACCVehicle.cpp" />
     <ClCompile Include="ACCVehicleController.cpp" />
+    <ClCompile Include="AVController.cpp" />
+    <ClCompile Include="CAVController.cpp" />
     <ClCompile Include="ConnectedAutonomousVehicle.cpp" />
+    <ClCompile Include="PlatoonVehicleController.cpp" />
     <ClCompile Include="VehicleController.cpp" />
     <ClCompile Include="InPlatoonLongitudinalController.cpp" />
     <ClCompile Include="LaneChangeGapsSafety.cpp" />
     <ClCompile Include="LastVehicleFirstStates.cpp" />
     <ClCompile Include="LeaderFirstAndInvertStates.cpp" />
     <ClCompile Include="LeaderFirstStates.cpp" />
-    <ClCompile Include="LongitudinalControllerWithTrafficLights.cpp" />
     <ClCompile Include="NoLaneChangeCAV.cpp" />
     <ClCompile Include="Platoon.cpp" />
     <ClCompile Include="PlatoonLaneChangeApproach.cpp" />
@@ -266,11 +268,9 @@
     <ClCompile Include="SwitchedLongitudinalController.cpp" />
     <ClCompile Include="SynchronousStates.cpp" />
     <ClCompile Include="TrafficLight.cpp" />
-    <ClCompile Include="TrafficLightALCVehicle.cpp" />
     <ClCompile Include="TrafficLightFileReader.cpp" />
     <ClCompile Include="VanAremLongitudinalController.cpp" />
     <ClCompile Include="VehicleState.cpp" />
-    <ClCompile Include="VirdiVehicle.cpp" />
     <ClCompile Include="VirtualLongitudinalController.cpp" />
     <ClCompile Include="LateralController.cpp" />
     <ClCompile Include="LongitudinalController.cpp" />
@@ -300,7 +300,10 @@
     <ClInclude Include="ACCVehicle.h" />
     <ClInclude Include="ACCVehicleController.h" />
     <ClInclude Include="AutonomousVehicle.h" />
+    <ClInclude Include="AVController.h" />
+    <ClInclude Include="CAVController.h" />
     <ClInclude Include="ConnectedAutonomousVehicle.h" />
+    <ClInclude Include="PlatoonVehicleController.h" />
     <ClInclude Include="VehicleController.h" />
     <ClInclude Include="EgoVehicleFactory.h" />
     <ClInclude Include="InPlatoonLongitudinalController.h" />
@@ -308,7 +311,6 @@
     <ClInclude Include="LastVehicleFirstStates.h" />
     <ClInclude Include="LeaderFirstAndInvertStates.h" />
     <ClInclude Include="LeaderFirstStates.h" />
-    <ClInclude Include="LongitudinalControllerWithTrafficLights.h" />
     <ClInclude Include="NoLaneChangeCAV.h" />
     <ClInclude Include="Platoon.h" />
     <ClInclude Include="PlatoonLaneChangeApproach.h" />
@@ -322,11 +324,9 @@
     <ClInclude Include="SwitchedLongitudinalController.h" />
     <ClInclude Include="SynchronousStates.h" />
     <ClInclude Include="TrafficLight.h" />
-    <ClInclude Include="TrafficLightALCVehicle.h" />
     <ClInclude Include="TrafficLightFileReader.h" />
     <ClInclude Include="VanAremLongitudinalController.h" />
     <ClInclude Include="VehicleState.h" />
-    <ClInclude Include="VirdiVehicle.h" />
     <ClInclude Include="VirtualLongitudinalController.h" />
     <ClInclude Include="LateralController.h" />
     <ClInclude Include="LongitudinalController.h" />

@@ -52,17 +52,8 @@
     <ClCompile Include="Vehicle.cpp">
       <Filter>Vehicles</Filter>
     </ClCompile>
-    <ClCompile Include="VirdiVehicle.cpp">
-      <Filter>Vehicles</Filter>
-    </ClCompile>
-    <ClCompile Include="TrafficLightALCVehicle.cpp">
-      <Filter>Vehicles</Filter>
-    </ClCompile>
     <ClCompile Include="PlatoonVehicle.cpp">
       <Filter>Vehicles</Filter>
-    </ClCompile>
-    <ClCompile Include="ControlManager.cpp">
-      <Filter>Controllers</Filter>
     </ClCompile>
     <ClCompile Include="GapController.cpp">
       <Filter>Controllers</Filter>
@@ -74,9 +65,6 @@
       <Filter>Controllers</Filter>
     </ClCompile>
     <ClCompile Include="LongitudinalController.cpp">
-      <Filter>Controllers</Filter>
-    </ClCompile>
-    <ClCompile Include="LongitudinalControllerWithTrafficLights.cpp">
       <Filter>Controllers</Filter>
     </ClCompile>
     <ClCompile Include="RealLongitudinalController.cpp">
@@ -120,6 +108,21 @@
     </ClCompile>
     <ClCompile Include="PlatoonLaneChangeApproach.cpp">
       <Filter>Platoons</Filter>
+    </ClCompile>
+    <ClCompile Include="VehicleController.cpp">
+      <Filter>Controllers</Filter>
+    </ClCompile>
+    <ClCompile Include="ACCVehicleController.cpp">
+      <Filter>Controllers</Filter>
+    </ClCompile>
+    <ClCompile Include="CAVController.cpp">
+      <Filter>Controllers</Filter>
+    </ClCompile>
+    <ClCompile Include="PlatoonVehicleController.cpp">
+      <Filter>Controllers</Filter>
+    </ClCompile>
+    <ClCompile Include="AVController.cpp">
+      <Filter>Controllers</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -177,15 +180,6 @@
     <ClInclude Include="Vehicle.h">
       <Filter>Vehicles</Filter>
     </ClInclude>
-    <ClInclude Include="VirdiVehicle.h">
-      <Filter>Vehicles</Filter>
-    </ClInclude>
-    <ClInclude Include="TrafficLightALCVehicle.h">
-      <Filter>Vehicles</Filter>
-    </ClInclude>
-    <ClInclude Include="ControlManager.h">
-      <Filter>Controllers</Filter>
-    </ClInclude>
     <ClInclude Include="GapController.h">
       <Filter>Controllers</Filter>
     </ClInclude>
@@ -196,9 +190,6 @@
       <Filter>Controllers</Filter>
     </ClInclude>
     <ClInclude Include="LongitudinalController.h">
-      <Filter>Controllers</Filter>
-    </ClInclude>
-    <ClInclude Include="LongitudinalControllerWithTrafficLights.h">
       <Filter>Controllers</Filter>
     </ClInclude>
     <ClInclude Include="RealLongitudinalController.h">
@@ -251,6 +242,21 @@
     </ClInclude>
     <ClInclude Include="StateVector.h">
       <Filter>Main and Support</Filter>
+    </ClInclude>
+    <ClInclude Include="VehicleController.h">
+      <Filter>Controllers</Filter>
+    </ClInclude>
+    <ClInclude Include="ACCVehicleController.h">
+      <Filter>Controllers</Filter>
+    </ClInclude>
+    <ClInclude Include="AVController.h">
+      <Filter>Controllers</Filter>
+    </ClInclude>
+    <ClInclude Include="CAVController.h">
+      <Filter>Controllers</Filter>
+    </ClInclude>
+    <ClInclude Include="PlatoonVehicleController.h">
+      <Filter>Controllers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

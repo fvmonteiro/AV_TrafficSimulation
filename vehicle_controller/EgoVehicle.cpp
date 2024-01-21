@@ -216,6 +216,11 @@ void EgoVehicle::set_verbose(bool value)
 	controller->set_verbose(value);
 }
 
+void EgoVehicle::set_controller(VehicleController* controller)
+{
+	this->controller = controller;
+}
+
 void EgoVehicle::set_gap_variation_during_lane_change(int nv_id, double value)
 {
 	gap_variation_during_lane_change[nv_id] = value;

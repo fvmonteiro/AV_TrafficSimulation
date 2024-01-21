@@ -204,13 +204,13 @@ void ConnectedAutonomousVehicle::update_destination_lane_follower(
 	{
 		std::shared_ptr<NearbyVehicle>& dest_lane_follower =
 			get_modifiable_dest_lane_follower();
-		controller->update_destination_lane_follower_time_headway(
+		cav_controller->update_destination_lane_follower_time_headway(
 			get_max_brake(), dest_lane_follower->is_connected(),
 			*dest_lane_follower);
 		if ((old_follower == nullptr )
 			|| (old_follower->get_id() != dest_lane_follower->get_id()))
 		{
-			controller->update_destination_lane_follower_parameters(
+			cav_controller->update_destination_lane_follower_parameters(
 				*dest_lane_follower);
 			//dest_lane_follower_lambda_0 =
 			//	get_destination_lane_follower()->get_lambda_0();
@@ -233,7 +233,7 @@ void ConnectedAutonomousVehicle::update_assisted_vehicle(
 					*assisted_vehicle, 0
 					/* assisted_vehicle->get_max_lane_change_risk_to_follower()*/
 				));
-			controller->update_gap_generation_controller(
+			cav_controller->update_gap_generation_controller(
 				get_velocity(), h_to_assisted_vehicle);
 		}
 	}
@@ -274,6 +274,12 @@ std::pair<double, double> ConnectedAutonomousVehicle
 		std::make_pair(lambda_0_lane_change_connected,
 			lambda_1_lane_change_connected)
 		: EgoVehicle::get_lane_changing_safe_gap_parameters();
+}
+
+void ConnectedAutonomousVehicle::set_controller(CAVController* a_controller)
+{
+	this->cav_controller = a_controller;
+	AutonomousVehicle::set_controller(a_controller);
 }
 
 void ConnectedAutonomousVehicle::set_assisted_vehicle_by_id(
@@ -324,12 +330,12 @@ double ConnectedAutonomousVehicle::compute_accepted_lane_change_gap(
 
 	if (use_linear_lane_change_gap)
 	{
-		accepted_gap = controller->compute_accepted_lane_change_gap(*this,
+		accepted_gap = cav_controller->compute_accepted_lane_change_gap(*this,
 			*nearby_vehicle, accepted_risk);
 	}
 	else
 	{
-		accepted_gap = controller->compute_accepted_lane_change_gap_exact(
+		accepted_gap = cav_controller->compute_accepted_lane_change_gap_exact(
 			*this, *nearby_vehicle, 
 			get_lane_changing_safe_gap_parameters(
 				nearby_vehicle->is_connected()),
@@ -362,12 +368,19 @@ double ConnectedAutonomousVehicle::compute_lane_changing_desired_time_headway(
 	}*/
 }
 
+void ConnectedAutonomousVehicle::implement_create_controller()
+{
+	this->controller_exclusive = std::make_unique<CAVController>(
+		*this, is_verbose());
+	this->set_controller(controller_exclusive.get());
+}
+
 double ConnectedAutonomousVehicle::implement_compute_desired_acceleration(
 	const std::unordered_map<int, TrafficLight>& traffic_lights)
 {
 	if (verbose) std::clog << "[CAV] get_desired_acceleration" << std::endl;
 	double a_desired_acceleration =
-		controller->get_desired_acceleration(*this);
+		cav_controller->get_desired_acceleration(*this);
 	return consider_vehicle_dynamics(a_desired_acceleration);
 }
 

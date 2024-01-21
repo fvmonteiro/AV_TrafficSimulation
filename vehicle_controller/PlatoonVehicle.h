@@ -1,6 +1,7 @@
 #pragma once
 
 #include "ConnectedAutonomousVehicle.h"
+#include "PlatoonVehicleController.h"
 
 class PlatoonVehicle : public ConnectedAutonomousVehicle
 {
@@ -41,10 +42,14 @@ protected:
 
 	/* Returns a nullptr if no virtual leader */
 	std::shared_ptr<NearbyVehicle> define_virtual_leader() const override;
+	void set_controller(PlatoonVehicleController* a_controller);
 
 private:
 	//double min_overtaking_rel_vel{ 50.0 / 3.6 };
 	std::shared_ptr<Platoon> platoon{ nullptr };
+	std::unique_ptr<PlatoonVehicleController> controller_exclusive{ nullptr };
+	PlatoonVehicleController* platoon_vehicle_controller;
+
 	// desired velocity when not a part of the platoon
 	//double alone_desired_velocity{ 0.0 };
 	/* Time the vehicle has been without a platoon.
@@ -60,10 +65,7 @@ private:
 	double in_platoon_comf_accel{ 0.5 };
 	double in_platoon_rho{ 0.1 };
 
-	void implement_create_controller() override {
-		this->controller = std::make_unique<VehicleController>(*this,
-			is_verbose());
-	};
+	void implement_create_controller() override;
 	double implement_compute_desired_acceleration(
 		const std::unordered_map<int, TrafficLight>& traffic_lights) override;
 	void implement_analyze_nearby_vehicles() override;

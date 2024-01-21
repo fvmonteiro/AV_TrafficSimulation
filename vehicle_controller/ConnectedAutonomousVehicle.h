@@ -1,6 +1,7 @@
 #pragma once
 
 #include "AutonomousVehicle.h"
+#include "CAVController.h"
 
 /* Vehicle similar to AutonomousVehicle, but can also request cooperation
 or cooperate with others to generate safe lane changing gaps. */
@@ -41,6 +42,7 @@ protected:
 	std::pair<double, double> get_lane_changing_safe_gap_parameters(
 		bool is_leader_connected) const;
 
+	void set_controller(CAVController* a_controller);
 	void find_cooperation_requests();
 	void set_assisted_vehicle_by_id(long assisted_vehicle_id);
 
@@ -60,12 +62,11 @@ private:
 	lane change gap */
 	std::shared_ptr<NearbyVehicle> assisted_vehicle{ nullptr };
 	double original_desired_velocity{ 0.0 };
+	std::unique_ptr<CAVController> controller_exclusive{ nullptr };
+	CAVController* cav_controller;
 
 
-	void implement_create_controller() override {
-		this->controller = std::make_unique<VehicleController>(*this,
-			is_verbose());
-	};
+	void implement_create_controller() override;
 
 	double implement_compute_desired_acceleration(
 		const std::unordered_map<int, TrafficLight>& traffic_lights) override;
