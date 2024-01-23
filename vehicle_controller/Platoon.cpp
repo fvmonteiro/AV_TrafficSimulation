@@ -327,7 +327,7 @@ long Platoon::get_destination_lane_vehicle_behind_last_vehicle() const
 	return get_last_vehicle()->get_destination_lane_follower_id();
 }
 
-std::shared_ptr<const NearbyVehicle> Platoon
+const NearbyVehicle* Platoon
 ::get_destination_lane_leader() const
 {
 	/* We would like to find the non-platoon vehicle behind which 
@@ -451,9 +451,9 @@ bool Platoon::can_vehicle_leave_platoon(
 		&& lane_change_strategy->can_vehicle_leave_platoon(platoon_vehicle);
 }
 
-bool Platoon::can_vehicle_start_lane_change(long veh_id)
+bool Platoon::can_vehicle_start_lane_change(long veh_id) const
 {
-	int veh_position = vehicle_id_to_position[veh_id];
+	int veh_position = vehicle_id_to_position.at(veh_id);
 	return lane_change_approach->can_vehicle_start_lane_change(veh_position);
 }
 
@@ -494,9 +494,8 @@ long Platoon::create_lane_change_request_for_vehicle(
 		->create_platoon_lane_change_request(platoon_vehicle);
 }
 
-std::shared_ptr<NearbyVehicle> Platoon
-::define_virtual_leader(const PlatoonVehicle& platoon_vehicle)
-const
+NearbyVehicle* Platoon::define_virtual_leader(
+	PlatoonVehicle& platoon_vehicle) const
 {
 	return lane_change_strategy->define_virtual_leader(platoon_vehicle);
 }

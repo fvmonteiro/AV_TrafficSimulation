@@ -28,15 +28,14 @@ private:
 
 	double implement_get_gap_error() const override;
 	double implement_compute_desired_acceleration(
-		const EgoVehicle& ego_vehicle,
-		std::shared_ptr<const NearbyVehicle> leader,
+		const EgoVehicle& ego_vehicle, const NearbyVehicle* leader,
 		double velocity_reference) override;
 
 	double compute_desired_gap(double ego_velocity, 
 		const NearbyVehicle& leader) const;
 	/* Also sets the value of gap error */
 	double compute_gap_control_acceleration(const EgoVehicle& ego_vehicle,
-		std::shared_ptr<const NearbyVehicle> leader);
+		const NearbyVehicle* leader);
 	double compute_velocity_control_acceleration(
 		double velocity_reference, double ego_velocity) const;
 	double apply_jerk_limit(double current_accel, double des_accel);

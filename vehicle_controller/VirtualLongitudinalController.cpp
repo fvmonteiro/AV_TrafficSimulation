@@ -44,8 +44,7 @@ VirtualLongitudinalController::VirtualLongitudinalController(
 //		velocity_filter_gain, time_headway_filter_gain, false) {}
 
 void VirtualLongitudinalController::determine_controller_state(
-	const EgoVehicle& ego_vehicle, 
-	std::shared_ptr<const NearbyVehicle> leader,
+	const EgoVehicle& ego_vehicle, const NearbyVehicle* leader,
 	double reference_velocity, double gap_control_input) 
 {
 	if (leader == nullptr) 

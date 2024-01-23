@@ -89,7 +89,7 @@ void PlatoonVehicleLongAdjustmentState
 		/* In Python, the preparation to start a lane change included
 		setting the start time and setting up a lane change controller.
 		We may need to save the start time. */
-		platoon_vehicle->get_platoon()->set_lane_change_start_time(
+		platoon_vehicle->share_platoon()->set_lane_change_start_time(
 			platoon_vehicle->get_current_time());
 		platoon_vehicle->set_state(
 			std::make_unique<PlatoonVehicleLaneChangingState>());

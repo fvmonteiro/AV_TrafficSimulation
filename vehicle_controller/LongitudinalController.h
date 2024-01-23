@@ -39,7 +39,7 @@ public:
 
 	double get_gap_error() const;
 	double compute_desired_acceleration(const EgoVehicle& ego_vehicle,
-		std::shared_ptr<const NearbyVehicle> leader,
+		const NearbyVehicle* leader,
 		double velocity_reference);
 
 	/* Printing ----------------------------------------------------------- */
@@ -54,8 +54,7 @@ protected:
 private:
 	virtual double implement_get_gap_error() const = 0;
 	virtual double implement_compute_desired_acceleration(
-		const EgoVehicle& ego_vehicle,
-		std::shared_ptr<const NearbyVehicle> leader,
+		const EgoVehicle& ego_vehicle, const NearbyVehicle* leader,
 		double velocity_reference) = 0;
 	std::unordered_map<State, color_t> state_to_color_map;
 	static const std::unordered_map<State, std::string> state_to_string_map;

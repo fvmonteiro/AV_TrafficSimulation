@@ -35,7 +35,7 @@ public:
 
     /* Determines and sets the current state of the longitudinal controller */
     void determine_controller_state(const EgoVehicle& ego_vehicle,
-        std::shared_ptr<const NearbyVehicle> leader,
+        const NearbyVehicle* leader,
         double reference_velocity, double gap_control_input) override;
 
 };

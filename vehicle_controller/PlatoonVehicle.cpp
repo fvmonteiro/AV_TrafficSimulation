@@ -143,8 +143,7 @@ PlatoonVehicle::get_following_vehicle_in_platoon() const
 	return get_platoon()->get_following_vehicle(get_id());
 }
 
-std::shared_ptr<NearbyVehicle> PlatoonVehicle
-::define_virtual_leader_when_alone() const
+NearbyVehicle* PlatoonVehicle::define_virtual_leader_when_alone() const
 {
 	
 	/* Note: this is a copy of 
@@ -153,7 +152,7 @@ std::shared_ptr<NearbyVehicle> PlatoonVehicle
 
 	/* By default, we try to merge behind the current destination
 	lane leader. */
-	std::shared_ptr<NearbyVehicle> nv = get_modifiable_dest_lane_leader();
+	NearbyVehicle* nv = get_modifiable_dest_lane_leader();
 	
 	/* The choice of min overtaking rel vel ensure that we only overtake
 	if the veh is in free-flow mode and the dest lane leader is almost 
@@ -291,7 +290,7 @@ bool PlatoonVehicle::was_my_cooperation_request_accepted() const
 	{
 		/* lane_change_request might be in the nearby vehicle
 		list of some other platoon vehicle, but not ours */
-		std::shared_ptr<NearbyVehicle> cooperating_vehicle =
+		NearbyVehicle* cooperating_vehicle =
 			get_nearby_vehicle_by_id(lane_change_request);
 		if (cooperating_vehicle != nullptr)
 		{
@@ -306,8 +305,7 @@ bool PlatoonVehicle::was_my_cooperation_request_accepted() const
 	return false;
 }
 
-std::shared_ptr<NearbyVehicle> PlatoonVehicle
-::define_virtual_leader() const
+NearbyVehicle* PlatoonVehicle::choose_virtual_leader()
 {
 	return is_in_a_platoon() ? 
 		get_platoon()->define_virtual_leader(*this)
@@ -321,7 +319,7 @@ void PlatoonVehicle::set_controller(PlatoonVehicleController* a_controller)
 }
 
 double PlatoonVehicle::compute_accepted_lane_change_gap(
-	std::shared_ptr<const NearbyVehicle> nearby_vehicle) const
+	const NearbyVehicle* nearby_vehicle) const
 {
 	/* TODO [must check if working]: use simple lane keeping reference gaps */
 	return compute_reference_vehicle_following_gap(nearby_vehicle);
@@ -344,11 +342,11 @@ void PlatoonVehicle::implement_analyze_nearby_vehicles()
 }
 
 double PlatoonVehicle::compute_reference_vehicle_following_gap(
-	std::shared_ptr<const NearbyVehicle> nearby_vehicle) const
+	const NearbyVehicle* nearby_vehicle) const
 {
-	return nearby_vehicle == nullptr ? 0.0
-		: platoon_vehicle_controller->get_lateral_controller().compute_time_headway_gap(
-			get_velocity(), *nearby_vehicle, 0.0);
+	return nearby_vehicle == nullptr ? 
+		0.0 : platoon_vehicle_controller->get_lateral_controller()
+		.compute_time_headway_gap(get_velocity(), *nearby_vehicle, 0.0);
 }
 
 void PlatoonVehicle::find_cooperation_request_from_platoon()
@@ -362,9 +360,9 @@ void PlatoonVehicle::find_cooperation_request_from_platoon()
 	long assisted_vehicle_id = 0;
 	if (is_in_a_platoon())
 	{
-		for (auto const& id_veh_pair : get_nearby_vehicles())
+		for (auto&& id_veh_pair : get_nearby_vehicles())
 		{
-			auto const& nearby_vehicle = id_veh_pair.second;
+			NearbyVehicle* nearby_vehicle = id_veh_pair.second.get();
 			if (platoon->is_vehicle_id_in_platoon(nearby_vehicle->get_id())
 				&& (nearby_vehicle->get_lane_change_request_veh_id() 
 					== get_id()))
@@ -444,7 +442,12 @@ bool PlatoonVehicle::implement_analyze_platoons(
 	return new_platoon_created;
 }
 
-std::shared_ptr<Platoon> PlatoonVehicle::implement_get_platoon() const
+const Platoon* PlatoonVehicle::implement_get_platoon() const
+{
+	return platoon.get();
+}
+
+std::shared_ptr<Platoon> PlatoonVehicle::implement_share_platoon() const
 {
 	return platoon;
 }

@@ -102,30 +102,29 @@ public:
 
 	long get_leader_id() const;
 	long get_old_leader_id() const;
-	std::shared_ptr<Platoon> get_platoon() const {
-		return implement_get_platoon();
-	};
+	const Platoon* get_platoon() const;
+	std::shared_ptr<Platoon> share_platoon() const;
 	double get_safe_time_headway() const;
 	/* Gap error (gap minus reference gap) of active longitudinal
 	controller */
 	double get_gap_error() const;
 	double get_current_desired_time_headway() const;
 	/* Returns a nullptr if there is no leader at the destination lane */
-	std::shared_ptr<const NearbyVehicle> get_destination_lane_leader() const {
+	const NearbyVehicle* get_destination_lane_leader() const {
 		return implement_get_destination_lane_leader();
 	};
 	/* Returns a nullptr if there is no follower at the destination lane */
-	std::shared_ptr<const NearbyVehicle> get_destination_lane_follower() const {
+	const NearbyVehicle* get_destination_lane_follower() const {
 		return implement_get_destination_lane_follower();
 	};
 	/* Returns a nullptr if there is no assisted vehicle */
-	std::shared_ptr<const NearbyVehicle> get_assisted_vehicle() const {
+	const NearbyVehicle* get_assisted_vehicle() const {
 		return implement_get_assisted_vehicle();
 	};
 	double get_gap_variation_to(
-		std::shared_ptr<const NearbyVehicle> nearby_vehicle) const;
+		const NearbyVehicle* nearby_vehicle) const;
 	double get_collision_free_gap_to(
-		std::shared_ptr<const NearbyVehicle> nearby_vehicle) const;
+		const NearbyVehicle* nearby_vehicle) const;
 	/* Returns the state of the Finite State Machine */
 	const VehicleState* get_state() const;
 	/* Lateral position w.r.t. the right boundary of right-most lane */
@@ -162,6 +161,21 @@ public:
 		implement_set_use_linear_lane_change_gap(value);
 	}
 
+	/* Getters for visual debuggin in VISSIM ------------------------------ */
+	/* Most of these could be included only in the derived concrete classes,   
+	but then we wouldn't be able to visualize them in the simulator
+	*/
+	virtual double get_dest_follower_time_headway() const {
+		return -1.0;
+	};
+	virtual double get_time_headway_to_assisted_vehicle() const { 
+		return -1.0; 
+	};
+	/* Returns the transient lane changing gap between ego vehicle
+	and other. */
+	virtual double compute_transient_gap(const NearbyVehicle* nearby_vehicle) {
+		return -1.0;
+	};
 
 	/* Dealing with nearby vehicles --------------------------------------- */
 
@@ -171,7 +185,7 @@ public:
 	the given data. */
 	void emplace_nearby_vehicle(long nv_id, long relative_lane,
 		long relative_position);
-	void emplace_nearby_vehicle(NearbyVehicle nearby_vehicle);
+	void add_nearby_vehicle(NearbyVehicle nearby_vehicle);
 	/* Returns the most recently added nearby vehicle */
 	//std::shared_ptr<NearbyVehicle> peek_nearby_vehicles() const;
 	/* Sets the nearby vehicle if both the ego and nearby vehicles are connected.
@@ -190,21 +204,17 @@ public:
 	};
 	//bool is_cutting_in(const NearbyVehicle& nearby_vehicle) const;
 	bool has_leader() const;
-	double get_time_headway_to_assisted_vehicle() const;
 	/* Returns a nullptr if there is no leader */
-	std::shared_ptr<const NearbyVehicle> get_leader() const;
+	const NearbyVehicle* get_leader() const;
 	/* Returns a nullptr if vehicle not found */
-	std::shared_ptr<NearbyVehicle> get_nearby_vehicle_by_id(
-		long nv_id) const;
+	NearbyVehicle* get_nearby_vehicle_by_id(long nv_id) const;
 
 	/* Computes the bumper-to-bumper distance between vehicles.
 	Returns MAX_DISTANCE if nearby_vehicle is empty. */
-	double compute_gap_to_a_leader(
-		const NearbyVehicle& nearby_vehicle) const;
+	double compute_gap_to_a_leader(const NearbyVehicle& nearby_vehicle) const;
 	/* Computes the bumper-to-bumper distance between vehicles.
 	Returns MAX_DISTANCE if nearby_vehicle is a nullptr. */
-	double compute_gap_to_a_leader(
-		std::shared_ptr<const NearbyVehicle> nearby_vehicle) const;
+	double compute_gap_to_a_leader(const NearbyVehicle* nearby_vehicle) const;
 	/* Computes the bumper-to-bumper distance between vehicles.
 	Returns MAX_DISTANCE if nearby_vehicle is empty. */
 	double compute_gap_to_a_follower(
@@ -212,17 +222,10 @@ public:
 	/* Computes the bumper-to-bumper distance between vehicles.
 	Returns MAX_DISTANCE if nearby_vehicle is a nullptr. */
 	double compute_gap_to_a_follower(
-		std::shared_ptr<const NearbyVehicle> nearby_vehicle) const;
+		const NearbyVehicle* nearby_vehicle) const;
 	/* 'Exact' nonlinear safe gap. Returns 0 if there is no leader */
 	double compute_safe_gap_to_leader();
 
-	/* Computes the absolute bumper-to-bumper distance between vehicles.
-	Returns MAX_DISTANCE if nearby_vehicle is empty. */
-	//double compute_absolute_gap(const NearbyVehicle& nearby_vehicle) const;
-	/* Computes the absolute bumper-to-bumper distance between vehicles.
-	* Returns MAX_DISTANCE if nearby_vehicle is a nullptr. */
-	/*double compute_absolute_gap(
-		std::shared_ptr<const NearbyVehicle> nearby_vehicle) const;*/
 	/* Ego velocity minus leader velocity. Returns zero if there
 	* is no leader */
 	double get_relative_velocity_to_leader();
@@ -246,7 +249,6 @@ public:
 	long get_destination_lane_follower_id() const;
 	// Returns zero if no assisted vehicle
 	long get_assisted_veh_id() const;
-	double get_dest_follower_time_headway() const;
 	// Returns zero if no virtual leader
 	long get_virtual_leader_id() const;
 
@@ -262,11 +264,6 @@ public:
 	
 	double compute_ttc(const NearbyVehicle& nearby_vehicle);
 	double compute_drac(const NearbyVehicle& nearby_vehicle);
-	/* Relative velocity at collision time under the worst case scenario
-	TODO: move to autonomous vehicle class */
-	/*double compute_collision_severity_risk(
-		const NearbyVehicle& nearby_vehicle) const;*/
-	//double compute_collision_severity_risk_to_leader();
 
 	/* State-machine related methods ----------------------------------------- */
 
@@ -300,7 +297,7 @@ public:
 	//void decide_lane_change_direction();
 
 	double get_accepted_lane_change_gap(
-		std::shared_ptr<const NearbyVehicle> nearby_vehicle);
+		const NearbyVehicle* nearby_vehicle);
 
 	/* Methods to access internal values. Used for quicker debugging --------- */
 
@@ -313,11 +310,7 @@ public:
 	/* Returns the desired time headway gap between the ego vehicle and the 
 	nearby vehicle based on their relative positions. */
 	double compute_time_headway_gap(
-		std::shared_ptr<const NearbyVehicle> nearby_vehicle) const;
-	/* Returns the transient lane changing gap between ego vehicle
-	and other. */
-	double compute_transient_gap(
-		std::shared_ptr<const NearbyVehicle> nearby_vehicle);
+		const NearbyVehicle* nearby_vehicle) const;
 	/* Sets the desired time headway of the origin lane controller based 
 	on the vehicle's current intention and current maneuver */
 	void update_time_headway_to_leader();
@@ -400,7 +393,7 @@ private:
 	/* Emergency braking parameter during lane change */
 	double lambda_0_lane_change{ 0.0 }; // [m/s]
 	std::unordered_map<long, std::shared_ptr<NearbyVehicle>> nearby_vehicles;
-	std::shared_ptr<NearbyVehicle> leader{ nullptr };
+	NearbyVehicle* leader{ nullptr };
 	long old_leader_id{ 0 };
 
 	/* Data obtained from VISSIM or generated by internal computations ---- */
@@ -477,12 +470,12 @@ private:
 	virtual bool implement_has_next_traffic_light() const { return false; };
 	//virtual void compute_lane_change_risks() {};
 	virtual double compute_accepted_lane_change_gap(
-		std::shared_ptr<const NearbyVehicle> nearby_vehicle) const = 0;
-	virtual std::shared_ptr<NearbyVehicle>
+		const NearbyVehicle* nearby_vehicle) const = 0;
+	virtual NearbyVehicle*
 		implement_get_destination_lane_leader() const = 0;
-	virtual std::shared_ptr<NearbyVehicle>
+	virtual NearbyVehicle*
 		implement_get_destination_lane_follower() const = 0;
-	virtual std::shared_ptr<NearbyVehicle>
+	virtual NearbyVehicle*
 		implement_get_assisted_vehicle() const = 0;
 	virtual long implement_get_virtual_leader_id() const = 0;
 	virtual void implement_set_accepted_lane_change_risk_to_leaders(
@@ -493,7 +486,8 @@ private:
 
 	virtual void pass_this_to_state();
 	// TODO: should this be abstract?
-	virtual std::shared_ptr<Platoon> implement_get_platoon() const;
+	virtual const Platoon* implement_get_platoon() const;
+	virtual std::shared_ptr<Platoon> implement_share_platoon() const;
 
 	/* Finds the current leader */
 	virtual void implement_analyze_nearby_vehicles();
@@ -507,7 +501,7 @@ private:
 	virtual double compute_lane_changing_desired_time_headway(
 		const NearbyVehicle& nearby_vehicle) const = 0;
 
-	void update_leader(std::shared_ptr<const NearbyVehicle>& old_leader);
+	void update_leader(const NearbyVehicle* old_leader);
 
 	/* For printing and debugging purporses ------------------------------- */
 	//static const std::unordered_map<State, std::string> state_to_string_map;

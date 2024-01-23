@@ -34,14 +34,14 @@ public:
 	const PlatoonVehicle* get_following_vehicle_in_platoon() const;
 	/* Suggests the virtual leader as if the vehicle was not part of 
 	a platoon */
-	std::shared_ptr<NearbyVehicle> define_virtual_leader_when_alone() const;
+	NearbyVehicle* define_virtual_leader_when_alone() const;
 	bool is_vehicle_in_sight(long nearby_vehicle_id) const;
 	bool can_start_lane_change();
 
 protected:
 
 	/* Returns a nullptr if no virtual leader */
-	std::shared_ptr<NearbyVehicle> define_virtual_leader() const override;
+	NearbyVehicle* choose_virtual_leader() override;
 	void set_controller(PlatoonVehicleController* a_controller);
 
 private:
@@ -78,19 +78,20 @@ private:
 	double compute_lane_changing_desired_time_headway(
 		const NearbyVehicle& nearby_vehicle) const override;
 	double compute_accepted_lane_change_gap(
-		std::shared_ptr<const NearbyVehicle> nearby_vehicle) const override;
+		const NearbyVehicle* nearby_vehicle) const override;
 	/* SCENARIO SPECIFIC: the platoon vehicles always start at the in ramp, 
 	and they try to change lanes as soon as they enter the highway */
 	void set_desired_lane_change_direction() override;
 	//bool implement_check_lane_change_gaps() override;
-	std::shared_ptr<Platoon> implement_get_platoon() const override;
+	const Platoon* implement_get_platoon() const override;
+	std::shared_ptr<Platoon> implement_share_platoon() const override;
 	void pass_this_to_state() override;
 	/* Chooses the desired destination lane follower */
 	void create_lane_change_request() override;
 	bool was_my_cooperation_request_accepted() const override;
 
 	double compute_reference_vehicle_following_gap(
-		std::shared_ptr<const NearbyVehicle> nearby_vehicle) const;
+		const NearbyVehicle* nearby_vehicle) const;
 	// Check if vehicles in our platoon need gap generation
 	void find_cooperation_request_from_platoon();
 	void create_platoon(long platoon_id, int platoon_lc_strategy);

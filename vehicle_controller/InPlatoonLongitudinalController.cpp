@@ -22,8 +22,7 @@ InPlatoonLongitudinalController::InPlatoonLongitudinalController(
 
 double InPlatoonLongitudinalController::
 implement_compute_desired_acceleration(
-	const EgoVehicle& ego_vehicle,
-	std::shared_ptr<const NearbyVehicle> leader,
+	const EgoVehicle& ego_vehicle, const NearbyVehicle* leader,
 	double velocity_reference)
 {
 	return gap_controller.compute_desired_acceleration(

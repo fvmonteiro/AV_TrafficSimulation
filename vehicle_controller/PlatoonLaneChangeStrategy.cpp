@@ -37,8 +37,8 @@ long PlatoonLaneChangeStrategy::create_platoon_lane_change_request(
 	return implement_create_platoon_lane_change_request(platoon_vehicle);
 }
 
-std::shared_ptr<NearbyVehicle> PlatoonLaneChangeStrategy
-::define_virtual_leader(const PlatoonVehicle& platoon_vehicle) const
+NearbyVehicle* PlatoonLaneChangeStrategy
+::define_virtual_leader(PlatoonVehicle& platoon_vehicle) const
 {
 	return implement_define_virtual_leader(platoon_vehicle);
 }
@@ -64,8 +64,8 @@ long NoStrategy::implement_create_platoon_lane_change_request(
 	return platoon_vehicle.get_destination_lane_follower_id();
 }
 
-std::shared_ptr<NearbyVehicle> NoStrategy
-::implement_define_virtual_leader(const PlatoonVehicle& platoon_vehicle) const
+NearbyVehicle* NoStrategy
+::implement_define_virtual_leader(PlatoonVehicle & platoon_vehicle) const
 {
 	return platoon_vehicle.define_virtual_leader_when_alone();
 }
@@ -106,8 +106,8 @@ long SynchronousStrategy::implement_create_platoon_lane_change_request(
 	//return platoon->get_destination_lane_vehicle_behind_the_leader();
 }
 
-std::shared_ptr<NearbyVehicle> SynchronousStrategy
-::implement_define_virtual_leader(const PlatoonVehicle& platoon_vehicle) const
+NearbyVehicle* SynchronousStrategy
+::implement_define_virtual_leader(PlatoonVehicle & platoon_vehicle) const
 {
 	return platoon_vehicle.is_platoon_leader() ?
 		platoon_vehicle.define_virtual_leader_when_alone() : nullptr;
@@ -171,8 +171,8 @@ long LeaderFirstStrategy::implement_create_platoon_lane_change_request(
 	return 0;
 }
 
-std::shared_ptr<NearbyVehicle> LeaderFirstStrategy
-::implement_define_virtual_leader(const PlatoonVehicle& platoon_vehicle) const
+NearbyVehicle* LeaderFirstStrategy
+::implement_define_virtual_leader(PlatoonVehicle & platoon_vehicle) const
 {
 	if (platoon_vehicle.is_platoon_leader())
 	{
@@ -260,8 +260,8 @@ long LastVehicleFirstStrategy::implement_create_platoon_lane_change_request(
 	return desired_future_follower_id;	
 }
 
-std::shared_ptr<NearbyVehicle> LastVehicleFirstStrategy
-::implement_define_virtual_leader(const PlatoonVehicle& platoon_vehicle) const
+NearbyVehicle* LastVehicleFirstStrategy
+::implement_define_virtual_leader(PlatoonVehicle & platoon_vehicle) const
 {
 	if (platoon_vehicle.is_last_platoon_vehicle())
 	{
@@ -348,8 +348,8 @@ long LeaderFirstAndInvertStrategy
 	return desired_future_follower_id;
 }
 
-std::shared_ptr<NearbyVehicle> LeaderFirstAndInvertStrategy
-::implement_define_virtual_leader(const PlatoonVehicle& platoon_vehicle) const
+NearbyVehicle* LeaderFirstAndInvertStrategy
+::implement_define_virtual_leader(PlatoonVehicle & platoon_vehicle) const
 {
 	if (platoon_vehicle.is_platoon_leader())
 	{
@@ -366,7 +366,7 @@ std::shared_ptr<NearbyVehicle> LeaderFirstAndInvertStrategy
 	merge merge between the preceding vehicle and its real leader. */
 	const auto& preceding_vehicle =
 		*platoon_vehicle.get_preceding_vehicle_in_platoon();
-	std::shared_ptr<NearbyVehicle> virtual_leader{ nullptr };
+	NearbyVehicle* virtual_leader{ nullptr };
 	if (!platoon_vehicle.has_leader()
 		|| (platoon_vehicle.get_leader_id()
 			!= preceding_vehicle.get_id()))
@@ -385,17 +385,13 @@ std::shared_ptr<NearbyVehicle> LeaderFirstAndInvertStrategy
 			if (virtual_leader == nullptr)
 			{
 				/* We didn't find the preceding vehicle's leader in the
-				platoon vehicle's nearby vehicle list*/
-				virtual_leader =
-					platoon_vehicle.create_nearby_vehicle_from_another(
+				platoon vehicle's nearby vehicle list */
+				platoon_vehicle.add_nearby_vehicle_from_another(
 						preceding_vehicle, preceding_veh_leader_id);
+				virtual_leader = platoon_vehicle.get_nearby_vehicle_by_id(
+					preceding_veh_leader_id);
 			}
 		}
-		//return virtual_leader;
 	}
 	return virtual_leader;
-	/*else
-	{
-		return nullptr;
-	}*/
 }

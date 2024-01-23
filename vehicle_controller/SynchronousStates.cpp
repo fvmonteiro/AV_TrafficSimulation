@@ -112,7 +112,7 @@ void SynchronousLookingForSafeGapState
 	{
 		if (platoon_vehicle->is_platoon_leader())
 		{
-			platoon_vehicle->get_platoon()->set_velocity_at_lane_change_start(
+			platoon_vehicle->share_platoon()->set_velocity_at_lane_change_start(
 				platoon_vehicle->get_velocity()
 			);
 		}

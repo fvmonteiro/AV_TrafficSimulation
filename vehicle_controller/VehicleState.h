@@ -76,11 +76,13 @@ protected:
 private:
 	std::string strategy_name;
 	std::string state_name;
-	/* Describes the state number withing the entire maneuver */
+	/* Describes the state number within the entire maneuver */
 	int state_number{ 0 };
 
 	/* Derived classes might need to use some concrete implementation of
-	EgoVehicle. They can cast it in this function. */
+	EgoVehicle. They can cast it in this function. 
+	Note: dynamic casting does not appear to be a good solution, but
+	no idea how to solve it differently. */
 	virtual void set_specific_type_of_vehicle(EgoVehicle* ego_vehicle) {};
 	virtual void implement_handle_lane_keeping_intention() = 0;
 	virtual void implement_handle_lane_change_intention() = 0;

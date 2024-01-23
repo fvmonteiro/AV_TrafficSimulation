@@ -24,10 +24,12 @@ public:
 
 	bool is_cooperating_to_generate_gap() const;
 	/* A connected nearby vehicle can inform us about a vehicle in its
-	range which we cannot detect. Returns nullptr if the cav is 
+	range which we cannot detect. Does nothing if the cav is 
 	not in our current list of nearby vehicles. */
-	std::shared_ptr<NearbyVehicle> create_nearby_vehicle_from_another(
-		const ConnectedAutonomousVehicle& cav, long nv_id) const;
+	void add_nearby_vehicle_from_another(
+		const ConnectedAutonomousVehicle& cav, long nv_id);
+
+	double get_time_headway_to_assisted_vehicle() const override;
 
 protected:
 	/* id of the vehicle in front of which we want to merge */
@@ -47,7 +49,7 @@ protected:
 	void set_assisted_vehicle_by_id(long assisted_vehicle_id);
 
 	/* Returns a nullptr if no virtual leader */
-	std::shared_ptr<NearbyVehicle> define_virtual_leader() const override;
+	NearbyVehicle* choose_virtual_leader() override;
 
 private:
 	/* Emergency braking parameter between connected vehicles */
@@ -60,7 +62,7 @@ private:
 	long assisted_vehicle_id{ 0 };
 	/* Vehicle for which the ego vehicle will help generate a safe
 	lane change gap */
-	std::shared_ptr<NearbyVehicle> assisted_vehicle{ nullptr };
+	NearbyVehicle* assisted_vehicle{ nullptr };
 	double original_desired_velocity{ 0.0 };
 	std::unique_ptr<CAVController> controller_exclusive{ nullptr };
 	CAVController* cav_controller;
@@ -78,8 +80,7 @@ private:
 	and follower (if the vehicle has lane change intention),
 	and if any nearby vehicle requested cooperation */
 	void implement_analyze_nearby_vehicles() override;
-	std::shared_ptr<NearbyVehicle>
-		implement_get_assisted_vehicle() const override;
+	NearbyVehicle* implement_get_assisted_vehicle() const override;
 	double compute_vehicle_following_safe_time_headway(
 		const NearbyVehicle& nearby_vehicle) const override;
 	double compute_vehicle_following_time_headway(
@@ -92,7 +93,7 @@ private:
 	
 	long implement_get_lane_change_request() const override;
 	double compute_accepted_lane_change_gap(
-		std::shared_ptr<const NearbyVehicle> nearby_vehicle) const override;
+		const NearbyVehicle* nearby_vehicle) const override;
 
 	/* Id of the vehicle in front of which we want to merge
 	IF we are trying to perform a mandatory lane change */
@@ -102,9 +103,9 @@ private:
 	void deal_with_close_and_slow_assited_vehicle();
 	void compute_connected_safe_gap_parameters();
 	void update_destination_lane_follower(
-		const std::shared_ptr<NearbyVehicle>& old_follower) override;
+		const NearbyVehicle* old_follower) override;
 	void update_assisted_vehicle(
-		const std::shared_ptr<NearbyVehicle>& old_assisted_vehicle);
+		const NearbyVehicle* old_assisted_vehicle);
 	
 	void set_max_desired_velocity(bool should_increase);
 };

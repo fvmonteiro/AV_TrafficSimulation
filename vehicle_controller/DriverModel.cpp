@@ -848,7 +848,7 @@ DRIVERMODEL_API  int  DriverModelExecuteCommand (long number)
             platoon_id, platoon_lc_strategy))
         {
             platoons[platoon_id] =
-                vehicles[current_vehicle_id]->get_platoon();
+                vehicles[current_vehicle_id]->share_platoon();
             if (platoon_id == LOGGED_PLATOON_ID)
             {
                 platoons[platoon_id]->set_verbose(true);

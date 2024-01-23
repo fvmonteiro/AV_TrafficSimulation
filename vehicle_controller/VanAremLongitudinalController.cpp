@@ -20,8 +20,7 @@ double VanAremLongitudinalController::implement_get_gap_error() const
 }
 
 double VanAremLongitudinalController::implement_compute_desired_acceleration(
-	const EgoVehicle& ego_vehicle,
-	std::shared_ptr<const NearbyVehicle> leader,
+	const EgoVehicle& ego_vehicle, const NearbyVehicle* leader,
 	double velocity_reference)
 {
 	double des_accel_vel = compute_velocity_control_acceleration(
@@ -67,8 +66,7 @@ double VanAremLongitudinalController::compute_desired_gap(
 }
 
 double VanAremLongitudinalController::compute_gap_control_acceleration(
-	const EgoVehicle& ego_vehicle,
-	std::shared_ptr<const NearbyVehicle> leader)
+	const EgoVehicle& ego_vehicle, const NearbyVehicle* leader)
 {
 	if (leader == nullptr)
 	{

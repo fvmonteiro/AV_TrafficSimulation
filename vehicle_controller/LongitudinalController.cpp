@@ -26,7 +26,7 @@ double LongitudinalController::get_gap_error() const
 
 double LongitudinalController::compute_desired_acceleration(
 	const EgoVehicle& ego_vehicle,
-	std::shared_ptr<const NearbyVehicle> leader,
+	const NearbyVehicle* leader,
 	double velocity_reference)
 {
 	return implement_compute_desired_acceleration(ego_vehicle, leader,

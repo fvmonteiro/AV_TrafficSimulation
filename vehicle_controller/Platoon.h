@@ -58,7 +58,7 @@ public:
 	long get_destination_lane_vehicle_behind_the_leader() const;
 	long get_destination_lane_vehicle_behind_last_vehicle() const;
 	/* The vehicle behind which the platoon wants to move */
-	std::shared_ptr<const NearbyVehicle> get_destination_lane_leader() const;
+	const NearbyVehicle* get_destination_lane_leader() const;
 
 	void set_strategy(int strategy_number);
 	void set_possible_maneuver_initial_states();
@@ -76,15 +76,15 @@ public:
 	void remove_vehicle_by_id(long veh_id, bool is_out_of_simulation);
 	bool can_vehicle_leave_platoon(
 		const PlatoonVehicle& platoon_vehicle) const;
-	bool can_vehicle_start_lane_change(long veh_id);
+	bool can_vehicle_start_lane_change(long veh_id) const;
 	/* Returns true if the platoon is stopped right before the mandatory
 	lane change point, i.e., stuck waiting to start lane change.*/
 	bool is_stuck() const;
 	void reorder_vehicles();
 	long create_lane_change_request_for_vehicle(
 		const PlatoonVehicle& platoon_vehicle) const;
-	std::shared_ptr<NearbyVehicle> define_virtual_leader(
-		const PlatoonVehicle& platoon_vehicle) const;
+	NearbyVehicle* define_virtual_leader(
+		PlatoonVehicle& platoon_vehicle) const;
 
 	/* Print function */
 	friend std::ostream& operator<< (std::ostream& out,

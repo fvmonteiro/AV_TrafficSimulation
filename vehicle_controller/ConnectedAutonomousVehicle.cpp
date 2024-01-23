@@ -24,9 +24,9 @@ bool ConnectedAutonomousVehicle::is_cooperating_to_generate_gap() const {
 	/* Function seems unnecessary, but we might perform other checks here */
 }
 
-std::shared_ptr<NearbyVehicle> ConnectedAutonomousVehicle
-::create_nearby_vehicle_from_another(
-	const ConnectedAutonomousVehicle& cav, long nv_id) const
+void ConnectedAutonomousVehicle
+::add_nearby_vehicle_from_another(
+	const ConnectedAutonomousVehicle& cav, long nv_id)
 {
 	const auto& source_nv = get_nearby_vehicle_by_id(cav.get_id());
 	
@@ -35,15 +35,32 @@ std::shared_ptr<NearbyVehicle> ConnectedAutonomousVehicle
 	{
 		NearbyVehicle new_nv(*cav.get_nearby_vehicle_by_id(nv_id));
 		new_nv.offset_from_another(*source_nv);
-		return std::make_shared<NearbyVehicle>(new_nv);
+		add_nearby_vehicle(new_nv);
+		//return std::make_shared<NearbyVehicle>(new_nv);
 	}
-	else
-	{
-		return nullptr;
-	}
+	//else
+	//{
+	//	return nullptr;
+	//}
 }
 
-std::shared_ptr<NearbyVehicle> ConnectedAutonomousVehicle::
+double ConnectedAutonomousVehicle::get_time_headway_to_assisted_vehicle() 
+const
+{
+	if (has_assisted_vehicle())
+	{
+		/* Only true when both ego and nearby vehicles are connected */
+		return cav_controller->get_gap_generation_lane_controller().
+			get_desired_time_headway();
+	}
+	/* We return a high value when there's no assisted vehicle because,
+	when a vehicle first requests assistance, it takes one simulation
+	iteration for the headway to be computed and transferred to the
+	assisted vehicle. */
+	return 3.0;
+}
+
+NearbyVehicle* ConnectedAutonomousVehicle::
 implement_get_assisted_vehicle() const
 {
 	return assisted_vehicle;
@@ -99,12 +116,11 @@ void ConnectedAutonomousVehicle::find_cooperation_requests()
 	//set_desired_velocity(original_desired_velocity);
 	bool should_increase_vel = false;
 
-	std::shared_ptr<NearbyVehicle> old_assisted_vehicle =
-		std::move(assisted_vehicle);
-
+	NearbyVehicle* old_assisted_vehicle = assisted_vehicle;
+	assisted_vehicle = nullptr;
 	for (auto const& id_veh_pair : get_nearby_vehicles())
 	{
-		auto const& nearby_vehicle = id_veh_pair.second;
+		NearbyVehicle* nearby_vehicle = id_veh_pair.second.get();
 		// Wants to merge in front of me?
 		if (nearby_vehicle->get_lane_change_request_veh_id() == get_id())
 		{
@@ -127,12 +143,12 @@ void ConnectedAutonomousVehicle::find_cooperation_requests()
 	update_assisted_vehicle(old_assisted_vehicle);
 }
 
-std::shared_ptr<NearbyVehicle> ConnectedAutonomousVehicle
-::define_virtual_leader() const
+NearbyVehicle* ConnectedAutonomousVehicle
+::choose_virtual_leader()
 {
 	/* By default, we try to merge behind the current destination
 	lane leader. */
-	std::shared_ptr<NearbyVehicle> nv = get_modifiable_dest_lane_leader();
+	NearbyVehicle* nv = get_modifiable_dest_lane_leader();
 
 	if (try_to_overtake_destination_lane_leader())
 	{
@@ -172,7 +188,7 @@ bool ConnectedAutonomousVehicle::was_my_cooperation_request_accepted() const
 	return false;
 	if (lane_change_request != 0)
 	{
-		std::shared_ptr<NearbyVehicle> cooperating_vehicle =
+		NearbyVehicle* cooperating_vehicle =
 			get_nearby_vehicle_by_id(lane_change_request);
 		if (cooperating_vehicle != nullptr
 			&& cooperating_vehicle->get_assisted_vehicle_id() == get_id())
@@ -198,11 +214,11 @@ void ConnectedAutonomousVehicle::deal_with_close_and_slow_assited_vehicle()
 }
 
 void ConnectedAutonomousVehicle::update_destination_lane_follower(
-	const std::shared_ptr<NearbyVehicle>& old_follower)
+	const NearbyVehicle* old_follower)
 {
 	if (has_destination_lane_follower())
 	{
-		std::shared_ptr<NearbyVehicle>& dest_lane_follower =
+		NearbyVehicle* dest_lane_follower =
 			get_modifiable_dest_lane_follower();
 		cav_controller->update_destination_lane_follower_time_headway(
 			get_max_brake(), dest_lane_follower->is_connected(),
@@ -221,7 +237,7 @@ void ConnectedAutonomousVehicle::update_destination_lane_follower(
 }
 
 void ConnectedAutonomousVehicle::update_assisted_vehicle(
-	const std::shared_ptr<NearbyVehicle>& old_assisted_vehicle)
+	const NearbyVehicle* old_assisted_vehicle)
 {
 	if (has_assisted_vehicle())
 	{
@@ -285,8 +301,7 @@ void ConnectedAutonomousVehicle::set_controller(CAVController* a_controller)
 void ConnectedAutonomousVehicle::set_assisted_vehicle_by_id(
 	long assisted_vehicle_id)
 {
-	std::shared_ptr<NearbyVehicle> old_assisted_vehicle =
-		std::move(assisted_vehicle);
+	NearbyVehicle* old_assisted_vehicle = assisted_vehicle;
 	assisted_vehicle = get_nearby_vehicle_by_id(assisted_vehicle_id);
 	//deal_with_close_and_slow_assited_vehicle();
 	update_assisted_vehicle(old_assisted_vehicle);
@@ -315,7 +330,7 @@ compute_vehicle_following_time_headway(
 }
 
 double ConnectedAutonomousVehicle::compute_accepted_lane_change_gap(
-	std::shared_ptr<const NearbyVehicle> nearby_vehicle) const
+	const NearbyVehicle* nearby_vehicle) const
 {
 	if (nearby_vehicle == nullptr) return 0.0;
 
