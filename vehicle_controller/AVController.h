@@ -6,7 +6,7 @@ class AutonomousVehicle;
 class AVController : public VehicleController
 {
 public:
-	AVController(const AutonomousVehicle& autonomous_vehicle, bool verbose);
+	AVController(const AutonomousVehicle* autonomous_vehicle, bool verbose);
 
 	const VirtualLongitudinalController& get_destination_lane_controller()
 		const {
@@ -65,8 +65,8 @@ protected:
 	LateralController lateral_controller;
 	VirtualLongitudinalController destination_lane_controller;
 
-	AVController(bool verbose) : VehicleController(verbose), 
-		lateral_controller{ LateralController(verbose) } {};
+	//AVController(bool verbose) : VehicleController(verbose), 
+	//	lateral_controller{ LateralController(verbose) } {};
 
 	/* Desired acceleration to adjust to destination lane leader.
 	Returns true if the computed acceleration was added to the map */
@@ -79,6 +79,7 @@ protected:
 		const NearbyVehicle& nearby_vehicle) const;
 
 private:
+	const AutonomousVehicle* autonomous_vehicle{ nullptr };
 
 	std::unordered_map<LongitudinalController::State, color_t>
 		dest_lane_colors =
@@ -86,12 +87,12 @@ private:
 		{ LongitudinalController::State::velocity_control, LIGHT_BLUE },
 		{ LongitudinalController::State::vehicle_following, BLUE },
 	};
-
+	
+	void implement_add_internal_controllers() override;
 	void implement_update_origin_lane_controller(
 		const EgoVehicle& ego_vehicle, const NearbyVehicle& real_leader
 	) override;
 	double implement_get_desired_time_headway_gap(
-		double ego_velocity, const NearbyVehicle& real_leader
-	) const override;
+		const NearbyVehicle& real_leader) const override;
 };
 

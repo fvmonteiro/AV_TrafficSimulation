@@ -1,17 +1,8 @@
 #include "CAVController.h"
 #include "ConnectedAutonomousVehicle.h"
 
-CAVController::CAVController(const ConnectedAutonomousVehicle& cav,
-	bool verbose) : AVController(verbose)
-{
-	if (verbose)
-	{
-		std::clog << "Creating CAV control manager\n";
-	}
-	add_origin_lane_controllers(cav);
-	add_lane_change_adjustment_controller(cav);
-	add_cooperative_lane_change_controller(cav);
-}
+CAVController::CAVController(const ConnectedAutonomousVehicle* cav,
+	bool verbose) : AVController(cav, verbose), cav{cav} {}
 
 double CAVController::get_desired_acceleration(
 	const ConnectedAutonomousVehicle& cav)
@@ -98,4 +89,14 @@ bool CAVController::get_cooperative_desired_acceleration(
 		is_active = true;
 	}
 	return is_active;
+}
+
+void CAVController::implement_add_internal_controllers()
+{
+	if (verbose) std::clog << "Creating CAV controlers\n";
+
+	add_origin_lane_controllers(*cav);
+	add_lane_change_adjustment_controller(*cav);
+	add_cooperative_lane_change_controller(*cav);
+	lateral_controller = LateralController(verbose);
 }

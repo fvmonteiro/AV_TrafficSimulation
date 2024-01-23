@@ -19,7 +19,7 @@ protected:
 
 private:
 	std::unique_ptr<ACCVehicleController> controller_exclusive{ nullptr };
-	ACCVehicleController* acc_vehicle_controller;
+	ACCVehicleController* acc_vehicle_controller{ nullptr };
 
 	void implement_create_controller() override;
 	double implement_compute_desired_acceleration(

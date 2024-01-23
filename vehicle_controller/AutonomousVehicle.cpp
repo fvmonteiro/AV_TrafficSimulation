@@ -359,7 +359,8 @@ void AutonomousVehicle::set_controller(AVController* a_controller)
 void AutonomousVehicle::implement_create_controller()
 {
 	this->controller_exclusive = std::make_unique<AVController>(
-		*this, is_verbose());
+		this, is_verbose());
+	controller_exclusive->add_internal_controllers();
 	this->set_controller(controller_exclusive.get());
 }
 
@@ -505,7 +506,6 @@ double AutonomousVehicle::compute_accepted_lane_change_gap(
 	double accepted_gap;
 	double accepted_risk = 0.0;
 
-	
 	if (verbose)
 	{
 		std::clog << "\tUsing linear overestimation? "
@@ -538,8 +538,7 @@ double AutonomousVehicle::compute_time_headway_gap_for_lane_change(
 	if (verbose) std::clog << "[WARNING] USING OUTDATED METHOD\n";
 
 	double accepted_time_headway_gap =
-		av_controller->get_desired_time_headway_gap(get_velocity(),
-			nearby_vehicle);
+		av_controller->get_desired_time_headway_gap(nearby_vehicle);
 
 	double accepted_risk = nearby_vehicle.is_ahead() ?
 		accepted_lane_change_risk_to_leaders :

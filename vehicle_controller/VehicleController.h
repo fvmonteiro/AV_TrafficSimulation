@@ -13,7 +13,6 @@
 
 #include "LateralController.h"
 #include "SwitchedLongitudinalController.h"
-//#include "LongitudinalControllerWithTrafficLights.h"
 #include "RealLongitudinalController.h"
 #include "VanAremLongitudinalController.h"
 #include "Vehicle.h"
@@ -22,8 +21,6 @@
 #include "TrafficLight.h"
 
 class EgoVehicle;
-//class TrafficLightALCVehicle;
-//class VirdiVehicle;
 
 class VehicleController 
 {
@@ -46,12 +43,7 @@ public:
 	};
 
 	VehicleController() = default;
-	//VehicleController(const TrafficLightALCVehicle& tfalc_vehicle, bool verbose);
-	//VehicleController(const VirdiVehicle& virdi_vehicle, bool verbose);
 
-	//const RealLongitudinalController& get_origin_lane_controller() const {
-	//	return origin_lane_controller;
-	//}
 	color_t get_longitudinal_controller_color() const;
 	/* Safe value depends on whether or not the vehicle has lane
 	change intention */
@@ -60,34 +52,27 @@ public:
 	the veh following or lane changing time headways if the vehicle
 	is transitiong between states. */
 	double get_current_desired_time_headway() const;
-
+	double get_reference_gap() const;
+	double get_gap_error() const;
+	/* Returns the safe time headway gap. */
+	double get_desired_time_headway_gap(
+		const NearbyVehicle& nearby_vehicle) const;
+	double get_desired_time_headway_gap_to_leader() const;
 	LongitudinalController::State
 		get_longitudinal_controller_state() const;
-	/*LongitudinalControllerWithTrafficLights::State
-		get_longitudinal_controller_with_traffic_lights_state();*/
-
-	void set_verbose(bool value);
-
-	/* Initializing controllers */
-	void add_vissim_controller();
-	void add_origin_lane_controllers(const EgoVehicle& ego_vehicle);
-	//void add_traffic_lights_controller();
-	//void add_van_arem_controllers(const VirdiVehicle& virdi_vehicle);
-
-	double get_reference_gap(double ego_velocity) const;
-
-	/* ----------------------------------------------------------------------- */
-
-	double get_gap_error() const;
 	/* Computes the deceleration rate to avoid collision */
 	double compute_drac(double relative_velocity, double gap);
 
+	void set_verbose(bool value);
+
+	void add_internal_controllers();
+
 	/* Resets the origin lane controller's velocity and time headway filters
-	and sets the time headway*/
-	void activate_origin_lane_controller(const EgoVehicle& ego_vehicle,
+	and sets the time headway */
+	void activate_origin_lane_controller(
 		const NearbyVehicle& real_leader);
 	void activate_end_of_lane_controller(double time_headway);
-	void update_origin_lane_controller(const EgoVehicle& ego_vehicle, 
+	void update_origin_lane_controller(
 		const NearbyVehicle& real_leader);
 
 	void reset_origin_lane_velocity_controller(double ego_velocity);
@@ -97,21 +82,10 @@ public:
 		const NearbyVehicle& a_leader, double standstill_distance);
 
 	bool is_in_free_flow_at_origin_lane() const;
-	
-	/*double get_desired_acceleration(
-		const TrafficLightALCVehicle& ego_vehicle,
-		const std::unordered_map<int, TrafficLight>& traffic_lights);
-	double get_desired_acceleration(const VirdiVehicle& virdi_vehicle);*/
-	void print_traffic_lights(const EgoVehicle& ego,
-		const std::unordered_map<int, TrafficLight>& traffic_lights) const;
-
-	/* Returns the safe time headway gap. */
-	double get_desired_time_headway_gap(double ego_velocity,
-		const NearbyVehicle& nearby_vehicle) const;
-	double get_desired_time_headway_gap_to_leader(double ego_velocity) const;
-
 
 	/* Printing ----------------------------------------------------------- */
+	void print_traffic_lights(const EgoVehicle& ego,
+		const std::unordered_map<int, TrafficLight>& traffic_lights) const;
 	static std::string ALC_type_to_string(
 		ALCType active_longitudinal_controller);
 
@@ -134,9 +108,11 @@ protected:
 	RealLongitudinalController end_of_lane_controller;
 
 	/* Constructor for derived classes */
-	VehicleController(bool verbose);
+	VehicleController(const EgoVehicle* ego_vehicle, bool verbose);
 
-	/* Desired accelerations per internal controllers --------------------- */
+	/* Initializing controllers */
+	void add_vissim_controller();
+	void add_origin_lane_controllers(const EgoVehicle& ego_vehicle);
 
 	/* VISSIM's suggested acceleration */
 	double get_vissim_desired_acceleration(const EgoVehicle& ego_vehicle);
@@ -166,8 +142,8 @@ protected:
 		std::unordered_map<ALCType, double>& possible_accelerations);
 
 private:
-	// TODO not being used yet [Jan 22 2024]
 	const EgoVehicle* ego_vehicle{ nullptr };
+
 	/* ------------------------- Control Parameters ----------------------- */
 
 	/* Cooperative Lane Changing paper ------------------------------------ */
@@ -198,12 +174,12 @@ private:
 		{ LongitudinalController::State::vehicle_following, DARK_MAGENTA },
 	};
 
-    /* -------------------------------------------------------------------- */	
+    /* -------------------------------------------------------------------- */
+	virtual void implement_add_internal_controllers() = 0;
 	virtual void implement_update_origin_lane_controller(
 		const EgoVehicle& ego_vehicle, const NearbyVehicle& real_leader);
 	virtual double implement_get_desired_time_headway_gap(
-		double ego_velocity, const NearbyVehicle& real_leader
-	) const;
+		const NearbyVehicle& real_leader) const;
 
 	const LongitudinalController* get_active_long_controller() const;
 

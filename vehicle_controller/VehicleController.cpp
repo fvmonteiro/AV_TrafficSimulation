@@ -9,39 +9,17 @@
 #include "VehicleController.h"
 #include "EgoVehicle.h"
 #include "NearbyVehicle.h"
-//#include "TrafficLightALCVehicle.h"
 #include "VariationLimitedFilter.h"
-//#include "VirdiVehicle.h"
 
-VehicleController::VehicleController(bool verbose)
-	: verbose{ verbose }, long_controllers_verbose{ verbose /*false*/}
+VehicleController::VehicleController(const EgoVehicle* ego_vehicle, 
+	bool verbose) : ego_vehicle{ ego_vehicle }, verbose {verbose}, 
+	long_controllers_verbose{ verbose /*false*/ }
 {
 	if (verbose && !long_controllers_verbose)
 	{
 		std::clog << "Attention! Long controllers are not verbose\n";
 	}
 }
-
-//VehicleController::VehicleController(const TrafficLightALCVehicle& ego_vehicle,
-//	bool verbose) : VehicleController(verbose)
-//{
-//	if (verbose)
-//	{
-//		std::clog << "Creating TL-ALC control manager\n";
-//	}
-//	add_traffic_lights_controller();
-//}
-
-//VehicleController::VehicleController(const VirdiVehicle& virdi_vehicle,
-//	bool verbose) : VehicleController(verbose)
-//{
-//	if (verbose)
-//	{
-//		std::clog << "Creating Virdi control manager\n";
-//	}
-//	add_van_arem_controllers(virdi_vehicle);
-//	
-//}
 
 color_t VehicleController::get_longitudinal_controller_color() const
 {
@@ -67,6 +45,31 @@ double VehicleController::get_current_desired_time_headway() const
 	return origin_lane_controller.get_current_time_headway();
 }
 
+double VehicleController::get_reference_gap() const
+{
+	return origin_lane_controller.get_desired_gap(
+		ego_vehicle->get_velocity());
+};
+
+double VehicleController::get_gap_error() const
+{
+	return get_active_long_controller()->get_gap_error();
+}
+
+double VehicleController::get_desired_time_headway_gap(
+	const NearbyVehicle& nearby_vehicle) const
+{
+	return implement_get_desired_time_headway_gap(
+		nearby_vehicle);
+}
+
+double VehicleController::get_desired_time_headway_gap_to_leader(
+	) const
+{
+	return origin_lane_controller.get_desired_time_headway_gap(
+		ego_vehicle->get_velocity());
+}
+
 LongitudinalController::State
 VehicleController::get_longitudinal_controller_state() const
 {
@@ -82,6 +85,18 @@ VehicleController::get_longitudinal_controller_state() const
 	}
 }
 
+double VehicleController::compute_drac(double relative_velocity, double gap)
+{
+	/* Deceleration (absolute value) to avoid collision assuming constant
+	velocities and instantaneous acceleration. DRAC is only defined when the
+	ego vehicle is faster than the leader. We some high negative value
+	otherwise */
+	//if (relative_velocity > 0) { // ego faster than leader
+	//	return relative_velocity * relative_velocity / 2 / gap;
+	//}
+	return -100;
+}
+
 void VehicleController::set_verbose(bool value)
 {
 	if (value && !verbose)
@@ -90,6 +105,11 @@ void VehicleController::set_verbose(bool value)
 			<< " Note that underlying long controllers are NOT verbose\n";
 	}
 	verbose = value;
+}
+
+void VehicleController::add_internal_controllers()
+{
+	implement_add_internal_controllers();
 }
 
 void VehicleController::add_vissim_controller()
@@ -128,62 +148,6 @@ void VehicleController::add_origin_lane_controllers(
 	available_controllers[ALCType::end_of_lane] = &end_of_lane_controller;
 }
 
-//void VehicleController::add_traffic_lights_controller()
-//{
-//	with_traffic_lights_controller =
-//		LongitudinalControllerWithTrafficLights(tl_alc_colors,
-//			long_controllers_verbose);
-//	active_longitudinal_controller_type = ALCType::traffic_light_alc;
-//
-//	available_controllers[ALCType::traffic_light_alc] =
-//		&with_traffic_lights_controller;
-//}
-
-//void VehicleController::add_van_arem_controllers(
-//	const VirdiVehicle& virdi_vehicle)
-//{
-//	double max_jerk_per_interval = 
-//		virdi_max_jerk * virdi_vehicle.get_simulation_time_step();
-//	van_arem_controllers[ALCType::origin_lane] =
-//		VanAremLongitudinalController(
-//			van_arem_vel_ctrl_gains, van_arem_gap_ctrl_gains,
-//			virdi_vehicle.get_max_brake(), INFINITY,
-//			orig_lane_colors, verbose);
-//	van_arem_controllers[ALCType::end_of_lane] =
-//		VanAremLongitudinalController(
-//			van_arem_vel_ctrl_gains, van_arem_gap_ctrl_gains,
-//			virdi_vehicle.get_max_brake(), INFINITY,
-//			end_of_lane_colors, verbose);
-//	van_arem_controllers[ALCType::destination_lane] =
-//		VanAremLongitudinalController(
-//			van_arem_vel_ctrl_gains, van_arem_gap_ctrl_gains,
-//			virdi_vehicle.get_max_brake(), max_jerk_per_interval,
-//			dest_lane_colors, verbose);
-//	van_arem_controllers[ALCType::cooperative_gap_generation] =
-//		VanAremLongitudinalController(
-//			van_arem_vel_ctrl_gains, van_arem_gap_ctrl_gains,
-//			virdi_vehicle.get_max_brake(), max_jerk_per_interval,
-//			gap_generation_colors, verbose);
-//
-//	for (auto const& item : van_arem_controllers)
-//	{
-//		available_controllers[item.first] = &item.second;
-//	}
-//}
-
-//void ControlManager::add_in_platoon_controller(
-//	const PlatoonVehicle& platoon_vehicle)
-//{
-//	in_platoon_controller = RealLongitudinalController(
-//		platoon_vehicle,
-//		desired_velocity_controller_gains,
-//		autonomous_real_following_gains,
-//		platoon_following_gains,
-//		velocity_filter_gain, time_headway_filter_gain,
-//		in_platoon_colors, long_controllers_verbose
-//	);
-//}
-
 const LongitudinalController*
 VehicleController::get_active_long_controller() const
 {
@@ -195,41 +159,17 @@ VehicleController::get_active_long_controller() const
 	return nullptr;
 }
 
-/* DEBUGGING FUNCTIONS --------------------------------------------------- */
-
-double VehicleController::get_reference_gap(double ego_velocity) const
-{
-	return origin_lane_controller.get_desired_gap(ego_velocity);
-};
-
-double VehicleController::get_gap_error() const
-{
-	return get_active_long_controller()->get_gap_error();
-}
-
 /* ----------------------------------------------------------------------- */
 
-double VehicleController::compute_drac(double relative_velocity, double gap)
-{
-	/* Deceleration (absolute value) to avoid collision assuming constant
-	velocities and instantaneous acceleration. DRAC is only defined when the
-	ego vehicle is faster than the leader. We some high negative value
-	otherwise */
-	//if (relative_velocity > 0) { // ego faster than leader
-	//	return relative_velocity * relative_velocity / 2 / gap;
-	//}
-	return -100;
-}
-
 void VehicleController::activate_origin_lane_controller(
-	const EgoVehicle& ego_vehicle, const NearbyVehicle& real_leader)
+	const NearbyVehicle& real_leader)
 {
-	double ego_velocity = ego_vehicle.get_velocity();
+	double ego_velocity = ego_vehicle->get_velocity();
 	origin_lane_controller.reset_leader_velocity_filter(ego_velocity);
 	/* NOTE: include 'if (time_headway_filter.get_is_initialized())' ?
 	And force initial value to be the non-lane-changing one? */
 	//origin_lane_controller.reset_time_headway_filter(time_headway);
-	update_origin_lane_controller(ego_vehicle, real_leader);
+	update_origin_lane_controller(real_leader);
 }
 
 void VehicleController::activate_end_of_lane_controller(double time_headway)
@@ -239,9 +179,9 @@ void VehicleController::activate_end_of_lane_controller(double time_headway)
 }
 
 void VehicleController::update_origin_lane_controller(
-	const EgoVehicle& ego_vehicle, const NearbyVehicle& real_leader)
+	const NearbyVehicle& real_leader)
 {
-	implement_update_origin_lane_controller(ego_vehicle, real_leader);
+	implement_update_origin_lane_controller(*ego_vehicle, real_leader);
 }
 
 void VehicleController::implement_update_origin_lane_controller(
@@ -529,35 +469,21 @@ NearbyVehicle VehicleController::create_virtual_stopped_vehicle(
 	return virtual_vehicle;
 }
 
-double VehicleController::get_desired_time_headway_gap(double ego_velocity,
-	const NearbyVehicle& nearby_vehicle) const
-{
-	return implement_get_desired_time_headway_gap(
-		ego_velocity, nearby_vehicle);
-}
-
 double VehicleController::implement_get_desired_time_headway_gap(
-	double ego_velocity, const NearbyVehicle& nearby_vehicle) const
+	const NearbyVehicle& nearby_vehicle) const
 {
 	double time_headway_gap = 0.0;
 	if (nearby_vehicle.is_ahead() 
 		&& nearby_vehicle.get_relative_lane() == RelativeLane::same)
 	{
 			time_headway_gap =
-				get_desired_time_headway_gap_to_leader(ego_velocity);
+				get_desired_time_headway_gap_to_leader();
 	}
 	else
 	{
 		time_headway_gap = -1.0;
 	}
 	return time_headway_gap;
-}
-
-double VehicleController::get_desired_time_headway_gap_to_leader(
-	double ego_velocity) const
-{
-	return origin_lane_controller.get_desired_time_headway_gap(
-		ego_velocity);
 }
 
 std::string VehicleController::ALC_type_to_string(

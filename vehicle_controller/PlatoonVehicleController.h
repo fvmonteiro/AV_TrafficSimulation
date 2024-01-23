@@ -7,7 +7,7 @@ class PlatoonVehicleController : public CAVController
 {
 public:
 	PlatoonVehicleController::PlatoonVehicleController(
-		const PlatoonVehicle& platoon_vehicle, bool verbose);
+		const PlatoonVehicle* platoon_vehicle, bool verbose);
 
 	double get_desired_acceleration(const PlatoonVehicle& platoon_vehicle);
 
@@ -28,10 +28,11 @@ public:
 		std::unordered_map<ALCType, double>& possible_accelerations);
 
 protected:
-	PlatoonVehicleController::PlatoonVehicleController(bool verbose)
-		: CAVController(verbose) {};
+	//PlatoonVehicleController::PlatoonVehicleController(bool verbose)
+	//	: CAVController(verbose) {};
 
 private:
+	const PlatoonVehicle* platoon_vehicle{ nullptr };
 	RealLongitudinalController* real_leader_controller{ nullptr }; /* copy of
 	origin_lane_controller, but we want a different name in the platoon
 	scenario */
@@ -51,5 +52,7 @@ private:
 		{ LongitudinalController::State::velocity_control, DARK_GRAY },
 		{ LongitudinalController::State::vehicle_following, WHITE},
 	};
+
+	void implement_add_internal_controllers() override;
 };
 

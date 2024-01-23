@@ -546,13 +546,13 @@ void EgoVehicle::update_leader(
 		bool is_new_leader_connected = leader->is_connected();
 		if (old_leader == nullptr)
 		{
-			controller->activate_origin_lane_controller(*this, *leader);
+			controller->activate_origin_lane_controller(*leader);
 		}
 		else if((std::abs(new_leader_max_brake
 			- old_leader->get_max_brake()) > 0.5)
 			|| (leader->get_type() != old_leader->get_type()))
 		{
-			controller->update_origin_lane_controller(*this, *leader);
+			controller->update_origin_lane_controller(*leader);
 		}
 	}
 }
@@ -723,7 +723,7 @@ double EgoVehicle::get_accepted_lane_change_gap(
 
 double EgoVehicle::get_reference_gap() const
 {
-	return controller->get_reference_gap(get_velocity());
+	return controller->get_reference_gap();
 }
 
 double EgoVehicle::compute_time_headway_gap(
@@ -733,7 +733,7 @@ double EgoVehicle::compute_time_headway_gap(
 	if (nearby_vehicle != nullptr)
 	{
 		time_headway_gap = controller->get_desired_time_headway_gap(
-			get_velocity(), *nearby_vehicle);
+			*nearby_vehicle);
 	}
 	return time_headway_gap;
 }
@@ -742,7 +742,7 @@ void EgoVehicle::update_time_headway_to_leader()
 {
 	if (has_leader())
 	{
-		controller->update_origin_lane_controller(*this, *leader);
+		controller->update_origin_lane_controller(*leader);
 	}
 }
 

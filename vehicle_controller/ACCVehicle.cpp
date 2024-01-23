@@ -22,7 +22,8 @@ void ACCVehicle::set_controller(ACCVehicleController* acc_controller)
 void ACCVehicle::implement_create_controller()
 {
 	this->controller_exclusive = std::make_unique<ACCVehicleController>(
-		*this, is_verbose());
+		this, is_verbose());
+	controller_exclusive->add_internal_controllers();
 	this->set_controller(controller_exclusive.get());
 }
 

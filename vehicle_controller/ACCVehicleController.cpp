@@ -1,17 +1,9 @@
 #include "ACCVehicle.h"
 #include "ACCVehicleController.h"
 
-ACCVehicleController::ACCVehicleController(const ACCVehicle& acc_vehicle,
-	bool verbose) : VehicleController(verbose)
-	//acc_vehicle{&acc_vehicle}
-{
-	if (verbose)
-	{
-		std::clog << "Creating ACC control manager\n";
-	}
-	add_vissim_controller();
-	add_origin_lane_controllers(acc_vehicle);
-}
+ACCVehicleController::ACCVehicleController(const ACCVehicle* acc_vehicle,
+	bool verbose) : VehicleController(acc_vehicle, verbose),
+	acc_vehicle{acc_vehicle} {}
 
 double ACCVehicleController::get_desired_acceleration(
 	const ACCVehicle& acc_vehicle)
@@ -30,4 +22,12 @@ double ACCVehicleController::get_desired_acceleration(
 		possible_accelerations);
 
 	return choose_minimum_acceleration(possible_accelerations);
+}
+
+void ACCVehicleController::implement_add_internal_controllers()
+{
+	if (verbose) std::clog << "Adding ACC vehicle controllers\n";
+
+	add_vissim_controller();
+	add_origin_lane_controllers(*acc_vehicle);
 }

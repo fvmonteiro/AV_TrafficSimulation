@@ -208,7 +208,8 @@ bool PlatoonVehicle::can_start_lane_change()
 
 void PlatoonVehicle::implement_create_controller() {
 	this->controller_exclusive = 
-		std::make_unique<PlatoonVehicleController>(*this, is_verbose());
+		std::make_unique<PlatoonVehicleController>(this, is_verbose());
+	controller_exclusive->add_internal_controllers();
 	set_controller(controller_exclusive.get());
 }
 

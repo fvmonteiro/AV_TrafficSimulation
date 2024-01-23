@@ -1,17 +1,9 @@
 #include "AVController.h"
 #include "AutonomousVehicle.h"
 
-AVController::AVController(const AutonomousVehicle& autonomous_vehicle,
-	bool verbose) : AVController(verbose)
-{
-	if (verbose)
-	{
-		std::clog << "Creating AV control manager\n";
-	}
-	add_vissim_controller();
-	add_origin_lane_controllers(autonomous_vehicle);
-	add_lane_change_adjustment_controller(autonomous_vehicle);
-}
+AVController::AVController(const AutonomousVehicle* autonomous_vehicle,
+	bool verbose) : VehicleController(autonomous_vehicle, verbose),
+	autonomous_vehicle {autonomous_vehicle} {}
 
 double AVController::get_desired_acceleration(
 	const AutonomousVehicle& autonomous_vehicle)
@@ -282,6 +274,16 @@ double AVController::determine_low_velocity_reference(double ego_velocity,
 	return reference_velocity;
 }
 
+void AVController::implement_add_internal_controllers()
+{
+	if (verbose) std::clog << "Creating AV controllers\n";
+
+	add_vissim_controller();
+	add_origin_lane_controllers(*autonomous_vehicle);
+	add_lane_change_adjustment_controller(*autonomous_vehicle);
+	lateral_controller = LateralController(verbose);
+}
+
 void AVController::implement_update_origin_lane_controller(
 	const EgoVehicle& ego_vehicle, const NearbyVehicle& real_leader)
 {
@@ -324,7 +326,7 @@ void AVController::implement_update_origin_lane_controller(
 }
 
 double AVController::implement_get_desired_time_headway_gap(
-	double ego_velocity, const NearbyVehicle& nearby_vehicle) const
+	const NearbyVehicle& nearby_vehicle) const
 {
 	double time_headway_gap = 0.0;
 	//double ego_velocity = ego_vehicle.get_velocity();
@@ -333,13 +335,13 @@ double AVController::implement_get_desired_time_headway_gap(
 		if (nearby_vehicle.get_relative_lane() == RelativeLane::same)
 		{
 			time_headway_gap =
-				get_desired_time_headway_gap_to_leader(ego_velocity);
+				get_desired_time_headway_gap_to_leader();
 		}
 		else
 		{
 			time_headway_gap =
 				destination_lane_controller.get_desired_time_headway_gap(
-					ego_velocity);
+					autonomous_vehicle->get_velocity());
 		}
 	}
 	else
@@ -349,7 +351,8 @@ double AVController::implement_get_desired_time_headway_gap(
 		time_headway_gap =
 			destination_lane_controller.get_time_headway_gap(
 				dest_lane_follower_time_headway,
-				nearby_vehicle.compute_velocity(ego_velocity));
+				nearby_vehicle.compute_velocity(
+					autonomous_vehicle->get_velocity()));
 	}
 
 	return time_headway_gap;

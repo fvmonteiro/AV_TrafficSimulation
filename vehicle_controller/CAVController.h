@@ -6,7 +6,7 @@ class ConnectedAutonomousVehicle;
 class CAVController : public AVController
 {
 public:
-	CAVController(const ConnectedAutonomousVehicle& cav, bool verbose);
+	CAVController(const ConnectedAutonomousVehicle* cav, bool verbose);
 	
 	const VirtualLongitudinalController& get_gap_generation_lane_controller()
 		const {
@@ -27,17 +27,21 @@ public:
 protected:
 	VirtualLongitudinalController gap_generating_controller;
 
-	CAVController(bool verbose) : AVController(verbose) {};
+	//CAVController(bool verbose) : AVController(verbose) {};
 
 	/* Returns true if the computed acceleration was added to the map */
 	bool get_cooperative_desired_acceleration(
 		const ConnectedAutonomousVehicle& cav,
 		std::unordered_map<ALCType, double>& possible_accelerations);
+
 private:
+	const ConnectedAutonomousVehicle* cav{ nullptr };
 	std::unordered_map<LongitudinalController::State, color_t>
 		gap_generation_colors =
 	{
 		{ LongitudinalController::State::velocity_control, YELLOW },
 		{ LongitudinalController::State::vehicle_following, DARK_YELLOW },
 	};
+
+	void implement_add_internal_controllers() override;
 };
