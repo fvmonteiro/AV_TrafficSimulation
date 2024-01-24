@@ -2,7 +2,7 @@
 /*  EgoVehicle.h	    													*/
 /*  TODO																    */
 /*                                                                          */
-/*  Version of 2021-xx-xx                             Fernando V. Monteiro  */
+/*  Version of xxxx-xx-xx                             Fernando V. Monteiro  */
 /*==========================================================================*/
 
 #pragma once
@@ -294,7 +294,6 @@ public:
 
 	void compute_desired_acceleration(
 		const std::unordered_map<int, TrafficLight>& traffic_lights);
-	//void decide_lane_change_direction();
 
 	double get_accepted_lane_change_gap(
 		const NearbyVehicle* nearby_vehicle);
@@ -358,16 +357,11 @@ protected:
 	is lane changing */
 	std::pair<double, double> get_current_safe_gap_parameters() const;
 	std::pair<double, double> get_lane_changing_safe_gap_parameters() const;
+	const std::unordered_map<long, std::shared_ptr<NearbyVehicle>>
+		get_nearby_vehicles() const;
 	void set_controller(VehicleController* controller);
 	void set_gap_variation_during_lane_change(int nv_id, double value);
 	void set_collision_free_gap(int nv_id, double value);
-
-	/* Takes the desired acceleration given by the controller and
-	returns the feasible acceleration given the approximated low level
-	dynamics */
-	double consider_vehicle_dynamics(double unfiltered_acceleration);
-	const std::unordered_map<long, std::shared_ptr<NearbyVehicle>> 
-		get_nearby_vehicles() const;
 
 	void set_leader_by_id(long new_leader_id);
 	void find_leader();
@@ -457,8 +451,8 @@ private:
 
 	virtual void implement_create_controller() = 0;
 	/* Computes the longitudinal controller input */
-	virtual double implement_compute_desired_acceleration(
-		const std::unordered_map<int, TrafficLight>& traffic_lights) = 0;
+	/*virtual double implement_compute_desired_acceleration(
+		const std::unordered_map<int, TrafficLight>& traffic_lights) = 0;*/
 	virtual bool give_lane_change_control_to_vissim() const = 0;
 	/* Decides whether the vehicle can start a
 	lane change. Returns -1 for right lane changes, +1 for left lane
@@ -483,9 +477,11 @@ private:
 	virtual void implement_set_accepted_lane_change_risk_to_follower(
 		double value) = 0;
 	virtual void implement_set_use_linear_lane_change_gap(long value) = 0;
-
+	/* Takes the desired acceleration given by the controller and
+	returns the feasible acceleration given the approximated low level
+	dynamics */
+	virtual double apply_low_level_dynamics(double unfiltered_acceleration);
 	virtual void pass_this_to_state();
-	// TODO: should this be abstract?
 	virtual const Platoon* implement_get_platoon() const;
 	virtual std::shared_ptr<Platoon> implement_share_platoon() const;
 

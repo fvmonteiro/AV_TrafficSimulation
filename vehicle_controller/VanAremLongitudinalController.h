@@ -10,7 +10,7 @@ class VanAremLongitudinalController :public LongitudinalController
 {
 public:
 	VanAremLongitudinalController() = default;
-	VanAremLongitudinalController(
+	VanAremLongitudinalController(const EgoVehicle* ego_vehicle,
 		const VelocityControllerGains& velocity_controller_gains,
 		const ConnectedGains& gap_controller_gains, double max_brake, 
 		double max_jerk, 
@@ -28,8 +28,7 @@ private:
 
 	double implement_get_gap_error() const override;
 	double implement_compute_desired_acceleration(
-		const EgoVehicle& ego_vehicle, const NearbyVehicle* leader,
-		double velocity_reference) override;
+		const NearbyVehicle* leader, double velocity_reference) override;
 
 	double compute_desired_gap(double ego_velocity, 
 		const NearbyVehicle& leader) const;

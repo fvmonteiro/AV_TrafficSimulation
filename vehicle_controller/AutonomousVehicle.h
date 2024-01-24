@@ -1,20 +1,19 @@
 #pragma once
 
+#include "ACCVehicle.h"
 #include "AVController.h"
-#include "EgoVehicle.h"
 #include "LaneChangeGapsSafety.h"
 
 /* Vehicle with autonomous longitudinal control during lane keeping and
 during adjustments for lane changing. The lane change intention still
 comes from VISSIM, but the vehicle decides when it is safe enough to start */
-class AutonomousVehicle : public EgoVehicle
+class AutonomousVehicle : public ACCVehicle
 {
 public:
+
 	AutonomousVehicle(long id, double desired_velocity,
 		double simulation_time_step, double creation_time,
-		bool verbose = false) : AutonomousVehicle(id,
-			VehicleType::autonomous_car, desired_velocity, false,
-			simulation_time_step, creation_time, verbose) {} ;
+		bool verbose);
 	
 	/* Vehicle behind which we want to merge (not necessarily the same as
 	the destination lane leader) */
@@ -46,9 +45,14 @@ protected:
 	headway */
 	bool use_linear_lane_change_gap{ false };
 
+	/* Pass-to-base constructor */
 	AutonomousVehicle(long id, VehicleType type, double desired_velocity,
-		bool is_connected, double simulation_time_step, double creation_time,
-		bool verbose = false);
+		double brake_delay, bool is_lane_change_autonomous,
+		bool is_connected, double simulation_time_step,
+		double creation_time, bool verbose)
+		: ACCVehicle(id, type, desired_velocity, brake_delay,
+			is_lane_change_autonomous, is_connected,
+			simulation_time_step, creation_time, verbose) {};
 
 	//double get_lambda_1_lane_change() const { return lambda_1_lane_change; };
 	double get_accepted_risk_to_leaders() const {
@@ -92,7 +96,7 @@ private:
 	double min_overtaking_rel_vel{ 10.0	/ 3.6}; // [m/s]
 	double min_overtaking_time{ 10.0 };// s
 	double max_lane_change_waiting_time{ 60.0 }; // [s]
-	std::unique_ptr<AVController> controller_exclusive{ nullptr };
+	AVController controller_exclusive;
 	AVController* av_controller{ nullptr };
 
 	/* Relevant members for lane changing ------------------------------------ */
@@ -128,13 +132,13 @@ private:
 	//double intermediate_risk_to_leader{ 0.0 }; // [m/s]
 	//double max_risk_to_follower{ 0.0 }; // [m/s]
 
-
 	void implement_create_controller() override;
 	/* Finds the current leader and, if the vehicle has lane change
 	intention, the destination lane leader and follower */
 	//void find_relevant_nearby_vehicles() override;
-	double implement_compute_desired_acceleration(
-		const std::unordered_map<int, TrafficLight>& traffic_lights) override;
+	/*double implement_compute_desired_acceleration(
+		const std::unordered_map<int, TrafficLight>& traffic_lights
+		) override;*/
 	/* Finds the current leader and, if the vehicle has lane change
 	intention, the destination lane leader and follower */
 	void implement_analyze_nearby_vehicles() override;

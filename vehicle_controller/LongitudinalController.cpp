@@ -2,10 +2,10 @@
 #include "LongitudinalController.h"
 #include "NearbyVehicle.h"
 
-LongitudinalController::LongitudinalController(
+LongitudinalController::LongitudinalController(const EgoVehicle* ego_vehicle,
 	std::unordered_map<State, color_t> state_to_color_map,
-	bool verbose) :
-	state_to_color_map(state_to_color_map), verbose{ verbose }
+	bool verbose) : ego_vehicle{ego_vehicle}, 
+	state_to_color_map{ state_to_color_map }, verbose{ verbose }
 {
 	this->state_to_color_map.insert({ State::uninitialized, BLACK });
 }
@@ -25,11 +25,9 @@ double LongitudinalController::get_gap_error() const
 }
 
 double LongitudinalController::compute_desired_acceleration(
-	const EgoVehicle& ego_vehicle,
-	const NearbyVehicle* leader,
-	double velocity_reference)
+	const NearbyVehicle* leader, double velocity_reference)
 {
-	return implement_compute_desired_acceleration(ego_vehicle, leader,
+	return implement_compute_desired_acceleration(leader,
 		velocity_reference);
 }
 

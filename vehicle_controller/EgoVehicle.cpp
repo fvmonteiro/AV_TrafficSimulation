@@ -2,7 +2,7 @@
 /*  Vehicle.h	    													    */
 /*  Class to manage simualated vehicles                                     */
 /*                                                                          */
-/*  Version of 2021-xx-xx                             Fernando V. Monteiro  */
+/*  Version of xxxx-xx-xx                             Fernando V. Monteiro  */
 /*==========================================================================*/
 
 #include <algorithm>
@@ -218,7 +218,8 @@ void EgoVehicle::set_verbose(bool value)
 	}
 	else if (!value && verbose)
 	{
-		std::clog << "[EgoVehicle] set to no longer verbose.\n";
+		std::clog << "[EgoVehicle] trying to set not verbose failed.\n";
+		return;
 	}
 	verbose = value;
 	controller->set_verbose(value);
@@ -477,18 +478,13 @@ void EgoVehicle::find_leader()
 {
 	old_leader_id = get_leader_id();
 	const NearbyVehicle* old_leader = leader;
-
-	bool leader_found = false;
+	leader = nullptr;
 	for (auto const& id_veh_pair : nearby_vehicles)
 	{
 		if (check_if_is_leader(*id_veh_pair.second)) 
 		{
 			leader = id_veh_pair.second.get();
 		}
-	}
-	if (!leader_found)
-	{
-		leader = nullptr;
 	}
 	update_leader(old_leader);
 }
@@ -672,7 +668,7 @@ long EgoVehicle::get_color_by_controller_state()
 
 /* Control related methods ------------------------------------------------ */
 
-double EgoVehicle::consider_vehicle_dynamics(double unfiltered_acceleration)
+double EgoVehicle::apply_low_level_dynamics(double unfiltered_acceleration)
 {
 	/* We assume lower level dynamics as:
 	a = u / (tau.s + 1) => tau.da/dt + a = u
@@ -694,26 +690,11 @@ double EgoVehicle::consider_vehicle_dynamics(double unfiltered_acceleration)
 void EgoVehicle::compute_desired_acceleration(
 	const std::unordered_map<int, TrafficLight>& traffic_lights)
 {
-	this->desired_acceleration =
-		implement_compute_desired_acceleration(traffic_lights);
+	//this->desired_acceleration =
+	//	implement_compute_desired_acceleration(traffic_lights);
+	double accel = controller->get_desired_acceleration();
+	this->desired_acceleration = apply_low_level_dynamics(accel);
 }
-
-//void EgoVehicle::decide_lane_change_direction()
-//{
-//	if (is_lane_changing())
-//	{
-//		lane_change_direction = get_active_lane_change_direction();
-//	}
-//	else if (has_lane_change_intention() && implement_check_lane_change_gaps())
-//	{
-//		lane_change_direction = desired_lane_change_direction;
-//	}
-//	else
-//	{
-//		//update_lane_change_waiting_time();
-//		lane_change_direction = RelativeLane::same;
-//	}
-//}
 
 double EgoVehicle::get_accepted_lane_change_gap(
 	const NearbyVehicle* nearby_vehicle)
@@ -748,8 +729,7 @@ void EgoVehicle::update_time_headway_to_leader()
 
 void EgoVehicle::reset_origin_lane_velocity_controller()
 {
-	controller->reset_origin_lane_velocity_controller(
-		get_velocity());
+	controller->reset_origin_lane_velocity_controller();
 }
 
 /* Computation of surrogate safety measurements --------------------------- */

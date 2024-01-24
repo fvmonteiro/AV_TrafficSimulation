@@ -9,12 +9,10 @@ class ConnectedAutonomousVehicle : public AutonomousVehicle
 {
 public:
 
+	ConnectedAutonomousVehicle() = default;
 	ConnectedAutonomousVehicle(long id, double desired_velocity,
 		double simulation_time_step, double creation_time,
-		bool verbose = false) :
-		ConnectedAutonomousVehicle(id, VehicleType::connected_car,
-			desired_velocity, simulation_time_step, creation_time,
-			verbose) {};
+		bool verbose);
 
 	/* The connected vehicle brake delay also depends on the other vehicle
 	type. If the other vehicle is not connected, the ego connected vehicle
@@ -35,9 +33,11 @@ protected:
 	/* id of the vehicle in front of which we want to merge */
 	long lane_change_request{ 0 };
 
+	/* Pass-to-base constructor */
 	ConnectedAutonomousVehicle(long id, VehicleType type,
-		double desired_velocity, double simulation_time_step,
-		double creation_time, bool verbose);
+		double desired_velocity, double brake_delay,
+		bool is_lane_change_autonomous, bool is_connected,
+		double simulation_time_step, double creation_time, bool verbose);
 
 	double get_lambda_1(bool is_leader_connected) const;
 	double get_lambda_1_lane_change(bool is_leader_connected) const;
@@ -64,14 +64,15 @@ private:
 	lane change gap */
 	NearbyVehicle* assisted_vehicle{ nullptr };
 	double original_desired_velocity{ 0.0 };
-	std::unique_ptr<CAVController> controller_exclusive{ nullptr };
-	CAVController* cav_controller;
+	CAVController controller_exclusive;
+	CAVController* cav_controller{ nullptr };
 
 
 	void implement_create_controller() override;
 
-	double implement_compute_desired_acceleration(
-		const std::unordered_map<int, TrafficLight>& traffic_lights) override;
+	/*double implement_compute_desired_acceleration(
+		const std::unordered_map<int, TrafficLight>& traffic_lights
+		) override;*/
 	bool give_lane_change_control_to_vissim() const override
 	{
 		return false;
@@ -94,6 +95,8 @@ private:
 	long implement_get_lane_change_request() const override;
 	double compute_accepted_lane_change_gap(
 		const NearbyVehicle* nearby_vehicle) const override;
+	void update_destination_lane_follower(
+		const NearbyVehicle* old_follower) override;
 
 	/* Id of the vehicle in front of which we want to merge
 	IF we are trying to perform a mandatory lane change */
@@ -102,8 +105,6 @@ private:
 
 	void deal_with_close_and_slow_assited_vehicle();
 	void compute_connected_safe_gap_parameters();
-	void update_destination_lane_follower(
-		const NearbyVehicle* old_follower) override;
 	void update_assisted_vehicle(
 		const NearbyVehicle* old_assisted_vehicle);
 	

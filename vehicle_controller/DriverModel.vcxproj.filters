@@ -58,9 +58,6 @@
     <ClCompile Include="GapController.cpp">
       <Filter>Controllers</Filter>
     </ClCompile>
-    <ClCompile Include="InPlatoonLongitudinalController.cpp">
-      <Filter>Controllers</Filter>
-    </ClCompile>
     <ClCompile Include="LateralController.cpp">
       <Filter>Controllers</Filter>
     </ClCompile>
@@ -124,6 +121,9 @@
     <ClCompile Include="AVController.cpp">
       <Filter>Controllers</Filter>
     </ClCompile>
+    <ClCompile Include="SimpleLongitudinalController.cpp">
+      <Filter>Controllers</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="VehicleState.h">
@@ -181,9 +181,6 @@
       <Filter>Vehicles</Filter>
     </ClInclude>
     <ClInclude Include="GapController.h">
-      <Filter>Controllers</Filter>
-    </ClInclude>
-    <ClInclude Include="InPlatoonLongitudinalController.h">
       <Filter>Controllers</Filter>
     </ClInclude>
     <ClInclude Include="LateralController.h">
@@ -256,6 +253,9 @@
       <Filter>Controllers</Filter>
     </ClInclude>
     <ClInclude Include="PlatoonVehicleController.h">
+      <Filter>Controllers</Filter>
+    </ClInclude>
+    <ClInclude Include="SimpleLongitudinalController.h">
       <Filter>Controllers</Filter>
     </ClInclude>
   </ItemGroup>

@@ -1,17 +1,13 @@
 #include "AutonomousVehicle.h"
 
-AutonomousVehicle::AutonomousVehicle(long id, VehicleType type,
-	double desired_velocity, bool is_connected,
+AutonomousVehicle::AutonomousVehicle(long id, double desired_velocity,
 	double simulation_time_step, double creation_time,
-	bool verbose) :
-	EgoVehicle(id, type, desired_velocity,
-		AUTONOMOUS_BRAKE_DELAY, true, false,
+	bool verbose)
+	: AutonomousVehicle(id, VehicleType::autonomous_car, 
+		AUTONOMOUS_BRAKE_DELAY, desired_velocity, true, false,
 		simulation_time_step, creation_time, verbose)
 {
-	if (verbose)
-	{
-		std::clog << "[AutonomousVehicle] constructor done" <<std::endl;
-	}
+	if (verbose) std::clog << "[AutonomousVehicle] created" <<std::endl;
 }
 
 bool AutonomousVehicle::has_destination_lane_leader_leader() const
@@ -47,8 +43,8 @@ LaneChangeGapsSafety AutonomousVehicle::get_lane_change_gaps_safety() const
 
 double AutonomousVehicle::get_dest_follower_time_headway() const
 {
-	return av_controller->get_destination_lane_controller().
-		get_follower_time_headway();
+	return av_controller->get_lateral_controller().
+		get_destination_lane_follower_time_headway();
 }
 
 double AutonomousVehicle::compute_transient_gap(const NearbyVehicle* nearby_vehicle)
@@ -241,7 +237,7 @@ void AutonomousVehicle::update_destination_lane_follower(
 			av_controller->update_destination_lane_follower_parameters(
 				*destination_lane_follower);
 			av_controller->update_destination_lane_follower_time_headway(
-				get_max_brake(), false, *destination_lane_follower);
+				false, *destination_lane_follower);
 		}
 	}
 }
@@ -284,8 +280,7 @@ void AutonomousVehicle::update_virtual_leader(
 		{
 			if (verbose) std::clog << "Activating dest lane ctrl.\n";
 
-			av_controller->activate_destination_lane_controller(*this, 
-				*get_virtual_leader());
+			av_controller->activate_destination_lane_controller(*get_virtual_leader());
 		}
 		else if ((std::abs(new_leader_max_brake
 			- old_leader->get_max_brake()) > 0.5)
@@ -294,8 +289,7 @@ void AutonomousVehicle::update_virtual_leader(
 		{
 			if (verbose) std::clog << "Updating dest lane ctrl.\n";
 
-			av_controller->update_destination_lane_controller(*this,
-				*get_virtual_leader());
+			av_controller->update_destination_lane_controller(*get_virtual_leader());
 		}
 	}
 }
@@ -358,19 +352,18 @@ void AutonomousVehicle::set_controller(AVController* a_controller)
 
 void AutonomousVehicle::implement_create_controller()
 {
-	this->controller_exclusive = std::make_unique<AVController>(
-		this, is_verbose());
-	controller_exclusive->add_internal_controllers();
-	this->set_controller(controller_exclusive.get());
+	this->controller_exclusive = AVController(this, is_verbose());
+	controller_exclusive.add_internal_controllers();
+	this->set_controller(&controller_exclusive);
 }
 
-double AutonomousVehicle::implement_compute_desired_acceleration(
-	const std::unordered_map<int, TrafficLight>& traffic_lights)
-{
-	double a_desired_acceleration =
-		av_controller->get_desired_acceleration(*this);
-	return consider_vehicle_dynamics(a_desired_acceleration);
-}
+//double AutonomousVehicle::implement_compute_desired_acceleration(
+//	const std::unordered_map<int, TrafficLight>& traffic_lights)
+//{
+//	double a_desired_acceleration =
+//		av_controller->get_desired_acceleration();
+//	return apply_low_level_dynamics(a_desired_acceleration);
+//}
 
 bool AutonomousVehicle::give_lane_change_control_to_vissim() const
 {
@@ -514,14 +507,13 @@ double AutonomousVehicle::compute_accepted_lane_change_gap(
 
 	if (use_linear_lane_change_gap)
 	{
-		accepted_gap = av_controller->compute_accepted_lane_change_gap(*this,
-				*nearby_vehicle, accepted_risk);
+		accepted_gap = av_controller->compute_accepted_lane_change_gap(*nearby_vehicle,
+				accepted_risk);
 	}
 	else
 	{
 		accepted_gap = av_controller->compute_accepted_lane_change_gap_exact(
-			*this, *nearby_vehicle, get_lane_changing_safe_gap_parameters(),
-			accepted_risk);
+			*nearby_vehicle, get_lane_changing_safe_gap_parameters(), accepted_risk);
 	}
 
 	return std::max(accepted_gap, 1.0);

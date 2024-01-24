@@ -22,6 +22,10 @@ public:
 	LateralController(bool verbose);
 	LateralController();
 
+	double get_destination_lane_follower_time_headway() const {
+		return time_headway_to_destination_lane_follower;
+	}
+
 	void set_time_headway_to_leader(double value) {
 		time_headway_to_leader = value;
 	}

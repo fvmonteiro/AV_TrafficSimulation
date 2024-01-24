@@ -40,15 +40,22 @@ public:
 
 protected:
 
+	/* Pass-to-base constructor */
+	PlatoonVehicle(long id, VehicleType type,
+		double desired_velocity, double brake_delay,
+		bool is_lane_change_autonomous, bool is_connected,
+		double simulation_time_step, double creation_time, bool verbose);
+
 	/* Returns a nullptr if no virtual leader */
 	NearbyVehicle* choose_virtual_leader() override;
 	void set_controller(PlatoonVehicleController* a_controller);
+	void compute_platoon_safe_gap_parameters();
 
 private:
 	//double min_overtaking_rel_vel{ 50.0 / 3.6 };
 	std::shared_ptr<Platoon> platoon{ nullptr };
 	std::unique_ptr<PlatoonVehicleController> controller_exclusive{ nullptr };
-	PlatoonVehicleController* platoon_vehicle_controller;
+	PlatoonVehicleController* platoon_vehicle_controller{ nullptr };
 
 	// desired velocity when not a part of the platoon
 	//double alone_desired_velocity{ 0.0 };
@@ -66,8 +73,9 @@ private:
 	double in_platoon_rho{ 0.1 };
 
 	void implement_create_controller() override;
-	double implement_compute_desired_acceleration(
-		const std::unordered_map<int, TrafficLight>& traffic_lights) override;
+	/*double implement_compute_desired_acceleration(
+		const std::unordered_map<int, TrafficLight>& traffic_lights
+	) override;*/
 	void implement_analyze_nearby_vehicles() override;
 	/* Returns true if the vehicle creates a platoon for itself. */
 	bool implement_analyze_platoons(
@@ -82,6 +90,7 @@ private:
 	/* SCENARIO SPECIFIC: the platoon vehicles always start at the in ramp, 
 	and they try to change lanes as soon as they enter the highway */
 	void set_desired_lane_change_direction() override;
+	double apply_low_level_dynamics(double unfiltered_acceleration) override;
 	//bool implement_check_lane_change_gaps() override;
 	const Platoon* implement_get_platoon() const override;
 	std::shared_ptr<Platoon> implement_share_platoon() const override;
@@ -98,6 +107,4 @@ private:
 	void add_myself_to_leader_platoon(
 		std::shared_ptr<Platoon> leader_platoon//,
 		/*std::shared_ptr<PlatoonVehicle> pointer_to_me*/);
-
-	void compute_platoon_safe_gap_parameters();
 };

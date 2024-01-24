@@ -6,22 +6,31 @@
 PlatoonVehicle::PlatoonVehicle(long id, double desired_velocity,
 	double simulation_time_step, double creation_time,
 	bool verbose) :
-	ConnectedAutonomousVehicle(id, VehicleType::platoon_car,
-		desired_velocity, simulation_time_step, creation_time,
-		verbose)
-	//alone_desired_velocity{ desired_velocity }
+	PlatoonVehicle(id, VehicleType::platoon_car,
+		desired_velocity, AUTONOMOUS_BRAKE_DELAY, true, true,
+		simulation_time_step, creation_time, verbose)
+{
+	if (verbose) std::clog << "[PlatoonVehicle] constructor done\n";
+}
+
+PlatoonVehicle::PlatoonVehicle(long id, VehicleType type,
+	double desired_velocity, double brake_delay,
+	bool is_lane_change_autonomous, bool is_connected,
+	double simulation_time_step, double creation_time, bool verbose)
+	: ConnectedAutonomousVehicle(id, type, desired_velocity, brake_delay,
+		is_lane_change_autonomous, is_connected,
+		simulation_time_step, creation_time, verbose) 
 {
 	compute_platoon_safe_gap_parameters();
-	//controller.add_in_platoon_controller(*this);
 	if (verbose)
 	{
 		std::clog << "lambda 1 platoon = " << lambda_1_platoon
 			<< ", lambda 0 platoon = " << lambda_0_platoon
 			<< ", lambda 1 lc platoon = " << lambda_1_lane_change_platoon
 			<< ", lambda 0 lc platoon = " << lambda_0_lane_change_platoon
-			<< "\n[PlatoonVehicle] constructor done" << std::endl;
+			<< std::endl;
 	}
-}
+};
 
 PlatoonVehicle::~PlatoonVehicle()
 {
@@ -213,14 +222,14 @@ void PlatoonVehicle::implement_create_controller() {
 	set_controller(controller_exclusive.get());
 }
 
-double PlatoonVehicle::implement_compute_desired_acceleration(
-	const std::unordered_map<int, TrafficLight>& traffic_lights)
-{
-	double a_desired_acceleration =
-		platoon_vehicle_controller->get_desired_acceleration(*this);
-	return a_desired_acceleration;
-	//return consider_vehicle_dynamics(a_desired_acceleration);
-}
+//double PlatoonVehicle::implement_compute_desired_acceleration(
+//	const std::unordered_map<int, TrafficLight>& traffic_lights)
+//{
+//	double a_desired_acceleration =
+//		platoon_vehicle_controller->get_desired_acceleration();
+//	return a_desired_acceleration;
+//	//return consider_vehicle_dynamics(a_desired_acceleration);
+//}
 
 double PlatoonVehicle::compute_vehicle_following_safe_time_headway(
 	const NearbyVehicle& nearby_vehicle) const
@@ -441,6 +450,12 @@ bool PlatoonVehicle::implement_analyze_platoons(
 	}
 
 	return new_platoon_created;
+}
+
+double PlatoonVehicle::apply_low_level_dynamics(
+	double unfiltered_acceleration)
+{
+	return unfiltered_acceleration;
 }
 
 const Platoon* PlatoonVehicle::implement_get_platoon() const

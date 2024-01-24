@@ -3,12 +3,13 @@
 #include "VanAremLongitudinalController.h"
 
 VanAremLongitudinalController::VanAremLongitudinalController(
+	const EgoVehicle* ego_vehicle,
 	const VelocityControllerGains& velocity_controller_gains,
 	const ConnectedGains& gap_controller_gains, double max_brake,
 	double max_jerk,
 	std::unordered_map<State, color_t> state_to_color_map,
 	bool verbose)
-	: LongitudinalController(state_to_color_map, verbose),
+	: LongitudinalController(ego_vehicle, state_to_color_map, verbose),
 	velocity_controller_gains(velocity_controller_gains),
 	gap_controller_gains(gap_controller_gains),
 	ego_max_brake(max_brake), max_jerk_per_interval(max_jerk) {}
@@ -20,13 +21,12 @@ double VanAremLongitudinalController::implement_get_gap_error() const
 }
 
 double VanAremLongitudinalController::implement_compute_desired_acceleration(
-	const EgoVehicle& ego_vehicle, const NearbyVehicle* leader,
-	double velocity_reference)
+	const NearbyVehicle* leader, double velocity_reference)
 {
 	double des_accel_vel = compute_velocity_control_acceleration(
-		velocity_reference, ego_vehicle.get_velocity());
+		velocity_reference, ego_vehicle->get_velocity());
 	double des_accel_gap = compute_gap_control_acceleration(
-			ego_vehicle, leader);
+			*ego_vehicle, leader);
 	double des_accel;
 	if (des_accel_vel < des_accel_gap)
 	{
@@ -39,7 +39,7 @@ double VanAremLongitudinalController::implement_compute_desired_acceleration(
 		des_accel = des_accel_gap;
 	}
 
-	double current_accel = ego_vehicle.get_acceleration();
+	double current_accel = ego_vehicle->get_acceleration();
 	double filtered_accel = apply_jerk_limit(current_accel, des_accel);
 
 	//if (verbose)

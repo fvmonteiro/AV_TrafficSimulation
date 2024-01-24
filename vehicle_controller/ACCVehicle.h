@@ -15,15 +15,24 @@ public:
 		bool verbose);
 
 protected:
+	/* Pass-to-base constructor */
+	ACCVehicle(long id, VehicleType type, double desired_velocity,
+		double brake_delay, bool is_lane_change_autonomous,
+		bool is_connected, double simulation_time_step,
+		double creation_time, bool verbose)
+		: EgoVehicle(id, type, desired_velocity, brake_delay,
+			is_lane_change_autonomous, is_connected,
+			simulation_time_step, creation_time, verbose) {};
+
 	void set_controller(ACCVehicleController* controller);
 
 private:
-	std::unique_ptr<ACCVehicleController> controller_exclusive{ nullptr };
+	ACCVehicleController controller_exclusive;
 	ACCVehicleController* acc_vehicle_controller{ nullptr };
 
 	void implement_create_controller() override;
-	double implement_compute_desired_acceleration(
-		const std::unordered_map<int, TrafficLight>& traffic_lights) override;
+	//double implement_compute_desired_acceleration(
+	//	const std::unordered_map<int, TrafficLight>& traffic_lights) override;
 	double compute_lane_changing_desired_time_headway(
 		const NearbyVehicle& nearby_vehicle) const override
 	{

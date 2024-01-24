@@ -9,13 +9,6 @@ public:
 	PlatoonVehicleController::PlatoonVehicleController(
 		const PlatoonVehicle* platoon_vehicle, bool verbose);
 
-	double get_desired_acceleration(const PlatoonVehicle& platoon_vehicle);
-
-	/* TODO: instead of overloading the method, we should deal with this
-	via polymorphism, but that'll be a long refactoring process */
-	void update_origin_lane_controller(const PlatoonVehicle& platoon_vehicle,
-		const NearbyVehicle& real_leader);
-
 	const RealLongitudinalController* get_real_leader_controller() const {
 		return real_leader_controller;
 	}
@@ -24,7 +17,6 @@ public:
 	}
 
 	bool get_destination_lane_desired_acceleration_when_in_platoon(
-		const PlatoonVehicle& platoon_vehicle,
 		std::unordered_map<ALCType, double>& possible_accelerations);
 
 protected:
@@ -54,5 +46,7 @@ private:
 	};
 
 	void implement_add_internal_controllers() override;
+	double implement_get_desired_acceleration() override;
+	void implement_update_origin_lane_controller(
+		const NearbyVehicle& real_leader) override;
 };
-

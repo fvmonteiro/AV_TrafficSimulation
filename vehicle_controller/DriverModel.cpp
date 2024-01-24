@@ -23,7 +23,7 @@
 
 /*==========================================================================*/
 
-std::unordered_set<long> logged_vehicles_ids{ 0 };
+std::unordered_set<long> logged_vehicles_ids{ 8 };
 const int LOGGED_PLATOON_ID{ 0 };
 bool verbose_simulation{ false };
 //const double DEBUGGING_START_TIME{ 249.0 };
@@ -334,7 +334,7 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
             break;
         case UDA::logged_vehicle_id:
             /* If possible, we create the vehicle as verbose. This is done
-            using the logged_vehicles_ids. If the vehicle is create before
+            using the logged_vehicles_ids. If the vehicle is created before
             we have the chance to read logged ids from VISSIM, then using 
             set_verbose ensures it becomes verbose afterwards. */
             logged_vehicles_ids.insert(long_value);

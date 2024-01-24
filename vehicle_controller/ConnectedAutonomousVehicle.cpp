@@ -1,12 +1,24 @@
 #include "ConnectedAutonomousVehicle.h"
 
 ConnectedAutonomousVehicle::ConnectedAutonomousVehicle(
-	long id, VehicleType type, double desired_velocity,
+	long id, double desired_velocity,
 	double simulation_time_step, double creation_time,
-	bool verbose) :
-	AutonomousVehicle(id, type, desired_velocity,
-		true, simulation_time_step, creation_time, verbose)
-	//original_desired_velocity(desired_velocity)
+	bool verbose) 
+	: ConnectedAutonomousVehicle(id, VehicleType::connected_car,
+		desired_velocity, AUTONOMOUS_BRAKE_DELAY, true, true,
+		simulation_time_step, creation_time, verbose)
+{
+	if (verbose) std::clog << "[ConnectedAutonomousVehicle] created\n";
+}
+
+ConnectedAutonomousVehicle::ConnectedAutonomousVehicle(
+	long id, VehicleType type,
+	double desired_velocity, double brake_delay,
+	bool is_lane_change_autonomous, bool is_connected,
+	double simulation_time_step, double creation_time, bool verbose)
+	: AutonomousVehicle(id, type, desired_velocity, brake_delay,
+		is_lane_change_autonomous, is_connected,
+		simulation_time_step, creation_time, verbose) 
 {
 	compute_connected_safe_gap_parameters();
 	if (verbose)
@@ -15,7 +27,7 @@ ConnectedAutonomousVehicle::ConnectedAutonomousVehicle(
 			<< ", lambda 0 connected = " << lambda_0_connected
 			<< ", lambda 1 lc connected = " << lambda_1_lane_change_connected
 			<< ", lambda 0 lc connected = " << lambda_0_lane_change_connected
-			<< "\n[ConnectedAutonomousVehicle] constructor done" << std::endl;
+			<< std::endl;
 	}
 }
 
@@ -221,8 +233,7 @@ void ConnectedAutonomousVehicle::update_destination_lane_follower(
 		NearbyVehicle* dest_lane_follower =
 			get_modifiable_dest_lane_follower();
 		cav_controller->update_destination_lane_follower_time_headway(
-			get_max_brake(), dest_lane_follower->is_connected(),
-			*dest_lane_follower);
+			dest_lane_follower->is_connected(), *dest_lane_follower);
 		if ((old_follower == nullptr )
 			|| (old_follower->get_id() != dest_lane_follower->get_id()))
 		{
@@ -270,8 +281,8 @@ void ConnectedAutonomousVehicle::set_max_desired_velocity(
 	}
 }
 
-double ConnectedAutonomousVehicle::get_lambda_1(
-	bool is_leader_connected) const
+double ConnectedAutonomousVehicle::get_lambda_1(bool is_leader_connected
+) const
 {
 	return is_leader_connected ?
 		lambda_1_connected : Vehicle::get_lambda_1();
@@ -345,15 +356,14 @@ double ConnectedAutonomousVehicle::compute_accepted_lane_change_gap(
 
 	if (use_linear_lane_change_gap)
 	{
-		accepted_gap = cav_controller->compute_accepted_lane_change_gap(*this,
+		accepted_gap = cav_controller->compute_accepted_lane_change_gap(
 			*nearby_vehicle, accepted_risk);
 	}
 	else
 	{
 		accepted_gap = cav_controller->compute_accepted_lane_change_gap_exact(
-			*this, *nearby_vehicle, 
-			get_lane_changing_safe_gap_parameters(
-				nearby_vehicle->is_connected()),
+			*nearby_vehicle, get_lane_changing_safe_gap_parameters(
+				nearby_vehicle->is_connected()), 
 			accepted_risk);
 	}
 
@@ -385,20 +395,19 @@ double ConnectedAutonomousVehicle::compute_lane_changing_desired_time_headway(
 
 void ConnectedAutonomousVehicle::implement_create_controller()
 {
-	this->controller_exclusive = std::make_unique<CAVController>(
-		this, is_verbose());
-	controller_exclusive->add_internal_controllers();
-	this->set_controller(controller_exclusive.get());
+	this->controller_exclusive = CAVController(this, is_verbose());
+	controller_exclusive.add_internal_controllers();
+	this->set_controller(&controller_exclusive);
 }
 
-double ConnectedAutonomousVehicle::implement_compute_desired_acceleration(
-	const std::unordered_map<int, TrafficLight>& traffic_lights)
-{
-	if (verbose) std::clog << "[CAV] get_desired_acceleration" << std::endl;
-	double a_desired_acceleration =
-		cav_controller->get_desired_acceleration(*this);
-	return consider_vehicle_dynamics(a_desired_acceleration);
-}
+//double ConnectedAutonomousVehicle::implement_compute_desired_acceleration(
+//	const std::unordered_map<int, TrafficLight>& traffic_lights)
+//{
+//	if (verbose) std::clog << "[CAV] get_desired_acceleration" << std::endl;
+//	double a_desired_acceleration =
+//		cav_controller->get_desired_acceleration();
+//	return apply_low_level_dynamics(a_desired_acceleration);
+//}
 
 void ConnectedAutonomousVehicle::compute_connected_safe_gap_parameters()
 {
