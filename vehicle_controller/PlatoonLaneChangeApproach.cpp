@@ -5,8 +5,9 @@
 #include "PlatoonLaneChangeApproach.h"
 #include "PlatoonVehicle.h"
 
-PlatoonLaneChangeApproach::PlatoonLaneChangeApproach(int id, std::string name) 
-	: id(id), name(name) {}
+PlatoonLaneChangeApproach::PlatoonLaneChangeApproach(int id, std::string name,
+	bool verbose) 
+	: id(id), name(name), verbose(verbose) {}
 
 long PlatoonLaneChangeApproach::get_desired_destination_lane_leader_id(
 	int ego_position)
@@ -61,32 +62,13 @@ long PlatoonLaneChangeApproach::get_assisted_vehicle_id(int ego_position)
 	return platoon->get_a_vehicle_by_position(rear_most_pos)->get_id();
 }
 
-void PlatoonLaneChangeApproach::set_platoon_lane_change_order(
-	LCOrder lc_order, CoopOrder coop_order)
-{
-	maneuver_step = 0;
-	platoon_lane_change_order = PlatoonLaneChangeOrder(lc_order, coop_order);
-
-	std::clog << "Order set to: " << platoon_lane_change_order << "\n";
-
-	last_dest_lane_vehicle_pos =
-		get_rearmost_lane_changing_vehicle_position();
-	is_initialized = true;
-}
-
-void PlatoonLaneChangeApproach::set_platoon_lane_change_order(
-	PlatoonLaneChangeOrder plco)
-{
-	maneuver_step = 0;
-	platoon_lane_change_order = plco;
-	last_dest_lane_vehicle_pos = 
-		get_rearmost_lane_changing_vehicle_position();
-	is_initialized = true;
-}
-
 bool PlatoonLaneChangeApproach::can_vehicle_start_lane_change(
 	int veh_position)
 {
+	
+	if (!is_initialized) decide_lane_change_order();
+	if (!is_initialized) return false;
+
 	if (maneuver_step >= platoon_lane_change_order.number_of_steps())
 	{
 		std::clog << "[WARNING] maneuver step counter greater than "
@@ -94,10 +76,14 @@ bool PlatoonLaneChangeApproach::can_vehicle_start_lane_change(
 		return false;
 	}
 
-	if (!is_initialized) decide_lane_change_order();
-	if (!is_initialized) return false;
-
 	std::unordered_set<int> next_to_move = get_current_lc_vehicle_positions();
+
+	if (verbose)
+	{
+		std::string message = "Next to move: ";
+		for (int i : next_to_move) message += std::to_string(i) + ", ";
+		std::clog << message << "\n";
+	}
 
 	/* TODO: change where this check happens.The current lc vehicles should
 	call a new method when they finish their maneuvers. In this new
@@ -145,12 +131,42 @@ bool PlatoonLaneChangeApproach::can_vehicle_start_lane_change(
 	return false;
 }
 
-//void PlatoonLaneChangeApproach::set_maneuver_initial_state(int ego_position,
-//	StateVector lo_states, std::vector<StateVector> platoon_states,
-//	StateVector ld_states, StateVector fd_states)
-//{
-//
-//}
+void PlatoonLaneChangeApproach::set_maneuver_initial_state(int ego_position, StateVector lo_states,
+	std::vector<StateVector> platoon_states, StateVector ld_states,
+	StateVector fd_states) 
+{
+
+}  
+
+void PlatoonLaneChangeApproach::set_empty_maneuver_initial_state(
+	int ego_position) 
+{
+
+}
+
+void PlatoonLaneChangeApproach::set_platoon_lane_change_order(
+	LCOrder lc_order, CoopOrder coop_order)
+{
+	maneuver_step = 0;
+	platoon_lane_change_order = PlatoonLaneChangeOrder(lc_order, coop_order);
+
+	if (verbose) std::clog << "Order set to: "
+		<< platoon_lane_change_order << "\n";
+
+	last_dest_lane_vehicle_pos =
+		get_rearmost_lane_changing_vehicle_position();
+	is_initialized = true;
+}
+
+void PlatoonLaneChangeApproach::set_platoon_lane_change_order(
+	PlatoonLaneChangeOrder plco)
+{
+	maneuver_step = 0;
+	platoon_lane_change_order = plco;
+	last_dest_lane_vehicle_pos =
+		get_rearmost_lane_changing_vehicle_position();
+	is_initialized = true;
+}
 
 bool PlatoonLaneChangeApproach::is_vehicle_turn_to_lane_change(
 	int veh_position)
@@ -163,6 +179,8 @@ bool PlatoonLaneChangeApproach::is_vehicle_turn_to_lane_change(
 int PlatoonLaneChangeApproach
 ::get_rearmost_lane_changing_vehicle_position() const
 {
+	if (verbose) std::clog << "Looking for rearmost lc veh.\n";
+
 	double min_x = INFINITY;
 	int rear_most_pos = 0;
 	for (int pos : get_current_lc_vehicle_positions())
@@ -175,6 +193,8 @@ int PlatoonLaneChangeApproach
 			rear_most_pos = pos;
 		}
 	}
+
+	if (verbose) std::clog << "Found at pos." << rear_most_pos << "\n";
 	return rear_most_pos;
 }
 
@@ -187,11 +207,10 @@ void SynchoronousApproach::decide_lane_change_order()
 	/*std::vector<int> l1(platoon->get_size());
 	std::iota(l1.begin(), l1.end(), 0);*/
 	std::unordered_set<int> lc_set_1;
-	CoopOrder coop_order;
+	CoopOrder coop_order{ {-1} };
 	for (int i = 0; i < platoon->get_size(); i++)
 	{
 		lc_set_1.insert(i);
-		coop_order.push_back(-1);
 	}
 	LCOrder lc_order = { lc_set_1 };
 	set_platoon_lane_change_order(lc_order, coop_order);

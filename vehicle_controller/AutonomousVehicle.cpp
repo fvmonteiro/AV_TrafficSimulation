@@ -381,10 +381,6 @@ bool AutonomousVehicle::implement_check_lane_change_gaps()
 	double safe_gap_to_lo, safe_gap_to_ld, safe_gap_to_fd;
 	double margin = 0.1;
 
-
-	if (verbose) std::clog << "Deciding lane changing safety\n"
-			<< "\t- To orig lane leader:\n";
-
 	gap_to_lo = compute_gap_to_a_leader(get_leader());  // possibly MAX_DIST
 	safe_gap_to_lo = compute_accepted_lane_change_gap(
 			get_leader()); // possibly 0.0
@@ -393,8 +389,6 @@ bool AutonomousVehicle::implement_check_lane_change_gaps()
 	/*lane_change_gaps_safety.orig_lane_leader_gap = 
 		is_lane_change_gap_safe(get_leader());*/
 
-	if (verbose) std::clog << "\t- To dest lane leader:\n";
-
 	gap_to_ld = compute_gap_to_a_leader(destination_lane_leader);
 	safe_gap_to_ld = compute_accepted_lane_change_gap(
 		destination_lane_leader);
@@ -402,8 +396,6 @@ bool AutonomousVehicle::implement_check_lane_change_gaps()
 		gap_to_ld + margin >= safe_gap_to_ld;
 	/*lane_change_gaps_safety.dest_lane_leader_gap =
 		is_lane_change_gap_safe(destination_lane_leader);*/
-	
-	if (verbose) std::clog << "\t- To dest lane follower:\n";
 	
 	/* Besides the regular safety conditions, we add the case
 	where the dest lane follower has completely stopped to give room
@@ -428,6 +420,19 @@ bool AutonomousVehicle::implement_check_lane_change_gaps()
 	is_space_suitable_for_lane_change =
 		(gap_to_ld + gap_to_fd + margin)
 		>= (safe_gap_to_fd + safe_gap_to_ld + get_length());
+
+	if (verbose)
+	{
+		std::clog << "Deciding lane changing safety"
+			<< "\n\t- To orig lane leader: "
+			<< "gap = " << gap_to_lo << ", safe_gap = " << safe_gap_to_lo
+			<< "\n\t- To dest lane leader:"
+			<< "gap = " << gap_to_ld << ", safe_gap = " << safe_gap_to_ld
+			<< "\n\t- To dest lane follower:"
+			<< "gap = " << gap_to_fd << ", safe_gap = " << safe_gap_to_fd
+			<< "\n";
+	}
+
 	return lane_change_gaps_safety.is_lane_change_safe();
 }
 

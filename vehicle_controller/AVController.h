@@ -2,7 +2,7 @@
 
 #include "LateralController.h"
 #include "ACCVehicleController.h"
-#include "VirtualLongitudinalController.h"
+#include "SwitchedLongitudinalController.h"
 
 class AutonomousVehicle;
 
@@ -13,9 +13,9 @@ public:
 	AVController() = default;
 	AVController(const AutonomousVehicle* autonomous_vehicle, bool verbose);
 
-	const VirtualLongitudinalController& get_destination_lane_controller()
+	const SwitchedLongitudinalController& get_destination_lane_controller()
 		const {
-		return destination_lane_controller;
+		return *destination_lane_controller;
 	};
 
 	const LateralController& get_lateral_controller() const {
@@ -59,7 +59,8 @@ protected:
 	// TODO organization: connected gains do not belong here
 	ConnectedGains connected_virtual_following_gains{ 0.4, 2.3, 0.13, 1.3 };
 	LateralController lateral_controller;
-	VirtualLongitudinalController destination_lane_controller;
+	std::unique_ptr<SwitchedLongitudinalController> 
+		destination_lane_controller;
 
 	void add_lane_change_adjustment_controller();
 

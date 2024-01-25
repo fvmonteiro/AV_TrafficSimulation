@@ -22,7 +22,7 @@ VirtualLongitudinalController::VirtualLongitudinalController(
 	if (verbose) std::clog << "Created virtual longitudinal controller\n";
 }
 
-double VirtualLongitudinalController::get_max_accepted_brake()
+double VirtualLongitudinalController::get_max_accepted_brake() const
 {
 	return ego_vehicle->get_comfortable_brake();
 }
@@ -59,22 +59,16 @@ void VirtualLongitudinalController::determine_controller_state(
 		}
 
 		if (verbose) {
-			std::clog << "Gap threshold = "
-				<< gap_threshold
+			std::clog << "Gap threshold = " << gap_threshold
 				<< ", gap = " << gap
 				<< " to leader id " << leader->get_id()
-				<< ". State: " << state_to_string(state)
-				<< std::endl;
+				<< ". State: " << state_to_string(state) << std::endl;
 		}
 	}
 }
 
-bool VirtualLongitudinalController::is_active() const 
-{
-	return state != State::uninitialized;
-}
-
-bool VirtualLongitudinalController::is_outdated() const 
+bool VirtualLongitudinalController::implement_is_velocity_reference_outdated(
+) const
 {
 	return ego_vehicle->get_velocity() 
 		< velocity_controller.get_reference_value();

@@ -1,5 +1,6 @@
 #include "AVController.h"
 #include "AutonomousVehicle.h"
+#include "VirtualLongitudinalController.h"
 
 AVController::AVController(const AutonomousVehicle* autonomous_vehicle,
 	bool verbose) : ACCVehicleController(autonomous_vehicle, verbose),
@@ -8,15 +9,15 @@ AVController::AVController(const AutonomousVehicle* autonomous_vehicle,
 void AVController::activate_destination_lane_controller(
 	const NearbyVehicle& virtual_leader)
 {
-	//destination_lane_controller.smooth_start_leader_velocity_filter();
+	//destination_lane_controller->smooth_start_leader_velocity_filter();
 	double leader_velocity = virtual_leader.compute_velocity(
 		autonomous_vehicle->get_velocity());
-	destination_lane_controller.reset_leader_velocity_filter(leader_velocity);
+	destination_lane_controller->reset_leader_velocity_filter(leader_velocity);
 
 	/* [Mar 6] Test: setting the initial value equal the current
 	origin lane time headway value. In the update function, we
 	set the desired value to the lane changing one. */
-	//destination_lane_controller.reset_time_headway_filter(time_headway
+	//destination_lane_controller->reset_time_headway_filter(time_headway
 	//	/*origin_lane_controller.get_current_time_headway()*/
 	//);
 	update_destination_lane_controller(virtual_leader);
@@ -36,12 +37,12 @@ void AVController::update_destination_lane_controller(
 	else
 	{
 		double current_h =
-			destination_lane_controller.get_current_time_headway();
+			destination_lane_controller->get_current_time_headway();
 		double comf_h = find_comfortable_time_headway(virtual_leader,
-			destination_lane_controller.get_standstill_distance());
+			destination_lane_controller->get_standstill_distance());
 		new_h = std::max(current_h, std::min(comf_h, safe_h));
 	}
-	destination_lane_controller.reset_time_headway_filter(new_h);
+	destination_lane_controller->reset_time_headway_filter(new_h);
 
 	if (verbose)
 	{
@@ -52,11 +53,11 @@ void AVController::update_destination_lane_controller(
 
 	/* [Mar 6, 23] TODO: still not sure what's the best way to
 	initialize the gap controller's velocity filter */
-	//destination_lane_controller.smooth_start_leader_velocity_filter();
-	destination_lane_controller.set_desired_time_headway(safe_h);
-	destination_lane_controller.connect_gap_controller(
+	//destination_lane_controller->smooth_start_leader_velocity_filter();
+	destination_lane_controller->set_desired_time_headway(safe_h);
+	destination_lane_controller->connect_gap_controller(
 		virtual_leader.is_connected());
-	//destination_lane_controller.reset_leader_velocity_filter(ego_velocity);
+	//destination_lane_controller->reset_leader_velocity_filter(ego_velocity);
 }
 
 void AVController::update_destination_lane_follower_parameters(
@@ -158,15 +159,16 @@ void AVController::add_lane_change_adjustment_controller()
 {
 	if (verbose) std::clog << "Creating lane change adjustment controller\n";
 
-	destination_lane_controller = VirtualLongitudinalController(
-		autonomous_vehicle, dest_lane_colors, long_controllers_verbose);
-	destination_lane_controller.create_velocity_controller(
+	destination_lane_controller = 
+		std::make_unique<VirtualLongitudinalController>(
+			autonomous_vehicle, dest_lane_colors, long_controllers_verbose);
+	destination_lane_controller->create_velocity_controller(
 		adjustment_velocity_controller_gains, velocity_filter_gain);
-	destination_lane_controller.create_gap_controller(
+	destination_lane_controller->create_gap_controller(
 		autonomous_virtual_following_gains, connected_virtual_following_gains,
 		velocity_filter_gain, time_headway_filter_gain);
 	available_controllers[ALCType::destination_lane] =
-		&destination_lane_controller;
+		destination_lane_controller.get();
 }
 
 bool AVController::get_destination_lane_desired_acceleration(
@@ -182,34 +184,29 @@ bool AVController::get_destination_lane_desired_acceleration(
 		autonomous_vehicle->get_virtual_leader();
 	if (virtual_leader != nullptr)
 	{
-		if (verbose)
-		{
-			std::clog << "Dest. lane controller"
-				<< std::endl;
-		}
+		if (verbose) std::clog << "Dest. lane controller\n";
+
 		/*std::shared_ptr<const NearbyVehicle> virtual_leader =
 			autonomous_vehicle.get_virtual_leader();*/
 		double reference_velocity = determine_low_velocity_reference(
 			*virtual_leader);
 
-		if (verbose)
-		{
-			std::clog << "low ref vel=" << reference_velocity << std::endl;
-		}
+		if (verbose) std::clog << "low ref vel=" << reference_velocity 
+			<< std::endl;
 
 		/* If the ego vehicle is braking hard due to conditions on
 		the current lane, the destination lane controller, which
 		uses comfortable constraints, must be updated. */
 		if ((active_longitudinal_controller_type
 			!= ALCType::destination_lane)
-			&& destination_lane_controller.is_outdated())
+			&& destination_lane_controller->is_velocity_reference_outdated())
 		{
-			destination_lane_controller.reset_velocity_controller(
+			destination_lane_controller->reset_velocity_controller(
 				autonomous_vehicle->get_velocity());
 		}
 
 		possible_accelerations[ALCType::destination_lane] =
-			destination_lane_controller.compute_desired_acceleration(
+			destination_lane_controller->compute_desired_acceleration(
 				virtual_leader, reference_velocity);
 		is_active = true;
 	}
@@ -292,7 +289,7 @@ void AVController::implement_update_origin_lane_controller(
 	{
 		// Use the time headway of to the virtual leader
 		new_h = std::min(safe_h,
-			destination_lane_controller.get_current_time_headway());
+			destination_lane_controller->get_current_time_headway());
 	}
 	else
 	{
@@ -332,7 +329,7 @@ double AVController::implement_get_desired_time_headway_gap(
 		else
 		{
 			time_headway_gap =
-				destination_lane_controller.get_desired_time_headway_gap();
+				destination_lane_controller->get_desired_time_headway_gap();
 		}
 	}
 	else
@@ -340,7 +337,7 @@ double AVController::implement_get_desired_time_headway_gap(
 		double dest_lane_follower_time_headway =
 			lateral_controller.get_destination_lane_follower_time_headway();
 		time_headway_gap =
-			destination_lane_controller.get_time_headway_gap(
+			destination_lane_controller->get_time_headway_gap(
 				dest_lane_follower_time_headway,
 				nearby_vehicle.compute_velocity(
 					autonomous_vehicle->get_velocity()));

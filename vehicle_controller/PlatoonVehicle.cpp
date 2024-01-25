@@ -2,6 +2,7 @@
 #include "PlatoonVehicle.h"
 #include "Platoon.h"
 #include "PlatoonLaneChangeStrategy.h"
+#include "PlatoonVehicleState.h"
 
 PlatoonVehicle::PlatoonVehicle(long id, double desired_velocity,
 	double simulation_time_step, double creation_time,
@@ -19,7 +20,7 @@ PlatoonVehicle::PlatoonVehicle(long id, VehicleType type,
 	double simulation_time_step, double creation_time, bool verbose)
 	: ConnectedAutonomousVehicle(id, type, desired_velocity, brake_delay,
 		is_lane_change_autonomous, is_connected,
-		simulation_time_step, creation_time, verbose) 
+		simulation_time_step, creation_time, verbose)
 {
 	compute_platoon_safe_gap_parameters();
 	if (verbose)
@@ -198,7 +199,11 @@ bool PlatoonVehicle::is_vehicle_in_sight(long nearby_vehicle_id) const
 
 bool PlatoonVehicle::can_start_lane_change()
 {
+	if (verbose) std::clog << "Can start lane change?\n";
 	bool is_safe = check_lane_change_gaps();
+	if (verbose) std::clog << "Gaps are safe? " 
+		<< (is_safe ? "yes" : "no") << "\n";
+
 	bool is_my_turn;
 	if (is_in_a_platoon())
 	{
@@ -212,6 +217,10 @@ bool PlatoonVehicle::can_start_lane_change()
 	{
 		is_my_turn = true;
 	}
+
+	if (verbose) std::clog << "Is my turn? "
+		<< (is_my_turn ? "yes" : "no") << "\n";
+
 	return is_safe && is_my_turn;
 }
 
@@ -315,6 +324,19 @@ bool PlatoonVehicle::was_my_cooperation_request_accepted() const
 	return false;
 }
 
+void PlatoonVehicle::implement_prepare_to_start_long_adjustments()
+{
+	has_completed_lane_change = false;
+}
+
+void PlatoonVehicle::implement_prepare_to_restart_lane_keeping(
+	bool was_lane_change_successful)
+{
+	has_completed_lane_change = was_lane_change_successful;
+	set_lane_change_direction(RelativeLane::same);
+	reset_lane_change_waiting_time();
+}
+
 NearbyVehicle* PlatoonVehicle::choose_virtual_leader()
 {
 	return is_in_a_platoon() ? 
@@ -345,10 +367,13 @@ void PlatoonVehicle::set_desired_lane_change_direction()
 
 void PlatoonVehicle::implement_analyze_nearby_vehicles()
 {
+	if (verbose) std::clog << "looking for leader\n";
 	find_leader();
+	if (verbose) std::clog << "looking for dest lane vehs\n";
 	find_destination_lane_vehicles();
+	if (verbose) std::clog << "looking for coop requests\n";
 	find_cooperation_request_from_platoon();
-	create_lane_change_request();
+	//create_lane_change_request();
 }
 
 double PlatoonVehicle::compute_reference_vehicle_following_gap(
@@ -361,13 +386,13 @@ double PlatoonVehicle::compute_reference_vehicle_following_gap(
 
 void PlatoonVehicle::find_cooperation_request_from_platoon()
 {
-	/*if (is_in_a_platoon())
+	if (is_in_a_platoon())
 	{
 		long assisted_vehicle_id =
 			get_platoon()->get_assisted_vehicle_id(get_id());
 		set_assisted_vehicle_by_id(assisted_vehicle_id);
-	}*/
-	long assisted_vehicle_id = 0;
+	}
+	/*long assisted_vehicle_id = 0;
 	if (is_in_a_platoon())
 	{
 		for (auto&& id_veh_pair : get_nearby_vehicles())
@@ -381,7 +406,7 @@ void PlatoonVehicle::find_cooperation_request_from_platoon()
 			}
 		}
 	}
-	set_assisted_vehicle_by_id(assisted_vehicle_id);
+	set_assisted_vehicle_by_id(assisted_vehicle_id);*/
 }
 
 bool PlatoonVehicle::implement_analyze_platoons(
@@ -394,9 +419,6 @@ bool PlatoonVehicle::implement_analyze_platoons(
 		has_leader() && get_leader()->is_in_a_platoon();
 	bool may_join_leader_platoon =
 		leader_is_in_a_platoon && (get_leader()->get_distance() < 60);
-
-	/*std::shared_ptr<PlatoonVehicle> pointer_to_me_my_type =
-		std::dynamic_pointer_cast<PlatoonVehicle>(pointer_to_me);*/
 
 	if (!am_in_a_platoon && !may_join_leader_platoon)
 	{
@@ -430,10 +452,8 @@ bool PlatoonVehicle::implement_analyze_platoons(
 	}
 	else // am_in_a_platoon && !may_join_leader_platoon
 	{
-		if (verbose)
-		{
-			std::clog << "\t[PlatoonVehicle] Might leave platoon\n";
-		}
+		/*if (verbose) std::clog << "\t[PlatoonVehicle] May leave platoon\n";*/
+
 		if (platoon->can_vehicle_leave_platoon(*this))
 		{
 			if (verbose)
@@ -443,7 +463,6 @@ bool PlatoonVehicle::implement_analyze_platoons(
 					<< ": leaving platoon " << platoon->get_id() << "\n";
 			}
 			platoon->remove_vehicle_by_id(get_id(), false);
-			//platoon.reset();
 			create_platoon(new_platoon_id, platoon_lc_strategy);
 			new_platoon_created = true;
 		}
@@ -483,7 +502,9 @@ void PlatoonVehicle::create_platoon(long platoon_id,
 	}
 
 	platoon = std::make_shared<Platoon>(platoon_id, 
-		platoon_lc_strategy, this);
+		platoon_lc_strategy, this, verbose);
+
+	if (verbose) std::clog << "platoon created\n";
 }
 
 void PlatoonVehicle::add_myself_to_leader_platoon(

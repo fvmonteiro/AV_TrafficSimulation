@@ -10,7 +10,7 @@ SimpleLongitudinalController::SimpleLongitudinalController(
 	if (verbose) std::clog << "Created simple long. controller\n";
 }
 
-double SimpleLongitudinalController::get_max_accepted_brake()
+double SimpleLongitudinalController::get_max_accepted_brake() const
 {
 	return max_brake;
 }

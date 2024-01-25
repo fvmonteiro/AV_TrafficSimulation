@@ -10,16 +10,16 @@ public:
 	CAVController() = default;
 	CAVController(const ConnectedAutonomousVehicle* cav, bool verbose);
 	
-	const VirtualLongitudinalController& get_gap_generation_lane_controller()
-		const {
-		return gap_generating_controller;
+	const SwitchedLongitudinalController& 
+		get_gap_generation_lane_controller() const {
+		return *gap_generating_controller;
 	};
 
 	void update_gap_generation_controller(double ego_velocity,
 		double time_headway);
 
 protected:
-	VirtualLongitudinalController gap_generating_controller;
+	std::unique_ptr<SwitchedLongitudinalController> gap_generating_controller;
 
 	void add_cooperative_lane_change_controller();
 	/* Returns true if the computed acceleration was added to the map */

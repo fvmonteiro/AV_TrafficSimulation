@@ -98,6 +98,9 @@ private:
 	/* Chooses the desired destination lane follower */
 	void create_lane_change_request() override;
 	bool was_my_cooperation_request_accepted() const override;
+	void implement_prepare_to_start_long_adjustments() override;
+	void implement_prepare_to_restart_lane_keeping(
+		bool was_lane_change_successful) override;
 
 	double compute_reference_vehicle_following_gap(
 		const NearbyVehicle* nearby_vehicle) const;
@@ -105,6 +108,5 @@ private:
 	void find_cooperation_request_from_platoon();
 	void create_platoon(long platoon_id, int platoon_lc_strategy);
 	void add_myself_to_leader_platoon(
-		std::shared_ptr<Platoon> leader_platoon//,
-		/*std::shared_ptr<PlatoonVehicle> pointer_to_me*/);
+		std::shared_ptr<Platoon> leader_platoon);
 };

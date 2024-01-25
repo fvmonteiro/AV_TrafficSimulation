@@ -38,6 +38,14 @@ public:
 		const ConnectedGains& connected_gains, double velocity_filter_gain,
 		double time_headway_filter_gain);
 
+	bool is_initialized() const;
+	/* Checks if the reference velocity is 'old'. That may happen when
+	* the controller is not active and the vehicle's velocity changed
+	* faster than the reference velocity filter.
+	TODO [Jan 24, 2024] is this really necessary? Can't we just check
+	this condition when the controller becomes active? */
+	bool is_velocity_reference_outdated() const;
+
 	/* --------------- Methods related to velocity control ---------------- */
 	
 	void reset_velocity_controller(double reset_velocity);
@@ -78,14 +86,15 @@ protected:
 	following control. Threshold is computed such that, at the switch, 
 	the vehicle following input is greater or equal to kg*h*(Vf - v) > 0. */
 	double compute_gap_threshold_1(double gap, 
-		double diff_to_velocity_reference, double gap_control_input);
+		double diff_to_velocity_reference, double gap_control_input) const;
 
 private:
-	virtual double get_max_accepted_brake() = 0;
+	virtual double get_max_accepted_brake() const = 0;
 	/* Determines and sets the current state of the longitudinal controller */
 	virtual void determine_controller_state(
 		const NearbyVehicle* leader, double reference_velocity, 
 		double gap_control_input) = 0;
+	virtual bool implement_is_velocity_reference_outdated() const = 0;
 
 	double implement_get_gap_error() const override;
 	double implement_compute_desired_acceleration(

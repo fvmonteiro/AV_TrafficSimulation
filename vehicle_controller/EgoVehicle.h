@@ -202,7 +202,6 @@ public:
 		return implement_analyze_platoons(platoons, new_platoon_id,
 			platoon_lc_strategy);
 	};
-	//bool is_cutting_in(const NearbyVehicle& nearby_vehicle) const;
 	bool has_leader() const;
 	/* Returns a nullptr if there is no leader */
 	const NearbyVehicle* get_leader() const;
@@ -237,6 +236,7 @@ public:
 	bool has_destination_lane_leader() const;
 	bool has_destination_lane_follower() const;
 	bool has_assisted_vehicle() const;
+
 
 	bool is_in_a_platoon() const;
 	long get_platoon_id() const;
@@ -288,6 +288,8 @@ public:
 	void update_lane_change_waiting_time();
 	void reset_lane_change_waiting_time();
 	bool check_lane_change_gaps();
+	void prepare_to_start_long_adjustments();
+	void prepare_to_restart_lane_keeping(bool was_lane_change_successful);
 
 	/* Control related methods ----------------------------------------------- */
 	void create_controller() { implement_create_controller(); };
@@ -329,14 +331,17 @@ public:
 		const EgoVehicle& vehicle);
 
 protected:
-	/* Keeps track of stopped time waiting for lane change */
-	double lane_change_waiting_time{ 0.0 };
-	std::unique_ptr<VehicleState> state{ nullptr };
-
 	bool verbose{ false }; /* when true, will print results to
 						  the default log file and
 						  create a specific log file for this
 						  vehicle */
+
+	/* Keeps track of stopped time waiting for lane change */
+	double lane_change_waiting_time{ 0.0 };
+	std::unique_ptr<VehicleState> state{ nullptr };
+	/* Becomes true after a lane change and is set to false again
+	every time the vehicle has another lane change intention. */
+	bool has_completed_lane_change{ false };
 
 	EgoVehicle(long id, VehicleType type, double desired_velocity,
 		double brake_delay, bool is_lane_change_autonomous, bool is_connected,
@@ -477,6 +482,10 @@ private:
 	virtual void implement_set_accepted_lane_change_risk_to_follower(
 		double value) = 0;
 	virtual void implement_set_use_linear_lane_change_gap(long value) = 0;
+	virtual void implement_prepare_to_start_long_adjustments() = 0;
+	//virtual void implement_prepare_to_start_lane_change() = 0;
+	virtual void implement_prepare_to_restart_lane_keeping(
+		bool was_lane_change_successful) = 0;
 	/* Takes the desired acceleration given by the controller and
 	returns the feasible acceleration given the approximated low level
 	dynamics */

@@ -67,7 +67,7 @@ void PlatoonVehicleLaneKeepingState
 	The cooperation requests in this code are set at every simulation step
 	in the method that updated nearby vehicles. And the lane change end
 	times are computed after the simulation is done. */
-	//platoon_vehicle->prepare_to_start_long_adjustments();
+	platoon_vehicle->prepare_to_start_long_adjustments();
 	platoon_vehicle->set_state(
 		std::make_unique<PlatoonVehicleLongAdjustmentState>());
 }
@@ -78,6 +78,7 @@ void PlatoonVehicleLongAdjustmentState
 ::implement_handle_lane_keeping_intention()
 {
 	/* This should not happen in our scenarios */
+	platoon_vehicle->prepare_to_restart_lane_keeping(false);
 	unexpected_transition_message(this, false);
 }
 
@@ -104,10 +105,7 @@ void PlatoonVehicleLaneChangingState
 	// Same as single vehicle case except for the next state
 	if (!platoon_vehicle->is_lane_changing())
 	{
-		platoon_vehicle->set_lane_change_direction(RelativeLane::same);
-		platoon_vehicle->reset_lane_change_waiting_time();
-		//platoon_vehicle->update_time_headway_to_leader();
-		//platoon_vehicle->reset_origin_lane_velocity_controller();
+		platoon_vehicle->prepare_to_restart_lane_keeping(false);
 		platoon_vehicle->set_state(
 			std::make_unique<PlatoonVehicleLaneKeepingState>());
 	}

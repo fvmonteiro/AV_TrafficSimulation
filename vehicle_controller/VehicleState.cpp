@@ -103,7 +103,7 @@ void SingleVehicleLaneKeepingState
 void SingleVehicleLaneKeepingState
 ::implement_handle_lane_change_intention()
 {
-	ego_vehicle->update_time_headway_to_leader();
+	ego_vehicle->prepare_to_start_long_adjustments();
 	ego_vehicle->set_state(
 		std::make_unique<SingleVehicleLongidutinalAdjustmentState>());
 }
@@ -113,9 +113,7 @@ void SingleVehicleLaneKeepingState
 void SingleVehicleLongidutinalAdjustmentState
 ::implement_handle_lane_keeping_intention()
 {
-	ego_vehicle->reset_lane_change_waiting_time();
-	ego_vehicle->update_time_headway_to_leader();
-	ego_vehicle->reset_origin_lane_velocity_controller();
+	ego_vehicle->prepare_to_restart_lane_keeping(false);
 	ego_vehicle->set_state(
 		std::make_unique<SingleVehicleLaneKeepingState>());
 }
@@ -146,8 +144,7 @@ void SingleVehicleLaneChangingState
 	ego_vehicle->set_lane_change_direction(RelativeLane::same);
 	if (!ego_vehicle->is_lane_changing())
 	{
-		ego_vehicle->update_time_headway_to_leader();
-		ego_vehicle->reset_origin_lane_velocity_controller();
+		ego_vehicle->prepare_to_restart_lane_keeping(true);
 		ego_vehicle->set_state(
 			std::make_unique<SingleVehicleLaneKeepingState>());
 	}

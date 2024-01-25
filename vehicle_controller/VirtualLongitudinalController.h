@@ -24,14 +24,6 @@ public:
         std::unordered_map<State, color_t> state_to_color_map,
         bool verbose);
 
-    bool is_active() const;
-    /* Checks whether the filtered reference velocity is greater than
-    the ego velocity. Method should only be called when the 
-    destination lane controller is NOT the active one. */
-    bool is_outdated() const;
-
-    /*void estimate_follower_time_headway(const NearbyVehicle& follower,
-        double ego_max_brake, double follower_free_flow_velocity);*/
     /* Changes the accepted risk if necessary and returns 
     true if it made any changes*/
     //bool update_accepted_risk(double time, const EgoVehicle& ego_vehicle);
@@ -44,8 +36,9 @@ public:
 
 private:
 
-    double get_max_accepted_brake() override;
+    double get_max_accepted_brake() const override;
     void determine_controller_state(const NearbyVehicle* leader,
         double reference_velocity, double gap_control_input) override;
+    bool implement_is_velocity_reference_outdated() const override;
 };
 

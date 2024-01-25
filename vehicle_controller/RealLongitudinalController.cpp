@@ -18,7 +18,7 @@ RealLongitudinalController::RealLongitudinalController(
 	if (verbose) std::clog << "Created real longitudinal controller\n";
 }
 
-double RealLongitudinalController::get_max_accepted_brake()
+double RealLongitudinalController::get_max_accepted_brake() const
 {
 	return ego_vehicle->get_max_brake();
 }
@@ -72,4 +72,11 @@ void RealLongitudinalController::determine_controller_state(
 				<< std::endl;
 		}
 	}
+}
+
+bool RealLongitudinalController::implement_is_velocity_reference_outdated(
+) const
+{
+	return ego_vehicle->get_velocity()
+		> velocity_controller.get_reference_value();
 }

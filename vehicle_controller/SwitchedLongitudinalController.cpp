@@ -41,6 +41,16 @@ void SwitchedLongitudinalController::create_gap_controller(
 		get_max_accepted_brake(), verbose);
 }
 
+bool SwitchedLongitudinalController::is_initialized() const
+{
+	return state != State::uninitialized;
+}
+
+bool SwitchedLongitudinalController::is_velocity_reference_outdated() const
+{
+	return implement_is_velocity_reference_outdated();
+}
+
 void SwitchedLongitudinalController::reset_velocity_controller(
 	double reset_velocity) {
 	velocity_controller.reset_filter(reset_velocity);
@@ -117,7 +127,7 @@ void SwitchedLongitudinalController::update_leader_velocity_filter(
 }
 
 double SwitchedLongitudinalController::compute_gap_threshold_1(double gap,
-	double diff_to_velocity_reference, double gap_control_input) 
+	double diff_to_velocity_reference, double gap_control_input) const
 {
 	/* Threshold is computed such that, at the switch, the vehicle following
 	input is greater or equal to kg*h*(Vf - v) > 0. */

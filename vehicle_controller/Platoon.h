@@ -59,11 +59,9 @@ public:
 	long get_destination_lane_vehicle_behind_last_vehicle() const;
 	/* The vehicle behind which the platoon wants to move */
 	const NearbyVehicle* get_destination_lane_leader() const;
+	long get_assisted_vehicle_id(long ego_id) const;
 
 	void set_strategy(int strategy_number);
-	void set_possible_maneuver_initial_states();
-	void set_maneuver_initial_state(long ego_id, StateVector lo_states,
-		StateVector ld_states, StateVector fd_states);
 
 	/* Remaining public methods */
 
@@ -71,7 +69,6 @@ public:
 	bool is_vehicle_id_in_platoon(long veh_id) const;
 	/* True if at least one vehicle started a lane change */
 	bool has_lane_change_started() const;
-	void add_leader(PlatoonVehicle* new_vehicle);
 	void add_last_vehicle(PlatoonVehicle* new_vehicle);
 	void remove_vehicle_by_id(long veh_id, bool is_out_of_simulation);
 	bool can_vehicle_leave_platoon(
@@ -80,11 +77,14 @@ public:
 	/* Returns true if the platoon is stopped right before the mandatory
 	lane change point, i.e., stuck waiting to start lane change.*/
 	bool is_stuck() const;
-	void reorder_vehicles();
+	void sort_vehicles_by_distance_traveled();
 	long create_lane_change_request_for_vehicle(
 		const PlatoonVehicle& platoon_vehicle) const;
 	NearbyVehicle* define_virtual_leader(
 		PlatoonVehicle& platoon_vehicle) const;
+	void set_possible_maneuver_initial_states();
+	void set_maneuver_initial_state(long ego_id, StateVector lo_states,
+		StateVector ld_states, StateVector fd_states);
 
 	/* Print function */
 	friend std::ostream& operator<< (std::ostream& out,
@@ -101,12 +101,13 @@ private:
 	};
 
 	long id{ 0 };
-	int leader_idx{ -1 };
-	int last_veh_idx{ 0 };
+	//int leader_idx{ 0 };
+	//int last_veh_idx{ 0 };
 	double desired_velocity{ 0.0 };
 	double velocity_at_lane_change_start{ 0.0 };
 	double lane_change_start_time{ INFINITY };
 	bool verbose{ false };
+	/* TODO [Jan 24, 24] these maps should be vectors */
 	/* Keys are the vehicle position in the platoon */
 	std::unordered_map<int, PlatoonVehicle*>
 		vehicles_by_position;
@@ -116,8 +117,9 @@ private:
 	std::unique_ptr<PlatoonLaneChangeApproach> lane_change_approach{ 
 		nullptr };
 
+	void add_leader(PlatoonVehicle* new_vehicle);
+	void add_vehicle(int idx_in_platoon, PlatoonVehicle* new_vehicle);
 	void remove_vehicle_by_position(int idx_in_platoon, long veh_id,
 		bool is_out_of_simulation);
-	void add_vehicle(int idx_in_platoon, 
-		PlatoonVehicle* new_vehicle);
+	void update_position_maps();
 };

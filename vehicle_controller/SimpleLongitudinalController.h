@@ -22,7 +22,7 @@ private:
 	double threshold_parameter{ 2.0 };
 	long previous_leader_id{ -1 };
 
-	double get_max_accepted_brake() override;
+	double get_max_accepted_brake() const override;
 	/* Determines and sets the current state of the longitudinal controller */
 	void determine_controller_state(const NearbyVehicle* leader,
 		double reference_velocity, double gap_control_input) override;

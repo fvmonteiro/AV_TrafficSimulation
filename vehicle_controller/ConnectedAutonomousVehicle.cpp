@@ -239,10 +239,6 @@ void ConnectedAutonomousVehicle::update_destination_lane_follower(
 		{
 			cav_controller->update_destination_lane_follower_parameters(
 				*dest_lane_follower);
-			//dest_lane_follower_lambda_0 =
-			//	get_destination_lane_follower()->get_lambda_0();
-			//dest_lane_follower_lambda_1 =
-			//	get_destination_lane_follower()->get_lambda_1();
 		}
 	}
 }

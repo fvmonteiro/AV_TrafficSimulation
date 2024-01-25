@@ -138,7 +138,7 @@ implement_handle_lane_keeping_intention()
 			LeaderFirstAndInvertLaneKeepingState().get_state_number()))
 		{
 			platoon_vehicle->set_desired_velocity(platoon_desired_vel);
-			platoon_vehicle->share_platoon()->reorder_vehicles();
+			platoon_vehicle->share_platoon()->sort_vehicles_by_distance_traveled();
 			change_state = true;
 		}
 		else

@@ -342,15 +342,6 @@ double EgoVehicle::compute_gap_to_a_leader(
 	{
 		return MAX_DISTANCE;
 	}
-	/*double offset_length;
-	if (nearby_vehicle.is_ahead())
-	{
-		offset_length = -nearby_vehicle.get_length();
-	}
-	else
-	{
-		offset_length = get_length();
-	}*/
 
 	return nearby_vehicle.get_distance() - nearby_vehicle.get_length();
 }
@@ -597,12 +588,11 @@ void EgoVehicle::update_state()
 
 void EgoVehicle::set_state(std::unique_ptr<VehicleState> new_state)
 {
-
 	if (verbose)
 	{
 		std::clog << ">>>> STATE TRANSITION <<<<\n"
 		<< "\tat t=" << get_current_time() << " from ";
-		if (state == nullptr) std::clog << "null";
+		if (state == nullptr) std::clog << "none";
 		else std::clog << *state;
 		std::clog << " to " << *new_state << std::endl;
 	}
@@ -621,6 +611,8 @@ void EgoVehicle::reset_state(
 			<< *new_lane_keeping_state
 			<< ", which is not a lane keeping state." << std::endl;
 	}
+
+	if (verbose) std::clog << "[EgoVehicle] Resetting state\n";
 
 	set_lane_change_direction(RelativeLane::same);
 	reset_lane_change_waiting_time();
@@ -648,6 +640,17 @@ void EgoVehicle::reset_lane_change_waiting_time()
 bool EgoVehicle::check_lane_change_gaps()
 {
 	return implement_check_lane_change_gaps();
+}
+
+void EgoVehicle::prepare_to_start_long_adjustments()
+{
+	implement_prepare_to_start_long_adjustments();
+}
+
+void EgoVehicle::prepare_to_restart_lane_keeping(
+	bool was_lane_change_successful)
+{
+	implement_prepare_to_restart_lane_keeping(was_lane_change_successful);
 }
 
 bool EgoVehicle::is_lane_changing() const

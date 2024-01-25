@@ -91,6 +91,11 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
     /* Note that we can check the order in which each case is accessed at the
     API documentation. */
 
+    //if (verbose_simulation)
+    //{
+    //    std::clog << "Setting type " << type << "\n";
+    //}
+
     switch (type) {
     case DRIVER_DATA_PATH                   :
         std::clog << "DLL path: "
@@ -119,7 +124,7 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
         if (verbose_simulation && (double_value != current_time))
         {
             std::clog << "t=" << current_time
-                << ", " << vehicles.size() << " vehicles." << std::endl;
+                << ", " << vehicles.size() << " controlled vehicles.\n";
             /*std::clog << "t=" << current_time
                 << ", " << platoons.size() << " platoons" << std::endl;
             for (auto& it : platoons)
@@ -524,8 +529,6 @@ DRIVERMODEL_API  int  DriverModelGetValue (long   type,
     /* Note that we can check the order in which each case is accessed at the
     API documentation. */
 
-    //EgoVehicle& ego_vehicle = vehicles[current_vehicle_id];
-
     /*if (CLUELESS_DEBUGGING)
     {
         std::clog << "Getting type " << type << "\n";
@@ -790,7 +793,7 @@ DRIVERMODEL_API  int  DriverModelExecuteCommand (long number)
         return 1;
     case DRIVER_COMMAND_CREATE_DRIVER :
     {
-        bool verbose = false;
+        bool verbose = true;
         if (logged_vehicles_ids.find(current_vehicle_id)
             != logged_vehicles_ids.end()) verbose = true;
         vehicles[current_vehicle_id] = std::move(
