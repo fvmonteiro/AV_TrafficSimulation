@@ -51,16 +51,17 @@ private:
 		const NearbyVehicle* nearby_vehicle) const override {
 		return 0.0;
 	};
-	NearbyVehicle* implement_get_destination_lane_leader() const override
+	std::shared_ptr<NearbyVehicle> implement_get_destination_lane_leader() 
+		const override
 	{
 		return nullptr;
 	};
-	NearbyVehicle*
+	std::shared_ptr<NearbyVehicle>
 		implement_get_destination_lane_follower() const override
 	{
 		return nullptr;
 	};
-	NearbyVehicle*
+	std::shared_ptr<NearbyVehicle>
 		implement_get_assisted_vehicle() const override
 	{
 		return nullptr;

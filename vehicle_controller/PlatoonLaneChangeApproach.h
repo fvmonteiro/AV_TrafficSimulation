@@ -25,7 +25,7 @@ public:
 	// [Jan 16, 2024] Let's see if this is needed to read the strategies map
 	//void set_strategies_map();	
 
-	long get_desired_destination_lane_leader_id(int ego_position);
+	long get_desired_destination_lane_leader(int ego_position);
 	long get_assisted_vehicle_id(int ego_position);
 
 	bool can_vehicle_start_lane_change(int veh_position);

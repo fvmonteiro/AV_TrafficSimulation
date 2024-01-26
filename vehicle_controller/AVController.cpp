@@ -181,7 +181,7 @@ bool AVController::get_destination_lane_desired_acceleration(
 		== SwitchedLongitudinalController::State::vehicle_following;
 
 	const NearbyVehicle* virtual_leader =
-		autonomous_vehicle->get_virtual_leader();
+		autonomous_vehicle->get_virtual_leader().get();
 	if (virtual_leader != nullptr)
 	{
 		if (verbose) std::clog << "Dest. lane controller\n";

@@ -37,6 +37,8 @@ public:
 	void set_orientation_angle(double value) { orientation_angle = value; };
 	/* Also sets the estimated maximum braking of the vehicle. */
 	void set_category(long category);
+	/* Also sets the estimated maximum braking of the vehicle. */
+	void set_category(VehicleCategory category);
 	
 	bool has_lane_change_intention() const;
 

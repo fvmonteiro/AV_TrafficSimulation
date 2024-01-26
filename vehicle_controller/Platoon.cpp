@@ -48,7 +48,7 @@ long Platoon::get_following_vehicle_id(long veh_id) const
 	return following_vehicle != nullptr ? following_vehicle->get_id() : 0;
 }
 
-const PlatoonVehicle* Platoon::get_a_vehicle_by_position(int veh_pos) const
+PlatoonVehicle* Platoon::get_a_vehicle_by_position(int veh_pos) const
 {
 	if (vehicles_by_position.find(veh_pos) != vehicles_by_position.end())
 	{
@@ -169,7 +169,7 @@ const NearbyVehicle* Platoon
 	{
 		if (item.second->has_virtual_leader())
 		{
-			return item.second->get_virtual_leader();
+			return item.second->get_virtual_leader().get();
 		}
 	}
 	return nullptr;
@@ -361,10 +361,14 @@ long Platoon::create_lane_change_request_for_vehicle(
 		->create_platoon_lane_change_request(platoon_vehicle);
 }
 
-NearbyVehicle* Platoon::define_virtual_leader(
-	PlatoonVehicle& platoon_vehicle) const
+long Platoon::define_virtual_leader_id(long ego_id) const
 {
-	return lane_change_strategy->define_virtual_leader(platoon_vehicle);
+	int pos_in_platoon = vehicle_id_to_position.at(ego_id);
+	long virtual_leader_id = 
+		lane_change_approach->get_desired_destination_lane_leader(
+			pos_in_platoon);
+	return virtual_leader_id;
+	//return lane_change_strategy->define_virtual_leader(platoon_vehicle);
 }
 
 void Platoon::set_possible_maneuver_initial_states()

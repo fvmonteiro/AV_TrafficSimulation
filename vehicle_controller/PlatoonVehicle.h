@@ -33,10 +33,14 @@ public:
 	const PlatoonVehicle* get_preceding_vehicle_in_platoon() const;
 	const PlatoonVehicle* get_following_vehicle_in_platoon() const;
 	/* Suggests the virtual leader as if the vehicle was not part of 
-	a platoon */
-	NearbyVehicle* define_virtual_leader_when_alone() const;
-	bool is_vehicle_in_sight(long nearby_vehicle_id) const;
+	a platoon. Should be phased out together with the Strategies framework */
+	std::shared_ptr<NearbyVehicle> define_virtual_leader_when_alone() const;
 	bool can_start_lane_change();
+
+	/* Adds a platoon vehicle that's outside the
+	sensory range to the nearby vehicles list. */
+	void add_another_as_nearby_vehicle(
+		const PlatoonVehicle& platoon_vehicle);
 
 protected:
 
@@ -47,7 +51,7 @@ protected:
 		double simulation_time_step, double creation_time, bool verbose);
 
 	/* Returns a nullptr if no virtual leader */
-	NearbyVehicle* choose_virtual_leader() override;
+	std::shared_ptr<NearbyVehicle> choose_virtual_leader() const override;
 	void set_controller(PlatoonVehicleController* a_controller);
 	void compute_platoon_safe_gap_parameters();
 

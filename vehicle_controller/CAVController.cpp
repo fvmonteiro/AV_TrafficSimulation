@@ -49,7 +49,7 @@ bool CAVController::get_cooperative_desired_acceleration(
 				<< std::endl;
 		}
 		const NearbyVehicle* assisted_vehicle =
-			cav->get_assisted_vehicle();
+			cav->get_assisted_vehicle().get();
 		double reference_velocity = determine_low_velocity_reference(
 			*assisted_vehicle);
 

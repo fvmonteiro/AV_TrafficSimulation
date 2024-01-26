@@ -46,7 +46,7 @@ public:
 	long get_preceding_vehicle_id(long veh_id) const;
 	long get_following_vehicle_id(long veh_id) const;
 	/* Returns a nullptr if vehicle not found in platoon */
-	const PlatoonVehicle* get_a_vehicle_by_position(int veh_pos) const;
+	PlatoonVehicle* get_a_vehicle_by_position(int veh_pos) const;
 	/* Returns a nullptr if vehicle not found in platoon */
 	const PlatoonVehicle* get_vehicle_by_id(long veh_id) const;
 	const PlatoonVehicle* get_preceding_vehicle(
@@ -80,8 +80,7 @@ public:
 	void sort_vehicles_by_distance_traveled();
 	long create_lane_change_request_for_vehicle(
 		const PlatoonVehicle& platoon_vehicle) const;
-	NearbyVehicle* define_virtual_leader(
-		PlatoonVehicle& platoon_vehicle) const;
+	long define_virtual_leader_id(long ego_id) const;
 	void set_possible_maneuver_initial_states();
 	void set_maneuver_initial_state(long ego_id, StateVector lo_states,
 		StateVector ld_states, StateVector fd_states);

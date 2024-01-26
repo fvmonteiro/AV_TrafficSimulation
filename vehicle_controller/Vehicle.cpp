@@ -23,11 +23,16 @@ Vehicle::Vehicle(long id, VehicleType type, double brake_delay) :
 
 void Vehicle::set_category(long category) 
 {
+	set_category(VehicleCategory(category));
+}
+
+void Vehicle::set_category(VehicleCategory category)
+{
 	/* We only need to set the category once, but VISSIM passes the
 	category every time step. */
-	if (this->category == VehicleCategory::undefined) 
+	if (this->category == VehicleCategory::undefined)
 	{
-		this->category = VehicleCategory(category);
+		this->category = category;
 		switch (this->category) {
 		case VehicleCategory::truck:
 			this->max_brake = TRUCK_MAX_BRAKE;

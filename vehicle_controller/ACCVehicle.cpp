@@ -38,14 +38,14 @@ bool ACCVehicle::implement_check_lane_change_gaps()
 
 void ACCVehicle::implement_prepare_to_start_long_adjustments()
 {
-	has_completed_lane_change = false;
+	set_has_completed_lane_change(false);
 	update_time_headway_to_leader();
 }
 
 void ACCVehicle::implement_prepare_to_restart_lane_keeping(
 	bool was_lane_change_successful)
 {
-	has_completed_lane_change = was_lane_change_successful;
+	set_has_completed_lane_change(was_lane_change_successful);
 	reset_lane_change_waiting_time();
 	update_time_headway_to_leader();
 	reset_origin_lane_velocity_controller();

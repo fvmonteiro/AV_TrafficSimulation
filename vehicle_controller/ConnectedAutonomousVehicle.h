@@ -21,9 +21,8 @@ public:
 	surrouding vehicles. */
 
 	bool is_cooperating_to_generate_gap() const;
-	/* A connected nearby vehicle can inform us about a vehicle in its
-	range which we cannot detect. Does nothing if the cav is 
-	not in our current list of nearby vehicles. */
+	/* Adds a nearby vehicle that's in another CAV's range.
+	Does nothing if the CAV is not in our range. */
 	void add_nearby_vehicle_from_another(
 		const ConnectedAutonomousVehicle& cav, long nv_id);
 
@@ -49,7 +48,7 @@ protected:
 	void set_assisted_vehicle_by_id(long assisted_vehicle_id);
 
 	/* Returns a nullptr if no virtual leader */
-	NearbyVehicle* choose_virtual_leader() override;
+	std::shared_ptr<NearbyVehicle> choose_virtual_leader() const override;
 
 private:
 	/* Emergency braking parameter between connected vehicles */
@@ -62,7 +61,7 @@ private:
 	long assisted_vehicle_id{ 0 };
 	/* Vehicle for which the ego vehicle will help generate a safe
 	lane change gap */
-	NearbyVehicle* assisted_vehicle{ nullptr };
+	std::shared_ptr<NearbyVehicle> assisted_vehicle{ nullptr };
 	double original_desired_velocity{ 0.0 };
 	CAVController controller_exclusive;
 	CAVController* cav_controller{ nullptr };
@@ -81,7 +80,8 @@ private:
 	and follower (if the vehicle has lane change intention),
 	and if any nearby vehicle requested cooperation */
 	void implement_analyze_nearby_vehicles() override;
-	NearbyVehicle* implement_get_assisted_vehicle() const override;
+	std::shared_ptr<NearbyVehicle> implement_get_assisted_vehicle() 
+		const override;
 	double compute_vehicle_following_safe_time_headway(
 		const NearbyVehicle& nearby_vehicle) const override;
 	double compute_vehicle_following_time_headway(

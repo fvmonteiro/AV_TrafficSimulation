@@ -59,11 +59,11 @@ double AutonomousVehicle::compute_transient_gap(const NearbyVehicle* nearby_vehi
 }
 
 void AutonomousVehicle::set_virtual_leader(
-	NearbyVehicle* new_virtual_leader)
+	std::shared_ptr<NearbyVehicle> new_virtual_leader)
 {
-	NearbyVehicle* old_virtual_lane_leader = virtual_leader;
+	std::shared_ptr<NearbyVehicle> old_virtual_lane_leader = virtual_leader;
 	virtual_leader = new_virtual_leader;
-	update_virtual_leader(old_virtual_lane_leader);
+	update_virtual_leader(old_virtual_lane_leader.get());
 }
 
 //void AutonomousVehicle::set_destination_lane_follower_by_id(
@@ -85,8 +85,10 @@ void AutonomousVehicle::implement_analyze_nearby_vehicles()
 void AutonomousVehicle::find_destination_lane_vehicles()
 {
 	/* Note: move operation "empties" the current pointer values */
-	NearbyVehicle* old_dest_lane_follower = destination_lane_follower;
-	NearbyVehicle* old_dest_lane_leader = destination_lane_leader;
+	std::shared_ptr<NearbyVehicle> old_dest_lane_follower = 
+		destination_lane_follower;
+	std::shared_ptr<NearbyVehicle> old_dest_lane_leader = 
+		destination_lane_leader;
 	destination_lane_follower = nullptr;
 	destination_lane_leader = nullptr;
 	destination_lane_leader_leader = nullptr;
@@ -94,7 +96,8 @@ void AutonomousVehicle::find_destination_lane_vehicles()
 	{
 		for (auto const& id_veh_pair : get_nearby_vehicles())
 		{
-			NearbyVehicle* nearby_vehicle = id_veh_pair.second.get();
+			std::shared_ptr<NearbyVehicle> nearby_vehicle = 
+				id_veh_pair.second;
 			if (is_destination_lane_follower(*nearby_vehicle))
 			{
 				destination_lane_follower = nearby_vehicle;
@@ -110,13 +113,14 @@ void AutonomousVehicle::find_destination_lane_vehicles()
 		}
 	}
 
-	update_destination_lane_follower(old_dest_lane_follower);
-	update_destination_lane_leader(old_dest_lane_leader);
-	NearbyVehicle* vl = choose_virtual_leader();
+	update_destination_lane_follower(old_dest_lane_follower.get());
+	update_destination_lane_leader(old_dest_lane_leader.get());
+	std::shared_ptr<NearbyVehicle> vl = choose_virtual_leader();
 	set_virtual_leader(vl);
 }
 
-NearbyVehicle* AutonomousVehicle::choose_virtual_leader()
+std::shared_ptr<NearbyVehicle> AutonomousVehicle::choose_virtual_leader() 
+const
 {
 	if (try_to_overtake_destination_lane_leader())
 	{
@@ -381,17 +385,18 @@ bool AutonomousVehicle::implement_check_lane_change_gaps()
 	double safe_gap_to_lo, safe_gap_to_ld, safe_gap_to_fd;
 	double margin = 0.1;
 
-	gap_to_lo = compute_gap_to_a_leader(get_leader());  // possibly MAX_DIST
+	
+	gap_to_lo = compute_gap_to_a_leader(get_leader().get()); // possibly MAX_DIST
 	safe_gap_to_lo = compute_accepted_lane_change_gap(
-			get_leader()); // possibly 0.0
+			get_leader().get()); // possibly 0.0
 	lane_change_gaps_safety.orig_lane_leader_gap =
 		gap_to_lo + margin >= safe_gap_to_lo;
 	/*lane_change_gaps_safety.orig_lane_leader_gap = 
 		is_lane_change_gap_safe(get_leader());*/
 
-	gap_to_ld = compute_gap_to_a_leader(destination_lane_leader);
+	gap_to_ld = compute_gap_to_a_leader(destination_lane_leader.get());
 	safe_gap_to_ld = compute_accepted_lane_change_gap(
-		destination_lane_leader);
+		destination_lane_leader.get());
 	lane_change_gaps_safety.dest_lane_leader_gap =
 		gap_to_ld + margin >= safe_gap_to_ld;
 	/*lane_change_gaps_safety.dest_lane_leader_gap =
@@ -400,9 +405,10 @@ bool AutonomousVehicle::implement_check_lane_change_gaps()
 	/* Besides the regular safety conditions, we add the case
 	where the dest lane follower has completely stopped to give room
 	to the lane changing vehicle */
-	gap_to_fd = compute_gap_to_a_follower(destination_lane_follower);
+	gap_to_fd = compute_gap_to_a_follower(destination_lane_follower.get());
+	if (verbose) std::clog << "computing safe gap to fd...\n";
 	safe_gap_to_fd = compute_accepted_lane_change_gap(
-		destination_lane_follower);
+		destination_lane_follower.get());
 	lane_change_gaps_safety.dest_lane_follower_gap = 
 		(gap_to_fd + margin >= safe_gap_to_fd)
 		|| ((destination_lane_follower->
@@ -695,13 +701,13 @@ double AutonomousVehicle::compute_gap_variation_during_lane_change(
 	return std::max(relative_vel * lc_time / 2, relative_vel * lc_time);
 }
 
-NearbyVehicle* AutonomousVehicle::
+std::shared_ptr<NearbyVehicle> AutonomousVehicle::
 implement_get_destination_lane_leader() const
 {
 	return destination_lane_leader;
 }
 
-NearbyVehicle* AutonomousVehicle::
+std::shared_ptr<NearbyVehicle> AutonomousVehicle::
 implement_get_destination_lane_follower() const
 {
 	return destination_lane_follower;

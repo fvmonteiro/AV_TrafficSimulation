@@ -40,7 +40,8 @@ void ConnectedAutonomousVehicle
 ::add_nearby_vehicle_from_another(
 	const ConnectedAutonomousVehicle& cav, long nv_id)
 {
-	const auto& source_nv = get_nearby_vehicle_by_id(cav.get_id());
+	const NearbyVehicle* source_nv = 
+		get_nearby_vehicle_by_id(cav.get_id()).get();
 	
 	if (source_nv != nullptr
 		&& cav.get_nearby_vehicle_by_id(nv_id) != nullptr)
@@ -72,7 +73,7 @@ const
 	return 3.0;
 }
 
-NearbyVehicle* ConnectedAutonomousVehicle::
+std::shared_ptr<NearbyVehicle> ConnectedAutonomousVehicle::
 implement_get_assisted_vehicle() const
 {
 	return assisted_vehicle;
@@ -128,11 +129,11 @@ void ConnectedAutonomousVehicle::find_cooperation_requests()
 	//set_desired_velocity(original_desired_velocity);
 	bool should_increase_vel = false;
 
-	NearbyVehicle* old_assisted_vehicle = assisted_vehicle;
+	std::shared_ptr<NearbyVehicle> old_assisted_vehicle = assisted_vehicle;
 	assisted_vehicle = nullptr;
 	for (auto const& id_veh_pair : get_nearby_vehicles())
 	{
-		NearbyVehicle* nearby_vehicle = id_veh_pair.second.get();
+		std::shared_ptr<NearbyVehicle> nearby_vehicle = id_veh_pair.second;
 		// Wants to merge in front of me?
 		if (nearby_vehicle->get_lane_change_request_veh_id() == get_id())
 		{
@@ -152,17 +153,22 @@ void ConnectedAutonomousVehicle::find_cooperation_requests()
 	}
 	set_max_desired_velocity(should_increase_vel);
 	deal_with_close_and_slow_assited_vehicle();
-	update_assisted_vehicle(old_assisted_vehicle);
+	update_assisted_vehicle(old_assisted_vehicle.get());
 }
 
-NearbyVehicle* ConnectedAutonomousVehicle
-::choose_virtual_leader()
+std::shared_ptr<NearbyVehicle> ConnectedAutonomousVehicle
+::choose_virtual_leader() const
 {
 	/* By default, we try to merge behind the current destination
 	lane leader. */
-	NearbyVehicle* nv = get_modifiable_dest_lane_leader();
+	std::shared_ptr<NearbyVehicle> nv = get_modifiable_dest_lane_leader();
 
-	if (try_to_overtake_destination_lane_leader())
+	/* The choice of min overtaking rel vel ensure that we only overtake
+	if the veh is in free-flow mode and the dest lane leader is almost
+	stopped. */
+	double min_vel = 1.5; // = 5.4 km/h
+	double min_overtaking_rel_vel = get_desired_velocity() - min_vel;
+	if (try_to_overtake_destination_lane_leader(min_overtaking_rel_vel))
 	{
 		nv = nullptr;
 	}
@@ -200,8 +206,8 @@ bool ConnectedAutonomousVehicle::was_my_cooperation_request_accepted() const
 	return false;
 	if (lane_change_request != 0)
 	{
-		NearbyVehicle* cooperating_vehicle =
-			get_nearby_vehicle_by_id(lane_change_request);
+		const NearbyVehicle* cooperating_vehicle =
+			get_nearby_vehicle_by_id(lane_change_request).get();
 		if (cooperating_vehicle != nullptr
 			&& cooperating_vehicle->get_assisted_vehicle_id() == get_id())
 		{
@@ -219,7 +225,7 @@ void ConnectedAutonomousVehicle::deal_with_close_and_slow_assited_vehicle()
 	go backwards, which would lead to a deadlock situation. */
 	if (has_assisted_vehicle()
 		&& (assisted_vehicle->compute_velocity(get_velocity()) < 1)
-		&& compute_gap_to_a_leader(assisted_vehicle) < 1)
+		&& compute_gap_to_a_leader(assisted_vehicle.get()) < 1)
 	{
 		assisted_vehicle = nullptr;
 	}
@@ -231,7 +237,7 @@ void ConnectedAutonomousVehicle::update_destination_lane_follower(
 	if (has_destination_lane_follower())
 	{
 		NearbyVehicle* dest_lane_follower =
-			get_modifiable_dest_lane_follower();
+			get_modifiable_dest_lane_follower().get();
 		cav_controller->update_destination_lane_follower_time_headway(
 			dest_lane_follower->is_connected(), *dest_lane_follower);
 		if ((old_follower == nullptr )
@@ -308,10 +314,10 @@ void ConnectedAutonomousVehicle::set_controller(CAVController* a_controller)
 void ConnectedAutonomousVehicle::set_assisted_vehicle_by_id(
 	long assisted_vehicle_id)
 {
-	NearbyVehicle* old_assisted_vehicle = assisted_vehicle;
+	std::shared_ptr<NearbyVehicle> old_assisted_vehicle = assisted_vehicle;
 	assisted_vehicle = get_nearby_vehicle_by_id(assisted_vehicle_id);
 	//deal_with_close_and_slow_assited_vehicle();
-	update_assisted_vehicle(old_assisted_vehicle);
+	update_assisted_vehicle(old_assisted_vehicle.get());
 }
 
 double ConnectedAutonomousVehicle::

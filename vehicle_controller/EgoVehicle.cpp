@@ -230,6 +230,15 @@ void EgoVehicle::set_controller(VehicleController* controller)
 	this->controller = controller;
 }
 
+void EgoVehicle::set_has_completed_lane_change(bool value)
+{
+	has_completed_lane_change = value;
+
+	if (verbose) std::clog << "veh " << get_id()
+		<< ", has_completed_lane_change=" << has_completed_lane_change
+		<< "\n";
+}
+
 void EgoVehicle::set_gap_variation_during_lane_change(int nv_id, double value)
 {
 	gap_variation_during_lane_change[nv_id] = value;
@@ -272,16 +281,21 @@ bool EgoVehicle::has_leader() const
 	return leader != nullptr;
 }
 
-const NearbyVehicle* EgoVehicle::get_leader() const
+const std::shared_ptr<NearbyVehicle> EgoVehicle::get_leader() const
 {
 	return leader;
 }
 
-NearbyVehicle* EgoVehicle::get_nearby_vehicle_by_id(
+std::shared_ptr<NearbyVehicle> EgoVehicle::get_nearby_vehicle_by_id(
 	long nv_id) const
 {
-	return nearby_vehicles.find(nv_id) != nearby_vehicles.end() ?
-		nearby_vehicles.at(nv_id).get() : nullptr;
+	return is_vehicle_in_sight(nv_id) ?
+		nearby_vehicles.at(nv_id) : nullptr;
+}
+
+bool EgoVehicle::is_vehicle_in_sight(long nearby_vehicle_id) const
+{
+	return nearby_vehicles.find(nearby_vehicle_id) != nearby_vehicles.end();
 }
 
 double EgoVehicle::get_relative_velocity_to_leader()
@@ -468,16 +482,16 @@ void EgoVehicle::set_leader_by_id(long new_leader_id)
 void EgoVehicle::find_leader()
 {
 	old_leader_id = get_leader_id();
-	const NearbyVehicle* old_leader = leader;
+	const std::shared_ptr<NearbyVehicle> old_leader = leader;
 	leader = nullptr;
 	for (auto const& id_veh_pair : nearby_vehicles)
 	{
 		if (check_if_is_leader(*id_veh_pair.second)) 
 		{
-			leader = id_veh_pair.second.get();
+			leader = id_veh_pair.second;
 		}
 	}
-	update_leader(old_leader);
+	update_leader(old_leader.get());
 }
 
 bool EgoVehicle::check_if_is_leader(const NearbyVehicle& nearby_vehicle) const
@@ -524,8 +538,7 @@ bool EgoVehicle::is_leader_of_destination_lane_leader(
 		&& relative_position == 2);
 }
 
-void EgoVehicle::update_leader(
-	const NearbyVehicle* old_leader)
+void EgoVehicle::update_leader(const NearbyVehicle* old_leader)
 {
 	if (has_leader())
 	{
@@ -661,7 +674,7 @@ bool EgoVehicle::is_lane_changing() const
 long EgoVehicle::get_color_by_controller_state()
 {
 	long state_color = controller->get_longitudinal_controller_color();
-	if (compute_gap_to_a_leader(leader) < compute_safe_gap_to_leader())
+	if (compute_gap_to_a_leader(leader.get()) < compute_safe_gap_to_leader())
 	{
 		state_color = RED;
 	}

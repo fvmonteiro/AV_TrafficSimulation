@@ -20,7 +20,7 @@ public:
 	void reset_state_of_all_vehicles() const;
 	long create_platoon_lane_change_request(
 		const PlatoonVehicle& platoon_vehicle) const;
-	NearbyVehicle* define_virtual_leader(
+	std::shared_ptr<NearbyVehicle> define_virtual_leader(
 		PlatoonVehicle& platoon_vehicle) const;
 
 	friend std::ostream& operator<< (std::ostream& out,
@@ -43,7 +43,7 @@ private:
 		implement_get_new_lane_keeping_state() const = 0;
 	virtual long implement_create_platoon_lane_change_request(
 		const PlatoonVehicle& platoon_vehicle) const = 0;
-	virtual NearbyVehicle* implement_define_virtual_leader(
+	virtual std::shared_ptr<NearbyVehicle> implement_define_virtual_leader(
 		PlatoonVehicle & platoon_vehicle) const = 0;
 };
 
@@ -60,7 +60,7 @@ private:
 		implement_get_new_lane_keeping_state() const override;
 	long implement_create_platoon_lane_change_request(
 		const PlatoonVehicle& platoon_vehicle) const override;
-	NearbyVehicle* implement_define_virtual_leader(
+	std::shared_ptr<NearbyVehicle> implement_define_virtual_leader(
 		PlatoonVehicle& platoon_vehicle) const override;
 };
 
@@ -77,7 +77,7 @@ private:
 		implement_get_new_lane_keeping_state() const override;
 	long implement_create_platoon_lane_change_request(
 		const PlatoonVehicle& platoon_vehicle) const override;
-	NearbyVehicle* implement_define_virtual_leader(
+	std::shared_ptr<NearbyVehicle> implement_define_virtual_leader(
 		PlatoonVehicle& platoon_vehicle) const override;
 };
 
@@ -94,7 +94,7 @@ private:
 		implement_get_new_lane_keeping_state() const override;
 	long implement_create_platoon_lane_change_request(
 		const PlatoonVehicle& platoon_vehicle) const override;
-	NearbyVehicle* implement_define_virtual_leader(
+	std::shared_ptr<NearbyVehicle> implement_define_virtual_leader(
 		PlatoonVehicle& platoon_vehicle) const override;
 };
 
@@ -112,7 +112,7 @@ private:
 		implement_get_new_lane_keeping_state() const override;
 	long implement_create_platoon_lane_change_request(
 		const PlatoonVehicle& platoon_vehicle) const override;
-	NearbyVehicle* implement_define_virtual_leader(
+	std::shared_ptr<NearbyVehicle> implement_define_virtual_leader(
 		PlatoonVehicle& platoon_vehicle) const override;
 };
 
@@ -131,6 +131,6 @@ private:
 		implement_get_new_lane_keeping_state() const override;
 	long implement_create_platoon_lane_change_request(
 		const PlatoonVehicle& platoon_vehicle) const override;
-	NearbyVehicle* implement_define_virtual_leader(
+	std::shared_ptr<NearbyVehicle> implement_define_virtual_leader(
 		PlatoonVehicle& platoon_vehicle) const override;
 };

@@ -33,6 +33,7 @@ public:
 	//void update_leader_lane_changing_time_headway(double time_headway);
 	void update_destination_lane_follower_parameters(
 		NearbyVehicle& dest_lane_follower);
+	// TODO: make virtual. AV and CAVs have different behavior
 	void update_destination_lane_follower_time_headway(
 		bool are_vehicles_connected, NearbyVehicle& dest_lane_follower);
 	void update_destination_lane_leader_time_headway(double time_headway);

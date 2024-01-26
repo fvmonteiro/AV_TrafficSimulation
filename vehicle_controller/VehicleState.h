@@ -47,10 +47,12 @@ class VehicleState
 public:
 	const static int lane_keeping_state_number{ 1 };
 
-	void set_ego_vehicle(EgoVehicle* ego_vehicle);
+	const EgoVehicle* get_ego_vehicle() const { return ego_vehicle; };
 	std::string get_strategy_name() const { return strategy_name; };
 	std::string get_state_name() const { return state_name; };
 	int get_state_number() const { return state_number; };
+
+	void set_ego_vehicle(EgoVehicle* ego_vehicle);
 	bool is_ego_vehicle_set() const;
 
 	void handle_lane_keeping_intention();

@@ -9,21 +9,22 @@ PlatoonLaneChangeApproach::PlatoonLaneChangeApproach(int id, std::string name,
 	bool verbose) 
 	: id(id), name(name), verbose(verbose) {}
 
-long PlatoonLaneChangeApproach::get_desired_destination_lane_leader_id(
+long PlatoonLaneChangeApproach::get_desired_destination_lane_leader(
 	int ego_position)
 {
-	const PlatoonVehicle* ego_vehicle = 
+	PlatoonVehicle* ego_vehicle = 
 		platoon->get_a_vehicle_by_position(ego_position);
 
 	if (!ego_vehicle->has_lane_change_intention() || !is_initialized
 		|| !is_vehicle_turn_to_lane_change(ego_position)) return 0;
 
-	int virtual_leader_id;
-	/* The first vehicles to simultaneously change lanes do so behind the
-    destination lane leader of the front-most vehicle (same as for
-    single vehicle lane change) */
+	int virtual_leader_id{ 0 };
+	
 	if (maneuver_step == 0)
 	{
+		/* The first vehicles to simultaneously change lanes do so behind the
+		destination lane leader of the front-most vehicle (similar to
+		single vehicle lane change) */
 		int first_lc_pos = *std::max_element(
 			platoon_lane_change_order.lc_order[0].begin(),
 			platoon_lane_change_order.lc_order[0].end());
@@ -31,20 +32,35 @@ long PlatoonLaneChangeApproach::get_desired_destination_lane_leader_id(
 			platoon->get_a_vehicle_by_position(first_lc_pos);
 		virtual_leader_id = 
 			front_most_veh->get_suitable_destination_lane_leader_id();
+		if (!ego_vehicle->is_vehicle_in_sight(virtual_leader_id))
+		{
+			ego_vehicle->add_nearby_vehicle_from_another(*front_most_veh, 
+				virtual_leader_id);
+		}
 	}
 	else
 	{
 		int coop_pos = get_current_coop_vehicle_position();
 		if (coop_pos == -1)
 		{
-			virtual_leader_id = platoon->get_a_vehicle_by_position(
-				last_dest_lane_vehicle_pos)->get_id();
+			const PlatoonVehicle* veh = platoon->get_a_vehicle_by_position(
+				last_dest_lane_vehicle_pos);
+			virtual_leader_id = veh->get_id();
+			if (!ego_vehicle->is_vehicle_in_sight(virtual_leader_id))
+			{
+				ego_vehicle->add_another_as_nearby_vehicle(*veh);
+			}
 		}
 		else
 		{
-			//Get the vehicle ahead the vehicle which helps generate the gap
-			virtual_leader_id = platoon->get_a_vehicle_by_position(coop_pos)
-				->get_leader_id();
+			const PlatoonVehicle* coop_veh =
+				platoon->get_a_vehicle_by_position(coop_pos);
+			virtual_leader_id = coop_veh->get_leader_id();
+			if (!ego_vehicle->is_vehicle_in_sight(virtual_leader_id))
+			{
+				ego_vehicle->add_nearby_vehicle_from_another(*coop_veh,
+					virtual_leader_id);
+			}
 		}
 	}
 
@@ -82,6 +98,7 @@ bool PlatoonLaneChangeApproach::can_vehicle_start_lane_change(
 	{
 		std::string message = "Next to move: ";
 		for (int i : next_to_move) message += std::to_string(i) + ", ";
+		message += "my pos. = " + std::to_string(veh_position);
 		std::clog << message << "\n";
 	}
 
@@ -94,7 +111,7 @@ bool PlatoonLaneChangeApproach::can_vehicle_start_lane_change(
 	{
 		const PlatoonVehicle* vehicle = 
 			platoon->get_a_vehicle_by_position(i);
-		if (vehicle->has_lane_change_intention())
+		if (!vehicle->get_has_completed_lane_change())
 		{
 			all_are_done = false;
 			break;
@@ -119,9 +136,14 @@ bool PlatoonLaneChangeApproach::can_vehicle_start_lane_change(
 		{
 			const PlatoonVehicle* vehicle = 
 				platoon->get_a_vehicle_by_position(i);
+
+			if (verbose)
+			{
+
+			}
+
 			if ((vehicle->get_virtual_leader_id()
-				!= vehicle->get_destination_lane_leader_id())
-				|| !vehicle->are_surrounding_gaps_safe_for_lane_change())
+				!= vehicle->get_destination_lane_leader_id()))
 			{
 				return false;
 			}

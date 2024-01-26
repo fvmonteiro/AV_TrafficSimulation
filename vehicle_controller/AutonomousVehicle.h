@@ -17,7 +17,7 @@ public:
 	
 	/* Vehicle behind which we want to merge (not necessarily the same as
 	the destination lane leader) */
-	const NearbyVehicle* get_virtual_leader() const {
+	const std::shared_ptr<NearbyVehicle> get_virtual_leader() const {
 		return virtual_leader;
 	}
 
@@ -61,15 +61,15 @@ protected:
 	double get_accepted_risk_to_follower() const {
 		return accepted_lane_change_risk_to_follower;
 	};
-	NearbyVehicle* get_modifiable_dest_lane_follower() const
+	std::shared_ptr<NearbyVehicle> get_modifiable_dest_lane_follower() const
 	{
 		return implement_get_destination_lane_follower();
 	};
-	NearbyVehicle* get_modifiable_dest_lane_leader() const
+	std::shared_ptr<NearbyVehicle> get_modifiable_dest_lane_leader() const
 	{
 		return implement_get_destination_lane_leader();
 	};
-	NearbyVehicle* get_destination_lane_leader_leader() const
+	std::shared_ptr<NearbyVehicle> get_destination_lane_leader_leader() const
 	{
 		return destination_lane_leader_leader;
 	};
@@ -82,9 +82,9 @@ protected:
 	bool try_to_overtake_destination_lane_leader_based_on_time() const;
 	
 	void set_virtual_leader(
-		NearbyVehicle* new_virtual_leader);
+		std::shared_ptr<NearbyVehicle> new_virtual_leader);
 	/* Returns a nullptr if no virtual leader */
-	virtual NearbyVehicle* choose_virtual_leader();
+	virtual std::shared_ptr<NearbyVehicle> choose_virtual_leader() const;
 
 	/* Non-linear gap based on ego and nearby vehicles states
 	and parameters */
@@ -102,14 +102,14 @@ private:
 	/* Relevant members for lane changing ------------------------------------ */
 
 	/* Vehicle immediately ahead at the destination lane */
-	NearbyVehicle* destination_lane_leader{ nullptr };
+	std::shared_ptr<NearbyVehicle> destination_lane_leader{ nullptr };
 	/* Vehicle immediately behind at the destination lane */
-	NearbyVehicle* destination_lane_follower{ nullptr };
+	std::shared_ptr<NearbyVehicle> destination_lane_follower{ nullptr };
 	/* Vehicle in front of the destination lane leader */
-	NearbyVehicle* destination_lane_leader_leader{ nullptr };
+	std::shared_ptr<NearbyVehicle> destination_lane_leader_leader{ nullptr };
 	/* Vehicle behind which we want to merge (not necessarily the same as 
 	the destination lane leader) */
-	NearbyVehicle* virtual_leader{ nullptr };
+	std::shared_ptr<NearbyVehicle> virtual_leader{ nullptr };
 	/* Emergency braking parameter during lane change */
 	//double lambda_1_lane_change{ 0.0 }; // [m/s]
 
@@ -146,9 +146,11 @@ private:
 	long implement_get_lane_change_request() const override { return 0; };
 	double compute_accepted_lane_change_gap(
 		const NearbyVehicle* nearby_vehicle) const override;
-	NearbyVehicle* implement_get_destination_lane_leader() const override;
-	NearbyVehicle* implement_get_destination_lane_follower() const override;
-	NearbyVehicle* implement_get_assisted_vehicle()
+	std::shared_ptr<NearbyVehicle> implement_get_destination_lane_leader() 
+		const override;
+	std::shared_ptr<NearbyVehicle> implement_get_destination_lane_follower() 
+		const override;
+	std::shared_ptr<NearbyVehicle> implement_get_assisted_vehicle()
 		const override { return nullptr; };
 	long implement_get_virtual_leader_id() const override;
 	double compute_lane_changing_desired_time_headway(

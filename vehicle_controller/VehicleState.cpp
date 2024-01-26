@@ -74,7 +74,16 @@ bool operator> (const VehicleState& s1, const VehicleState& s2)
 {
 	if (!have_same_strategy(s1, s2))
 	{
-		std::clog << "Comparing states of different strategies\n";
+		std::clog << "Comparing states " << s1 << " and " 
+			<< s2 << " (different strategies)\n"
+			<< "Comparison called from veh. ";
+		if (s1.is_ego_vehicle_set())
+			std::clog << s1.get_ego_vehicle()->get_id();
+		else if (s2.is_ego_vehicle_set())
+			std::clog << s2.get_ego_vehicle()->get_id();
+		else
+			std::clog << "none?";
+		std::clog << "\n";
 	}
 	return s1.get_state_number() > s2.get_state_number();
 }

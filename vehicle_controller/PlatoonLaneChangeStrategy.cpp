@@ -34,10 +34,13 @@ void PlatoonLaneChangeStrategy::reset_state_of_all_vehicles() const
 long PlatoonLaneChangeStrategy::create_platoon_lane_change_request(
 	const PlatoonVehicle& platoon_vehicle) const
 {
+	std::clog << "===== WARNING ===== \n"
+		<< "create lane change request "
+		<< "being done by phased out LaneChangeStrategy class.";
 	return implement_create_platoon_lane_change_request(platoon_vehicle);
 }
 
-NearbyVehicle* PlatoonLaneChangeStrategy
+std::shared_ptr<NearbyVehicle> PlatoonLaneChangeStrategy
 ::define_virtual_leader(PlatoonVehicle& platoon_vehicle) const
 {
 	return implement_define_virtual_leader(platoon_vehicle);
@@ -64,7 +67,7 @@ long NoStrategy::implement_create_platoon_lane_change_request(
 	return platoon_vehicle.get_destination_lane_follower_id();
 }
 
-NearbyVehicle* NoStrategy
+std::shared_ptr<NearbyVehicle> NoStrategy
 ::implement_define_virtual_leader(PlatoonVehicle & platoon_vehicle) const
 {
 	return platoon_vehicle.define_virtual_leader_when_alone();
@@ -106,7 +109,7 @@ long SynchronousStrategy::implement_create_platoon_lane_change_request(
 	//return platoon->get_destination_lane_vehicle_behind_the_leader();
 }
 
-NearbyVehicle* SynchronousStrategy
+std::shared_ptr<NearbyVehicle> SynchronousStrategy
 ::implement_define_virtual_leader(PlatoonVehicle & platoon_vehicle) const
 {
 	return platoon_vehicle.is_platoon_leader() ?
@@ -171,7 +174,7 @@ long LeaderFirstStrategy::implement_create_platoon_lane_change_request(
 	return 0;
 }
 
-NearbyVehicle* LeaderFirstStrategy
+std::shared_ptr<NearbyVehicle> LeaderFirstStrategy
 ::implement_define_virtual_leader(PlatoonVehicle & platoon_vehicle) const
 {
 	if (platoon_vehicle.is_platoon_leader())
@@ -221,8 +224,9 @@ bool LastVehicleFirstStrategy::implement_can_vehicle_leave_platoon(
 
 	long precending_platoon_veh_id =
 		platoon_vehicle.get_preceding_vehicle_id();
-	const auto& preceding_platoon_veh =
-		platoon_vehicle.get_nearby_vehicle_by_id(precending_platoon_veh_id);
+	const NearbyVehicle* preceding_platoon_veh =
+		platoon_vehicle.get_nearby_vehicle_by_id(precending_platoon_veh_id
+		).get();
 	return !platoon_vehicle.is_platoon_leader()
 		&& *platoon_vehicle.get_state() != LastVehicleFirstLaneChangingState()
 		&& precending_platoon_veh_id != platoon_vehicle.get_leader_id()
@@ -260,7 +264,7 @@ long LastVehicleFirstStrategy::implement_create_platoon_lane_change_request(
 	return desired_future_follower_id;	
 }
 
-NearbyVehicle* LastVehicleFirstStrategy
+std::shared_ptr<NearbyVehicle> LastVehicleFirstStrategy
 ::implement_define_virtual_leader(PlatoonVehicle & platoon_vehicle) const
 {
 	if (platoon_vehicle.is_last_platoon_vehicle())
@@ -348,7 +352,7 @@ long LeaderFirstAndInvertStrategy
 	return desired_future_follower_id;
 }
 
-NearbyVehicle* LeaderFirstAndInvertStrategy
+std::shared_ptr<NearbyVehicle> LeaderFirstAndInvertStrategy
 ::implement_define_virtual_leader(PlatoonVehicle & platoon_vehicle) const
 {
 	if (platoon_vehicle.is_platoon_leader())
@@ -366,7 +370,7 @@ NearbyVehicle* LeaderFirstAndInvertStrategy
 	merge merge between the preceding vehicle and its real leader. */
 	const auto& preceding_vehicle =
 		*platoon_vehicle.get_preceding_vehicle_in_platoon();
-	NearbyVehicle* virtual_leader{ nullptr };
+	std::shared_ptr<NearbyVehicle> virtual_leader{ nullptr };
 	if (!platoon_vehicle.has_leader()
 		|| (platoon_vehicle.get_leader_id()
 			!= preceding_vehicle.get_id()))

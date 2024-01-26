@@ -70,7 +70,7 @@ bool ACCVehicleController::get_origin_lane_desired_acceleration(
 	if (verbose) std::clog << "Origin lane controller" << std::endl;
 	possible_accelerations[ALCType::origin_lane] =
 		origin_lane_controller->compute_desired_acceleration(
-			acc_vehicle->get_leader(), acc_vehicle->get_desired_velocity());
+			acc_vehicle->get_leader().get(), acc_vehicle->get_desired_velocity());
 
 	return true;
 }

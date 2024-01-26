@@ -70,8 +70,8 @@ bool PlatoonVehicle::has_finished_increasing_gap() const
 	bool is_gap_error_non_negative = true;
 	if (has_leader())
 	{
-		double safe_gap = compute_time_headway_gap(get_leader());
-		double gap = compute_gap_to_a_leader(get_leader());
+		double safe_gap = compute_time_headway_gap(get_leader().get());
+		double gap = compute_gap_to_a_leader(get_leader().get());
 		double gap_error = gap - safe_gap;
 		is_gap_error_non_negative = gap_error / safe_gap > (-0.05);
 	}
@@ -88,8 +88,8 @@ bool PlatoonVehicle::has_finished_closing_gap() const
 	bool is_gap_error_small = true;
 	if (has_leader())
 	{
-		double safe_gap = compute_time_headway_gap(get_leader());
-		double gap = compute_gap_to_a_leader(get_leader());
+		double safe_gap = compute_time_headway_gap(get_leader().get());
+		double gap = compute_gap_to_a_leader(get_leader().get());
 		double gap_error = gap - safe_gap;
 		is_gap_error_small = gap_error / safe_gap < 0.05;
 	}
@@ -153,48 +153,10 @@ PlatoonVehicle::get_following_vehicle_in_platoon() const
 	return get_platoon()->get_following_vehicle(get_id());
 }
 
-NearbyVehicle* PlatoonVehicle::define_virtual_leader_when_alone() const
+std::shared_ptr<NearbyVehicle> PlatoonVehicle
+::define_virtual_leader_when_alone() const
 {
-	
-	/* Note: this is a copy of 
-	ConnectedAutonomousVehicle::define_virtual_leader() */
-	//return ConnectedAutonomousVehicle::define_virtual_leader();
-
-	/* By default, we try to merge behind the current destination
-	lane leader. */
-	NearbyVehicle* nv = get_modifiable_dest_lane_leader();
-	
-	/* The choice of min overtaking rel vel ensure that we only overtake
-	if the veh is in free-flow mode and the dest lane leader is almost 
-	stopped. */
-	double min_vel = 1.5; // = 5.4 km/h
-	double min_overtaking_rel_vel = get_desired_velocity() - min_vel;
-	if (try_to_overtake_destination_lane_leader(min_overtaking_rel_vel))
-	{
-		nv = nullptr;
-	}
-	else if (was_my_cooperation_request_accepted())
-	{
-		/* We must avoid trying to merge behind a vehicle that is
-		braking to make space for us. */
-		int cooperating_vehicle_relative_position =
-			get_nearby_vehicle_by_id(lane_change_request)
-			->get_relative_position();
-		if (cooperating_vehicle_relative_position == 1)
-		{
-			nv = get_destination_lane_leader_leader();
-		}
-		else if (cooperating_vehicle_relative_position > 1)
-		{
-			nv = nullptr;
-		}
-	}
-	return nv;
-}
-
-bool PlatoonVehicle::is_vehicle_in_sight(long nearby_vehicle_id) const
-{
-	return get_nearby_vehicle_by_id(nearby_vehicle_id) != nullptr;
+	return ConnectedAutonomousVehicle::choose_virtual_leader();
 }
 
 bool PlatoonVehicle::can_start_lane_change()
@@ -222,6 +184,27 @@ bool PlatoonVehicle::can_start_lane_change()
 		<< (is_my_turn ? "yes" : "no") << "\n";
 
 	return is_safe && is_my_turn;
+}
+
+void PlatoonVehicle::add_another_as_nearby_vehicle(
+	const PlatoonVehicle& platoon_vehicle)
+{
+	if (!is_vehicle_in_sight(platoon_vehicle.get_id()))
+	{
+		int rel_lane = platoon_vehicle.get_lane() - get_lane();
+		double distance = 
+			platoon_vehicle.get_distance_traveled() - get_distance_traveled();
+		int rel_position = distance > 0 ? 3 : -3;
+		double rel_velocity = 
+			get_velocity() - platoon_vehicle.get_velocity();
+		NearbyVehicle new_nv(platoon_vehicle.get_id(), rel_lane, rel_position);
+		new_nv.set_distance(distance);
+		new_nv.set_relative_velocity(rel_velocity);
+		new_nv.set_length(platoon_vehicle.get_length());
+		new_nv.set_category(platoon_vehicle.get_category());
+		new_nv.set_type(platoon_vehicle.get_type(), get_type());
+		add_nearby_vehicle(new_nv);
+	}
 }
 
 void PlatoonVehicle::implement_create_controller() {
@@ -309,8 +292,8 @@ bool PlatoonVehicle::was_my_cooperation_request_accepted() const
 	{
 		/* lane_change_request might be in the nearby vehicle
 		list of some other platoon vehicle, but not ours */
-		NearbyVehicle* cooperating_vehicle =
-			get_nearby_vehicle_by_id(lane_change_request);
+		const NearbyVehicle* cooperating_vehicle =
+			get_nearby_vehicle_by_id(lane_change_request).get();
 		if (cooperating_vehicle != nullptr)
 		{
 			long id_of_vehicle_being_assisted =
@@ -326,22 +309,28 @@ bool PlatoonVehicle::was_my_cooperation_request_accepted() const
 
 void PlatoonVehicle::implement_prepare_to_start_long_adjustments()
 {
-	has_completed_lane_change = false;
+	set_has_completed_lane_change(false);
 }
 
 void PlatoonVehicle::implement_prepare_to_restart_lane_keeping(
 	bool was_lane_change_successful)
 {
-	has_completed_lane_change = was_lane_change_successful;
+	set_has_completed_lane_change(was_lane_change_successful);
 	set_lane_change_direction(RelativeLane::same);
 	reset_lane_change_waiting_time();
 }
 
-NearbyVehicle* PlatoonVehicle::choose_virtual_leader()
+std::shared_ptr<NearbyVehicle> PlatoonVehicle::choose_virtual_leader() const
 {
-	return is_in_a_platoon() ? 
-		get_platoon()->define_virtual_leader(*this)
-		: define_virtual_leader_when_alone();
+	if (is_in_a_platoon())
+	{
+		long vl_id = get_platoon()->define_virtual_leader_id(get_id());
+		return get_nearby_vehicle_by_id(vl_id);
+	}
+	else
+	{
+		return ConnectedAutonomousVehicle::choose_virtual_leader();
+	}
 }
 
 void PlatoonVehicle::set_controller(PlatoonVehicleController* a_controller)
@@ -354,7 +343,18 @@ double PlatoonVehicle::compute_accepted_lane_change_gap(
 	const NearbyVehicle* nearby_vehicle) const
 {
 	/* TODO [must check if working]: use simple lane keeping reference gaps */
-	return compute_reference_vehicle_following_gap(nearby_vehicle);
+	double safe_gap;
+	if (nearby_vehicle == nullptr) 
+	{
+		safe_gap = 0.0;
+	}
+	else
+	{
+		safe_gap = platoon_vehicle_controller->get_lateral_controller()
+			.compute_time_headway_gap(get_velocity(), *nearby_vehicle, 0.0);
+	}
+	return safe_gap;
+	//return compute_reference_vehicle_following_gap(nearby_vehicle);
 }
 
 void PlatoonVehicle::set_desired_lane_change_direction()
@@ -367,13 +367,18 @@ void PlatoonVehicle::set_desired_lane_change_direction()
 
 void PlatoonVehicle::implement_analyze_nearby_vehicles()
 {
-	if (verbose) std::clog << "looking for leader\n";
 	find_leader();
-	if (verbose) std::clog << "looking for dest lane vehs\n";
 	find_destination_lane_vehicles();
-	if (verbose) std::clog << "looking for coop requests\n";
 	find_cooperation_request_from_platoon();
 	//create_lane_change_request();
+
+	if (verbose)
+	{
+		std::clog << "\tleader=" << get_leader_id()
+			<< ", dest.lane leader=" << get_destination_lane_leader_id()
+			<< ", dest.lane foll.=" << get_destination_lane_follower_id()
+			<< ", virtual leader=" << get_virtual_leader_id() << "\n";
+	}
 }
 
 double PlatoonVehicle::compute_reference_vehicle_following_gap(

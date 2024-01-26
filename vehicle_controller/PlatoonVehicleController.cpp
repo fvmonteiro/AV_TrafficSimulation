@@ -18,7 +18,7 @@ bool PlatoonVehicleController
 		/*&& platoon_vehicle->can_start_adjustment_to_virtual_leader()*/)
 	{
 		const NearbyVehicle* virtual_leader =
-			platoon_vehicle->get_virtual_leader();
+			platoon_vehicle->get_virtual_leader().get();
 		double reference_velocity = determine_low_velocity_reference(
 			*virtual_leader);
 

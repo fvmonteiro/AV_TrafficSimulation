@@ -105,7 +105,7 @@ void PlatoonVehicleLaneChangingState
 	// Same as single vehicle case except for the next state
 	if (!platoon_vehicle->is_lane_changing())
 	{
-		platoon_vehicle->prepare_to_restart_lane_keeping(false);
+		platoon_vehicle->prepare_to_restart_lane_keeping(true);
 		platoon_vehicle->set_state(
 			std::make_unique<PlatoonVehicleLaneKeepingState>());
 	}
