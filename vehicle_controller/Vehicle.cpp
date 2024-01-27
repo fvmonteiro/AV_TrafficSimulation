@@ -107,12 +107,12 @@ double Vehicle::compute_lambda_1(double max_jerk,
 double Vehicle::compute_time_headway_with_risk(
 	double free_flow_velocity,
 	double follower_max_brake, double leader_max_brake,
-	double lambda_1, double rho, double accepted_risk) const
+	double a_lambda_1, double rho, double accepted_risk) const
 {
 	double time_headway;
 	double gamma = leader_max_brake / follower_max_brake;
 	double gamma_threshold = (1 - rho) * free_flow_velocity
-		/ (free_flow_velocity + lambda_1);
+		/ (free_flow_velocity + a_lambda_1);
 	double risk_term = std::pow(accepted_risk, 2) / 2 / free_flow_velocity;
 
 	if (gamma < gamma_threshold) 
@@ -120,20 +120,26 @@ double Vehicle::compute_time_headway_with_risk(
 		// case where ego brakes harder
 		time_headway =
 			(std::pow(rho, 2) * free_flow_velocity / 2
-				+ rho * lambda_1 - risk_term)
+				+ rho * a_lambda_1 - risk_term)
 			/ ((1 - gamma) * follower_max_brake);
 	}
 	else if (gamma >= std::pow(1 - rho, 2)) 
 	{
 		time_headway =
 			((1 - std::pow(1 - rho, 2) / gamma) * free_flow_velocity / 2
-				+ lambda_1 - risk_term)
+				+ a_lambda_1 - risk_term)
 			/ follower_max_brake;
 	}
 	else {
-		time_headway = (lambda_1 - risk_term) / follower_max_brake;
+		time_headway = (a_lambda_1 - risk_term) / follower_max_brake;
 	}
 
+	std::clog << "Computing some h."
+		<< "\n\td_l=" << leader_max_brake << ", d_f=" << follower_max_brake
+		<< "\n\tV_f=" << free_flow_velocity << ", rho=" << rho
+		<< ", lambda1=" << a_lambda_1
+		<< "\n\tgamma=" << gamma << ", Gamma=" << gamma_threshold
+		<< "\n\t\th=" << time_headway << "\n";
 	return time_headway;
 }
 

@@ -156,7 +156,7 @@ PlatoonVehicle::get_following_vehicle_in_platoon() const
 std::shared_ptr<NearbyVehicle> PlatoonVehicle
 ::define_virtual_leader_when_alone() const
 {
-	return ConnectedAutonomousVehicle::choose_virtual_leader();
+	return ConnectedAutonomousVehicle::choose_behind_whom_to_move();
 }
 
 bool PlatoonVehicle::can_start_lane_change()
@@ -180,7 +180,7 @@ bool PlatoonVehicle::can_start_lane_change()
 		is_my_turn = true;
 	}
 
-	if (verbose) std::clog << "Is my turn? "
+	if (verbose) std::clog << "Start LC? "
 		<< (is_my_turn ? "yes" : "no") << "\n";
 
 	return is_safe && is_my_turn;
@@ -205,13 +205,6 @@ void PlatoonVehicle::add_another_as_nearby_vehicle(
 		new_nv.set_type(platoon_vehicle.get_type(), get_type());
 		add_nearby_vehicle(new_nv);
 	}
-}
-
-void PlatoonVehicle::implement_create_controller() {
-	this->controller_exclusive = 
-		std::make_unique<PlatoonVehicleController>(this, is_verbose());
-	controller_exclusive->add_internal_controllers();
-	set_controller(controller_exclusive.get());
 }
 
 //double PlatoonVehicle::implement_compute_desired_acceleration(
@@ -320,20 +313,22 @@ void PlatoonVehicle::implement_prepare_to_restart_lane_keeping(
 	reset_lane_change_waiting_time();
 }
 
-std::shared_ptr<NearbyVehicle> PlatoonVehicle::choose_virtual_leader() const
+std::shared_ptr<NearbyVehicle> PlatoonVehicle::choose_behind_whom_to_move() const
 {
 	if (is_in_a_platoon())
 	{
-		long vl_id = get_platoon()->define_virtual_leader_id(get_id());
+		long vl_id = get_platoon()->define_desired_destination_lane_leader_id(
+			get_id());
 		return get_nearby_vehicle_by_id(vl_id);
 	}
 	else
 	{
-		return ConnectedAutonomousVehicle::choose_virtual_leader();
+		return ConnectedAutonomousVehicle::choose_behind_whom_to_move();
 	}
 }
 
-void PlatoonVehicle::set_controller(PlatoonVehicleController* a_controller)
+void PlatoonVehicle::set_controller(
+	std::shared_ptr<PlatoonVehicleController> a_controller)
 {
 	platoon_vehicle_controller = a_controller;
 	ConnectedAutonomousVehicle::set_controller(a_controller);
@@ -365,18 +360,49 @@ void PlatoonVehicle::set_desired_lane_change_direction()
 		RelativeLane::left : RelativeLane::same;
 }
 
+void PlatoonVehicle::implement_create_controller()
+{
+	set_controller(std::make_shared<PlatoonVehicleController>(
+		this, is_verbose()));
+	/*this->controller_exclusive =
+		std::make_unique<PlatoonVehicleController>(this, is_verbose());
+	controller_exclusive->add_internal_controllers();
+	set_controller(controller_exclusive.get());*/
+}
+
 void PlatoonVehicle::implement_analyze_nearby_vehicles()
 {
 	find_leader();
 	find_destination_lane_vehicles();
 	find_cooperation_request_from_platoon();
-	//create_lane_change_request();
 
+	std::shared_ptr<NearbyVehicle> desired_leader = 
+		choose_behind_whom_to_move();
+	if (desired_leader != nullptr && has_assisted_vehicle())
+	{
+		std::clog << "==== WARNING (unexpected behavior) ===="
+			<<"[PlatoonVehicle] too many possible virtual leaders: "
+			<< "both a desired dest lane leader and an assisted veh.\n";
+	}
+	else if (desired_leader != nullptr)
+	{
+		set_virtual_leader(desired_leader);
+	}
+	else if (has_assisted_vehicle())
+	{
+		set_virtual_leader(get_assisted_vehicle());
+	}
+	else
+	{
+		set_virtual_leader(nullptr);
+	}
+	
 	if (verbose)
 	{
 		std::clog << "\tleader=" << get_leader_id()
 			<< ", dest.lane leader=" << get_destination_lane_leader_id()
 			<< ", dest.lane foll.=" << get_destination_lane_follower_id()
+			<< ", assited veh=" << get_assisted_veh_id()
 			<< ", virtual leader=" << get_virtual_leader_id() << "\n";
 	}
 }
@@ -397,21 +423,6 @@ void PlatoonVehicle::find_cooperation_request_from_platoon()
 			get_platoon()->get_assisted_vehicle_id(get_id());
 		set_assisted_vehicle_by_id(assisted_vehicle_id);
 	}
-	/*long assisted_vehicle_id = 0;
-	if (is_in_a_platoon())
-	{
-		for (auto&& id_veh_pair : get_nearby_vehicles())
-		{
-			NearbyVehicle* nearby_vehicle = id_veh_pair.second.get();
-			if (platoon->is_vehicle_id_in_platoon(nearby_vehicle->get_id())
-				&& (nearby_vehicle->get_lane_change_request_veh_id() 
-					== get_id()))
-			{
-				assisted_vehicle_id = nearby_vehicle->get_id();
-			}
-		}
-	}
-	set_assisted_vehicle_by_id(assisted_vehicle_id);*/
 }
 
 bool PlatoonVehicle::implement_analyze_platoons(

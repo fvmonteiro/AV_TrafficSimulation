@@ -13,7 +13,7 @@ public:
 	ACCVehicleController(const ACCVehicle* acc_vehicle, bool verbose);
 
 protected:
-	RealLongitudinalController end_of_lane_controller;
+	std::shared_ptr<SwitchedLongitudinalController> end_of_lane_controller;
 
 	/* Initializing controllers */
 	void add_vissim_controller();
@@ -42,6 +42,7 @@ private:
 
 	/* ------------------------- Control Parameters ----------------------- */
 	AutonomousGains autonomous_real_following_gains{ 0.2, 1.0 };
+	// TODO organization: connected gains do not belong here
 	ConnectedGains connected_real_following_gains{ 0.2, 2.3, 0.13, 1.3 };
 	VelocityControllerGains desired_velocity_controller_gains{
 		0.5, 0.1, 0.03 };

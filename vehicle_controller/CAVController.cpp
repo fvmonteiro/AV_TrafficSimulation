@@ -21,7 +21,7 @@ void CAVController::add_cooperative_lane_change_controller()
 	if (verbose) std::clog << "Creating coop. lane change controller.\n";
 
 	gap_generating_controller = 
-		std::make_unique<VirtualLongitudinalController>(
+		std::make_shared<VirtualLongitudinalController>(
 			cav, gap_generation_colors, long_controllers_verbose);
 	gap_generating_controller->create_velocity_controller(
 		adjustment_velocity_controller_gains, velocity_filter_gain);

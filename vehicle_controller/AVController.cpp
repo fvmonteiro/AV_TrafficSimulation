@@ -160,7 +160,7 @@ void AVController::add_lane_change_adjustment_controller()
 	if (verbose) std::clog << "Creating lane change adjustment controller\n";
 
 	destination_lane_controller = 
-		std::make_unique<VirtualLongitudinalController>(
+		std::make_shared<VirtualLongitudinalController>(
 			autonomous_vehicle, dest_lane_colors, long_controllers_verbose);
 	destination_lane_controller->create_velocity_controller(
 		adjustment_velocity_controller_gains, velocity_filter_gain);
@@ -177,7 +177,7 @@ bool AVController::get_destination_lane_desired_acceleration(
 	bool is_active = false;
 
 	bool end_of_lane_controller_is_active =
-		end_of_lane_controller.get_state()
+		end_of_lane_controller->get_state()
 		== SwitchedLongitudinalController::State::vehicle_following;
 
 	const NearbyVehicle* virtual_leader =

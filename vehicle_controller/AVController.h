@@ -60,7 +60,7 @@ protected:
 	// TODO organization: connected gains do not belong here
 	ConnectedGains connected_virtual_following_gains{ 0.4, 2.3, 0.13, 1.3 };
 	LateralController lateral_controller;
-	std::unique_ptr<SwitchedLongitudinalController> 
+	std::shared_ptr<SwitchedLongitudinalController> 
 		destination_lane_controller;
 
 	void add_lane_change_adjustment_controller();

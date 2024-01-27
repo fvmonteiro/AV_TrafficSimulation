@@ -361,7 +361,7 @@ long Platoon::create_lane_change_request_for_vehicle(
 		->create_platoon_lane_change_request(platoon_vehicle);
 }
 
-long Platoon::define_virtual_leader_id(long ego_id) const
+long Platoon::define_desired_destination_lane_leader_id(long ego_id) const
 {
 	int pos_in_platoon = vehicle_id_to_position.at(ego_id);
 	long virtual_leader_id = 

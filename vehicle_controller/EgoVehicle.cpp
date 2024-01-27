@@ -225,9 +225,10 @@ void EgoVehicle::set_verbose(bool value)
 	controller->set_verbose(value);
 }
 
-void EgoVehicle::set_controller(VehicleController* controller)
+void EgoVehicle::set_controller(std::shared_ptr<VehicleController> controller)
 {
 	this->controller = controller;
+	this->controller->add_internal_controllers();
 }
 
 void EgoVehicle::set_has_completed_lane_change(bool value)

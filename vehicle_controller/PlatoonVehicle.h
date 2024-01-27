@@ -51,15 +51,18 @@ protected:
 		double simulation_time_step, double creation_time, bool verbose);
 
 	/* Returns a nullptr if no virtual leader */
-	std::shared_ptr<NearbyVehicle> choose_virtual_leader() const override;
-	void set_controller(PlatoonVehicleController* a_controller);
+	std::shared_ptr<NearbyVehicle> choose_behind_whom_to_move() 
+		const override;
+	void set_controller(
+		std::shared_ptr<PlatoonVehicleController> a_controller);
 	void compute_platoon_safe_gap_parameters();
 
 private:
 	//double min_overtaking_rel_vel{ 50.0 / 3.6 };
 	std::shared_ptr<Platoon> platoon{ nullptr };
-	std::unique_ptr<PlatoonVehicleController> controller_exclusive{ nullptr };
-	PlatoonVehicleController* platoon_vehicle_controller{ nullptr };
+	//std::unique_ptr<PlatoonVehicleController> controller_exclusive{ nullptr };
+	std::shared_ptr<PlatoonVehicleController> platoon_vehicle_controller{ 
+		nullptr };
 
 	// desired velocity when not a part of the platoon
 	//double alone_desired_velocity{ 0.0 };

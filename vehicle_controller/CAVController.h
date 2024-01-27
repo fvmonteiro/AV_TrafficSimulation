@@ -19,7 +19,7 @@ public:
 		double time_headway);
 
 protected:
-	std::unique_ptr<SwitchedLongitudinalController> gap_generating_controller;
+	std::shared_ptr<SwitchedLongitudinalController> gap_generating_controller;
 
 	void add_cooperative_lane_change_controller();
 	/* Returns true if the computed acceleration was added to the map */

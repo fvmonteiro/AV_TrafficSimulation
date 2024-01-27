@@ -73,15 +73,21 @@ long PlatoonLaneChangeApproach::get_assisted_vehicle_id(int ego_position)
 		platoon->get_a_vehicle_by_position(ego_position);
 
 	if (ego_vehicle->has_lane_change_intention() || !is_initialized
-		|| ego_position != get_current_coop_vehicle_position()) return 0;
+		|| ego_position != get_current_coop_vehicle_position()) 
+	{
+		return 0;
+	}
+
 	int rear_most_pos = get_rearmost_lane_changing_vehicle_position();
-	return platoon->get_a_vehicle_by_position(rear_most_pos)->get_id();
+	const PlatoonVehicle* assisted_vehicle =
+		platoon->get_a_vehicle_by_position(rear_most_pos);
+	return assisted_vehicle->has_lane_change_intention() ?
+		assisted_vehicle->get_id() : 0;
 }
 
 bool PlatoonLaneChangeApproach::can_vehicle_start_lane_change(
 	int veh_position)
-{
-	
+{	
 	if (!is_initialized) decide_lane_change_order();
 	if (!is_initialized) return false;
 
@@ -93,12 +99,14 @@ bool PlatoonLaneChangeApproach::can_vehicle_start_lane_change(
 	}
 
 	std::unordered_set<int> next_to_move = get_current_lc_vehicle_positions();
+	bool is_my_turn = is_vehicle_turn_to_lane_change(veh_position);
 
 	if (verbose)
 	{
 		std::string message = "Next to move: ";
 		for (int i : next_to_move) message += std::to_string(i) + ", ";
-		message += "my pos. = " + std::to_string(veh_position);
+		message += "my pos. = " + std::to_string(veh_position)
+			+ "-> is my turn? " + (is_my_turn ? "yes" : "no");
 		std::clog << message << "\n";
 	}
 
@@ -129,21 +137,18 @@ bool PlatoonLaneChangeApproach::can_vehicle_start_lane_change(
 		maneuver_step++;
 	}
 
-
-	if (is_vehicle_turn_to_lane_change(veh_position))
+	if (is_my_turn)
 	{
 		for (int i : next_to_move)
 		{
 			const PlatoonVehicle* vehicle = 
 				platoon->get_a_vehicle_by_position(i);
-
-			if (verbose)
+			if (vehicle->get_virtual_leader_id()
+				!= vehicle->get_destination_lane_leader_id())
 			{
-
+				return false;
 			}
-
-			if ((vehicle->get_virtual_leader_id()
-				!= vehicle->get_destination_lane_leader_id()))
+			if (!vehicle->are_surrounding_gaps_safe_for_lane_change())
 			{
 				return false;
 			}

@@ -16,7 +16,7 @@ void ACCVehicleController::add_origin_lane_controllers()
 {
 	if (verbose) std::clog << "Creating origin lane controllers.\n";
 
-	origin_lane_controller = std::make_unique<RealLongitudinalController>(
+	origin_lane_controller = std::make_shared<RealLongitudinalController>(
 		acc_vehicle, orig_lane_colors, long_controllers_verbose);
 	origin_lane_controller->create_velocity_controller(
 		desired_velocity_controller_gains, velocity_filter_gain);
@@ -26,11 +26,11 @@ void ACCVehicleController::add_origin_lane_controllers()
 
 	/* Note: the end of lane controller could have special vel control gains
 	but we want to see how the ego vehicle responds to a stopped vehicle. */
-	end_of_lane_controller = RealLongitudinalController(
+	end_of_lane_controller = std::make_shared < RealLongitudinalController>(
 		acc_vehicle, end_of_lane_colors, long_controllers_verbose);
-	end_of_lane_controller.create_velocity_controller(
+	end_of_lane_controller->create_velocity_controller(
 		desired_velocity_controller_gains, velocity_filter_gain);
-	end_of_lane_controller.create_gap_controller(
+	end_of_lane_controller->create_gap_controller(
 		autonomous_real_following_gains, connected_real_following_gains,
 		velocity_filter_gain, time_headway_filter_gain);
 	/* The end of the lane is seen as a stopped vehicle. We set some
@@ -38,13 +38,13 @@ void ACCVehicleController::add_origin_lane_controllers()
 	activate_end_of_lane_controller(time_headway_to_end_of_lane);
 
 	available_controllers[ALCType::origin_lane] = origin_lane_controller.get();
-	available_controllers[ALCType::end_of_lane] = &end_of_lane_controller;
+	available_controllers[ALCType::end_of_lane] = end_of_lane_controller.get();
 }
 
 void ACCVehicleController::activate_end_of_lane_controller(double time_headway)
 {
-	end_of_lane_controller.reset_time_headway_filter(time_headway);
-	end_of_lane_controller.set_desired_time_headway(time_headway);
+	end_of_lane_controller->reset_time_headway_filter(time_headway);
+	end_of_lane_controller->set_desired_time_headway(time_headway);
 }
 
 double ACCVehicleController::get_vissim_desired_acceleration()
@@ -104,21 +104,21 @@ bool ACCVehicleController::get_end_of_lane_desired_acceleration(
 			create_virtual_stopped_vehicle(*acc_vehicle);
 
 		LongitudinalController::State old_state =
-			end_of_lane_controller.get_state();
+			end_of_lane_controller->get_state();
 		/* To avoid sudden high decelerations */
 		if (old_state
 			== LongitudinalController::State::uninitialized)
 		{
-			end_of_lane_controller.reset_leader_velocity_filter(
+			end_of_lane_controller->reset_leader_velocity_filter(
 				acc_vehicle->get_velocity());
 		}
 		double desired_acceleration =
-			end_of_lane_controller.compute_desired_acceleration(
+			end_of_lane_controller->compute_desired_acceleration(
 				&virtual_vehicle, acc_vehicle->get_desired_velocity());
 
 		/* This controller is only active when it's at vehicle
 		following mode */
-		if (end_of_lane_controller.get_state()
+		if (end_of_lane_controller->get_state()
 			== LongitudinalController::State::vehicle_following)
 		{
 			if (verbose)

@@ -10,7 +10,8 @@ ACCVehicle::ACCVehicle(long id, double desired_velocity,
 	if (verbose) std::clog << "[ACCVehicle] created" << std::endl;
 }
 
-void ACCVehicle::set_controller(ACCVehicleController* acc_controller)
+void ACCVehicle::set_controller(
+	std::shared_ptr<ACCVehicleController> acc_controller)
 {
 	this->acc_vehicle_controller = acc_controller;
 	EgoVehicle::set_controller(acc_controller);
@@ -18,9 +19,11 @@ void ACCVehicle::set_controller(ACCVehicleController* acc_controller)
 
 void ACCVehicle::implement_create_controller()
 {
-	this->controller_exclusive = ACCVehicleController(this, is_verbose());
-	controller_exclusive.add_internal_controllers();
-	this->set_controller(&controller_exclusive);
+	set_controller(std::make_shared<ACCVehicleController>(
+		this, is_verbose()));
+	//this->controller_exclusive = ACCVehicleController(this, is_verbose());
+	//controller_exclusive.add_internal_controllers();
+	//this->set_controller(&controller_exclusive);
 }
 
 //double ACCVehicle::implement_compute_desired_acceleration(

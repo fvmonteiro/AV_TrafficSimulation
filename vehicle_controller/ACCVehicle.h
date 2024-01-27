@@ -24,11 +24,11 @@ protected:
 			is_lane_change_autonomous, is_connected,
 			simulation_time_step, creation_time, verbose) {};
 
-	void set_controller(ACCVehicleController* controller);
+	void set_controller(std::shared_ptr<ACCVehicleController> controller);
 
 private:
-	ACCVehicleController controller_exclusive;
-	ACCVehicleController* acc_vehicle_controller{ nullptr };
+	//ACCVehicleController controller_exclusive;
+	std::shared_ptr<ACCVehicleController> acc_vehicle_controller{ nullptr };
 
 	void implement_create_controller() override;
 	//double implement_compute_desired_acceleration(

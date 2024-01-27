@@ -43,12 +43,13 @@ protected:
 	std::pair<double, double> get_lane_changing_safe_gap_parameters(
 		bool is_leader_connected) const;
 
-	void set_controller(CAVController* a_controller);
+	void set_controller(std::shared_ptr<CAVController> a_controller);
 	void find_cooperation_requests();
 	void set_assisted_vehicle_by_id(long assisted_vehicle_id);
 
 	/* Returns a nullptr if no virtual leader */
-	std::shared_ptr<NearbyVehicle> choose_virtual_leader() const override;
+	std::shared_ptr<NearbyVehicle> choose_behind_whom_to_move()
+		const override;
 
 private:
 	/* Emergency braking parameter between connected vehicles */
@@ -63,8 +64,8 @@ private:
 	lane change gap */
 	std::shared_ptr<NearbyVehicle> assisted_vehicle{ nullptr };
 	double original_desired_velocity{ 0.0 };
-	CAVController controller_exclusive;
-	CAVController* cav_controller{ nullptr };
+	//CAVController controller_exclusive;
+	std::shared_ptr<CAVController> cav_controller{ nullptr };
 
 
 	void implement_create_controller() override;
@@ -84,7 +85,7 @@ private:
 		const override;
 	double compute_vehicle_following_safe_time_headway(
 		const NearbyVehicle& nearby_vehicle) const override;
-	double compute_vehicle_following_time_headway(
+	double compute_vehicle_following_time_headway_with_risk(
 		const NearbyVehicle& nearby_vehicle,
 		double nv_max_lane_change_risk) const;
 	double compute_lane_changing_desired_time_headway(

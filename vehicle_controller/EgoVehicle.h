@@ -368,7 +368,7 @@ protected:
 	std::pair<double, double> get_lane_changing_safe_gap_parameters() const;
 	const std::unordered_map<long, std::shared_ptr<NearbyVehicle>>
 		get_nearby_vehicles() const;
-	void set_controller(VehicleController* controller);
+	void set_controller(std::shared_ptr<VehicleController> controller);
 	void set_has_completed_lane_change(bool value);
 	void set_gap_variation_during_lane_change(int nv_id, double value);
 	void set_collision_free_gap(int nv_id, double value);
@@ -442,7 +442,7 @@ private:
 	long turning_indicator{ 0 };
 
 	/* Controller --------------------------------------------------------- */
-	VehicleController* controller{ nullptr };
+	std::shared_ptr<VehicleController> controller{ nullptr };
 
 	/* Safe lane change decision parameters ------------------------------- */
 	/* Variables are only needed if we want to be able to see values in

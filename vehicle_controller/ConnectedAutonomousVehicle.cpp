@@ -122,6 +122,9 @@ void ConnectedAutonomousVehicle::implement_analyze_nearby_vehicles()
 	find_destination_lane_vehicles();
 	find_cooperation_requests();
 	create_lane_change_request();
+
+	std::shared_ptr<NearbyVehicle> vl = choose_behind_whom_to_move();
+	set_virtual_leader(vl);
 }
 
 void ConnectedAutonomousVehicle::find_cooperation_requests()
@@ -157,13 +160,13 @@ void ConnectedAutonomousVehicle::find_cooperation_requests()
 }
 
 std::shared_ptr<NearbyVehicle> ConnectedAutonomousVehicle
-::choose_virtual_leader() const
+::choose_behind_whom_to_move() const
 {
 	/* By default, we try to merge behind the current destination
 	lane leader. */
 	std::shared_ptr<NearbyVehicle> nv = get_modifiable_dest_lane_leader();
 
-	/* The choice of min overtaking rel vel ensure that we only overtake
+	/* The choice of min overtaking rel vel ensures that we only overtake
 	if the veh is in free-flow mode and the dest lane leader is almost
 	stopped. */
 	double min_vel = 1.5; // = 5.4 km/h
@@ -257,11 +260,18 @@ void ConnectedAutonomousVehicle::update_assisted_vehicle(
 		if ((old_assisted_vehicle == nullptr)
 			|| (old_assisted_vehicle->get_id() != assisted_vehicle->get_id()))
 		{
-			double h_to_assisted_vehicle = std::max(0.0,
-				compute_vehicle_following_time_headway(
-					*assisted_vehicle, 0
-					/* assisted_vehicle->get_max_lane_change_risk_to_follower()*/
-				));
+			if (verbose)
+			{
+				std::clog << "Computing h to assisted veh...\n";
+			}
+			double h_to_assisted_vehicle =
+				compute_vehicle_following_safe_time_headway(
+					*assisted_vehicle);
+			//double h_to_assisted_vehicle = std::max(0.0,
+			//	compute_vehicle_following_time_headway_with_risk(
+			//		*assisted_vehicle, 0
+			//		/* assisted_vehicle->get_max_lane_change_risk_to_follower()*/
+			//	));
 			cav_controller->update_gap_generation_controller(
 				get_velocity(), h_to_assisted_vehicle);
 		}
@@ -305,7 +315,8 @@ std::pair<double, double> ConnectedAutonomousVehicle
 		: EgoVehicle::get_lane_changing_safe_gap_parameters();
 }
 
-void ConnectedAutonomousVehicle::set_controller(CAVController* a_controller)
+void ConnectedAutonomousVehicle::set_controller(
+	std::shared_ptr<CAVController> a_controller)
 {
 	this->cav_controller = a_controller;
 	AutonomousVehicle::set_controller(a_controller);
@@ -328,11 +339,11 @@ compute_vehicle_following_safe_time_headway(
 	return compute_time_headway_with_risk(get_desired_velocity(),
 		get_max_brake(), nearby_vehicle.get_max_brake(),
 		current_lambda_1, get_rho(), 0);*/
-	return compute_vehicle_following_time_headway(nearby_vehicle, 0);
+	return compute_vehicle_following_time_headway_with_risk(nearby_vehicle, 0);
 }
 
 double ConnectedAutonomousVehicle::
-compute_vehicle_following_time_headway(
+compute_vehicle_following_time_headway_with_risk(
 	const NearbyVehicle& nearby_vehicle,
 	double nv_max_lane_change_risk) const
 {
@@ -397,9 +408,10 @@ double ConnectedAutonomousVehicle::compute_lane_changing_desired_time_headway(
 
 void ConnectedAutonomousVehicle::implement_create_controller()
 {
-	this->controller_exclusive = CAVController(this, is_verbose());
-	controller_exclusive.add_internal_controllers();
-	this->set_controller(&controller_exclusive);
+	set_controller(std::make_shared<CAVController>(this, is_verbose()));
+	//this->controller_exclusive = CAVController(this, is_verbose());
+	//controller_exclusive.add_internal_controllers();
+	//this->set_controller(&controller_exclusive);
 }
 
 //double ConnectedAutonomousVehicle::implement_compute_desired_acceleration(

@@ -74,7 +74,7 @@ protected:
 		return destination_lane_leader_leader;
 	};
 
-	void set_controller(AVController* a_controller);
+	void set_controller(std::shared_ptr<AVController> a_controller);
 	void find_destination_lane_vehicles();
 	bool try_to_overtake_destination_lane_leader() const;
 	bool try_to_overtake_destination_lane_leader(
@@ -84,7 +84,7 @@ protected:
 	void set_virtual_leader(
 		std::shared_ptr<NearbyVehicle> new_virtual_leader);
 	/* Returns a nullptr if no virtual leader */
-	virtual std::shared_ptr<NearbyVehicle> choose_virtual_leader() const;
+	virtual std::shared_ptr<NearbyVehicle> choose_behind_whom_to_move() const;
 
 	/* Non-linear gap based on ego and nearby vehicles states
 	and parameters */
@@ -96,8 +96,8 @@ private:
 	double min_overtaking_rel_vel{ 10.0	/ 3.6}; // [m/s]
 	double min_overtaking_time{ 10.0 };// s
 	double max_lane_change_waiting_time{ 60.0 }; // [s]
-	AVController controller_exclusive;
-	AVController* av_controller{ nullptr };
+	//AVController controller_exclusive;
+	std::shared_ptr<AVController> av_controller{ nullptr };
 
 	/* Relevant members for lane changing ------------------------------------ */
 

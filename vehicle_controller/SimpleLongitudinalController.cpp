@@ -62,3 +62,10 @@ void SimpleLongitudinalController::determine_controller_state(
 
 	if (verbose) std::clog << message << "State: " << state_to_string(state);
 }
+
+bool SimpleLongitudinalController::implement_is_velocity_reference_outdated(
+) const
+{
+	return ego_vehicle->get_velocity()
+		> velocity_controller.get_reference_value();
+}

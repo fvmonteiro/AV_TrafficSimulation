@@ -90,7 +90,7 @@ protected:
 	bool long_controllers_verbose{ false };
 	double origin_lane_controller_time_headway{ 10.0 };
 	
-	std::unique_ptr<SwitchedLongitudinalController> origin_lane_controller;
+	std::shared_ptr<SwitchedLongitudinalController> origin_lane_controller;
 
 	/* Constructor for derived classes */
 	VehicleController(const EgoVehicle* ego_vehicle, bool verbose);

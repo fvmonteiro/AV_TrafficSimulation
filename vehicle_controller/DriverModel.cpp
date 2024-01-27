@@ -795,7 +795,7 @@ DRIVERMODEL_API  int  DriverModelExecuteCommand (long number)
         return 1;
     case DRIVER_COMMAND_CREATE_DRIVER :
     {
-        bool verbose = false;
+        bool verbose = true;
         if (logged_vehicles_ids.find(current_vehicle_id)
             != logged_vehicles_ids.end()) verbose = true;
         vehicles[current_vehicle_id] = std::move(

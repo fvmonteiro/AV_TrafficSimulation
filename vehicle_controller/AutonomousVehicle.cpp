@@ -80,6 +80,7 @@ void AutonomousVehicle::implement_analyze_nearby_vehicles()
 {
 	find_leader();
 	find_destination_lane_vehicles();
+	set_virtual_leader(choose_behind_whom_to_move());
 }
 
 void AutonomousVehicle::find_destination_lane_vehicles()
@@ -115,11 +116,9 @@ void AutonomousVehicle::find_destination_lane_vehicles()
 
 	update_destination_lane_follower(old_dest_lane_follower.get());
 	update_destination_lane_leader(old_dest_lane_leader.get());
-	std::shared_ptr<NearbyVehicle> vl = choose_virtual_leader();
-	set_virtual_leader(vl);
 }
 
-std::shared_ptr<NearbyVehicle> AutonomousVehicle::choose_virtual_leader() 
+std::shared_ptr<NearbyVehicle> AutonomousVehicle::choose_behind_whom_to_move()
 const
 {
 	if (try_to_overtake_destination_lane_leader())
@@ -348,17 +347,20 @@ double AutonomousVehicle::estimate_nearby_vehicle_time_headway(
 		nearby_vehicle.estimate_desired_time_headway(max_brake, 0));
 }
 
-void AutonomousVehicle::set_controller(AVController* a_controller)
+void AutonomousVehicle::set_controller(
+	std::shared_ptr<AVController> a_controller)
 {
 	this->av_controller = a_controller;
-	EgoVehicle::set_controller(av_controller);
+	ACCVehicle::set_controller(av_controller);
 }
 
 void AutonomousVehicle::implement_create_controller()
 {
-	this->controller_exclusive = AVController(this, is_verbose());
+	set_controller(std::make_shared<AVController>(
+		this, is_verbose()));
+	/*this->controller_exclusive = AVController(this, is_verbose());
 	controller_exclusive.add_internal_controllers();
-	this->set_controller(&controller_exclusive);
+	this->set_controller(&controller_exclusive);*/
 }
 
 //double AutonomousVehicle::implement_compute_desired_acceleration(
