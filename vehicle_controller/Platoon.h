@@ -3,9 +3,10 @@
 #include <memory>
 #include <unordered_map>
 
-#include "PlatoonLaneChangeStrategy.h"
+//#include "PlatoonLaneChangeStrategy.h"
 #include "PlatoonLaneChangeApproach.h"
 
+class NearbyVehicle;
 class PlatoonVehicle;
 
 class Platoon
@@ -60,6 +61,7 @@ public:
 	/* The vehicle behind which the platoon wants to move */
 	const NearbyVehicle* get_destination_lane_leader() const;
 	long get_assisted_vehicle_id(long ego_id) const;
+	long get_cooperating_vehicle_id() const;
 
 	void set_strategy(int strategy_number);
 
@@ -67,19 +69,20 @@ public:
 
 	bool is_empty() const;
 	bool is_vehicle_id_in_platoon(long veh_id) const;
-	/* True if at least one vehicle started a lane change */
-	bool has_lane_change_started() const;
 	void add_last_vehicle(PlatoonVehicle* new_vehicle);
 	void remove_vehicle_by_id(long veh_id, bool is_out_of_simulation);
-	bool can_vehicle_leave_platoon(
-		const PlatoonVehicle& platoon_vehicle) const;
-	bool can_vehicle_start_lane_change(long veh_id) const;
+	bool has_lane_change_intention() const;
+	void receive_lane_change_intention_signal();
+	void receive_lane_keeping_signal();
 	/* Returns true if the platoon is stopped right before the mandatory
 	lane change point, i.e., stuck waiting to start lane change.*/
 	bool is_stuck() const;
+	/* True if at least one vehicle started a lane change */
+	bool has_lane_change_started() const;
+	bool can_vehicle_leave_platoon(long ego_id) const;
+	bool can_vehicle_start_lane_change(long ego_id) const;
 	void sort_vehicles_by_distance_traveled();
-	long create_lane_change_request_for_vehicle(
-		const PlatoonVehicle& platoon_vehicle) const;
+	long create_lane_change_request_for_vehicle(long ego_id) const;
 	long define_desired_destination_lane_leader_id(long ego_id) const;
 	void set_possible_maneuver_initial_states();
 	void set_maneuver_initial_state(long ego_id, StateVector lo_states,
@@ -100,19 +103,20 @@ private:
 	};
 
 	long id{ 0 };
-	//int leader_idx{ 0 };
-	//int last_veh_idx{ 0 };
+	bool verbose{ false };
+	
 	double desired_velocity{ 0.0 };
 	double velocity_at_lane_change_start{ 0.0 };
 	double lane_change_start_time{ INFINITY };
-	bool verbose{ false };
+	int lane_change_intention_counter{ 0 };
+	
 	/* TODO [Jan 24, 24] these maps should be vectors */
 	/* Keys are the vehicle position in the platoon */
 	std::unordered_map<int, PlatoonVehicle*>
 		vehicles_by_position;
 	std::unordered_map<long, int> vehicle_id_to_position;
-	std::unique_ptr<PlatoonLaneChangeStrategy> lane_change_strategy{ 
-		std::make_unique<NoStrategy>() };
+	//std::unique_ptr<PlatoonLaneChangeStrategy> lane_change_strategy{ 
+	//	std::make_unique<NoStrategy>() };
 	std::unique_ptr<PlatoonLaneChangeApproach> lane_change_approach{ 
 		nullptr };
 

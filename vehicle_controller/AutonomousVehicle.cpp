@@ -232,7 +232,6 @@ void AutonomousVehicle::update_destination_lane_follower(
 {
 	if (has_destination_lane_follower())
 	{
-		get_is_connected();
 		if (old_follower == nullptr
 			|| (old_follower->get_category()
 				!= destination_lane_follower->get_category()))
@@ -240,7 +239,7 @@ void AutonomousVehicle::update_destination_lane_follower(
 			av_controller->update_destination_lane_follower_parameters(
 				*destination_lane_follower);
 			av_controller->update_destination_lane_follower_time_headway(
-				false, *destination_lane_follower);
+				*destination_lane_follower);
 		}
 	}
 }
@@ -283,7 +282,8 @@ void AutonomousVehicle::update_virtual_leader(
 		{
 			if (verbose) std::clog << "Activating dest lane ctrl.\n";
 
-			av_controller->activate_destination_lane_controller(*get_virtual_leader());
+			av_controller->activate_destination_lane_controller(
+				*get_virtual_leader());
 		}
 		else if ((std::abs(new_leader_max_brake
 			- old_leader->get_max_brake()) > 0.5)

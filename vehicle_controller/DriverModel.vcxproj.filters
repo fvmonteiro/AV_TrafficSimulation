@@ -4,21 +4,6 @@
     <ClCompile Include="VehicleState.cpp">
       <Filter>StateMachines</Filter>
     </ClCompile>
-    <ClCompile Include="SynchronousStates.cpp">
-      <Filter>StateMachines</Filter>
-    </ClCompile>
-    <ClCompile Include="PlatoonVehicleState.cpp">
-      <Filter>StateMachines</Filter>
-    </ClCompile>
-    <ClCompile Include="LeaderFirstStates.cpp">
-      <Filter>StateMachines</Filter>
-    </ClCompile>
-    <ClCompile Include="LastVehicleFirstStates.cpp">
-      <Filter>StateMachines</Filter>
-    </ClCompile>
-    <ClCompile Include="LeaderFirstAndInvertStates.cpp">
-      <Filter>StateMachines</Filter>
-    </ClCompile>
     <ClCompile Include="PlatoonLaneChangeOrder.cpp">
       <Filter>Platoons</Filter>
     </ClCompile>
@@ -26,9 +11,6 @@
       <Filter>Platoons</Filter>
     </ClCompile>
     <ClCompile Include="Platoon.cpp">
-      <Filter>Platoons</Filter>
-    </ClCompile>
-    <ClCompile Include="PlatoonLaneChangeStrategy.cpp">
       <Filter>Platoons</Filter>
     </ClCompile>
     <ClCompile Include="ACCVehicle.cpp">
@@ -124,24 +106,30 @@
     <ClCompile Include="SimpleLongitudinalController.cpp">
       <Filter>Controllers</Filter>
     </ClCompile>
+    <ClCompile Include="LastVehicleFirstStates.cpp">
+      <Filter>Deprecated</Filter>
+    </ClCompile>
+    <ClCompile Include="LeaderFirstAndInvertStates.cpp">
+      <Filter>Deprecated</Filter>
+    </ClCompile>
+    <ClCompile Include="LeaderFirstStates.cpp">
+      <Filter>Deprecated</Filter>
+    </ClCompile>
+    <ClCompile Include="PlatoonVehicleState.cpp">
+      <Filter>Deprecated</Filter>
+    </ClCompile>
+    <ClCompile Include="SynchronousStates.cpp">
+      <Filter>Deprecated</Filter>
+    </ClCompile>
+    <ClCompile Include="PlatoonLaneChangeStrategy.cpp">
+      <Filter>Deprecated</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="VehicleState.h">
       <Filter>StateMachines</Filter>
     </ClInclude>
-    <ClInclude Include="SynchronousStates.h">
-      <Filter>StateMachines</Filter>
-    </ClInclude>
     <ClInclude Include="PlatoonVehicleState.h">
-      <Filter>StateMachines</Filter>
-    </ClInclude>
-    <ClInclude Include="LeaderFirstStates.h">
-      <Filter>StateMachines</Filter>
-    </ClInclude>
-    <ClInclude Include="LeaderFirstAndInvertStates.h">
-      <Filter>StateMachines</Filter>
-    </ClInclude>
-    <ClInclude Include="LastVehicleFirstStates.h">
       <Filter>StateMachines</Filter>
     </ClInclude>
     <ClInclude Include="PlatoonLaneChangeOrder.h">
@@ -151,9 +139,6 @@
       <Filter>Platoons</Filter>
     </ClInclude>
     <ClInclude Include="Platoon.h">
-      <Filter>Platoons</Filter>
-    </ClInclude>
-    <ClInclude Include="PlatoonLaneChangeStrategy.h">
       <Filter>Platoons</Filter>
     </ClInclude>
     <ClInclude Include="ACCVehicle.h">
@@ -258,6 +243,21 @@
     <ClInclude Include="SimpleLongitudinalController.h">
       <Filter>Controllers</Filter>
     </ClInclude>
+    <ClInclude Include="LastVehicleFirstStates.h">
+      <Filter>Deprecated</Filter>
+    </ClInclude>
+    <ClInclude Include="LeaderFirstAndInvertStates.h">
+      <Filter>Deprecated</Filter>
+    </ClInclude>
+    <ClInclude Include="LeaderFirstStates.h">
+      <Filter>Deprecated</Filter>
+    </ClInclude>
+    <ClInclude Include="SynchronousStates.h">
+      <Filter>Deprecated</Filter>
+    </ClInclude>
+    <ClInclude Include="PlatoonLaneChangeStrategy.h">
+      <Filter>Deprecated</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="StateMachines">
@@ -274,6 +274,9 @@
     </Filter>
     <Filter Include="Main and Support">
       <UniqueIdentifier>{43712dbc-76ef-46d9-8cf8-80aa8fa2ce8e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Deprecated">
+      <UniqueIdentifier>{2ed1fa81-d6ad-4974-863e-e2310627b322}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

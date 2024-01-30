@@ -22,25 +22,30 @@ public:
 	bool has_finished_adjusting_time_headway() const;
 	bool has_finished_increasing_gap() const;
 	bool has_finished_closing_gap() const;
-	//bool can_start_adjustment_to_virtual_leader() const;
+	long get_suitable_destination_lane_leader_id() const;
+	double get_desired_velocity_from_platoon() const;
+	bool can_start_lane_change();
+	/* True if the dest lane leader and follower correspond to what
+	the lane change strategy expects. */
+	bool is_at_right_lane_change_gap() const;
+
+	/* Adds a platoon vehicle that's outside the sensory range to the 
+	nearby vehicles list. */
+	void add_another_as_nearby_vehicle(
+		const PlatoonVehicle& platoon_vehicle);
+
+	/* Methods used by deprecated framework (Jan 24) ---------------------- */
 
 	long get_preceding_vehicle_id() const;
 	long get_following_vehicle_id() const;
-	long get_suitable_destination_lane_leader_id() const;
-	double get_desired_velocity_from_platoon() const;
 	const VehicleState* get_preceding_vehicle_state() const;
 	const VehicleState* get_following_vehicle_state() const;
 	const PlatoonVehicle* get_preceding_vehicle_in_platoon() const;
 	const PlatoonVehicle* get_following_vehicle_in_platoon() const;
-	/* Suggests the virtual leader as if the vehicle was not part of 
-	a platoon. Should be phased out together with the Strategies framework */
+	/* Suggests the virtual leader as if the vehicle was not part of
+	a platoon. */
 	std::shared_ptr<NearbyVehicle> define_virtual_leader_when_alone() const;
-	bool can_start_lane_change();
-
-	/* Adds a platoon vehicle that's outside the
-	sensory range to the nearby vehicles list. */
-	void add_another_as_nearby_vehicle(
-		const PlatoonVehicle& platoon_vehicle);
+	/* -------------------------------------------------------------------- */
 
 protected:
 

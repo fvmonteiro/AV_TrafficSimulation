@@ -1,3 +1,5 @@
+/* ============================ DEPRACATED ================================ */
+
 #pragma once
 
 #include <unordered_map>
@@ -8,6 +10,7 @@ class PlatoonVehicle;
 class Platoon;
 class NearbyVehicle;
 
+/* Deprecated in favor or PlatoonLaneChangeApproach */
 class PlatoonLaneChangeStrategy
 {
 public:

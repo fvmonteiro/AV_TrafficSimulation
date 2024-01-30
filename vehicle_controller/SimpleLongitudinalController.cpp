@@ -1,5 +1,6 @@
-#include "SimpleLongitudinalController.h"
 #include "EgoVehicle.h"
+#include "Platoon.h"
+#include "SimpleLongitudinalController.h"
 
 SimpleLongitudinalController::SimpleLongitudinalController(
 	const EgoVehicle* ego_vehicle,
@@ -16,8 +17,7 @@ double SimpleLongitudinalController::get_max_accepted_brake() const
 }
 
 void SimpleLongitudinalController::determine_controller_state(
-	const NearbyVehicle* leader, double reference_velocity,
-	double gap_control_input)
+	const NearbyVehicle* leader, double reference_velocity)
 {
 	std::string message;
 	if (leader == nullptr) // no vehicle ahead
@@ -25,8 +25,15 @@ void SimpleLongitudinalController::determine_controller_state(
 		state = State::velocity_control;
 		message = "No leader. ";
 	}
+	else if (ego_vehicle->is_in_a_platoon()
+		&& (ego_vehicle->get_platoon()
+			->is_vehicle_id_in_platoon(leader->get_id())))
+	{
+		state = State::vehicle_following;
+		message = "In platoon. ";
+	}
 	else if (leader->compute_velocity(ego_vehicle->get_velocity())
-				> ego_vehicle->get_desired_velocity())
+				> reference_velocity*1.1)
 	{
 		state = State::velocity_control;
 		message = "v_leader > v_ff. ";
@@ -35,7 +42,7 @@ void SimpleLongitudinalController::determine_controller_state(
 		&& leader->get_id() == previous_leader_id)
 	{
 		state = State::vehicle_following;
-		message = "locked in veh following. ";
+		message = "Locked in veh following. ";
 	}
 	else
 	{
@@ -50,17 +57,20 @@ void SimpleLongitudinalController::determine_controller_state(
 		if (gap > gap_threshold)
 		{
 			state = State::velocity_control;
-			message = "gap > gap_thresh. ";
+			message = "gap (" + std::to_string(gap) 
+				+ ") > gap_thresh (" + std::to_string(gap_threshold) + ").";
 		}
 		else
 		{
 			state = State::vehicle_following;
-			message = "gap <= gap_thresh. ";
+			message = "gap (" + std::to_string(gap)
+				+ ") <= gap_thresh (" + std::to_string(gap_threshold) + ").";
 			previous_leader_id = leader->get_id();
 		}
 	}
 
-	if (verbose) std::clog << message << "State: " << state_to_string(state);
+	if (verbose) std::clog << message << "State: " 
+		<< state_to_string(state) << "\n";
 }
 
 bool SimpleLongitudinalController::implement_is_velocity_reference_outdated(

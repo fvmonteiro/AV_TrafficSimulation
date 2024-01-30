@@ -1,6 +1,7 @@
 #include <iostream>
 #include <map>
 
+#include "NearbyVehicle.h"
 #include "Platoon.h"
 #include "PlatoonVehicle.h"
 #include "PlatoonVehicleState.h"
@@ -154,9 +155,20 @@ long Platoon::get_destination_lane_vehicle_behind_last_vehicle() const
 	return get_last_vehicle()->get_destination_lane_follower_id();
 }
 
-const NearbyVehicle* Platoon
-::get_destination_lane_leader() const
+const NearbyVehicle* Platoon::get_destination_lane_leader() const
 {
+	long veh_id = 
+		lane_change_approach->get_platoon_destination_lane_leader_id();
+
+	for (auto const& item : vehicles_by_position)
+	{
+		if (item.second->is_vehicle_in_sight(veh_id))
+		{
+			return item.second->get_nearby_vehicle_by_id(veh_id).get();
+		}
+	}
+	return nullptr;
+
 	/* We would like to find the non-platoon vehicle behind which
 	the platoon is merging. This involves figuring out the front-most
 	platoon vehicle that can change lanes, and reading its dest lane
@@ -165,14 +177,14 @@ const NearbyVehicle* Platoon
 	The current implementation approximates that by finding the current
 	virtual leader of the lane changing vehicle(s) */
 
-	for (const auto& item : vehicles_by_position)
-	{
-		if (item.second->has_virtual_leader())
-		{
-			return item.second->get_virtual_leader().get();
-		}
-	}
-	return nullptr;
+	//for (const auto& item : vehicles_by_position)
+	//{
+	//	if (item.second->has_virtual_leader())
+	//	{
+	//		return item.second->get_virtual_leader().get();
+	//	}
+	//}
+	//return nullptr;
 }
 
 long Platoon::get_assisted_vehicle_id(long ego_id) const
@@ -181,54 +193,61 @@ long Platoon::get_assisted_vehicle_id(long ego_id) const
 	return lane_change_approach->get_assisted_vehicle_id(ego_position);
 }
 
+long Platoon::get_cooperating_vehicle_id() const
+{
+	return lane_change_approach->get_cooperating_vehicle_id();
+}
+
 void Platoon::set_strategy(int strategy_number)
 {
 	/* TODO [Jan 24, 24] we're phasing out the current strategy
 	class in favor of the approach class */
-	std::unique_ptr<PlatoonLaneChangeStrategy> old_strategy =
-		std::move(lane_change_strategy);
+	/*std::unique_ptr<PlatoonLaneChangeStrategy> old_strategy =
+		std::move(lane_change_strategy);*/
 	std::unique_ptr<PlatoonLaneChangeApproach> old_approach =
 		std::move(lane_change_approach);
 
 	switch (Strategy(strategy_number))
 	{
-	case Platoon::no_strategy:
+	/*case Platoon::no_strategy:
 		lane_change_strategy = std::make_unique<NoStrategy>();
-		break;
+		break;*/
 	case Platoon::synchronous_strategy:
-		lane_change_strategy = std::make_unique<SynchronousStrategy>();
+		//lane_change_strategy = std::make_unique<SynchronousStrategy>();
 		lane_change_approach =
 			std::make_unique<SynchoronousApproach>(verbose);
 		break;
 	case Platoon::leader_first_strategy:
-		lane_change_strategy = std::make_unique<LeaderFirstStrategy>();
+		//lane_change_strategy = std::make_unique<LeaderFirstStrategy>();
 		lane_change_approach =
 			std::make_unique<LeaderFirstApproach>(verbose);
 		break;
 	case Platoon::last_vehicle_first_strategy:
-		lane_change_strategy = std::make_unique<LastVehicleFirstStrategy>();
+		//lane_change_strategy = std::make_unique<LastVehicleFirstStrategy>();
 		lane_change_approach =
 			std::make_unique<LastVehicleFirstApproach>(verbose);
 		break;
 	case Platoon::leader_first_invert_strategy:
-		lane_change_strategy =
-			std::make_unique<LeaderFirstAndInvertStrategy>();
+		//lane_change_strategy =
+		//	std::make_unique<LeaderFirstAndInvertStrategy>();
 		lane_change_approach =
 			std::make_unique<LeaderFirstReverseApproach>(verbose);
 		break;
 	default:
 		std::clog << "ERROR: Platoon lane change strategy not coded\n";
-		lane_change_strategy = std::make_unique<NoStrategy>();
+		//lane_change_strategy = std::make_unique<NoStrategy>();
+		lane_change_approach =
+			std::make_unique<SynchoronousApproach>(verbose);
 		break;
 	}
 
 	if (verbose)
 	{
-		std::clog << "Platoon " << *this << "\n";
+		/*std::clog << "Platoon " << *this << "\n";
 		std::clog << "LC Strategy change from ";
 		if (old_strategy == nullptr) std::clog << "none";
 		else std::clog << *old_strategy;
-		std::clog << " to " << *lane_change_strategy << std::endl;
+		std::clog << " to " << *lane_change_strategy << std::endl;*/
 
 		std::clog << "Platoon " << *this << "\n";
 		std::clog << "LC Approach change from ";
@@ -237,7 +256,7 @@ void Platoon::set_strategy(int strategy_number)
 		std::clog << " to " << lane_change_approach->get_name() << std::endl;
 	}
 
-	lane_change_strategy->set_platoon(this);
+	//lane_change_strategy->set_platoon(this);
 	// Phasing out strategy
 	//lane_change_strategy->reset_state_of_all_vehicles();
 
@@ -300,21 +319,30 @@ void Platoon::remove_vehicle_by_id(long veh_id, bool is_out_of_simulation)
 	}
 }
 
-bool Platoon::can_vehicle_leave_platoon(
-	const PlatoonVehicle& platoon_vehicle) const
+bool Platoon::can_vehicle_leave_platoon(long ego_id) const
 {
-	/* The platoon leader always stays in its platoon,
-	which might be a single vehicle platoon */
-	if (platoon_vehicle.is_platoon_leader()) return false;
-
-	// TODO: must make it dependent on the approach (not strategy)
-	return lane_change_strategy->can_vehicle_leave_platoon(platoon_vehicle);
+	int ego_position = vehicle_id_to_position.at(ego_id);
+	return lane_change_approach->can_vehicle_leave_platoon(ego_position);
 }
 
-bool Platoon::can_vehicle_start_lane_change(long veh_id) const
+bool Platoon::can_vehicle_start_lane_change(long ego_id) const
 {
-	int veh_position = vehicle_id_to_position.at(veh_id);
+	int veh_position = vehicle_id_to_position.at(ego_id);
 	return lane_change_approach->can_vehicle_start_lane_change(veh_position);
+}
+
+bool Platoon::has_lane_change_intention() const {
+	return lane_change_intention_counter > 0;
+};
+
+void Platoon::receive_lane_change_intention_signal()
+{
+	lane_change_intention_counter++;
+}
+
+void Platoon::receive_lane_keeping_signal()
+{
+	lane_change_intention_counter--;
 }
 
 bool Platoon::is_stuck() const
@@ -355,10 +383,10 @@ void Platoon::sort_vehicles_by_distance_traveled()
 }
 
 long Platoon::create_lane_change_request_for_vehicle(
-	const PlatoonVehicle& platoon_vehicle) const
+	long ego_id) const
 {
-	return lane_change_strategy
-		->create_platoon_lane_change_request(platoon_vehicle);
+	return lane_change_approach->create_platoon_lane_change_request(
+			vehicle_id_to_position.at(ego_id));
 }
 
 long Platoon::define_desired_destination_lane_leader_id(long ego_id) const

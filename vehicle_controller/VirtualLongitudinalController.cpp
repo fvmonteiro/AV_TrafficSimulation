@@ -28,8 +28,7 @@ double VirtualLongitudinalController::get_max_accepted_brake() const
 }
 
 void VirtualLongitudinalController::determine_controller_state(
-	const NearbyVehicle* leader, double reference_velocity, 
-	double gap_control_input) 
+	const NearbyVehicle* leader, double reference_velocity) 
 {
 	if (leader == nullptr) 
 	{ // no vehicle ahead
@@ -41,6 +40,8 @@ void VirtualLongitudinalController::determine_controller_state(
 	{		
 		double gap = ego_vehicle->compute_gap_to_a_leader(leader);
 		double ego_velocity = ego_vehicle->get_velocity();
+		double gap_control_input =
+			gap_controller.compute_desired_acceleration(*ego_vehicle, leader);
 		double gap_threshold = compute_gap_threshold_1(gap,
 			0/*reference_velocity - ego_velocity*/, gap_control_input);
 

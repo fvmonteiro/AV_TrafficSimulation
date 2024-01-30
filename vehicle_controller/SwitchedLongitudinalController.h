@@ -89,11 +89,11 @@ protected:
 		double diff_to_velocity_reference, double gap_control_input) const;
 
 private:
+	/* Absolute value */
 	virtual double get_max_accepted_brake() const = 0;
 	/* Determines and sets the current state of the longitudinal controller */
 	virtual void determine_controller_state(
-		const NearbyVehicle* leader, double reference_velocity, 
-		double gap_control_input) = 0;
+		const NearbyVehicle* leader, double reference_velocity) = 0;
 	virtual bool implement_is_velocity_reference_outdated() const = 0;
 
 	double implement_get_gap_error() const override;

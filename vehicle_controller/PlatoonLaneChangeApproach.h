@@ -1,5 +1,6 @@
 #pragma once
 
+#include <string>
 #include <unordered_map>
 #include <vector>
 
@@ -17,7 +18,7 @@ public:
 	int get_id() const { return id; };
 	std::string get_name() const { return name; };
 	double get_decision_time() const { return decision_time; };
-	const PlatoonLaneChangeOrder* get_platoon_lane_change_order() {
+	const PlatoonLaneChangeOrder* get_platoon_lane_change_order() const {
 		return &platoon_lane_change_order;
 	};
 	void set_platoon(Platoon* platoon) { this->platoon = platoon; };
@@ -25,10 +26,18 @@ public:
 	// [Jan 16, 2024] Let's see if this is needed to read the strategies map
 	//void set_strategies_map();	
 
-	long get_desired_destination_lane_leader(int ego_position);
-	long get_assisted_vehicle_id(int ego_position);
+	long get_desired_destination_lane_leader(int ego_position) ;
+	long get_assisted_vehicle_id(int ego_position) const;
+	long get_cooperating_vehicle_id() const;
+	/* Returns the non-platoon vehicle behind which the entire platoon
+	is trying to move. */
+	long get_platoon_destination_lane_leader_id() const;
 
-	bool can_vehicle_start_lane_change(int veh_position);
+	bool can_vehicle_start_lane_change(int ego_position);
+	/* Placeholder. For now always returns false */
+	bool can_vehicle_leave_platoon(int ego_position) const;
+	/* Placeholder. For now always returns 0*/
+	long create_platoon_lane_change_request(int ego_position) const;
 
 	// [Jan 16, 2024] These two methods only necessary with the graph approach
 	void set_maneuver_initial_state(int ego_position, StateVector lo_states,
@@ -54,14 +63,18 @@ private:
 	PlatoonLaneChangeOrder platoon_lane_change_order;
 	int maneuver_step{ 0 };
 	int last_dest_lane_vehicle_pos{ -1 };
+	/* Stores the non-platoon vehicle behind which the entire platoon
+	is trying to move. */
+	long platoon_destination_lane_leader_id{ 0 };
 
 	virtual void decide_lane_change_order() = 0;
+	virtual bool implement_can_vehicle_leave_platoon(int veh_position) const;
 	std::unordered_set<int> get_current_lc_vehicle_positions() const { 
 		return platoon_lane_change_order.lc_order[maneuver_step]; };
 	int get_current_coop_vehicle_position() const { 
 		return platoon_lane_change_order.coop_order[maneuver_step]; };
 	
-	bool is_vehicle_turn_to_lane_change(int ego_position);
+	bool is_vehicle_turn_to_lane_change(int ego_position) const;
 	int get_rearmost_lane_changing_vehicle_position() const;
 };
 

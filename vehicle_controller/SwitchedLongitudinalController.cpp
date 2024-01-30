@@ -149,13 +149,12 @@ double SwitchedLongitudinalController::implement_get_gap_error() const
 double SwitchedLongitudinalController::implement_compute_desired_acceleration(
 	const NearbyVehicle* leader, double velocity_reference) 
 {
+	if (verbose) std::clog << "[LongController] deciding acceleration...\n";
+
 	double desired_acceleration;
 	State old_state = state;
-	double gap_control_input = 
-		gap_controller.compute_desired_acceleration(*ego_vehicle, leader);
-	
-	determine_controller_state(leader, velocity_reference,
-		gap_control_input);
+
+	determine_controller_state(leader, velocity_reference);
 
 	switch (state)
 	{
@@ -164,6 +163,8 @@ double SwitchedLongitudinalController::implement_compute_desired_acceleration(
 		break;
 	case State::vehicle_following:
 	{
+		double gap_control_input =
+			gap_controller.compute_desired_acceleration(*ego_vehicle, leader);
 		desired_acceleration = gap_control_input;
 		break;
 	}
@@ -190,10 +191,11 @@ double SwitchedLongitudinalController::implement_compute_desired_acceleration(
 		std::clog << "\tu=" << desired_acceleration << std::endl;
 	}
 
-	return desired_acceleration;
+	return std::max(desired_acceleration, -get_max_accepted_brake());
 }
 
-//void SwitchedLongitudinalController::compute_max_risk_to_leader(bool is_lane_changing) {
+//void SwitchedLongitudinalController::compute_max_risk_to_leader(
+// bool is_lane_changing) {
 //	double time_headway = get_safe_time_headway();
 //	max_risk_to_leader = std::sqrt(
 //		2 * time_headway * ego_max_brake * free_flow_velocity);

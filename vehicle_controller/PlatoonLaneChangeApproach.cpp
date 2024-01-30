@@ -4,13 +4,14 @@
 #include "Platoon.h"
 #include "PlatoonLaneChangeApproach.h"
 #include "PlatoonVehicle.h"
+#include "PlatoonVehicleState.h"
 
 PlatoonLaneChangeApproach::PlatoonLaneChangeApproach(int id, std::string name,
 	bool verbose) 
 	: id(id), name(name), verbose(verbose) {}
 
 long PlatoonLaneChangeApproach::get_desired_destination_lane_leader(
-	int ego_position)
+	int ego_position) 
 {
 	PlatoonVehicle* ego_vehicle = 
 		platoon->get_a_vehicle_by_position(ego_position);
@@ -18,7 +19,7 @@ long PlatoonLaneChangeApproach::get_desired_destination_lane_leader(
 	if (!ego_vehicle->has_lane_change_intention() || !is_initialized
 		|| !is_vehicle_turn_to_lane_change(ego_position)) return 0;
 
-	int virtual_leader_id{ 0 };
+	long virtual_leader_id{ 0 };
 	
 	if (maneuver_step == 0)
 	{
@@ -32,6 +33,7 @@ long PlatoonLaneChangeApproach::get_desired_destination_lane_leader(
 			platoon->get_a_vehicle_by_position(first_lc_pos);
 		virtual_leader_id = 
 			front_most_veh->get_suitable_destination_lane_leader_id();
+		platoon_destination_lane_leader_id = virtual_leader_id;
 		if (!ego_vehicle->is_vehicle_in_sight(virtual_leader_id))
 		{
 			ego_vehicle->add_nearby_vehicle_from_another(*front_most_veh, 
@@ -67,7 +69,8 @@ long PlatoonLaneChangeApproach::get_desired_destination_lane_leader(
 	return virtual_leader_id;
 }
 
-long PlatoonLaneChangeApproach::get_assisted_vehicle_id(int ego_position)
+long PlatoonLaneChangeApproach::get_assisted_vehicle_id(int ego_position) 
+const
 {
 	const PlatoonVehicle* ego_vehicle =
 		platoon->get_a_vehicle_by_position(ego_position);
@@ -85,8 +88,28 @@ long PlatoonLaneChangeApproach::get_assisted_vehicle_id(int ego_position)
 		assisted_vehicle->get_id() : 0;
 }
 
+long PlatoonLaneChangeApproach::get_cooperating_vehicle_id() const
+{
+	if (is_initialized)
+	{
+		int coop_veh_position = get_current_coop_vehicle_position();
+		if (coop_veh_position >= 0)
+		{
+			return platoon->get_a_vehicle_by_position(
+				coop_veh_position)->get_id();
+		}
+	}
+	return 0;
+}
+
+long PlatoonLaneChangeApproach
+::get_platoon_destination_lane_leader_id() const
+{
+	return platoon_destination_lane_leader_id;
+}
+
 bool PlatoonLaneChangeApproach::can_vehicle_start_lane_change(
-	int veh_position)
+	int ego_position)
 {	
 	if (!is_initialized) decide_lane_change_order();
 	if (!is_initialized) return false;
@@ -99,13 +122,13 @@ bool PlatoonLaneChangeApproach::can_vehicle_start_lane_change(
 	}
 
 	std::unordered_set<int> next_to_move = get_current_lc_vehicle_positions();
-	bool is_my_turn = is_vehicle_turn_to_lane_change(veh_position);
+	bool is_my_turn = is_vehicle_turn_to_lane_change(ego_position);
 
 	if (verbose)
 	{
 		std::string message = "Next to move: ";
 		for (int i : next_to_move) message += std::to_string(i) + ", ";
-		message += "my pos. = " + std::to_string(veh_position)
+		message += "my pos. = " + std::to_string(ego_position)
 			+ "-> is my turn? " + (is_my_turn ? "yes" : "no");
 		std::clog << message << "\n";
 	}
@@ -113,7 +136,7 @@ bool PlatoonLaneChangeApproach::can_vehicle_start_lane_change(
 	/* TODO: change where this check happens.The current lc vehicles should
 	call a new method when they finish their maneuvers. In this new
 	method we advance the idx */
-	// Check if next_in_line has finished its lane change
+	// Check if all in next_to_move have finished their lane changes
 	bool all_are_done = true;
 	for (int i : next_to_move)
 	{
@@ -143,8 +166,7 @@ bool PlatoonLaneChangeApproach::can_vehicle_start_lane_change(
 		{
 			const PlatoonVehicle* vehicle = 
 				platoon->get_a_vehicle_by_position(i);
-			if (vehicle->get_virtual_leader_id()
-				!= vehicle->get_destination_lane_leader_id())
+			if (!vehicle->is_at_right_lane_change_gap())
 			{
 				return false;
 			}
@@ -156,6 +178,32 @@ bool PlatoonLaneChangeApproach::can_vehicle_start_lane_change(
 		return true;
 	}
 	return false;
+}
+
+bool PlatoonLaneChangeApproach::can_vehicle_leave_platoon(int veh_position) 
+const
+{
+	return implement_can_vehicle_leave_platoon(veh_position);
+}
+
+long PlatoonLaneChangeApproach::create_platoon_lane_change_request(
+	int ego_position) const
+{
+	/* We're not running scenarios with non-platoon cooperative vehicles, 
+	* so this is irrelevant for now (Jan 2024). If we need to run cooperative
+	* scenarios, this function must return the id of the vehicle behind the
+	* platoon vehicle's virtual
+	*/
+
+	// Skeleton
+	//if (is_initialized && is_vehicle_turn_to_lane_change(ego_position))
+	//{
+	//	if (platoon_vehicle.has_virtual_leader())
+	//	{
+	//		// figure out the vehicle behind the virtual leader
+	//	}
+	//}
+	return 0;
 }
 
 void PlatoonLaneChangeApproach::set_maneuver_initial_state(int ego_position, StateVector lo_states,
@@ -195,8 +243,14 @@ void PlatoonLaneChangeApproach::set_platoon_lane_change_order(
 	is_initialized = true;
 }
 
+bool PlatoonLaneChangeApproach::implement_can_vehicle_leave_platoon(
+	int ego_position) const
+{
+	return false;
+}
+
 bool PlatoonLaneChangeApproach::is_vehicle_turn_to_lane_change(
-	int veh_position)
+	int veh_position) const
 {
 	std::unordered_set<int> current_movers =
 		get_current_lc_vehicle_positions();

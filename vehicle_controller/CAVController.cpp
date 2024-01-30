@@ -94,3 +94,12 @@ double CAVController::implement_get_desired_acceleration(
 
 	return choose_minimum_acceleration(possible_accelerations);
 }
+
+double CAVController::compute_destination_lane_follower_time_headway(
+	NearbyVehicle& dest_lane_follower)
+{
+	return dest_lane_follower.is_connected() ?
+		dest_lane_follower.get_h_to_incoming_vehicle()
+		: dest_lane_follower.estimate_desired_time_headway(
+			cav->get_max_brake(), 0);
+}

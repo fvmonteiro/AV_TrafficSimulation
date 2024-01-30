@@ -80,6 +80,8 @@ void PlatoonVehicleLongAdjustmentState
 	/* This should not happen in our scenarios */
 	platoon_vehicle->prepare_to_restart_lane_keeping(false);
 	unexpected_transition_message(this, false);
+	platoon_vehicle->set_state(
+		std::make_unique<PlatoonVehicleLaneKeepingState>());
 }
 
 void PlatoonVehicleLongAdjustmentState

@@ -79,38 +79,6 @@ implement_get_assisted_vehicle() const
 	return assisted_vehicle;
 }
 
-//bool ConnectedAutonomousVehicle::implement_check_lane_change_gaps()
-//{
-//	//if (verbose) std::clog << "Deciding lane change" << std::endl;
-//	
-//	/* We don't move between platoon vehicles 
-//	[Feb 9, 2023] No longer needed after creation of CAV no LC class*/
-//	//if (has_destination_lane_leader()
-//	//	&& get_destination_lane_leader()->get_type() == VehicleType::platoon_car
-//	//	&& has_destination_lane_follower()
-//	//	&& get_destination_lane_follower()->get_type() == VehicleType::platoon_car)
-//	//{
-//	//	return false;
-//	//}
-//
-//	lane_change_gaps_safety.orig_lane_leader_gap =
-//		is_lane_change_gap_safe(get_leader());
-//	lane_change_gaps_safety.dest_lane_leader_gap =
-//		is_lane_change_gap_safe(get_destination_lane_leader());
-//	/* Besides the regular safety conditions, we add the case
-//	where the dest lane follower has completely stopped to give room
-//	to the lane changing vehicle */
-//	lane_change_gaps_safety.dest_lane_follower_gap =
-//		is_lane_change_gap_safe(get_destination_lane_follower())
-//		|| ((get_destination_lane_follower()->
-//			compute_velocity(get_velocity()) <= 1.0)
-//			&& (get_destination_lane_follower()->get_distance() <= -2.0));
-//	lane_change_gaps_safety.no_conflict =
-//		!has_lane_change_conflict();
-//
-//	return lane_change_gaps_safety.is_lane_change_safe();
-//}
-
 long ConnectedAutonomousVehicle::implement_get_lane_change_request() const
 {
 	return lane_change_request;
@@ -242,7 +210,7 @@ void ConnectedAutonomousVehicle::update_destination_lane_follower(
 		NearbyVehicle* dest_lane_follower =
 			get_modifiable_dest_lane_follower().get();
 		cav_controller->update_destination_lane_follower_time_headway(
-			dest_lane_follower->is_connected(), *dest_lane_follower);
+			*dest_lane_follower);
 		if ((old_follower == nullptr )
 			|| (old_follower->get_id() != dest_lane_follower->get_id()))
 		{

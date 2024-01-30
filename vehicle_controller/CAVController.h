@@ -39,4 +39,6 @@ private:
 	/* Computes the AV desired acceleration plus the cooperative acceleration
 	to help create a gap for an incoming vehicle, and chooses the minimum. */
 	double implement_get_desired_acceleration() override;
+	double compute_destination_lane_follower_time_headway(
+		NearbyVehicle& dest_lane_follower) override;
 };

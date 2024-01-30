@@ -38,7 +38,7 @@ private:
 
     double get_max_accepted_brake() const override;
     void determine_controller_state(const NearbyVehicle* leader,
-        double reference_velocity, double gap_control_input) override;
+        double reference_velocity) override;
     bool implement_is_velocity_reference_outdated() const override;
 };
 

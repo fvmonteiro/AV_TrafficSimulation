@@ -102,10 +102,14 @@ bool PlatoonVehicle::has_finished_closing_gap() const
 double PlatoonVehicle::get_desired_velocity_from_platoon() const
 {
 	if (is_in_a_platoon() && is_platoon_leader()
-		&& has_lane_change_intention() && get_platoon()->has_lane_change_started())
+		&& has_lane_change_intention() 
+		&& get_platoon()->has_lane_change_intention())
 	{
-		return get_platoon()->get_destination_lane_leader()
-			->compute_velocity(get_velocity());
+		const NearbyVehicle* nv = 
+			get_platoon()->get_destination_lane_leader();
+		return nv != nullptr ? 
+			nv->compute_velocity(get_velocity()) 
+			: get_desired_velocity();
 	}
 	return get_desired_velocity();
 }
@@ -184,6 +188,24 @@ bool PlatoonVehicle::can_start_lane_change()
 		<< (is_my_turn ? "yes" : "no") << "\n";
 
 	return is_safe && is_my_turn;
+}
+
+bool PlatoonVehicle::is_at_right_lane_change_gap() const
+{
+	bool is_dest_lane_leader_correct =
+		get_virtual_leader_id() == get_destination_lane_leader_id();
+	bool is_dest_lane_follower_correct;
+	if (is_in_a_platoon())
+	{
+		is_dest_lane_follower_correct =
+			platoon->get_cooperating_vehicle_id()
+			== get_destination_lane_follower_id();
+	}
+	else
+	{
+		is_dest_lane_follower_correct = true;
+	}
+	return (is_dest_lane_leader_correct && is_dest_lane_follower_correct);
 }
 
 void PlatoonVehicle::add_another_as_nearby_vehicle(
@@ -271,7 +293,7 @@ void PlatoonVehicle::create_lane_change_request()
 	if (is_in_a_platoon())
 	{
 		lane_change_request =
-			platoon->create_lane_change_request_for_vehicle(*this);
+			platoon->create_lane_change_request_for_vehicle(get_id());
 	}
 	else
 	{
@@ -303,6 +325,7 @@ bool PlatoonVehicle::was_my_cooperation_request_accepted() const
 void PlatoonVehicle::implement_prepare_to_start_long_adjustments()
 {
 	set_has_completed_lane_change(false);
+	platoon->receive_lane_change_intention_signal();
 }
 
 void PlatoonVehicle::implement_prepare_to_restart_lane_keeping(
@@ -311,9 +334,11 @@ void PlatoonVehicle::implement_prepare_to_restart_lane_keeping(
 	set_has_completed_lane_change(was_lane_change_successful);
 	set_lane_change_direction(RelativeLane::same);
 	reset_lane_change_waiting_time();
+	platoon->receive_lane_keeping_signal();
 }
 
-std::shared_ptr<NearbyVehicle> PlatoonVehicle::choose_behind_whom_to_move() const
+std::shared_ptr<NearbyVehicle> PlatoonVehicle::choose_behind_whom_to_move() 
+const
 {
 	if (is_in_a_platoon())
 	{
@@ -468,20 +493,26 @@ bool PlatoonVehicle::implement_analyze_platoons(
 	}
 	else // am_in_a_platoon && !may_join_leader_platoon
 	{
-		/*if (verbose) std::clog << "\t[PlatoonVehicle] May leave platoon\n";*/
+		/* In discretionary lane change scenarios, we will never split
+		* platoons. In the worst-case, the vehicles in the platoon will 
+		* just never complete lane changes.
+		* If mandatory lane change scenarios are included, splitting becomes
+		* necessary.
+		*/
 
-		if (platoon->can_vehicle_leave_platoon(*this))
-		{
-			if (verbose)
-			{
-				std::clog << "\tt=" << get_current_time() 
-					<< " id=" << get_id() 
-					<< ": leaving platoon " << platoon->get_id() << "\n";
-			}
-			platoon->remove_vehicle_by_id(get_id(), false);
-			create_platoon(new_platoon_id, platoon_lc_strategy);
-			new_platoon_created = true;
-		}
+		/*if (verbose) std::clog << "\t[PlatoonVehicle] May leave platoon\n";*/
+		//if (platoon->can_vehicle_leave_platoon(*this))
+		//{
+		//	if (verbose)
+		//	{
+		//		std::clog << "\tt=" << get_current_time() 
+		//			<< " id=" << get_id() 
+		//			<< ": leaving platoon " << platoon->get_id() << "\n";
+		//	}
+		//	platoon->remove_vehicle_by_id(get_id(), false);
+		//	create_platoon(new_platoon_id, platoon_lc_strategy);
+		//	new_platoon_created = true;
+		//}
 	}
 
 	return new_platoon_created;

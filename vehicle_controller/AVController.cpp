@@ -26,38 +26,7 @@ void AVController::activate_destination_lane_controller(
 void AVController::update_destination_lane_controller(
 	const NearbyVehicle& virtual_leader)
 {
-	double old_leader_id = autonomous_vehicle->get_old_leader_id();
-	double safe_h = autonomous_vehicle->compute_current_desired_time_headway(
-		virtual_leader);
-	double new_h;
-	if (old_leader_id == virtual_leader.get_id())
-	{
-		new_h = std::min(safe_h, origin_lane_controller_time_headway);
-	}
-	else
-	{
-		double current_h =
-			destination_lane_controller->get_current_time_headway();
-		double comf_h = find_comfortable_time_headway(virtual_leader,
-			destination_lane_controller->get_standstill_distance());
-		new_h = std::max(current_h, std::min(comf_h, safe_h));
-	}
-	destination_lane_controller->reset_time_headway_filter(new_h);
-
-	if (verbose)
-	{
-		std::clog << "Resetting dest lane ctrl (virtual leader) h_r = "
-			<< new_h << " and setting desired value to " << safe_h
-			<< std::endl;
-	}
-
-	/* [Mar 6, 23] TODO: still not sure what's the best way to
-	initialize the gap controller's velocity filter */
-	//destination_lane_controller->smooth_start_leader_velocity_filter();
-	destination_lane_controller->set_desired_time_headway(safe_h);
-	destination_lane_controller->connect_gap_controller(
-		virtual_leader.is_connected());
-	//destination_lane_controller->reset_leader_velocity_filter(ego_velocity);
+	implement_update_destination_lane_controller(virtual_leader);
 }
 
 void AVController::update_destination_lane_follower_parameters(
@@ -69,21 +38,13 @@ void AVController::update_destination_lane_follower_parameters(
 }
 
 void AVController::update_destination_lane_follower_time_headway(
-	bool are_vehicles_connected, NearbyVehicle& dest_lane_follower)
+	NearbyVehicle& dest_lane_follower)
 {
-	double dest_lane_follower_time_headway = are_vehicles_connected ?
-		dest_lane_follower.get_h_to_incoming_vehicle()
-		: dest_lane_follower.estimate_desired_time_headway(
-			autonomous_vehicle->get_max_brake(), 0);
+	double h_f = compute_destination_lane_follower_time_headway(
+		dest_lane_follower);
+	lateral_controller.set_destination_lane_follower_time_headway(h_f);
 
-	if (verbose)
-	{
-		std::clog << "\tUpdating fd's h."
-			<< " Are vehs connected ? " << are_vehicles_connected
-			<< ", h_f=" << dest_lane_follower_time_headway << "\n";
-	}
-	lateral_controller.set_destination_lane_follower_time_headway(
-		dest_lane_follower_time_headway);
+	if (verbose) std::clog << "\tUpdated fd's h to " << h_f << "\n";
 }
 
 void AVController::update_destination_lane_leader_time_headway(
@@ -213,7 +174,8 @@ bool AVController::get_destination_lane_desired_acceleration(
 	return is_active;
 }
 
-double AVController::determine_low_velocity_reference(const NearbyVehicle& nearby_vehicle) const
+double AVController::determine_low_velocity_reference(
+	const NearbyVehicle& nearby_vehicle) const
 {
 	double ego_velocity = autonomous_vehicle->get_velocity();
 	double leader_velocity =
@@ -277,8 +239,7 @@ double AVController::implement_get_desired_acceleration()
 void AVController::implement_update_origin_lane_controller(
 	const NearbyVehicle& real_leader)
 {
-	/* Vehicles always update the leader before
-	updating others */
+	/* Vehicles always update the leader before updating others */
 	long old_virtual_leader_id = autonomous_vehicle->get_virtual_leader_id();
 	origin_lane_controller_time_headway =
 		origin_lane_controller->get_current_time_headway();
@@ -344,4 +305,48 @@ double AVController::implement_get_desired_time_headway_gap(
 	}
 
 	return time_headway_gap;
+}
+
+void AVController::implement_update_destination_lane_controller(
+	const NearbyVehicle& virtual_leader)
+{
+	double old_leader_id = autonomous_vehicle->get_old_leader_id();
+	double safe_h = autonomous_vehicle->compute_current_desired_time_headway(
+		virtual_leader);
+	double new_h;
+	if (old_leader_id == virtual_leader.get_id())
+	{
+		new_h = std::min(safe_h, origin_lane_controller_time_headway);
+	}
+	else
+	{
+		double current_h =
+			destination_lane_controller->get_current_time_headway();
+		double comf_h = find_comfortable_time_headway(virtual_leader,
+			destination_lane_controller->get_standstill_distance());
+		new_h = std::max(current_h, std::min(comf_h, safe_h));
+	}
+	destination_lane_controller->reset_time_headway_filter(new_h);
+
+	if (verbose)
+	{
+		std::clog << "Resetting dest lane ctrl (virtual leader) h_r = "
+			<< new_h << " and setting desired value to " << safe_h
+			<< std::endl;
+	}
+
+	/* [Mar 6, 23] TODO: still not sure what's the best way to
+	initialize the gap controller's velocity filter */
+	//destination_lane_controller->smooth_start_leader_velocity_filter();
+	destination_lane_controller->set_desired_time_headway(safe_h);
+	destination_lane_controller->connect_gap_controller(
+		virtual_leader.is_connected());
+	//destination_lane_controller->reset_leader_velocity_filter(ego_velocity);
+}
+
+double AVController::compute_destination_lane_follower_time_headway(
+	NearbyVehicle& dest_lane_follower)
+{
+	return dest_lane_follower.estimate_desired_time_headway(
+		autonomous_vehicle->get_max_brake(), 0);
 }
