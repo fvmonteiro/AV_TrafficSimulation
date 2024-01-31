@@ -57,7 +57,7 @@ double PlatoonVehicleController::implement_get_desired_acceleration()
 			platoon_vehicle->get_desired_velocity_from_platoon());
 
 	if (platoon_vehicle->has_virtual_leader())
-	{	
+	{
 		possible_accelerations[ALCType::virtual_leader] = 
 			virtual_leader_controller->compute_desired_acceleration(
 				platoon_vehicle->get_virtual_leader().get(),

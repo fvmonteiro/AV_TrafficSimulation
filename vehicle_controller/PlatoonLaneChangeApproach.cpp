@@ -206,9 +206,11 @@ long PlatoonLaneChangeApproach::create_platoon_lane_change_request(
 	return 0;
 }
 
-void PlatoonLaneChangeApproach::set_maneuver_initial_state(int ego_position, StateVector lo_states,
-	std::vector<StateVector> platoon_states, StateVector ld_states,
-	StateVector fd_states) 
+void PlatoonLaneChangeApproach::set_maneuver_initial_state(
+	int ego_position, ContinuousStateVector lo_states,
+	std::vector<ContinuousStateVector> platoon_states, 
+	ContinuousStateVector ld_states
+	/*StateVector fd_states*/) 
 {
 
 }  
@@ -222,15 +224,8 @@ void PlatoonLaneChangeApproach::set_empty_maneuver_initial_state(
 void PlatoonLaneChangeApproach::set_platoon_lane_change_order(
 	LCOrder lc_order, CoopOrder coop_order)
 {
-	maneuver_step = 0;
-	platoon_lane_change_order = PlatoonLaneChangeOrder(lc_order, coop_order);
-
-	if (verbose) std::clog << "Order set to: "
-		<< platoon_lane_change_order << "\n";
-
-	last_dest_lane_vehicle_pos =
-		get_rearmost_lane_changing_vehicle_position();
-	is_initialized = true;
+	set_platoon_lane_change_order(
+		PlatoonLaneChangeOrder(lc_order, coop_order));
 }
 
 void PlatoonLaneChangeApproach::set_platoon_lane_change_order(
@@ -238,6 +233,10 @@ void PlatoonLaneChangeApproach::set_platoon_lane_change_order(
 {
 	maneuver_step = 0;
 	platoon_lane_change_order = plco;
+
+	if (verbose) std::clog << "Order set to: "
+		<< platoon_lane_change_order << "\n";
+
 	last_dest_lane_vehicle_pos =
 		get_rearmost_lane_changing_vehicle_position();
 	is_initialized = true;
@@ -343,4 +342,80 @@ void LeaderFirstReverseApproach::decide_lane_change_order()
 		lc_order.push_back(lc_set);
 	}
 	set_platoon_lane_change_order(lc_order, coop_order);
+}
+
+void GraphApproach::decide_lane_change_order()
+{
+	// TODO: strategy name as simulation parameter
+	if (!is_data_loaded)
+	{
+		std::string cost_name = "accel";
+		strategy_manager = PlatoonLCStrategyManager(cost_name);
+		strategy_manager.initialize(platoon->get_size());
+	}
+	PlatoonLaneChangeOrder plco = find_best_order_in_map();
+	if (plco.cost > -1)  // an order was found
+	{
+		set_platoon_lane_change_order(plco);
+	}
+	// else: the approach continues to be not initialized.
+}
+
+PlatoonLaneChangeOrder GraphApproach::find_best_order_in_map()
+{
+	bool found{ false };
+	double best_cost{ INFINITY };
+	PlatoonLaneChangeOrder best_order;
+	int n = platoon->get_size();
+
+	/* First, we check if any vehicles are already at safe position to
+	start the maneuver */
+	std::vector<PlatoonLaneChangeOrder> all_orders; // for debugging
+	for (int pos1 = 0; pos1 < n; pos1++)
+	{
+		std::set<int> first_movers;
+		int pos2 = pos1;
+		while (pos2 < n
+			&& (platoon->get_a_vehicle_by_position(pos2)
+				->are_surrounding_gaps_safe_for_lane_change()))
+		{
+			first_movers.insert(pos2);
+			PlatoonLaneChangeOrder an_order =
+				strategy_manager.find_minimum_cost_order_given_first_mover(
+					first_movers);
+			all_orders.push_back(an_order);
+			pos2++;
+			if (an_order.cost < best_cost)
+			{
+				found = true;
+				best_cost = an_order.cost;
+				best_order = an_order;
+			}
+		}
+	}
+
+	/* If there are no vehicles at safe positions, we check if any are
+	close to a suitable gap */
+	if (!found)
+	{
+		for (int pos1 = 0; pos1 < n; pos1++)
+		{
+			if (platoon->get_a_vehicle_by_position(pos1)
+				->get_is_space_suitable_for_lane_change())
+			{
+				std::set<int> single_veh_set { pos1 };
+				PlatoonLaneChangeOrder an_order =
+					strategy_manager.find_minimum_cost_order_given_first_mover(
+						single_veh_set );
+				all_orders.push_back(an_order);
+				if (an_order.cost < best_cost)
+				{
+					found = true;
+					best_cost = an_order.cost;
+					best_order = an_order;
+				}
+			}
+		}
+	}
+	return best_order;
 }

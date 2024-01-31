@@ -6,6 +6,8 @@
 #include <vector>
 
 #include "PlatoonLaneChangeOrder.h"
+#include "StateQuantizer.h"
+#include "StateVector.h"
 
 /* Hash function taken from:
 https://stackoverflow.com/questions/20511347/a-good-hash-function-for-a-vector/72073933#72073933
@@ -38,14 +40,35 @@ class PlatoonLCStrategyManager
 {
 public:
     PlatoonLCStrategyManager() = default;
-    PlatoonLCStrategyManager(int n_platoon, std::string cost_name);
+    PlatoonLCStrategyManager(std::string cost_name);
+
+    void initialize(int n_platoon);
+
+    void set_maneuver_initial_state(int ego_position, 
+        ContinuousStateVector lo_states,
+        std::vector<ContinuousStateVector> platoon_states, 
+        ContinuousStateVector ld_states/*,
+        ContinuousStateVector fd_states*/);
+    void set_empty_maneuver_initial_state(int ego_position);
+    PlatoonLaneChangeOrder find_minimum_cost_order_given_first_mover(
+        std::set<int>& first_mover_positions);
 
     friend std::ostream& operator<<(std::ostream& out,
         PlatoonLCStrategyManager const& strategy_manager);
 
 private:
-    std::unordered_map<int, OuterMap> strategy_map_per_size{};
+    std::string cost_name;
+    //std::unordered_map<int, OuterMap> strategy_map_per_size{};
+    OuterMap strategy_map{};
+    StateQuantizer state_quantizer{ StateQuantizer() };
+    std::unordered_map<int, std::vector<int>> initial_state_per_vehicle{};
+    std::vector<int> empty_state{ 0 };
 
     void load_a_strategy_map(int n_platoon, std::string cost_name);
+
+    /* Transforms a vector of vectors into a single long vector */
+    template<typename T>
+    std::vector<T> flatten_state_matrix(
+        std::vector<StateVector<T>>& state_matrix);
 };
 

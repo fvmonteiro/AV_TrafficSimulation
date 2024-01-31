@@ -135,7 +135,7 @@ public:
 	double get_road_reference_lateral_position() const;
 	/* Returns distance traveled, current lane, orientation angle,
 	and speed */
-	StateVector get_state_vector() const;
+	ContinuousStateVector get_state_vector() const;
 
 	/* Sets the active lane change direction given by VISSIM */
 	void set_active_lane_change_direction(long direction);

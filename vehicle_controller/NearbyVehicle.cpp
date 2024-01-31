@@ -82,19 +82,19 @@ double NearbyVehicle::get_relative_lateral_position() const
 		+ get_lateral_position();
 }
 
-StateVector NearbyVehicle::get_relative_state_vector() const
+ContinuousStateVector NearbyVehicle::get_relative_state_vector() const
 {
-	return StateVector{ get_distance(),
+	return ContinuousStateVector{ get_distance(),
 		get_relative_lateral_position(),
 		get_orientation_angle(), get_relative_velocity() };
 }
 
-StateVector NearbyVehicle::get_absolute_state_vector(
-	StateVector ego_states) const
+ContinuousStateVector NearbyVehicle::get_absolute_state_vector(
+	ContinuousStateVector ego_states) const
 {
-	return StateVector{ get_distance() + ego_states.x,
-		get_relative_lateral_position() + ego_states.y,
-		get_orientation_angle(), compute_velocity(ego_states.v) };
+	return ContinuousStateVector{ get_distance() + ego_states.get_x(),
+		get_relative_lateral_position() + ego_states.get_y(),
+		get_orientation_angle(), compute_velocity(ego_states.get_vel()) };
 }
 
 bool NearbyVehicle::is_connected() const 

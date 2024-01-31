@@ -41,7 +41,7 @@ long current_nearby_vehicle_id{ 0 };
 long platoon_id{ 1 };
 int platoon_lc_strategy{ 0 };
 PlatoonLCStrategyManager platoon_lc_strategy_manager {
-    PlatoonLCStrategyManager(2, "time") };
+    PlatoonLCStrategyManager("time") };
 
 /*==========================================================================*/
 

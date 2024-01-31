@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "PlatoonLaneChangeOrder.h"
+#include "PlatoonLCStrategyManager.h"
 #include "StateVector.h"
 
 class Platoon;
@@ -40,9 +41,11 @@ public:
 	long create_platoon_lane_change_request(int ego_position) const;
 
 	// [Jan 16, 2024] These two methods only necessary with the graph approach
-	void set_maneuver_initial_state(int ego_position, StateVector lo_states,
-		std::vector<StateVector> platoon_states, StateVector ld_states,
-		StateVector fd_states);  // TODO [major]
+	void set_maneuver_initial_state(int ego_position, 
+		ContinuousStateVector lo_states,
+		std::vector<ContinuousStateVector> platoon_states, 
+		ContinuousStateVector ld_states
+		/*ContinuousStateVector fd_states*/);  // TODO [major]
 	void set_empty_maneuver_initial_state(int ego_position); // TODO [major]
 
 protected:
@@ -50,7 +53,6 @@ protected:
 
 	PlatoonLaneChangeApproach(int id, std::string name, bool verbose);
 
-	// TODO [Jan 17, 2024] waiting to see which version is necessary
 	void set_platoon_lane_change_order(LCOrder lc_order, CoopOrder coop_order);
 	void set_platoon_lane_change_order(PlatoonLaneChangeOrder plco);
 
@@ -121,4 +123,18 @@ public:
 		: PlatoonLaneChangeApproach(3, "leader first reverse", verbose) {};
 private:
 	void decide_lane_change_order() override;
+};
+
+class GraphApproach : public PlatoonLaneChangeApproach
+{
+public:
+	GraphApproach(): GraphApproach(false) {};
+	GraphApproach(bool verbose)
+		: PlatoonLaneChangeApproach(4, "graph", verbose) {};
+private:
+	bool is_data_loaded{ false };
+	PlatoonLCStrategyManager strategy_manager;
+
+	void decide_lane_change_order() override;
+	PlatoonLaneChangeOrder find_best_order_in_map();
 };

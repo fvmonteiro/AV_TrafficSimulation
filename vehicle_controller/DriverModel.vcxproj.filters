@@ -124,6 +124,12 @@
     <ClCompile Include="PlatoonLaneChangeStrategy.cpp">
       <Filter>Deprecated</Filter>
     </ClCompile>
+    <ClCompile Include="StateQuantizer.cpp">
+      <Filter>Main and Support</Filter>
+    </ClCompile>
+    <ClCompile Include="StateVector.cpp">
+      <Filter>Main and Support</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="VehicleState.h">
@@ -257,6 +263,9 @@
     </ClInclude>
     <ClInclude Include="PlatoonLaneChangeStrategy.h">
       <Filter>Deprecated</Filter>
+    </ClInclude>
+    <ClInclude Include="StateQuantizer.h">
+      <Filter>Main and Support</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

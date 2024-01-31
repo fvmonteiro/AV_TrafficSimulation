@@ -5,6 +5,7 @@
 
 //#include "PlatoonLaneChangeStrategy.h"
 #include "PlatoonLaneChangeApproach.h"
+//#include "StateVector.h"
 
 class NearbyVehicle;
 class PlatoonVehicle;
@@ -85,8 +86,9 @@ public:
 	long create_lane_change_request_for_vehicle(long ego_id) const;
 	long define_desired_destination_lane_leader_id(long ego_id) const;
 	void set_possible_maneuver_initial_states();
-	void set_maneuver_initial_state(long ego_id, StateVector lo_states,
-		StateVector ld_states, StateVector fd_states);
+	void set_maneuver_initial_state(long ego_id, 
+		ContinuousStateVector lo_states,
+		ContinuousStateVector ld_states/*, ContinuousStateVector fd_states*/);
 
 	/* Print function */
 	friend std::ostream& operator<< (std::ostream& out,

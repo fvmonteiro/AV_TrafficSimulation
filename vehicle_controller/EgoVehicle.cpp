@@ -170,9 +170,9 @@ double EgoVehicle::get_road_reference_lateral_position() const
 	return (get_lane() + 1 / 2)* LANE_WIDTH + get_lateral_position();
 }
 
-StateVector EgoVehicle::get_state_vector() const
+ContinuousStateVector EgoVehicle::get_state_vector() const
 {
-	return StateVector{ get_distance_traveled(), 
+	return ContinuousStateVector{ get_distance_traveled(),
 		get_road_reference_lateral_position(),
 		get_orientation_angle(), get_velocity() };
 }
