@@ -111,7 +111,7 @@ long PlatoonLaneChangeApproach
 bool PlatoonLaneChangeApproach::can_vehicle_start_lane_change(
 	int ego_position)
 {	
-	if (!is_initialized) decide_lane_change_order();
+	if (!is_initialized && ego_position == 0) decide_lane_change_order();
 	if (!is_initialized) return false;
 
 	if (maneuver_step >= platoon_lane_change_order.number_of_steps())
@@ -136,29 +136,7 @@ bool PlatoonLaneChangeApproach::can_vehicle_start_lane_change(
 	/* TODO: change where this check happens.The current lc vehicles should
 	call a new method when they finish their maneuvers. In this new
 	method we advance the idx */
-	// Check if all in next_to_move have finished their lane changes
-	bool all_are_done = true;
-	for (int i : next_to_move)
-	{
-		const PlatoonVehicle* vehicle = 
-			platoon->get_a_vehicle_by_position(i);
-		if (!vehicle->get_has_completed_lane_change())
-		{
-			all_are_done = false;
-			break;
-		}
-	}
-	if (all_are_done)
-	{
-		if (get_current_coop_vehicle_position() == -1)
-		{
-			/* If the vehicle completed a maneuver behind all others (no
-			coop), it is now the last vehicle */
-			last_dest_lane_vehicle_pos =
-				get_rearmost_lane_changing_vehicle_position();
-		}
-		maneuver_step++;
-	}
+	check_maneuver_step_done(next_to_move);
 
 	if (is_my_turn)
 	{
@@ -206,21 +184,6 @@ long PlatoonLaneChangeApproach::create_platoon_lane_change_request(
 	return 0;
 }
 
-void PlatoonLaneChangeApproach::set_maneuver_initial_state(
-	int ego_position, ContinuousStateVector lo_states,
-	std::vector<ContinuousStateVector> platoon_states, 
-	ContinuousStateVector ld_states
-	/*StateVector fd_states*/) 
-{
-
-}  
-
-void PlatoonLaneChangeApproach::set_empty_maneuver_initial_state(
-	int ego_position) 
-{
-
-}
-
 void PlatoonLaneChangeApproach::set_platoon_lane_change_order(
 	LCOrder lc_order, CoopOrder coop_order)
 {
@@ -256,6 +219,33 @@ bool PlatoonLaneChangeApproach::is_vehicle_turn_to_lane_change(
 	return current_movers.find(veh_position) != current_movers.end();
 }
 
+void PlatoonLaneChangeApproach::check_maneuver_step_done(
+	const std::unordered_set<int>& lane_changing_veh_ids)
+{
+	bool all_are_done = true;
+	for (int i : lane_changing_veh_ids)
+	{
+		const PlatoonVehicle* vehicle =
+			platoon->get_a_vehicle_by_position(i);
+		if (!vehicle->get_has_completed_lane_change())
+		{
+			all_are_done = false;
+			break;
+		}
+	}
+	if (all_are_done)
+	{
+		if (get_current_coop_vehicle_position() == -1)
+		{
+			/* If the vehicle completed a maneuver behind all others (no
+			coop), it is now the last vehicle */
+			last_dest_lane_vehicle_pos =
+				get_rearmost_lane_changing_vehicle_position();
+		}
+		maneuver_step++;
+	}
+}
+
 int PlatoonLaneChangeApproach
 ::get_rearmost_lane_changing_vehicle_position() const
 {
@@ -279,7 +269,7 @@ int PlatoonLaneChangeApproach
 }
 
 /* ------------------------------------------------------------------------ */
-/* Concrete Approaches ---------------------------------------------------- */
+/* Fixed Order Approaches ------------------------------------------------- */
 /* ------------------------------------------------------------------------ */
 
 void SynchoronousApproach::decide_lane_change_order()
@@ -344,21 +334,92 @@ void LeaderFirstReverseApproach::decide_lane_change_order()
 	set_platoon_lane_change_order(lc_order, coop_order);
 }
 
+/* ------------------------------------------------------------------------ */
+/* Graph Approach --------------------------------------------------------- */
+/* ------------------------------------------------------------------------ */
+
 void GraphApproach::decide_lane_change_order()
 {
-	// TODO: strategy name as simulation parameter
+	// TODO: cost name as simulation parameter
 	if (!is_data_loaded)
 	{
 		std::string cost_name = "accel";
 		strategy_manager = PlatoonLCStrategyManager(cost_name);
 		strategy_manager.initialize(platoon->get_size());
 	}
+	set_maneuver_initial_state_for_all_vehicles();
 	PlatoonLaneChangeOrder plco = find_best_order_in_map();
 	if (plco.cost > -1)  // an order was found
 	{
 		set_platoon_lane_change_order(plco);
 	}
 	// else: the approach continues to be not initialized.
+}
+
+void GraphApproach::set_maneuver_initial_state_for_all_vehicles()
+{
+	/* TODO [Jan 16 2024]: change how to deal with no leaders once these
+	situations are included in the graph */
+
+	// We need to center all vehicles' states around the leader
+	const PlatoonVehicle* platoon_leader = platoon->get_platoon_leader();
+	double leader_x = platoon_leader->get_state_vector().get_x();
+	double leader_y = platoon_leader->get_state_vector().get_y();
+
+	std::vector<ContinuousStateVector> system_state_matrix;
+	/* Orig lane leader's and platoon vehicles' states don't depend 
+	who's changing lanes first */
+	ContinuousStateVector lo_states;
+	if (platoon_leader->has_leader())
+	{
+		lo_states = platoon_leader->get_leader()
+			->get_relative_state_vector(platoon_leader->get_velocity());
+	}
+	else
+	{
+		lo_states = platoon_leader->get_state_vector();
+		lo_states.add_to_x(MAX_DISTANCE);
+		lo_states.offset(leader_x, leader_y);
+	}
+	system_state_matrix.push_back(lo_states);
+
+	for (const auto& item : platoon->get_vehicles_by_position())
+	{
+		ContinuousStateVector veh_state_vector = 
+			item.second->get_state_vector();
+		veh_state_vector.offset(leader_x, leader_y);
+		system_state_matrix.push_back(veh_state_vector);
+	}
+
+	/* Now we check which platoon vehicles can move and set possible
+	destination lane leaders */
+	for (std::pair<int, PlatoonVehicle*> pos_and_veh 
+		: platoon->get_vehicles_by_position())
+	{
+		int veh_pos = pos_and_veh.first;
+		PlatoonVehicle* veh = pos_and_veh.second;
+		if (veh->get_is_space_suitable_for_lane_change())
+		{
+			ContinuousStateVector ld_states;
+			if (veh->has_destination_lane_leader())
+			{
+				ld_states = veh->get_destination_lane_leader()
+					->get_relative_state_vector(veh->get_velocity());
+			}
+			else
+			{
+				ld_states = platoon_leader->get_state_vector();
+				ld_states.add_to_x(MAX_DISTANCE);
+				ld_states.add_to_y(
+					platoon_leader->get_desired_lane_change_direction().to_int()
+					* LANE_WIDTH);
+			}
+			system_state_matrix.push_back(ld_states);
+			strategy_manager.set_maneuver_initial_state(veh_pos, 
+				system_state_matrix);
+			system_state_matrix.pop_back();
+		}
+	}
 }
 
 PlatoonLaneChangeOrder GraphApproach::find_best_order_in_map()

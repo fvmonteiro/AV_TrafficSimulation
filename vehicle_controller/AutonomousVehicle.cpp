@@ -425,9 +425,12 @@ bool AutonomousVehicle::implement_check_lane_change_gaps()
 	lane_change_gaps_safety.no_conflict =
 		!has_lane_change_conflict();
 
+	/* A suitable gap is a gap that the vehicle can reach by decelerating
+    and that is large enough for a lane change. */
 	is_space_suitable_for_lane_change =
-		(gap_to_ld + gap_to_fd + margin)
-		>= (safe_gap_to_fd + safe_gap_to_ld + get_length());
+		lane_change_gaps_safety.dest_lane_follower_gap
+		&& (gap_to_ld + gap_to_fd + margin)
+			>= (safe_gap_to_fd + safe_gap_to_ld + get_length());
 
 	if (verbose)
 	{

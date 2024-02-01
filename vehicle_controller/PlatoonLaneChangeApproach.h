@@ -40,14 +40,6 @@ public:
 	/* Placeholder. For now always returns 0*/
 	long create_platoon_lane_change_request(int ego_position) const;
 
-	// [Jan 16, 2024] These two methods only necessary with the graph approach
-	void set_maneuver_initial_state(int ego_position, 
-		ContinuousStateVector lo_states,
-		std::vector<ContinuousStateVector> platoon_states, 
-		ContinuousStateVector ld_states
-		/*ContinuousStateVector fd_states*/);  // TODO [major]
-	void set_empty_maneuver_initial_state(int ego_position); // TODO [major]
-
 protected:
 	const Platoon* platoon{ nullptr };
 
@@ -71,12 +63,15 @@ private:
 
 	virtual void decide_lane_change_order() = 0;
 	virtual bool implement_can_vehicle_leave_platoon(int veh_position) const;
+
 	std::unordered_set<int> get_current_lc_vehicle_positions() const { 
 		return platoon_lane_change_order.lc_order[maneuver_step]; };
 	int get_current_coop_vehicle_position() const { 
 		return platoon_lane_change_order.coop_order[maneuver_step]; };
 	
 	bool is_vehicle_turn_to_lane_change(int ego_position) const;
+	void check_maneuver_step_done(
+		const std::unordered_set<int>& lane_changing_veh_ids);
 	int get_rearmost_lane_changing_vehicle_position() const;
 };
 
@@ -131,10 +126,12 @@ public:
 	GraphApproach(): GraphApproach(false) {};
 	GraphApproach(bool verbose)
 		: PlatoonLaneChangeApproach(4, "graph", verbose) {};
+
 private:
 	bool is_data_loaded{ false };
 	PlatoonLCStrategyManager strategy_manager;
 
 	void decide_lane_change_order() override;
+	void set_maneuver_initial_state_for_all_vehicles();
 	PlatoonLaneChangeOrder find_best_order_in_map();
 };

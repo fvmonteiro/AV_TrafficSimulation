@@ -82,11 +82,12 @@ double NearbyVehicle::get_relative_lateral_position() const
 		+ get_lateral_position();
 }
 
-ContinuousStateVector NearbyVehicle::get_relative_state_vector() const
+ContinuousStateVector NearbyVehicle::get_relative_state_vector(
+	double ego_velocity) const
 {
 	return ContinuousStateVector{ get_distance(),
 		get_relative_lateral_position(),
-		get_orientation_angle(), get_relative_velocity() };
+		get_orientation_angle(), compute_velocity(ego_velocity) };
 }
 
 ContinuousStateVector NearbyVehicle::get_absolute_state_vector(

@@ -39,15 +39,20 @@ const double CAR_MAX_BRAKE{ 6.0 }; // absolute value [m/s^2]
 const double TRUCK_MAX_BRAKE{ 5.5 }; // absolute value  [m/s^2]
 const double ACTUATOR_CONSTANT{ 0.5 }; // [s].
 const double COMFORTABLE_ACCELERATION{ 2.0 }; // [m/s^2]
-const double COMFORTABLE_BRAKE{ 2.5 }; // absolute value [m/s^2]
+const double COMFORTABLE_BRAKE{ 2.0 }; // absolute value [m/s^2]
 const double CAR_MAX_JERK{ 50.0 }; // [m/s^3]
 const double TRUCK_MAX_JERK{ 30.0 }; // [m/s^3]
 const double CONNECTED_BRAKE_DELAY{ 0.1 }; // [s]
 const double AUTONOMOUS_BRAKE_DELAY{ 0.2 }; // [s]
 const double HUMAN_BRAKE_DELAY{ 0.75 }; // [s]
-
-const long MAIN_LINK_NUMBER{ 3 };
 const double LANE_WIDTH{ 3.6 }; // [m]
+
+/* Parameters used in discretionary platoon lane change scenarios */
+
+const double SAFE_TIME_HEADWAY{ 2.0 }; // [s]
+const double CONNECTED_SAFE_TIME_HEADWAY{ 1.0 }; // [s]
+const long MAIN_LINK_NUMBER{ 3 };
+
 
 const std::string STRATEGY_MAPS_FOLDER{ "C:\\Users\\fvall\\Documents"
 	"\\Research\\data\\strategy_maps\\" };

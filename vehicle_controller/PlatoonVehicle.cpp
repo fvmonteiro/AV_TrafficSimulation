@@ -101,13 +101,21 @@ bool PlatoonVehicle::has_finished_closing_gap() const
 
 double PlatoonVehicle::get_desired_velocity_from_platoon() const
 {
+	/* The goal here is to prevent the platoon from "speeding ahead" 
+	while some other platoon vehicles are decelerating while adjusting 
+	for a gap.	
+	We can control the entire platoon by limiting only its leader's 
+	speed. */
 	if (is_in_a_platoon() && is_platoon_leader()
 		&& has_lane_change_intention() 
 		&& get_platoon()->has_lane_change_intention())
 	{
-		const NearbyVehicle* nv = 
+		const NearbyVehicle* nv =
 			get_platoon()->get_destination_lane_leader();
-		return nv != nullptr ? 
+		/* The the platoon's dest lane leader only equals the platoon's 
+		leader virtual leader when the platoon leader is the first vehicle
+		to change lanes. In this case, we don't need to limit its speed. */
+		return nv != nullptr && nv->get_id() != get_virtual_leader_id() ?
 			nv->compute_velocity(get_velocity()) 
 			: get_desired_velocity();
 	}

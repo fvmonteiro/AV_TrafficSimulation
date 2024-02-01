@@ -92,7 +92,10 @@ public:
 	void offset_from_another(const NearbyVehicle& other_vehicle);
 
 	double get_relative_lateral_position() const;
-	ContinuousStateVector get_relative_state_vector() const;
+	/* State vector with relative distances to ego vehicle
+	but absolute orientation angle and velocity. */
+	ContinuousStateVector get_relative_state_vector(
+		double ego_velocity) const;
 	ContinuousStateVector get_absolute_state_vector(
 		ContinuousStateVector ego_states) const;
 	bool is_connected() const;

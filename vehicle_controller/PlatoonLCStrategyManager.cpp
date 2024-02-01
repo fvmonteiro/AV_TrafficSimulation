@@ -17,18 +17,8 @@ void PlatoonLCStrategyManager::initialize(int n_platoon)
 }
 
 void PlatoonLCStrategyManager::set_maneuver_initial_state(
-	int ego_position, ContinuousStateVector lo_states,
-	std::vector<ContinuousStateVector> platoon_states, 
-	ContinuousStateVector ld_states/*,
-	ContinuousStateVector fd_states*/)
-{
-	std::vector<ContinuousStateVector> system_state_matrix;
-	system_state_matrix.reserve(2 + platoon_states.size());
-	system_state_matrix.push_back(lo_states);
-	system_state_matrix.insert(system_state_matrix.end(),
-		platoon_states.begin(), platoon_states.end());
-	system_state_matrix.push_back(ld_states);
-	
+	int ego_position, std::vector<ContinuousStateVector> system_state_matrix)
+{	
 	std::vector<QuantizedStateVector> quantized_state_matrix = 
 		state_quantizer.quantize_states(system_state_matrix);
 

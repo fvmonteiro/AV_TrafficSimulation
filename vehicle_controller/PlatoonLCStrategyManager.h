@@ -45,10 +45,7 @@ public:
     void initialize(int n_platoon);
 
     void set_maneuver_initial_state(int ego_position, 
-        ContinuousStateVector lo_states,
-        std::vector<ContinuousStateVector> platoon_states, 
-        ContinuousStateVector ld_states/*,
-        ContinuousStateVector fd_states*/);
+        std::vector<ContinuousStateVector> system_state_matrix);
     void set_empty_maneuver_initial_state(int ego_position);
     PlatoonLaneChangeOrder find_minimum_cost_order_given_first_mover(
         std::set<int>& first_mover_positions);

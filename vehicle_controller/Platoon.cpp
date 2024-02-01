@@ -159,7 +159,8 @@ const NearbyVehicle* Platoon::get_destination_lane_leader() const
 {
 	long veh_id = 
 		lane_change_approach->get_platoon_destination_lane_leader_id();
-
+	
+	if (veh_id == 0) return nullptr;
 	for (auto const& item : vehicles_by_position)
 	{
 		if (item.second->is_vehicle_in_sight(veh_id))
@@ -396,99 +397,6 @@ long Platoon::define_desired_destination_lane_leader_id(long ego_id) const
 		lane_change_approach->get_desired_destination_lane_leader(
 			pos_in_platoon);
 	return virtual_leader_id;
-	//return lane_change_strategy->define_virtual_leader(platoon_vehicle);
-}
-
-void Platoon::set_possible_maneuver_initial_states()
-{
-	if (has_lane_change_started()) return;
-
-	const PlatoonVehicle* platoon_leader = get_platoon_leader();
-	ContinuousStateVector lo_states;
-	ContinuousStateVector ld_states;
-	ContinuousStateVector fd_states; // (not necessary)
-	if (platoon_leader->has_leader())
-	{
-		lo_states = platoon_leader->get_leader()
-			->get_absolute_state_vector(platoon_leader->get_state_vector());
-	}
-
-	for (std::pair<int, PlatoonVehicle*> pos_and_veh : vehicles_by_position)
-	{
-		PlatoonVehicle* veh = pos_and_veh.second;
-		if (veh->get_is_space_suitable_for_lane_change())
-		{
-			if (veh->has_destination_lane_leader())
-			{
-				ld_states = veh->get_destination_lane_leader()
-					->get_absolute_state_vector(veh->get_state_vector());
-			}
-			if (veh->has_destination_lane_follower())
-			{
-				fd_states = veh->get_destination_lane_follower()
-					->get_absolute_state_vector(veh->get_state_vector());
-			}
-			set_maneuver_initial_state(veh->get_id(), lo_states,
-				ld_states/*, fd_states*/);
-		}
-		else
-		{
-			lane_change_approach->set_empty_maneuver_initial_state(veh->get_id());
-		}
-	}
-}
-
-void Platoon::set_maneuver_initial_state(long ego_id, 
-	ContinuousStateVector lo_states,
-	ContinuousStateVector ld_states /*, StateVector fd_states*/)
-{
-	const PlatoonVehicle* platoon_leader = get_platoon_leader();
-
-	// First we deal with 'empty' states
-	/* TODO [Jan 16 2024]: change how to deal with no leaders once these
-	situations are included in the graph */
-	if (lo_states.get_is_empty())
-	{
-		lo_states = platoon_leader->get_state_vector();
-		lo_states.add_to_x(MAX_DISTANCE);
-	}
-	if (ld_states.get_is_empty())
-	{
-		ld_states = platoon_leader->get_state_vector();
-		ld_states.add_to_x(MAX_DISTANCE);
-		ld_states.add_to_y(
-			platoon_leader->get_desired_lane_change_direction().to_int()
-			* LANE_WIDTH);
-	}
-	//if (fd_states.get_is_empty())
-	//{
-	//	const PlatoonVehicle* last_vehicle = get_last_vehicle();
-	//	fd_states = last_vehicle->get_state_vector();
-	//	fd_states.add_to_x(-MAX_DISTANCE);
-	//	fd_states.add_to_y(
-	//		platoon_leader->get_desired_lane_change_direction().to_int()
-	//		* LANE_WIDTH);
-	//}
-
-	// Next we center all vehicles' states around the leader
-	double leader_x = platoon_leader->get_state_vector().get_x();
-	double leader_y = platoon_leader->get_state_vector().get_y();
-
-	std::vector<ContinuousStateVector> platoon_states;
-	for (const auto& item : vehicles_by_position)
-	{
-		ContinuousStateVector veh_state_vector = item.second->get_state_vector();
-		veh_state_vector.offset(leader_x, leader_y);
-		platoon_states.push_back(veh_state_vector);
-	}
-
-	lo_states.offset(leader_x, leader_y);
-	ld_states.offset(leader_x, leader_y);
-	//fd_states.offset(leader_x, leader_y);
-
-	int ego_position = vehicle_id_to_position[ego_id];
-	lane_change_approach->set_maneuver_initial_state(ego_position, lo_states,
-		platoon_states, ld_states/*, fd_states*/);
 }
 
 void Platoon::add_leader(PlatoonVehicle* new_vehicle)
