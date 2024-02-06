@@ -56,6 +56,8 @@ const long MAIN_LINK_NUMBER{ 3 };
 
 const std::string STRATEGY_MAPS_FOLDER{ "C:\\Users\\fvall\\Documents"
 	"\\Research\\data\\strategy_maps\\" };
+const std::string QUANTIZATION_PARAMS_FOLDER{ "C:\\Users\\fvall\\Documents"
+	"\\Research\\data\\quantization_parameters\\" };
 
 /* Categories set by VISSIM */
 enum class VehicleCategory {

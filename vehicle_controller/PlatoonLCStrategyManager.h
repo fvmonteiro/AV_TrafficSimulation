@@ -62,6 +62,8 @@ private:
     std::vector<int> empty_state{ 0 };
 
     void load_a_strategy_map(int n_platoon, std::string cost_name);
+    std::unordered_map<std::string, double> load_quantizer_data(
+        int n_platoon);
 
     /* Transforms a vector of vectors into a single long vector */
     template<typename T>

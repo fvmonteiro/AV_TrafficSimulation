@@ -14,6 +14,8 @@ PlatoonLCStrategyManager::PlatoonLCStrategyManager(std::string cost_name)
 void PlatoonLCStrategyManager::initialize(int n_platoon)
 {
 	load_a_strategy_map(n_platoon, cost_name);
+	load_quantizer_data(n_platoon);
+
 }
 
 void PlatoonLCStrategyManager::set_maneuver_initial_state(
@@ -86,6 +88,21 @@ void PlatoonLCStrategyManager::load_a_strategy_map(
 	}
 	strategy_map = a_strategy_map;
 	//strategy_map_per_size[n_platoon] = a_strategy_map;
+}
+
+std::unordered_map<std::string, double> PlatoonLCStrategyManager
+::load_quantizer_data(int n_platoon)
+{
+	std::string file_name = std::to_string(n_platoon) + "_vehicles.json";
+	std::ifstream new_file(QUANTIZATION_PARAMS_FOLDER + file_name);
+	json json_data = json::parse(new_file);
+	std::unordered_map<std::string, double> params;
+
+	for (auto& datum : json_data.items())
+	{
+		params[datum.key()] = datum.value();
+	}
+	return params;
 }
 
 template<typename T>
