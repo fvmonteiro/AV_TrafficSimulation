@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <fstream>
 #include <numeric>
 
 #include "Platoon.h"
@@ -111,6 +112,9 @@ long PlatoonLaneChangeApproach
 bool PlatoonLaneChangeApproach::can_vehicle_start_lane_change(
 	int ego_position)
 {	
+	if (verbose) std::clog << "[PlatoonLaneChangeApproach] "
+		"can_vehicle_start_lane_change\n";
+
 	if (!is_initialized && ego_position == 0) decide_lane_change_order();
 	if (!is_initialized) return false;
 
@@ -340,6 +344,7 @@ void LeaderFirstReverseApproach::decide_lane_change_order()
 
 void GraphApproach::decide_lane_change_order()
 {
+	if (verbose) std::clog << "[GraphApproach] decide_lane_change_order\n";
 	// TODO: cost name as simulation parameter
 	if (!is_data_loaded)
 	{
@@ -347,6 +352,7 @@ void GraphApproach::decide_lane_change_order()
 		strategy_manager = PlatoonLCStrategyManager(cost_name);
 		strategy_manager.initialize(platoon->get_size());
 	}
+	if (verbose) std::clog << "[GraphApproach] about to set initial states \n";
 	set_maneuver_initial_state_for_all_vehicles();
 	PlatoonLaneChangeOrder plco = find_best_order_in_map();
 	if (plco.cost > -1)  // an order was found
@@ -367,13 +373,14 @@ void GraphApproach::set_maneuver_initial_state_for_all_vehicles()
 	double leader_y = platoon_leader->get_state_vector().get_y();
 
 	std::vector<ContinuousStateVector> system_state_matrix;
-	/* Orig lane leader's and platoon vehicles' states don't depend 
+
+	/* Orig lane leader's and platoon vehicles' states don't depend on
 	who's changing lanes first */
 	ContinuousStateVector lo_states;
 	if (platoon_leader->has_leader())
 	{
-		lo_states = platoon_leader->get_leader()
-			->get_relative_state_vector(platoon_leader->get_velocity());
+		lo_states = platoon_leader->get_leader()->get_relative_state_vector(
+			platoon_leader->get_velocity());
 	}
 	else
 	{
@@ -382,29 +389,47 @@ void GraphApproach::set_maneuver_initial_state_for_all_vehicles()
 		lo_states.offset(leader_x, leader_y);
 	}
 	system_state_matrix.push_back(lo_states);
+	if (verbose) std::clog << "lo states="
+		<< system_state_matrix.back().to_string() << "\n";
+
+	int i = 0;
+	for (ContinuousStateVector& v : platoon->get_vehicles_states())
+	{
+		system_state_matrix.push_back(v);
+		if (verbose) std::clog << "platoon states (" << i++ << ")="
+			<< system_state_matrix.back().to_string() << "\n";
+	/*}
 
 	for (const auto& item : platoon->get_vehicles_by_position())
 	{
 		ContinuousStateVector veh_state_vector = 
 			item.second->get_state_vector();
+		if (verbose) std::clog << "platoon states before (" << item.first << ")="
+			<< veh_state_vector.to_string() << "\n";
 		veh_state_vector.offset(leader_x, leader_y);
 		system_state_matrix.push_back(veh_state_vector);
+		if (verbose) std::clog << "platoon states (" << item.first << ")="
+			<< system_state_matrix.back().to_string() << "\n"; */
 	}
 
 	/* Now we check which platoon vehicles can move and set possible
 	destination lane leaders */
-	for (std::pair<int, PlatoonVehicle*> pos_and_veh 
+	for (std::pair<int, const PlatoonVehicle*> pos_and_veh 
 		: platoon->get_vehicles_by_position())
 	{
 		int veh_pos = pos_and_veh.first;
-		PlatoonVehicle* veh = pos_and_veh.second;
-		if (veh->get_is_space_suitable_for_lane_change())
+		const PlatoonVehicle* vehicle = pos_and_veh.second;
+
+		if (vehicle->get_is_space_suitable_for_lane_change())
 		{
 			ContinuousStateVector ld_states;
-			if (veh->has_destination_lane_leader())
+			if (vehicle->has_destination_lane_leader())
 			{
-				ld_states = veh->get_destination_lane_leader()
-					->get_relative_state_vector(veh->get_velocity());
+				const NearbyVehicle& ld = 
+					*vehicle->get_destination_lane_leader();
+				double vehicle_vel = vehicle->get_velocity();
+				ld_states = ld.get_relative_state_vector(
+					vehicle->get_velocity());
 			}
 			else
 			{
@@ -413,12 +438,34 @@ void GraphApproach::set_maneuver_initial_state_for_all_vehicles()
 				ld_states.add_to_y(
 					platoon_leader->get_desired_lane_change_direction().to_int()
 					* LANE_WIDTH);
+				ld_states.offset(leader_x, leader_y);
 			}
 			system_state_matrix.push_back(ld_states);
-			strategy_manager.set_maneuver_initial_state(veh_pos, 
-				system_state_matrix);
+			if (verbose) std::clog << "ld states ("
+				<< veh_pos << ")" << system_state_matrix.back().to_string()
+				<< "\n";
+			try
+			{
+				if (verbose) std::clog << "Setting initial state...";
+				strategy_manager.set_maneuver_initial_state(veh_pos,
+					system_state_matrix);
+			}
+			catch (const StateNotFoundException& e)
+			{
+				if (verbose) std::clog << "done.\nState not found.\n";
+				double free_flow_speed_dest =
+					vehicle->has_destination_lane_leader() ?
+					vehicle->get_destination_lane_leader()->compute_velocity(
+						vehicle->get_velocity())
+					: platoon_leader->get_desired_velocity();
+				save_not_found_state_to_file(e.state_vector, 
+					free_flow_speed_dest);
+				throw;
+			}
 			system_state_matrix.pop_back();
 		}
+
+		
 	}
 }
 
@@ -479,4 +526,37 @@ PlatoonLaneChangeOrder GraphApproach::find_best_order_in_map()
 		}
 	}
 	return best_order;
+}
+
+void GraphApproach::save_not_found_state_to_file(
+	std::vector<int> state_vector, double free_flow_speed_dest)
+{
+	if (verbose) std::clog << "[GraphApproach] Saving not found state to "
+		"file\n";
+
+	const PlatoonVehicle* platoon_leader = platoon->get_platoon_leader();
+	std::unordered_map<std::string, double> free_flow_speeds{
+		{"platoon", platoon_leader->get_desired_velocity()},
+		{"dest", free_flow_speed_dest}
+	};
+	free_flow_speeds["orig"] = platoon_leader->has_leader() ?
+		platoon_leader->get_leader()
+		->compute_velocity(platoon_leader->get_velocity())
+		: free_flow_speeds["platoon"];
+
+	std::string file_name = "unsolved_x0_" 
+		+ std::to_string(platoon->get_size()) + "_vehicles.csv";
+	std::string file_path = "C:\\Users\\fvall\\Documents\\Research"
+		"\\data\\vehicle_state_graphs\\";
+	/* Entry starts with the free-flow speeds in alphabetical order
+	(dest, orig, platoon) and then come the states */
+	std::ofstream outfile{ file_path + file_name, std::ios::app };
+	outfile << free_flow_speeds["dest"] << ","
+		<< free_flow_speeds["orig"] << ","
+		<< free_flow_speeds["platoon"] << ",";
+	for (int i = 0; i < state_vector.size() - 1; i++)
+	{
+		outfile << state_vector[i] << ",";
+	}
+	outfile << state_vector[state_vector.size() - 1] << "\n";
 }

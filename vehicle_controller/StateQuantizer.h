@@ -3,6 +3,8 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+
+#include "Constants.h"
 #include "StateVector.h"
 
 /* TODO: merge with StateVector? */
@@ -19,7 +21,8 @@ public:
 private:
 	/* Quantization intervals */
 	double dx{ 9.0 };
-	double dy{ 4.0 };
+	double dy{ LANE_WIDTH - 0.01 };
+	double dtheta{ 2*PI };
 	double dv{ 2.0 };
 
 	/* Max and min values for variables that can 
@@ -33,6 +36,6 @@ private:
 	double max_v_ld{ INFINITY };
 	double min_v_ld{ -INFINITY };
 
-	QuantizedStateVector apply_bounds(QuantizedStateVector qs);
+	//QuantizedStateVector apply_bounds(QuantizedStateVector qs);
 };
 

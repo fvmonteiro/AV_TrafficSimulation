@@ -2,12 +2,27 @@
 
 #include <iostream>
 #include <set>
+#include <stdexcept>
 #include <unordered_map>
 #include <vector>
 
 #include "PlatoonLaneChangeOrder.h"
 #include "StateQuantizer.h"
 #include "StateVector.h"
+
+/* Used to signalize code higher up that the vehicles should give up
+on lane changing during the simulation. */
+class StateNotFoundException : public std::out_of_range 
+{
+public:
+    StateNotFoundException(std::vector<int>& state_vector) throw()
+        : std::out_of_range("Initial state not found in strategy map"),
+        state_vector(state_vector) {
+        std::clog << "[StateNotFoundException] constructor\n";
+    };
+
+    std::vector<int> state_vector;
+};
 
 /* Hash function taken from:
 https://stackoverflow.com/questions/20511347/a-good-hash-function-for-a-vector/72073933#72073933
@@ -55,6 +70,7 @@ public:
 
 private:
     std::string cost_name;
+    int n_platoon{ 0 };
     //std::unordered_map<int, OuterMap> strategy_map_per_size{};
     OuterMap strategy_map{};
     StateQuantizer state_quantizer{ StateQuantizer() };

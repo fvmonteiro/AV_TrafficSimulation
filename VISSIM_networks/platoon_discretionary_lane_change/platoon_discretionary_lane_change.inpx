@@ -760,7 +760,7 @@
 		<routGuid1 interval="999999" offset="0" strategy="NEWROUTETODESTINATIONPARKINGLOT"/>
 		<routGuid2 interval="999999" offset="0" strategy="NEWROUTETODESTINATIONPARKINGLOT"/>
 	</dynamicAssignment>
-	<evaluation autoCreateResultColumns="true" databaseConnection="" evalOutDir="#data#results\test\" keepPrevResults="KEEPCURRENT" listAutoExportType="FILE" nodesDelaySegmentStart="100" queueBeginSpeed="5" queueConsiderAdjacentLanes="true" queueEndSpeed="10" queueMaxHeadway="20" queueMaxLength="500">
+	<evaluation autoCreateResultColumns="true" databaseConnection="" evalOutDir="#data#results\test" keepPrevResults="KEEPCURRENT" listAutoExportType="FILE" nodesDelaySegmentStart="100" queueBeginSpeed="5" queueConsiderAdjacentLanes="true" queueEndSpeed="10" queueMaxHeadway="20" queueMaxLength="500">
 		<areaMeasRawData fromTime="0" toTime="99999" writeFile="false"/>
 		<areaMeasResults collectData="false" fromTime="0" interval="99999" toTime="99999"/>
 		<areaResults collectData="false" fromTime="0" interval="99999" toTime="99999"/>
@@ -1688,7 +1688,7 @@
 		</reducedSpeedArea>
 		<reducedSpeedArea anmFlag="false" lane="3 2" length="100" name="dest_lane" no="2" pos="2875.7601231163753" timeFrom="0" timeTo="99999">
 			<vehClassSpeedRed>
-				<vehClassSpeedReduction decel="2" desSpeedDistr="7" vehClass="10"/>
+				<vehClassSpeedReduction decel="2" desSpeedDistr="5" vehClass="10"/>
 			</vehClassSpeedRed>
 		</reducedSpeedArea>
 	</reducedSpeedAreas>
@@ -1763,7 +1763,7 @@
 		<userDefinedAttribute comment="When an autonmous vehicle takes too long to find a lane change gap, it gives control to VISSIM" dataSrcType="DATA" dataType="BOOL" decimals="2" formula="" internalDefValueNum="1" internalDefValueStr="" internalMaxValue="INF" internalMinValue="-INF" maxStrLen="100" nameLong="Give Control to Vissim" nameShort="giveControlToVissim" no="8" objType="VEHICLE" subAttrs=""/>
 		<userDefinedAttribute comment="Whether to compute the accepted lane change gap using a linear estimation of the accepted gap (hv+d)" dataSrcType="DATA" dataType="BOOL" decimals="2" formula="" internalDefValueNum="0" internalDefValueStr="" internalMaxValue="INF" internalMinValue="-INF" maxStrLen="100" nameLong="Use linear lane change gap" nameShort="useLinearLCGap" no="11" objType="VEHICLE" subAttrs=""/>
 		<userDefinedAttribute comment="" dataSrcType="DATA" dataType="INT" decimals="2" formula="" internalDefValueNum="-1" internalDefValueStr="" internalMaxValue="INF" internalMinValue="-INF" maxStrLen="100" nameLong="Platoon ID" nameShort="platoonID" no="12" objType="VEHICLE" subAttrs=""/>
-		<userDefinedAttribute comment="0: No strategy; 1: Synchronous;  2: Leader first; 3: Last vehicle first; 4: Leader first and invert" dataSrcType="DATA" dataType="INT" decimals="2" formula="" internalDefValueNum="4" internalDefValueStr="" internalMaxValue="INF" internalMinValue="-INF" maxStrLen="100" nameLong="Platoon lane change strategy" nameShort="platoonLCStrategy" no="13" objType="VEHICLE" subAttrs=""/>
+		<userDefinedAttribute comment="0: No strategy; 1: Synchronous;  2: Leader first; 3: Last vehicle first; 4: Leader first and invert" dataSrcType="DATA" dataType="INT" decimals="2" formula="" internalDefValueNum="1" internalDefValueStr="" internalMaxValue="INF" internalMinValue="-INF" maxStrLen="100" nameLong="Platoon lane change strategy" nameShort="platoonLCStrategy" no="13" objType="VEHICLE" subAttrs=""/>
 		<userDefinedAttribute comment="If true, prints updates on all the controlled vehicles to a log file." dataSrcType="DATA" dataType="BOOL" decimals="2" formula="" internalDefValueNum="0" internalDefValueStr="" internalMaxValue="INF" internalMinValue="-INF" maxStrLen="100" nameLong="Verbose Simulation" nameShort="verboseSimulation" no="98" objType="VEHICLE" subAttrs=""/>
 		<userDefinedAttribute comment="Writes information about vehicle to log file. Does not work for id = 1" dataSrcType="DATA" dataType="INT" decimals="2" formula="" internalDefValueNum="0" internalDefValueStr="" internalMaxValue="INF" internalMinValue="-INF" maxStrLen="100" nameLong="Logged vehicle ID" nameShort="loggedVehID" no="99" objType="VEHICLE" subAttrs=""/>
 		<userDefinedAttribute comment="" dataSrcType="DATA" dataType="INT" decimals="2" formula="" internalDefValueNum="0" internalDefValueStr="" internalMaxValue="INF" internalMinValue="-INF" maxStrLen="100" nameLong="Leader ID" nameShort="leaderID" no="100" objType="VEHICLE" subAttrs=""/>
@@ -1850,7 +1850,7 @@
 		</vehicleComposition>
 		<vehicleComposition name="dest_lane" no="8">
 			<vehCompRelFlows>
-				<vehicleCompositionRelativeFlow desSpeedDistr="7" relFlow="100" vehType="100"/>
+				<vehicleCompositionRelativeFlow desSpeedDistr="5" relFlow="100" vehType="100"/>
 			</vehCompRelFlows>
 		</vehicleComposition>
 		<vehicleComposition name="all_autonomous" no="20">
@@ -1867,12 +1867,12 @@
 	<vehicleInputs>
 		<vehicleInput anmFlag="false" link="4" name="left_lane" no="3">
 			<timeIntVehVols>
-				<timeIntervalVehVolume cont="false" timeInt="1 0" vehComp="8" volType="EXACT" volume="1500"/>
+				<timeIntervalVehVolume cont="false" timeInt="1 0" vehComp="8" volType="EXACT" volume="0"/>
 			</timeIntVehVols>
 		</vehicleInput>
 		<vehicleInput anmFlag="false" link="2" name="right_lane" no="4">
 			<timeIntVehVols>
-				<timeIntervalVehVolume cont="false" timeInt="1 0" vehComp="7" volType="EXACT" volume="1500"/>
+				<timeIntervalVehVolume cont="false" timeInt="1 0" vehComp="7" volType="EXACT" volume="0"/>
 			</timeIntVehVols>
 		</vehicleInput>
 	</vehicleInputs>

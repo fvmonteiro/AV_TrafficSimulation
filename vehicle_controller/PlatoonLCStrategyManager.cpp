@@ -13,25 +13,39 @@ PlatoonLCStrategyManager::PlatoonLCStrategyManager(std::string cost_name)
 
 void PlatoonLCStrategyManager::initialize(int n_platoon)
 {
+	std::clog << "[PlatoonLCStrategyManager] initialize (about to load)...\n";
+	this->n_platoon = n_platoon;
 	load_a_strategy_map(n_platoon, cost_name);
+	std::clog << "All strategies loaded. Loading quantizer data..." << "\n";
 	load_quantizer_data(n_platoon);
-
+	std::clog << "Quantizer data loaded." << "\n";
 }
 
 void PlatoonLCStrategyManager::set_maneuver_initial_state(
 	int ego_position, std::vector<ContinuousStateVector> system_state_matrix)
 {	
+	std::clog << "[PlatoonLCStrategyManager] Quantization start.\n";
+
 	std::vector<QuantizedStateVector> quantized_state_matrix = 
 		state_quantizer.quantize_states(system_state_matrix);
+
+	std::clog << "[PlatoonLCStrategyManager] Quantization done.\n";
 
 	std::vector<int> quantized_state_vector = flatten_state_matrix<int>(
 		quantized_state_matrix);
 	if (strategy_map.find(quantized_state_vector) == strategy_map.end())
 	{
-		std::clog << " ==== ERROR: ====\n"
+		throw StateNotFoundException(quantized_state_vector);
+		/*std::clog << " ==== ERROR: ====\n"
 			<< "[PlatoonLCStrategyManager] "
-			<< "Initial state not found in strategy map\n";
-		// TODO: choose random strategy to prevent crashing VISSIM
+			<< "Initial state not found in strategy map\n";*/
+		/* TODO: write the missing quantized initial state to the 
+		* appropriate csv file. Then, do one of the following:
+		1 - stop simulation here (without crashing!)
+		2 - remove vehicles from simulation and let it finish
+		3 - remove lane change intention from vehicles (otherwise
+		they'll write the missing state over and over again) and let them
+		finish the simulation. Is there any way of making them simpler? */
 	}
 	initial_state_per_vehicle[ego_position] = quantized_state_vector;
 }
@@ -109,14 +123,29 @@ template<typename T>
 std::vector<T> PlatoonLCStrategyManager::flatten_state_matrix(
 	std::vector<StateVector<T>>& state_matrix)
 {
+	std::clog << "[PlatoonLCStrategyManager] flatten matrix...\n";
 	std::vector<T> system_state_vector;
 	int n_vehs = static_cast<int>(state_matrix.size());
-	system_state_vector.reserve(4 * n_vehs);
-	for (auto& s : state_matrix)
+	int n_states = 4;
+	std::clog << "\tstate_vector desired size: " << n_states * n_vehs;
+
+	system_state_vector.reserve(n_states * n_vehs);
+
+	std::clog << "\tstate_vector size: " << system_state_vector.size() << "\n";
+	std::clog << "\tStarting copy... \n";
+	for (StateVector<T>& v : state_matrix)
 	{
-		system_state_vector.insert(system_state_vector.end(),
-			s.get().begin(), s.get().end());
+		std::clog << "\tv=" << v.to_string() << "\n";
+		for (auto i : v.get())
+		{
+			system_state_vector.push_back(i);
+		}
+		//system_state_vector.insert(system_state_vector.end(),
+		//	v.get().begin(), v.get().end());
+		std::clog << "\tstate_vector size: " << system_state_vector.size()
+			<< "\n";
 	}
+	std::clog << "done.\n";
 	return system_state_vector;
 }
 

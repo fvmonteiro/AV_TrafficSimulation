@@ -21,11 +21,9 @@ StateQuantizer::StateQuantizer(
 QuantizedStateVector StateQuantizer::quantize_state(
 	ContinuousStateVector state)
 {
-	//double x = std::max(std::min(state.get_x(), max_x), min_x);
-	//double vel = std::max(std::min(state.get_vel(), max_v), min_v);
 	int qx = static_cast<int>(state.get_x() / dx);
 	int qy = static_cast<int>(state.get_y() / dy);
-	int qtheta = 0;
+	int qtheta = static_cast<int>(state.get_theta() / dtheta);
 	int qv = static_cast<int>(state.get_vel() / dv);
 	
 	return QuantizedStateVector(qx, qy, qtheta, qv);
@@ -34,15 +32,11 @@ QuantizedStateVector StateQuantizer::quantize_state(
 std::vector <QuantizedStateVector> StateQuantizer::quantize_states(
 	std::vector<ContinuousStateVector> system_state)
 {
-	std::vector <QuantizedStateVector> full_quantized_state;
-	// The first vehicle is always the orig lane leader
-	ContinuousStateVector& state = system_state[0];
-	full_quantized_state.push_back(quantize_state(state));
-	for (int i = 1; i < system_state.size()-1; i++)
+	std::vector <QuantizedStateVector> quantized_state_matrix;
+	for (int i = 0; i < system_state.size(); i++)
 	{
-		ContinuousStateVector& state = system_state[i];
-		full_quantized_state.push_back(quantize_state(state));
+		quantized_state_matrix.push_back(quantize_state(system_state[i]));
 	}
-	return full_quantized_state;
+	return quantized_state_matrix;
 }
 

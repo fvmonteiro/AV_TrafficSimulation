@@ -282,7 +282,7 @@ bool EgoVehicle::has_leader() const
 	return leader != nullptr;
 }
 
-const std::shared_ptr<NearbyVehicle> EgoVehicle::get_leader() const
+std::shared_ptr<NearbyVehicle> EgoVehicle::get_leader() const
 {
 	return leader;
 }

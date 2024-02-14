@@ -42,6 +42,23 @@ PlatoonVehicle::~PlatoonVehicle()
 	}
 }
 
+double PlatoonVehicle::decide_safe_time_headway(
+	const NearbyVehicle& nearby_vehicle) const
+{
+	if (is_in_a_platoon())
+	{
+		return platoon->is_vehicle_id_in_platoon(nearby_vehicle.get_id()) ?
+			SAFE_PLATOON_TIME_HEADWAY : SAFE_TIME_HEADWAY;
+	}
+	else
+	{
+		/* This code will only be run at the first simulation step 
+		when platoons haven't been set yet. */
+		return nearby_vehicle.is_connected() ?
+			SAFE_PLATOON_TIME_HEADWAY : SAFE_TIME_HEADWAY;
+	}
+}
+
 bool PlatoonVehicle::is_platoon_leader() const
 {
 	return !is_in_a_platoon() || (platoon->get_leader_id() == get_id());
@@ -52,51 +69,10 @@ bool PlatoonVehicle::is_last_platoon_vehicle() const
 	return !is_in_a_platoon() || (platoon->get_last_veh_id() == get_id());
 }
 
-bool PlatoonVehicle::has_finished_adjusting_time_headway() const
+long PlatoonVehicle::get_suitable_destination_lane_leader_id() const
 {
-	double safe_time_headway = get_safe_time_headway();
-	bool has_time_headway_transition_ended =
-		(std::abs(safe_time_headway
-			- get_current_desired_time_headway())
-			/ safe_time_headway) < 0.1;
-	return has_time_headway_transition_ended || !has_leader();
-}
-
-bool PlatoonVehicle::has_finished_increasing_gap() const
-{
-	/* When we increase the reference gap, the gap error becomes negative.
-	The maneuver is considered to be done when the gap error is close 
-	to becoming non-negative. */
-	bool is_gap_error_non_negative = true;
-	if (has_leader())
-	{
-		double safe_gap = compute_time_headway_gap(get_leader().get());
-		double gap = compute_gap_to_a_leader(get_leader().get());
-		double gap_error = gap - safe_gap;
-		is_gap_error_non_negative = gap_error / safe_gap > (-0.05);
-	}
-	return has_finished_adjusting_time_headway()
-		&& is_gap_error_non_negative;
-}
-
-bool PlatoonVehicle::has_finished_closing_gap() const
-{
-	/* When we decrease the reference gap, the gap error becomes positive.
-	The maneuver is considered to be done when the gap error is close
-	to zero. */
-
-	bool is_gap_error_small = true;
-	if (has_leader())
-	{
-		double safe_gap = compute_time_headway_gap(get_leader().get());
-		double gap = compute_gap_to_a_leader(get_leader().get());
-		double gap_error = gap - safe_gap;
-		is_gap_error_small = gap_error / safe_gap < 0.05;
-	}
-	return has_finished_adjusting_time_headway() && is_gap_error_small;
-	//bool is_gap_error_small = get_gap_error() < gap_error_threshold;
-	//return has_finished_adjusting_time_headway()
-	//	&& (is_gap_error_small || is_platoon_leader());
+	return get_is_space_suitable_for_lane_change() ?
+		get_destination_lane_leader_id() : 0;
 }
 
 double PlatoonVehicle::get_desired_velocity_from_platoon() const
@@ -122,69 +98,16 @@ double PlatoonVehicle::get_desired_velocity_from_platoon() const
 	return get_desired_velocity();
 }
 
-const VehicleState* PlatoonVehicle::get_preceding_vehicle_state() const
-{
-	const auto& leader = platoon->get_preceding_vehicle(get_id());
-	return leader == nullptr ? nullptr : leader->get_state();
-}
-
-long PlatoonVehicle::get_preceding_vehicle_id() const
-{
-	const auto& leader = platoon->get_preceding_vehicle(get_id());
-	return leader == nullptr ? 0 : leader->get_id();
-}
-
-const PlatoonVehicle*
-PlatoonVehicle::get_preceding_vehicle_in_platoon() const
-{
-	return platoon->get_preceding_vehicle(get_id());
-}
-
-const VehicleState*
-PlatoonVehicle::get_following_vehicle_state() const
-{
-	const auto& follower = platoon->get_following_vehicle(get_id());
-	return follower == nullptr ? nullptr : follower->get_state();
-}
-
-long PlatoonVehicle::get_following_vehicle_id() const
-{
-	const auto& follower = platoon->get_following_vehicle(get_id());
-	return follower == nullptr ? 0 : follower->get_id();
-}
-
-long PlatoonVehicle::get_suitable_destination_lane_leader_id() const
-{
-	return get_is_space_suitable_for_lane_change() ?
-		get_destination_lane_leader_id() : 0;
-}
-
-const PlatoonVehicle*
-PlatoonVehicle::get_following_vehicle_in_platoon() const
-{
-	return get_platoon()->get_following_vehicle(get_id());
-}
-
-std::shared_ptr<NearbyVehicle> PlatoonVehicle
-::define_virtual_leader_when_alone() const
-{
-	return ConnectedAutonomousVehicle::choose_behind_whom_to_move();
-}
-
 bool PlatoonVehicle::can_start_lane_change()
 {
 	if (verbose) std::clog << "Can start lane change?\n";
 	bool is_safe = check_lane_change_gaps();
-	if (verbose) std::clog << "Gaps are safe? " 
+	if (verbose) std::clog << "Gaps are safe? "
 		<< (is_safe ? "yes" : "no") << "\n";
 
 	bool is_my_turn;
 	if (is_in_a_platoon())
 	{
-		//if (is_platoon_leader())
-		//{
-		//	get_platoon()->set_possible_maneuver_initial_states();
-		//}
 		is_my_turn = get_platoon()->can_vehicle_start_lane_change(get_id());
 	}
 	else
@@ -222,10 +145,10 @@ void PlatoonVehicle::add_another_as_nearby_vehicle(
 	if (!is_vehicle_in_sight(platoon_vehicle.get_id()))
 	{
 		int rel_lane = platoon_vehicle.get_lane() - get_lane();
-		double distance = 
+		double distance =
 			platoon_vehicle.get_distance_traveled() - get_distance_traveled();
 		int rel_position = distance > 0 ? 3 : -3;
-		double rel_velocity = 
+		double rel_velocity =
 			get_velocity() - platoon_vehicle.get_velocity();
 		NearbyVehicle new_nv(platoon_vehicle.get_id(), rel_lane, rel_position);
 		new_nv.set_distance(distance);
@@ -235,6 +158,109 @@ void PlatoonVehicle::add_another_as_nearby_vehicle(
 		new_nv.set_type(platoon_vehicle.get_type(), get_type());
 		add_nearby_vehicle(new_nv);
 	}
+}
+
+void PlatoonVehicle::give_up_lane_change()
+{
+	if (verbose) std::clog << "t=" << get_current_time()
+		<< ", id=" << get_id() << ": giving up lane change\n";
+	has_lane_change_failed = true;
+}
+
+double PlatoonVehicle::get_free_flow_intra_platoon_gap() const
+{
+	return (SAFE_PLATOON_TIME_HEADWAY + TIME_HEADWAY_MARGIN)
+		* get_desired_velocity() + 1.0; 
+}
+
+const VehicleState* PlatoonVehicle::get_preceding_vehicle_state() const
+{
+	const auto& leader = platoon->get_preceding_vehicle(get_id());
+	return leader == nullptr ? nullptr : leader->get_state();
+}
+
+bool PlatoonVehicle::has_finished_adjusting_time_headway() const
+{
+	double safe_time_headway = get_safe_time_headway();
+	bool has_time_headway_transition_ended =
+		(std::abs(safe_time_headway
+			- get_current_desired_time_headway())
+			/ safe_time_headway) < 0.1;
+	return has_time_headway_transition_ended || !has_leader();
+}
+
+bool PlatoonVehicle::has_finished_increasing_gap() const
+{
+	/* When we increase the reference gap, the gap error becomes negative.
+	The maneuver is considered to be done when the gap error is close
+	to becoming non-negative. */
+	bool is_gap_error_non_negative = true;
+	if (has_leader())
+	{
+		double safe_gap = compute_time_headway_gap(get_leader().get());
+		double gap = compute_gap_to_a_leader(get_leader().get());
+		double gap_error = gap - safe_gap;
+		is_gap_error_non_negative = gap_error / safe_gap > (-0.05);
+	}
+	return has_finished_adjusting_time_headway()
+		&& is_gap_error_non_negative;
+}
+
+bool PlatoonVehicle::has_finished_closing_gap() const
+{
+	/* When we decrease the reference gap, the gap error becomes positive.
+	The maneuver is considered to be done when the gap error is close
+	to zero. */
+
+	bool is_gap_error_small = true;
+	if (has_leader())
+	{
+		double safe_gap = compute_time_headway_gap(get_leader().get());
+		double gap = compute_gap_to_a_leader(get_leader().get());
+		double gap_error = gap - safe_gap;
+		is_gap_error_small = gap_error / safe_gap < 0.05;
+	}
+	return has_finished_adjusting_time_headway() && is_gap_error_small;
+	//bool is_gap_error_small = get_gap_error() < gap_error_threshold;
+	//return has_finished_adjusting_time_headway()
+	//	&& (is_gap_error_small || is_platoon_leader());
+}
+
+long PlatoonVehicle::get_preceding_vehicle_id() const
+{
+	const auto& leader = platoon->get_preceding_vehicle(get_id());
+	return leader == nullptr ? 0 : leader->get_id();
+}
+
+const PlatoonVehicle*
+PlatoonVehicle::get_preceding_vehicle_in_platoon() const
+{
+	return platoon->get_preceding_vehicle(get_id());
+}
+
+const VehicleState*
+PlatoonVehicle::get_following_vehicle_state() const
+{
+	const auto& follower = platoon->get_following_vehicle(get_id());
+	return follower == nullptr ? nullptr : follower->get_state();
+}
+
+long PlatoonVehicle::get_following_vehicle_id() const
+{
+	const auto& follower = platoon->get_following_vehicle(get_id());
+	return follower == nullptr ? 0 : follower->get_id();
+}
+
+const PlatoonVehicle*
+PlatoonVehicle::get_following_vehicle_in_platoon() const
+{
+	return get_platoon()->get_following_vehicle(get_id());
+}
+
+std::shared_ptr<NearbyVehicle> PlatoonVehicle
+::define_virtual_leader_when_alone() const
+{
+	return ConnectedAutonomousVehicle::choose_behind_whom_to_move();
 }
 
 //double PlatoonVehicle::implement_compute_desired_acceleration(
@@ -249,51 +275,57 @@ void PlatoonVehicle::add_another_as_nearby_vehicle(
 double PlatoonVehicle::compute_vehicle_following_safe_time_headway(
 	const NearbyVehicle& nearby_vehicle) const
 {
-	double current_lambda_1;
-	double rho;
-	if (nearby_vehicle.get_type() == VehicleType::platoon_car)
-	{
-		if (verbose) std::clog << "Leader identified as platoon veh.\n";
-		current_lambda_1 = lambda_1_platoon;
-		rho = in_platoon_rho;
-	}
-	else
-	{
-		current_lambda_1 = ConnectedAutonomousVehicle::get_lambda_1(
-			nearby_vehicle.is_connected());
-		rho = get_rho();
-	}
+	//double current_lambda_1;
+	//double rho;
+	//if (nearby_vehicle.get_type() == VehicleType::platoon_car)
+	//{
+	//	if (verbose) std::clog << "Leader identified as platoon veh.\n";
+	//	current_lambda_1 = lambda_1_platoon;
+	//	rho = in_platoon_rho;
+	//}
+	//else
+	//{
+	//	current_lambda_1 = ConnectedAutonomousVehicle::get_lambda_1(
+	//		nearby_vehicle.is_connected());
+	//	rho = get_rho();
+	//}
 
-	return compute_time_headway_with_risk(get_desired_velocity(),
-		get_max_brake(), nearby_vehicle.get_max_brake(),
-		current_lambda_1, rho, 0);
+	//return compute_time_headway_with_risk(get_desired_velocity(),
+	//	get_max_brake(), nearby_vehicle.get_max_brake(),
+	//	current_lambda_1, rho, 0);
+	if (verbose) std::clog << "[PlatoonVehicle] compute_vehicle_following_safe_time_headway\n";
+	return decide_safe_time_headway(nearby_vehicle);
 }
 
 double PlatoonVehicle::compute_lane_changing_desired_time_headway(
 	const NearbyVehicle& nearby_vehicle) const
 {
-	double current_lambda_1;
-	double rho;
-	if (nearby_vehicle.get_type() == VehicleType::platoon_car)
-	{
-		current_lambda_1 = lambda_1_platoon;
-		/*Not lambda_1_lane_change_platoon because we are not interessed 
-		in this detail of safety for platoons */
-		rho = in_platoon_rho;
-	}
-	else
-	{
-		current_lambda_1 = ConnectedAutonomousVehicle::
-			get_lambda_1(nearby_vehicle.is_connected());
-			/* Not get_lambda_1_lane_change(nearby_vehicle.is_connected());
-			for the same reason as above. */
-		rho = get_rho();
-	}
-	double h_lc = compute_time_headway_with_risk(get_desired_velocity(),
-		/*get_lane_change_max_brake()*/
-		get_max_brake(), nearby_vehicle.get_max_brake(),
-		current_lambda_1, rho, 0);
-	return h_lc;
+	//double current_lambda_1;
+	//double rho;
+	//if (nearby_vehicle.get_type() == VehicleType::platoon_car)
+	//{
+	//	current_lambda_1 = lambda_1_platoon;
+	//	/*Not lambda_1_lane_change_platoon because we are not interessed 
+	//	in this detail of safety for platoons */
+	//	rho = in_platoon_rho;
+	//}
+	//else
+	//{
+	//	current_lambda_1 = ConnectedAutonomousVehicle::
+	//		get_lambda_1(nearby_vehicle.is_connected());
+	//		/* Not get_lambda_1_lane_change(nearby_vehicle.is_connected());
+	//		for the same reason as above. */
+	//	rho = get_rho();
+	//}
+	//double h_lc = compute_time_headway_with_risk(get_desired_velocity(),
+	//	/*get_lane_change_max_brake()*/
+	//	get_max_brake(), nearby_vehicle.get_max_brake(),
+	//	current_lambda_1, rho, 0);
+	//return h_lc;
+
+	if (verbose) std::clog << "[PlatoonVehicle] compute_lane_changing_desired_time_headway\n";
+
+	return decide_safe_time_headway(nearby_vehicle);
 }
 
 void PlatoonVehicle::create_lane_change_request()
@@ -382,14 +414,14 @@ double PlatoonVehicle::compute_accepted_lane_change_gap(
 			.compute_time_headway_gap(get_velocity(), *nearby_vehicle, 0.0);
 	}
 	return safe_gap;
-	//return compute_reference_vehicle_following_gap(nearby_vehicle);
 }
 
 void PlatoonVehicle::set_desired_lane_change_direction()
 {
 	bool should_change_lane = (get_link() == MAIN_LINK_NUMBER)
 		&& (get_lane() == 1);
-	desired_lane_change_direction = should_change_lane ?
+	desired_lane_change_direction = 
+		should_change_lane && !has_lane_change_failed ?
 		RelativeLane::left : RelativeLane::same;
 }
 

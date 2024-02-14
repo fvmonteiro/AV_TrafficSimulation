@@ -41,6 +41,7 @@ public:
 	long create_platoon_lane_change_request(int ego_position) const;
 
 protected:
+	bool verbose{ false };
 	const Platoon* platoon{ nullptr };
 
 	PlatoonLaneChangeApproach(int id, std::string name, bool verbose);
@@ -51,7 +52,6 @@ protected:
 private:
 	int id;
 	std::string name;
-	bool verbose{ false };
 	double decision_time{ 0.0 };
 	bool is_initialized{ false };
 	PlatoonLaneChangeOrder platoon_lane_change_order;
@@ -134,4 +134,6 @@ private:
 	void decide_lane_change_order() override;
 	void set_maneuver_initial_state_for_all_vehicles();
 	PlatoonLaneChangeOrder find_best_order_in_map();
+	void save_not_found_state_to_file(std::vector<int> state_vector,
+		double free_flow_speed_dest);
 };

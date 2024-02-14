@@ -199,6 +199,52 @@ long Platoon::get_cooperating_vehicle_id() const
 	return lane_change_approach->get_cooperating_vehicle_id();
 }
 
+std::vector<ContinuousStateVector> Platoon::get_vehicles_states() const
+{
+	const PlatoonVehicle* platoon_leader = get_platoon_leader();
+	double leader_x = platoon_leader->get_state_vector().get_x();
+	double leader_y = platoon_leader->get_state_vector().get_y();
+
+	/* By definition, we center around the leader */
+	ContinuousStateVector leader_states(0., 0., 0., 
+		platoon_leader->get_velocity());
+	std::vector<ContinuousStateVector> system_state_matrix{ leader_states };
+	double delta_x{ 0.0 };
+	double delta_y{ 0.0 };
+	for (int i = 1; i < vehicles_by_position.size(); i++)
+	{
+		const PlatoonVehicle* veh = vehicles_by_position.at(i);
+		/* Relative position values given by VISSIM are more reliable
+		than the ones obtained by internal computations. However, during a 
+		lane change the vehicle's leader may not be its platoon preceding 
+		vehicle. So we address both cases. */
+		if (veh->get_leader_id() == vehicles_by_position.at(i - 1)->get_id())
+		{
+			const NearbyVehicle* leader = veh->get_leader().get();
+			delta_y -= leader->get_relative_lateral_position();
+			delta_x += veh->compute_gap_to_a_leader(leader);
+		}
+		else
+		{
+			const PlatoonVehicle* leader = vehicles_by_position.at(i - 1);
+			delta_y += (veh->get_lateral_position()
+					    - leader->get_lateral_position());
+			/* Since the platoon vehicles start the simulation at different
+			positions, the different in distance travelled does not equal
+			the distance between them. */
+			delta_x += (veh->get_distance_traveled()
+						- leader->get_distance_traveled()
+						- veh->get_free_flow_intra_platoon_gap());
+		}
+		system_state_matrix.push_back(
+			ContinuousStateVector(delta_x, delta_y,
+				veh->get_orientation_angle(), veh->get_velocity()));
+		delta_x += veh->get_length();
+	}
+
+	return system_state_matrix;
+}
+
 void Platoon::set_strategy(int strategy_number)
 {
 	/* TODO [Jan 24, 24] we're phasing out the current strategy
@@ -233,6 +279,10 @@ void Platoon::set_strategy(int strategy_number)
 		//	std::make_unique<LeaderFirstAndInvertStrategy>();
 		lane_change_approach =
 			std::make_unique<LeaderFirstReverseApproach>(verbose);
+		break;
+	case Platoon::graph_strategy:
+		lane_change_approach =
+			std::make_unique<GraphApproach>(verbose);
 		break;
 	default:
 		std::clog << "ERROR: Platoon lane change strategy not coded\n";
@@ -328,8 +378,22 @@ bool Platoon::can_vehicle_leave_platoon(long ego_id) const
 
 bool Platoon::can_vehicle_start_lane_change(long ego_id) const
 {
+	if (verbose) std::clog << "[Platoon] can_vehicle_start_lane_change\n";
 	int veh_position = vehicle_id_to_position.at(ego_id);
-	return lane_change_approach->can_vehicle_start_lane_change(veh_position);
+	try
+	{
+		return lane_change_approach->can_vehicle_start_lane_change(
+			veh_position);
+	}
+	catch (const StateNotFoundException& e)
+	{
+		std::clog << "[Platoon] " << e.what() << "\n";
+		for (std::pair<int, PlatoonVehicle*> pos_veh : vehicles_by_position)
+		{
+			pos_veh.second->give_up_lane_change();
+		}
+		return false;
+	}
 }
 
 bool Platoon::has_lane_change_intention() const {

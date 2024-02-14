@@ -5,6 +5,10 @@
 
 #pragma once
 
+#define _USE_MATH_DEFINES
+#include <math.h>
+#include <string>
+
 typedef unsigned long color_t;
 /* Based on the _WINGDI_ RGB definition and some tests on VISSIM */
 //#define ARGB(a,r,g,b)   ((COLORREF)((((BYTE)(b) | ((WORD)((BYTE)(g)) << 8)) | (((DWORD)(BYTE)(r)) << 16))|((BYTE)(a) << 24)))
@@ -47,6 +51,7 @@ const double AUTONOMOUS_BRAKE_DELAY{ 0.2 }; // [s]
 const double HUMAN_BRAKE_DELAY{ 0.75 }; // [s]
 const double LANE_WIDTH{ 3.6 }; // [m]
 
+const double PI{ M_PI };
 /* Parameters used in discretionary platoon lane change scenarios */
 
 const double SAFE_TIME_HEADWAY{ 2.0 }; // [s]

@@ -12,16 +12,19 @@ public:
 		bool verbose);
 	~PlatoonVehicle();
 
+	/* Value added to the safe headway to determine the reference
+	headway. */
+	double get_time_headway_margin() const { return TIME_HEADWAY_MARGIN; };
+	/* Chooses between in-platoon or non-platoon time headway */
+	double decide_safe_time_headway(const NearbyVehicle& nearby_vehicle
+	) const;
 	/* Returns true if vehicle is the platoon leader 
 	or if it is not part of a platoon */
 	bool is_platoon_leader() const;
 	/* Returns true if vehicle is the last vehicle in 
 	the platoon or if it is not part of a platoon */
 	bool is_last_platoon_vehicle() const;
-
-	bool has_finished_adjusting_time_headway() const;
-	bool has_finished_increasing_gap() const;
-	bool has_finished_closing_gap() const;
+	
 	long get_suitable_destination_lane_leader_id() const;
 	double get_desired_velocity_from_platoon() const;
 	bool can_start_lane_change();
@@ -34,8 +37,15 @@ public:
 	void add_another_as_nearby_vehicle(
 		const PlatoonVehicle& platoon_vehicle);
 
-	/* Methods used by deprecated framework (Jan 24) ---------------------- */
+	void give_up_lane_change();
 
+	/* Returns h.v_ff + c. Attention: h and c are hard coded */
+	double get_free_flow_intra_platoon_gap() const;
+
+	/* Methods used by deprecated framework (Jan 24) ---------------------- */
+	bool has_finished_adjusting_time_headway() const;
+	bool has_finished_increasing_gap() const;
+	bool has_finished_closing_gap() const;
 	long get_preceding_vehicle_id() const;
 	long get_following_vehicle_id() const;
 	const VehicleState* get_preceding_vehicle_state() const;
@@ -63,26 +73,32 @@ protected:
 	void compute_platoon_safe_gap_parameters();
 
 private:
-	//double min_overtaking_rel_vel{ 50.0 / 3.6 };
 	std::shared_ptr<Platoon> platoon{ nullptr };
-	//std::unique_ptr<PlatoonVehicleController> controller_exclusive{ nullptr };
 	std::shared_ptr<PlatoonVehicleController> platoon_vehicle_controller{ 
 		nullptr };
+	bool has_lane_change_failed{ false };
 
-	// desired velocity when not a part of the platoon
-	//double alone_desired_velocity{ 0.0 };
 	/* Time the vehicle has been without a platoon.
 	As soon as the vehicle enters simulation, it may create its own platoon */
-	double alone_time{ 1.0 };
-	double max_time_looking_for_platoon{ 1.0 };
+	double alone_time{ 1.0 }; // not in use
+	double max_time_looking_for_platoon{ 1.0 }; // not in use
+
+	/* Safe and reference gaps' parameters.
+	Not being used. It is easier to debug and analyze with 
+	fixed values of h */
+
 	double lambda_0_platoon{ 0.0 };
 	double lambda_1_platoon{ 0.0 };
 	double lambda_0_lane_change_platoon{ 0.0 };
 	double lambda_1_lane_change_platoon{ 0.0 };
-
-	/* Some constants for the platoon vehicles */
 	double in_platoon_comf_accel{ 0.5 };
 	double in_platoon_rho{ 0.1 };
+
+	/* Safe and reference time headway values */
+
+	const double SAFE_TIME_HEADWAY{ 2.0 }; // towards non-platoon vehicles
+	const double SAFE_PLATOON_TIME_HEADWAY{ 1.0 }; // towards platoon vehicles
+	const double TIME_HEADWAY_MARGIN{ 0.1 };  // h_ref = h_safe + h_margin
 
 	void implement_create_controller() override;
 	/*double implement_compute_desired_acceleration(
@@ -103,7 +119,6 @@ private:
 	and they try to change lanes as soon as they enter the highway */
 	void set_desired_lane_change_direction() override;
 	double apply_low_level_dynamics(double unfiltered_acceleration) override;
-	//bool implement_check_lane_change_gaps() override;
 	const Platoon* implement_get_platoon() const override;
 	std::shared_ptr<Platoon> implement_share_platoon() const override;
 	void pass_this_to_state() override;

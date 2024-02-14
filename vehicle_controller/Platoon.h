@@ -63,6 +63,7 @@ public:
 	const NearbyVehicle* get_destination_lane_leader() const;
 	long get_assisted_vehicle_id(long ego_id) const;
 	long get_cooperating_vehicle_id() const;
+	std::vector<ContinuousStateVector> get_vehicles_states() const;
 
 	void set_strategy(int strategy_number);
 
@@ -97,7 +98,8 @@ private:
 		synchronous_strategy,
 		leader_first_strategy,
 		last_vehicle_first_strategy,
-		leader_first_invert_strategy
+		leader_first_invert_strategy,
+		graph_strategy,
 	};
 
 	long id{ 0 };

@@ -70,23 +70,19 @@ double PlatoonVehicleController::implement_get_desired_acceleration()
 void PlatoonVehicleController::implement_update_origin_lane_controller(
 	const NearbyVehicle& real_leader)
 {
+	if (verbose) std::clog << "[PlVehController] updating orig lane leader\n";
+
 	origin_lane_controller_time_headway =
 		real_leader_controller->get_current_time_headway();
-	double safe_h = platoon_vehicle->compute_current_desired_time_headway(
+	double h_safe = platoon_vehicle->compute_current_desired_time_headway(
 		real_leader);
-	//double safe_h;
-	//if (platoon_vehicle->get_platoon()
-	//	->is_vehicle_id_in_platoon(real_leader.get_id()))
-	//{
-	//	safe_h = 1.0;
-	//}
-	//else
-	//{
-	//	safe_h = 2.0;
-	//}
-	lateral_controller.set_time_headway_to_leader(safe_h);
-	real_leader_controller->reset_time_headway_filter(safe_h);
-	real_leader_controller->set_desired_time_headway(safe_h);
+	//double h_safe = platoon_vehicle->decide_safe_time_headway(real_leader);
+	if (verbose) std::clog << "\th_safe=" << h_safe << "\n";
+	double h_ref = h_safe + platoon_vehicle->get_time_headway_margin();
+	if (verbose) std::clog << "\th_ref=" << h_safe << "\n";
+	lateral_controller.set_time_headway_to_leader(h_safe);
+	real_leader_controller->reset_time_headway_filter(h_ref);
+	real_leader_controller->set_desired_time_headway(h_ref);
 	real_leader_controller->connect_gap_controller(
 		real_leader.is_connected());
 }
@@ -94,10 +90,20 @@ void PlatoonVehicleController::implement_update_origin_lane_controller(
 void PlatoonVehicleController::implement_update_destination_lane_controller(
 	const NearbyVehicle& virtual_leader)
 {
-	double safe_h = platoon_vehicle->compute_current_desired_time_headway(
-		virtual_leader);
-	virtual_leader_controller->reset_time_headway_filter(safe_h);
-	virtual_leader_controller->set_desired_time_headway(safe_h);
+	/*double safe_h = platoon_vehicle->compute_current_desired_time_headway(
+		virtual_leader);*/
+	double h_safe = platoon_vehicle->decide_safe_time_headway(virtual_leader);
+	double h_ref = h_safe + platoon_vehicle->get_time_headway_margin();
+	virtual_leader_controller->reset_time_headway_filter(h_ref);
+	virtual_leader_controller->set_desired_time_headway(h_ref);
 	virtual_leader_controller->connect_gap_controller(
 		virtual_leader.is_connected());
+}
+
+double PlatoonVehicleController
+::compute_destination_lane_follower_time_headway(
+	NearbyVehicle& dest_lane_follower)
+{
+	if (verbose) std::clog << "[PlVehController] getting h_safe\n";
+	return platoon_vehicle->decide_safe_time_headway(dest_lane_follower);
 }

@@ -208,7 +208,7 @@ public:
 	};
 	bool has_leader() const;
 	/* Returns a nullptr if there is no leader */
-	const std::shared_ptr<NearbyVehicle> get_leader() const;
+	std::shared_ptr<NearbyVehicle> get_leader() const;
 	/* Returns a nullptr if vehicle not found */
 	std::shared_ptr<NearbyVehicle> get_nearby_vehicle_by_id(long nv_id) const;
 	/* Checks if the given id is in the ego vehicle's nearby

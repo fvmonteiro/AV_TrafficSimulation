@@ -55,4 +55,6 @@ private:
 	vehicle. */
 	virtual void implement_update_destination_lane_controller(
 		const NearbyVehicle& virtual_leader);
+	double compute_destination_lane_follower_time_headway(
+		NearbyVehicle& dest_lane_follower) override;
 };

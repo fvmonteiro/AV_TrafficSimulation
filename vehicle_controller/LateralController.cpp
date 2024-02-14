@@ -5,9 +5,7 @@
 /*  Version of 2021-xx-xx                             Fernando V. Monteiro  */
 /*==========================================================================*/
 
-#define _USE_MATH_DEFINES
-#include <math.h>
-
+#include "Constants.h"
 #include "LateralController.h"
 #include "LongitudinalController.h"
 #include "NearbyVehicle.h"
@@ -338,8 +336,8 @@ void LateralController::estimate_lane_change_kinematics()
 	while (time < lane_change_duration) 
 	{
 		lane_change_lateral_acceleration.push_back(
-			2 * M_PI * LANE_WIDTH / (lane_change_duration*lane_change_duration)
-			* std::sin(2*M_PI*time/lane_change_duration)
+			2 * PI * LANE_WIDTH / (lane_change_duration*lane_change_duration)
+			* std::sin(2*PI*time/lane_change_duration)
 		);
 		lane_change_lateral_velocity.push_back(
 			lane_change_lateral_velocity.back() 

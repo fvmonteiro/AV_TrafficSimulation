@@ -387,7 +387,6 @@ bool AutonomousVehicle::implement_check_lane_change_gaps()
 	double safe_gap_to_lo, safe_gap_to_ld, safe_gap_to_fd;
 	double margin = 0.1;
 
-	
 	gap_to_lo = compute_gap_to_a_leader(get_leader().get()); // possibly MAX_DIST
 	safe_gap_to_lo = compute_accepted_lane_change_gap(
 			get_leader().get()); // possibly 0.0
@@ -523,13 +522,14 @@ double AutonomousVehicle::compute_accepted_lane_change_gap(
 
 	if (use_linear_lane_change_gap)
 	{
-		accepted_gap = av_controller->compute_accepted_lane_change_gap(*nearby_vehicle,
-				accepted_risk);
+		accepted_gap = av_controller->compute_accepted_lane_change_gap(
+			*nearby_vehicle, accepted_risk);
 	}
 	else
 	{
 		accepted_gap = av_controller->compute_accepted_lane_change_gap_exact(
-			*nearby_vehicle, get_lane_changing_safe_gap_parameters(), accepted_risk);
+			*nearby_vehicle, get_lane_changing_safe_gap_parameters(), 
+			accepted_risk);
 	}
 
 	return std::max(accepted_gap, 1.0);
