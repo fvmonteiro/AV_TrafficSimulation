@@ -8,6 +8,7 @@
 #define _USE_MATH_DEFINES
 #include <math.h>
 #include <string>
+#include <vector>
 
 typedef unsigned long color_t;
 /* Based on the _WINGDI_ RGB definition and some tests on VISSIM */
@@ -51,7 +52,8 @@ const double AUTONOMOUS_BRAKE_DELAY{ 0.2 }; // [s]
 const double HUMAN_BRAKE_DELAY{ 0.75 }; // [s]
 const double LANE_WIDTH{ 3.6 }; // [m]
 
-const double PI{ M_PI };
+const double PI{ M_PI };  // because I never remember how to find PI
+
 /* Parameters used in discretionary platoon lane change scenarios */
 
 const double SAFE_TIME_HEADWAY{ 2.0 }; // [s]
@@ -93,4 +95,17 @@ enum class VehicleType {
 	virdi_car = 150,
 	truck = 200,
 	bus = 300
+};
+
+template <typename T>
+std::string vector_to_string(std::vector<T> v)
+{
+	std::string ret_str = "[";
+	for (T i : v)
+	{
+		ret_str += std::to_string(i) + ", ";
+	}
+	if (ret_str.size() > 1) ret_str.erase(ret_str.size() - 2);
+	ret_str += "], ";
+	return ret_str;
 };

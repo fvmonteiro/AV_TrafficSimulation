@@ -222,7 +222,7 @@ std::vector<ContinuousStateVector> Platoon::get_vehicles_states() const
 		{
 			const NearbyVehicle* leader = veh->get_leader().get();
 			delta_y -= leader->get_relative_lateral_position();
-			delta_x += veh->compute_gap_to_a_leader(leader);
+			delta_x -= veh->compute_gap_to_a_leader(leader);
 		}
 		else
 		{
@@ -379,11 +379,15 @@ bool Platoon::can_vehicle_leave_platoon(long ego_id) const
 bool Platoon::can_vehicle_start_lane_change(long ego_id) const
 {
 	if (verbose) std::clog << "[Platoon] can_vehicle_start_lane_change\n";
+
 	int veh_position = vehicle_id_to_position.at(ego_id);
+	bool all_vehicles_have_or_had_intention =
+		has_lane_change_intention() || has_lane_change_started();
 	try
 	{
-		return lane_change_approach->can_vehicle_start_lane_change(
-			veh_position);
+		return all_vehicles_have_or_had_intention
+			&& lane_change_approach->can_vehicle_start_lane_change(
+				veh_position);
 	}
 	catch (const StateNotFoundException& e)
 	{
@@ -397,8 +401,8 @@ bool Platoon::can_vehicle_start_lane_change(long ego_id) const
 }
 
 bool Platoon::has_lane_change_intention() const {
-	return lane_change_intention_counter > 0;
-};
+	return lane_change_intention_counter == get_size();
+}
 
 void Platoon::receive_lane_change_intention_signal()
 {

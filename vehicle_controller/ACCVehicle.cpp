@@ -41,7 +41,6 @@ bool ACCVehicle::implement_check_lane_change_gaps()
 
 void ACCVehicle::implement_prepare_to_start_long_adjustments()
 {
-	set_has_completed_lane_change(false);
 	update_time_headway_to_leader();
 }
 

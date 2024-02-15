@@ -40,8 +40,8 @@ double current_desired_velocity{ 0 };
 long current_nearby_vehicle_id{ 0 };
 long platoon_id{ 1 };
 int platoon_lc_strategy{ 0 };
-PlatoonLCStrategyManager platoon_lc_strategy_manager {
-    PlatoonLCStrategyManager("time") };
+//PlatoonLCStrategyManager platoon_lc_strategy_manager {
+//    PlatoonLCStrategyManager("time", true) };
 
 /*==========================================================================*/
 
@@ -274,10 +274,18 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
         }
         return 1;
     case DRIVER_DATA_VEH_X_COORDINATE       :
+        vehicles[current_vehicle_id]->set_front_x(double_value);
+        return 1;
     case DRIVER_DATA_VEH_Y_COORDINATE       :
+        vehicles[current_vehicle_id]->set_front_y(double_value);
+        return 1;
     case DRIVER_DATA_VEH_Z_COORDINATE       :
     case DRIVER_DATA_VEH_REAR_X_COORDINATE  :
+        vehicles[current_vehicle_id]->set_rear_x(double_value);
+        return 1;
     case DRIVER_DATA_VEH_REAR_Y_COORDINATE  :
+        vehicles[current_vehicle_id]->set_rear_y(double_value);
+        return 1;
     case DRIVER_DATA_VEH_REAR_Z_COORDINATE  :
         return 1;
     case DRIVER_DATA_VEH_TYPE               :

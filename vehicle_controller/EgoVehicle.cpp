@@ -658,6 +658,8 @@ bool EgoVehicle::check_lane_change_gaps()
 
 void EgoVehicle::prepare_to_start_long_adjustments()
 {
+	set_has_completed_lane_change(false);
+	check_lane_change_gaps();
 	implement_prepare_to_start_long_adjustments();
 }
 

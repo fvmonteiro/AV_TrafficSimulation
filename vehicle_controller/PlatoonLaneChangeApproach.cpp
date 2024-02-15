@@ -137,9 +137,6 @@ bool PlatoonLaneChangeApproach::can_vehicle_start_lane_change(
 		std::clog << message << "\n";
 	}
 
-	/* TODO: change where this check happens.The current lc vehicles should
-	call a new method when they finish their maneuvers. In this new
-	method we advance the idx */
 	check_maneuver_step_done(next_to_move);
 
 	if (is_my_turn)
@@ -349,10 +346,9 @@ void GraphApproach::decide_lane_change_order()
 	if (!is_data_loaded)
 	{
 		std::string cost_name = "accel";
-		strategy_manager = PlatoonLCStrategyManager(cost_name);
+		strategy_manager = PlatoonLCStrategyManager(cost_name, verbose);
 		strategy_manager.initialize(platoon->get_size());
 	}
-	if (verbose) std::clog << "[GraphApproach] about to set initial states \n";
 	set_maneuver_initial_state_for_all_vehicles();
 	PlatoonLaneChangeOrder plco = find_best_order_in_map();
 	if (plco.cost > -1)  // an order was found
@@ -366,6 +362,7 @@ void GraphApproach::set_maneuver_initial_state_for_all_vehicles()
 {
 	/* TODO [Jan 16 2024]: change how to deal with no leaders once these
 	situations are included in the graph */
+	if (verbose) std::clog << "[GraphApproach] Setting all initial states \n";
 
 	// We need to center all vehicles' states around the leader
 	const PlatoonVehicle* platoon_leader = platoon->get_platoon_leader();
@@ -389,27 +386,15 @@ void GraphApproach::set_maneuver_initial_state_for_all_vehicles()
 		lo_states.offset(leader_x, leader_y);
 	}
 	system_state_matrix.push_back(lo_states);
-	if (verbose) std::clog << "lo states="
+	if (verbose) std::clog << "\tlo states="
 		<< system_state_matrix.back().to_string() << "\n";
 
 	int i = 0;
 	for (ContinuousStateVector& v : platoon->get_vehicles_states())
 	{
 		system_state_matrix.push_back(v);
-		if (verbose) std::clog << "platoon states (" << i++ << ")="
+		if (verbose) std::clog << "\tplatoon states (" << i++ << ")="
 			<< system_state_matrix.back().to_string() << "\n";
-	/*}
-
-	for (const auto& item : platoon->get_vehicles_by_position())
-	{
-		ContinuousStateVector veh_state_vector = 
-			item.second->get_state_vector();
-		if (verbose) std::clog << "platoon states before (" << item.first << ")="
-			<< veh_state_vector.to_string() << "\n";
-		veh_state_vector.offset(leader_x, leader_y);
-		system_state_matrix.push_back(veh_state_vector);
-		if (verbose) std::clog << "platoon states (" << item.first << ")="
-			<< system_state_matrix.back().to_string() << "\n"; */
 	}
 
 	/* Now we check which platoon vehicles can move and set possible
@@ -430,6 +415,7 @@ void GraphApproach::set_maneuver_initial_state_for_all_vehicles()
 				double vehicle_vel = vehicle->get_velocity();
 				ld_states = ld.get_relative_state_vector(
 					vehicle->get_velocity());
+				
 			}
 			else
 			{
@@ -441,18 +427,19 @@ void GraphApproach::set_maneuver_initial_state_for_all_vehicles()
 				ld_states.offset(leader_x, leader_y);
 			}
 			system_state_matrix.push_back(ld_states);
-			if (verbose) std::clog << "ld states ("
+			if (verbose) std::clog << "\tld states ("
 				<< veh_pos << ")" << system_state_matrix.back().to_string()
 				<< "\n";
 			try
 			{
-				if (verbose) std::clog << "Setting initial state...";
+				if (verbose) std::clog << "\tSetting one initial state...\n";
 				strategy_manager.set_maneuver_initial_state(veh_pos,
 					system_state_matrix);
+				if (verbose) std::clog << "\tState found.\n";
 			}
 			catch (const StateNotFoundException& e)
 			{
-				if (verbose) std::clog << "done.\nState not found.\n";
+				if (verbose) std::clog << "\tState not found.\n";
 				double free_flow_speed_dest =
 					vehicle->has_destination_lane_leader() ?
 					vehicle->get_destination_lane_leader()->compute_velocity(
@@ -464,8 +451,6 @@ void GraphApproach::set_maneuver_initial_state_for_all_vehicles()
 			}
 			system_state_matrix.pop_back();
 		}
-
-		
 	}
 }
 
@@ -498,6 +483,8 @@ PlatoonLaneChangeOrder GraphApproach::find_best_order_in_map()
 				found = true;
 				best_cost = an_order.cost;
 				best_order = an_order;
+				if (verbose) std::clog << "best order so far=" 
+					<< best_order.to_string() << "\n";
 			}
 		}
 	}
@@ -521,6 +508,8 @@ PlatoonLaneChangeOrder GraphApproach::find_best_order_in_map()
 					found = true;
 					best_cost = an_order.cost;
 					best_order = an_order;
+					if (verbose) std::clog << "best order so far=" 
+						<< best_order.to_string() << "\n";
 				}
 			}
 		}

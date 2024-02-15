@@ -7,38 +7,37 @@
 
 using json = nlohmann::json;
 
-PlatoonLCStrategyManager::PlatoonLCStrategyManager(std::string cost_name) 
-	: cost_name(cost_name)
+PlatoonLCStrategyManager::PlatoonLCStrategyManager(std::string cost_name,
+	bool verbose) 
+	: cost_name(cost_name), verbose(verbose)
 {}
 
 void PlatoonLCStrategyManager::initialize(int n_platoon)
 {
-	std::clog << "[PlatoonLCStrategyManager] initialize (about to load)...\n";
+	if (verbose) std::clog << "[PlatoonLCStrategyManager] initializing...";
+	
 	this->n_platoon = n_platoon;
 	load_a_strategy_map(n_platoon, cost_name);
-	std::clog << "All strategies loaded. Loading quantizer data..." << "\n";
 	load_quantizer_data(n_platoon);
-	std::clog << "Quantizer data loaded." << "\n";
+
+	if (verbose) std::clog << " done.\n";
 }
 
 void PlatoonLCStrategyManager::set_maneuver_initial_state(
 	int ego_position, std::vector<ContinuousStateVector> system_state_matrix)
 {	
-	std::clog << "[PlatoonLCStrategyManager] Quantization start.\n";
-
 	std::vector<QuantizedStateVector> quantized_state_matrix = 
 		state_quantizer.quantize_states(system_state_matrix);
 
-	std::clog << "[PlatoonLCStrategyManager] Quantization done.\n";
-
 	std::vector<int> quantized_state_vector = flatten_state_matrix<int>(
 		quantized_state_matrix);
+
+	if (verbose) std::clog << "\tqx="
+		<< vector_to_string(quantized_state_vector) << "\n";
+
 	if (strategy_map.find(quantized_state_vector) == strategy_map.end())
 	{
 		throw StateNotFoundException(quantized_state_vector);
-		/*std::clog << " ==== ERROR: ====\n"
-			<< "[PlatoonLCStrategyManager] "
-			<< "Initial state not found in strategy map\n";*/
 		/* TODO: write the missing quantized initial state to the 
 		* appropriate csv file. Then, do one of the following:
 		1 - stop simulation here (without crashing!)
@@ -58,16 +57,16 @@ void PlatoonLCStrategyManager::set_empty_maneuver_initial_state(
 
 PlatoonLaneChangeOrder PlatoonLCStrategyManager
 ::find_minimum_cost_order_given_first_mover(
-	std::set<int>& first_mover_positions)
+	std::set<int>& first_mover_positions) const
 {
 	std::vector<int> initial_state;
-	for (int i : first_mover_positions)
+	for (int p : first_mover_positions)
 	{
 		if (initial_state.size() == 0) 
 		{
-			initial_state = initial_state_per_vehicle[i];
+			initial_state = initial_state_per_vehicle.at(p);
 		}
-		else if (initial_state != initial_state_per_vehicle[i])
+		else if (initial_state != initial_state_per_vehicle.at(p))
 		{
 			std::clog << " ==== ERROR: ====\n"
 				<< "[PlatoonLCStrategyManager] "
@@ -75,7 +74,7 @@ PlatoonLaneChangeOrder PlatoonLCStrategyManager
 				<< "for a given set of initial movers\n";
 		}
 	}
-	return strategy_map[initial_state][first_mover_positions];
+	return strategy_map.at(initial_state).at(first_mover_positions);
 }
 
 void PlatoonLCStrategyManager::load_a_strategy_map(
@@ -123,29 +122,19 @@ template<typename T>
 std::vector<T> PlatoonLCStrategyManager::flatten_state_matrix(
 	std::vector<StateVector<T>>& state_matrix)
 {
-	std::clog << "[PlatoonLCStrategyManager] flatten matrix...\n";
 	std::vector<T> system_state_vector;
-	int n_vehs = static_cast<int>(state_matrix.size());
-	int n_states = 4;
-	std::clog << "\tstate_vector desired size: " << n_states * n_vehs;
-
-	system_state_vector.reserve(n_states * n_vehs);
-
-	std::clog << "\tstate_vector size: " << system_state_vector.size() << "\n";
-	std::clog << "\tStarting copy... \n";
+	//int n_vehs = static_cast<int>(state_matrix.size());
+	//int n_states = state_matrix.front().get().size();
+	//system_state_vector.reserve(n_states * n_vehs);
 	for (StateVector<T>& v : state_matrix)
 	{
-		std::clog << "\tv=" << v.to_string() << "\n";
 		for (auto i : v.get())
 		{
 			system_state_vector.push_back(i);
 		}
 		//system_state_vector.insert(system_state_vector.end(),
 		//	v.get().begin(), v.get().end());
-		std::clog << "\tstate_vector size: " << system_state_vector.size()
-			<< "\n";
 	}
-	std::clog << "done.\n";
 	return system_state_vector;
 }
 

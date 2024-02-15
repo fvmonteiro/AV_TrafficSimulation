@@ -28,6 +28,7 @@ public:
 	double get_desired_velocity() const { return desired_velocity; };
 	double get_velocity_at_lane_change_start() const {
 		return velocity_at_lane_change_start; };
+	/* Returns the number of platoon vehicles */
 	int get_size() const { 
 		return static_cast<int>(vehicles_by_position.size()); };
 	const std::unordered_map<int, PlatoonVehicle*>&
@@ -73,6 +74,7 @@ public:
 	bool is_vehicle_id_in_platoon(long veh_id) const;
 	void add_last_vehicle(PlatoonVehicle* new_vehicle);
 	void remove_vehicle_by_id(long veh_id, bool is_out_of_simulation);
+	/* True when all platoon vehicles have lane change intention */
 	bool has_lane_change_intention() const;
 	void receive_lane_change_intention_signal();
 	void receive_lane_keeping_signal();

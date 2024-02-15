@@ -17,9 +17,7 @@ class StateNotFoundException : public std::out_of_range
 public:
     StateNotFoundException(std::vector<int>& state_vector) throw()
         : std::out_of_range("Initial state not found in strategy map"),
-        state_vector(state_vector) {
-        std::clog << "[StateNotFoundException] constructor\n";
-    };
+        state_vector(state_vector) {};
 
     std::vector<int> state_vector;
 };
@@ -55,7 +53,7 @@ class PlatoonLCStrategyManager
 {
 public:
     PlatoonLCStrategyManager() = default;
-    PlatoonLCStrategyManager(std::string cost_name);
+    PlatoonLCStrategyManager(std::string cost_name, bool verbose);
 
     void initialize(int n_platoon);
 
@@ -63,13 +61,14 @@ public:
         std::vector<ContinuousStateVector> system_state_matrix);
     void set_empty_maneuver_initial_state(int ego_position);
     PlatoonLaneChangeOrder find_minimum_cost_order_given_first_mover(
-        std::set<int>& first_mover_positions);
+        std::set<int>& first_mover_positions) const;
 
     friend std::ostream& operator<<(std::ostream& out,
         PlatoonLCStrategyManager const& strategy_manager);
 
 private:
     std::string cost_name;
+    bool verbose{ false };
     int n_platoon{ 0 };
     //std::unordered_map<int, OuterMap> strategy_map_per_size{};
     OuterMap strategy_map{};

@@ -115,9 +115,6 @@
     <ClCompile Include="LeaderFirstStates.cpp">
       <Filter>Deprecated</Filter>
     </ClCompile>
-    <ClCompile Include="PlatoonVehicleState.cpp">
-      <Filter>Deprecated</Filter>
-    </ClCompile>
     <ClCompile Include="SynchronousStates.cpp">
       <Filter>Deprecated</Filter>
     </ClCompile>
@@ -129,6 +126,9 @@
     </ClCompile>
     <ClCompile Include="StateVector.cpp">
       <Filter>Main and Support</Filter>
+    </ClCompile>
+    <ClCompile Include="PlatoonVehicleState.cpp">
+      <Filter>StateMachines</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

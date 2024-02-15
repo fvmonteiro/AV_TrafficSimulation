@@ -21,6 +21,10 @@ public:
 	long get_id() const { return id; };
 	double get_length() const { return length; };
 	double get_width() const { return width; };
+	double get_front_x() const { return front_x; };
+	double get_rear_x() const { return rear_x; };
+	double get_front_y() const { return front_y; };
+	double get_rear_y() const { return rear_y; };
 	/* angle relative to the middle of the lane [rad]
 	(positive = turning left) */
 	double get_orientation_angle() const{ return orientation_angle; };
@@ -34,6 +38,10 @@ public:
 
 	void set_length(double value) { length = value; };
 	void set_width(double value) { width = value; };
+	void set_front_x(double value) { front_x = value; };
+	void set_rear_x(double value) { rear_x = value; };
+	void set_front_y(double value) { front_y = value; };
+	void set_rear_y(double value) { rear_y = value; };
 	void set_orientation_angle(double value) { orientation_angle = value; };
 	/* Also sets the estimated maximum braking of the vehicle. */
 	void set_category(long category);
@@ -92,6 +100,10 @@ private:
 	long id;
 	double length{ 0.0 }; // [m]
 	double width{ 0.0 }; // [m]
+	double front_x{ 0.0 };
+	double rear_x{ 0.0 };
+	double front_y{ 0.0 };
+	double rear_y{ 0.0 };
 	double orientation_angle{ 0.0 }; // [rad]
 	/* Parameter related to the emergency braking scenario [m] */
 	double lambda_0{ 0.0 };

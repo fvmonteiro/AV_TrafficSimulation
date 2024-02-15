@@ -293,7 +293,6 @@ double PlatoonVehicle::compute_vehicle_following_safe_time_headway(
 	//return compute_time_headway_with_risk(get_desired_velocity(),
 	//	get_max_brake(), nearby_vehicle.get_max_brake(),
 	//	current_lambda_1, rho, 0);
-	if (verbose) std::clog << "[PlatoonVehicle] compute_vehicle_following_safe_time_headway\n";
 	return decide_safe_time_headway(nearby_vehicle);
 }
 
@@ -322,9 +321,6 @@ double PlatoonVehicle::compute_lane_changing_desired_time_headway(
 	//	get_max_brake(), nearby_vehicle.get_max_brake(),
 	//	current_lambda_1, rho, 0);
 	//return h_lc;
-
-	if (verbose) std::clog << "[PlatoonVehicle] compute_lane_changing_desired_time_headway\n";
-
 	return decide_safe_time_headway(nearby_vehicle);
 }
 
@@ -364,7 +360,6 @@ bool PlatoonVehicle::was_my_cooperation_request_accepted() const
 
 void PlatoonVehicle::implement_prepare_to_start_long_adjustments()
 {
-	set_has_completed_lane_change(false);
 	platoon->receive_lane_change_intention_signal();
 }
 

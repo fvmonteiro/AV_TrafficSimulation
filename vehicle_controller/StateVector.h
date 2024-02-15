@@ -8,24 +8,24 @@ class StateVector
 public:
 	StateVector() = default;
 	StateVector(T x, T y, T theta, T vel)
-		: vector{ {x, y, theta, vel} }, is_empty(false) {};
+		: internal_vector{ {x, y, theta, vel} }, is_empty(false) {};
 
 	//static int get_size() { return size; };
 
-	std::vector<T> get() const { return vector; };
-	T get_x() const { return vector[x_idx]; };
-	T get_y() const { return vector[y_idx]; };
-	T get_theta() const { return vector[theta_idx]; };
-	T get_vel() const { return vector[vel_idx]; };
+	std::vector<T> get() const { return internal_vector; };
+	T get_x() const { return internal_vector[x_idx]; };
+	T get_y() const { return internal_vector[y_idx]; };
+	T get_theta() const { return internal_vector[theta_idx]; };
+	T get_vel() const { return internal_vector[vel_idx]; };
 	bool get_is_empty() const { return is_empty; };
 
 	void add_to_x(T value)
 	{
-		vector[x_idx] += value;
+		internal_vector[x_idx] += value;
 	};
 	void add_to_y(T value)
 	{
-		vector[y_idx] += value;
+		internal_vector[y_idx] += value;
 	};
 	void offset(T off_x, T off_y)
 	{
@@ -34,14 +34,11 @@ public:
 	};
 	std::string to_string() const
 	{
-		return "[" + std::to_string(get_x()) 
-			+ ", " + std::to_string(get_y())
-			+ ", " + std::to_string(get_theta())
-			+ ", " + std::to_string(get_vel()) + "]";
+		return vector_to_string(internal_vector);
 	};
 
 private:
-	std::vector<T> vector;
+	std::vector<T> internal_vector;
 	static const int x_idx{ 0 };
 	static const int y_idx{ 1 };
 	static const int theta_idx{ 2 };
