@@ -5,10 +5,10 @@
 #include "PlatoonLaneChangeOrder.h"
 
 PlatoonLaneChangeOrder::PlatoonLaneChangeOrder(LCOrder lc_order,
-	CoopOrder coop_order) : lc_order(lc_order), coop_order(coop_order) {}
+	std::vector<int> coop_order) : lc_order(lc_order), coop_order(coop_order) {}
 
 PlatoonLaneChangeOrder::PlatoonLaneChangeOrder(
-	std::vector<std::vector<int>> lc_order, CoopOrder coop_order,
+	std::vector<std::vector<int>> lc_order, std::vector<int> coop_order,
 	float cost) : coop_order(coop_order), cost(cost)
 {
 	for (auto& inner_vector : lc_order)

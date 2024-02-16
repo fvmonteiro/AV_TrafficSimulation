@@ -12,6 +12,8 @@
 
 #include "Vehicle.h"
 
+class EgoVehicle;
+
 class NearbyVehicle : public Vehicle{
 public:
 	using Vehicle::compute_safe_gap_parameters;

@@ -46,7 +46,8 @@ protected:
 
 	PlatoonLaneChangeApproach(int id, std::string name, bool verbose);
 
-	void set_platoon_lane_change_order(LCOrder lc_order, CoopOrder coop_order);
+	void set_platoon_lane_change_order(LCOrder lc_order, 
+		std::vector<int> coop_order);
 	void set_platoon_lane_change_order(PlatoonLaneChangeOrder plco);
 
 private:
@@ -135,5 +136,5 @@ private:
 	void set_maneuver_initial_state_for_all_vehicles();
 	PlatoonLaneChangeOrder find_best_order_in_map();
 	void save_not_found_state_to_file(std::vector<int> state_vector,
-		double free_flow_speed_dest);
+		double free_flow_speed_orig, double free_flow_speed_dest);
 };

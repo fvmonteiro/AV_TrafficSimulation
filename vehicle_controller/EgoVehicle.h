@@ -211,6 +211,8 @@ public:
 	std::shared_ptr<NearbyVehicle> get_leader() const;
 	/* Returns a nullptr if vehicle not found */
 	std::shared_ptr<NearbyVehicle> get_nearby_vehicle_by_id(long nv_id) const;
+	/* Returns an empty state vector if no leader */
+	ContinuousStateVector get_nearby_vehicle_relative_states(long nv_id) const;
 	/* Checks if the given id is in the ego vehicle's nearby
 	vehicles map. */
 	bool is_vehicle_in_sight(long nearby_vehicle_id) const;
@@ -221,12 +223,12 @@ public:
 	/* Computes the bumper-to-bumper distance between vehicles.
 	Returns MAX_DISTANCE if nearby_vehicle is a nullptr. */
 	double compute_gap_to_a_leader(const NearbyVehicle* nearby_vehicle) const;
-	/* Computes the bumper-to-bumper distance between vehicles.
-	Returns MAX_DISTANCE if nearby_vehicle is empty. */
+	/* Computes the bumper-to-bumper distance (absolute value) between
+	vehicles. Returns MAX_DISTANCE if nearby_vehicle is empty. */
 	double compute_gap_to_a_follower(
 		const NearbyVehicle& nearby_vehicle) const;
-	/* Computes the bumper-to-bumper distance between vehicles.
-	Returns MAX_DISTANCE if nearby_vehicle is a nullptr. */
+	/* Computes the bumper-to-bumper distance (absolute value) between 
+	vehicles. Returns MAX_DISTANCE if nearby_vehicle is a nullptr. */
 	double compute_gap_to_a_follower(
 		const NearbyVehicle* nearby_vehicle) const;
 	/* 'Exact' nonlinear safe gap. Returns 0 if there is no leader */

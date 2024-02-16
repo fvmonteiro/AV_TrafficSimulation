@@ -88,6 +88,8 @@ public:
 	void sort_vehicles_by_distance_traveled();
 	long create_lane_change_request_for_vehicle(long ego_id) const;
 	long define_desired_destination_lane_leader_id(long ego_id) const;
+	/* Adds all platoon vehicles to the platoon leader's nearby vehicle map */
+	void share_vehicle_info_with_platoon_leader() const;
 
 	/* Print function */
 	friend std::ostream& operator<< (std::ostream& out,

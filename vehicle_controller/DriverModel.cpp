@@ -274,17 +274,29 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
         }
         return 1;
     case DRIVER_DATA_VEH_X_COORDINATE       :
-        vehicles[current_vehicle_id]->set_front_x(double_value);
+        if (vehicles.find(current_nearby_vehicle_id) != vehicles.end())
+        {
+            vehicles[current_vehicle_id]->set_front_x(double_value);
+        }
         return 1;
     case DRIVER_DATA_VEH_Y_COORDINATE       :
-        vehicles[current_vehicle_id]->set_front_y(double_value);
+        if (vehicles.find(current_nearby_vehicle_id) != vehicles.end())
+        {
+            vehicles[current_vehicle_id]->set_front_y(double_value);
+        }
         return 1;
     case DRIVER_DATA_VEH_Z_COORDINATE       :
     case DRIVER_DATA_VEH_REAR_X_COORDINATE  :
-        vehicles[current_vehicle_id]->set_rear_x(double_value);
+        if (vehicles.find(current_nearby_vehicle_id) != vehicles.end())
+        {
+            vehicles[current_vehicle_id]->set_rear_x(double_value);
+        }
         return 1;
     case DRIVER_DATA_VEH_REAR_Y_COORDINATE  :
-        vehicles[current_vehicle_id]->set_rear_y(double_value);
+        if (vehicles.find(current_nearby_vehicle_id) != vehicles.end())
+        {
+            vehicles[current_vehicle_id]->set_rear_y(double_value);
+        }
         return 1;
     case DRIVER_DATA_VEH_REAR_Z_COORDINATE  :
         return 1;
@@ -803,7 +815,7 @@ DRIVERMODEL_API  int  DriverModelExecuteCommand (long number)
         return 1;
     case DRIVER_COMMAND_CREATE_DRIVER :
     {
-        bool verbose = true;
+        bool verbose = false;
         if (logged_vehicles_ids.find(current_vehicle_id)
             != logged_vehicles_ids.end()) verbose = true;
         vehicles[current_vehicle_id] = std::move(

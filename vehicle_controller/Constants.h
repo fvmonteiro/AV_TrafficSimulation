@@ -106,6 +106,6 @@ std::string vector_to_string(std::vector<T> v)
 		ret_str += std::to_string(i) + ", ";
 	}
 	if (ret_str.size() > 1) ret_str.erase(ret_str.size() - 2);
-	ret_str += "], ";
+	ret_str += "]";
 	return ret_str;
 };

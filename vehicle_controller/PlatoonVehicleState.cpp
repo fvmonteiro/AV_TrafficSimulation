@@ -20,7 +20,7 @@ void PlatoonVehicleState::set_specific_type_of_vehicle(
 bool PlatoonVehicleState::are_other_platoon_gaps_closed(long veh_id,
 	int lane_keeping_state_number)
 {
-	for (auto& item :
+	for (std::pair<int, const PlatoonVehicle*> item :
 		platoon_vehicle->get_platoon()->get_vehicles_by_position())
 	{
 		auto& veh = item.second;
@@ -37,7 +37,7 @@ bool PlatoonVehicleState::are_other_platoon_gaps_closed(long veh_id,
 bool PlatoonVehicleState::has_platoon_changed_lanes(
 	std::unique_ptr<PlatoonVehicleState> lane_changing_state)
 {
-	for (auto& item 
+	for (std::pair<int, const PlatoonVehicle*> item
 		: platoon_vehicle->get_platoon()->get_vehicles_by_position())
 	{
 		if (item.second->has_lane_change_intention())

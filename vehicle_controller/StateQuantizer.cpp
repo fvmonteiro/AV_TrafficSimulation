@@ -2,21 +2,21 @@
 
 #include "StateQuantizer.h"
 
-StateQuantizer::StateQuantizer(
-	std::unordered_map<std::string, double> parameters)
-{
-	dx = parameters["dx"];
-	dy = parameters["dy"];
-	dv = parameters["dv"];
-	max_x_lo = parameters["max_x_lo"];
-	min_x_lo = parameters["min_x_lo"];
-	max_v_lo = parameters["max_v_lo"];
-	min_v_lo = parameters["min_v_lo"];
-	max_x_ld = parameters["max_x_ld"];
-	min_x_ld = parameters["min_x_ld"];
-	max_v_ld = parameters["max_v_ld"];
-	min_v_ld = parameters["min_v_ld"];
-}
+//StateQuantizer::StateQuantizer(
+//	std::unordered_map<std::string, double> parameters)
+//{
+//	dx = parameters["dx"];
+//	dy = parameters["dy"];
+//	dv = parameters["dv"];
+//	max_x_lo = parameters["max_x_lo"];
+//	min_x_lo = parameters["min_x_lo"];
+//	max_v_lo = parameters["max_v_lo"];
+//	min_v_lo = parameters["min_v_lo"];
+//	max_x_ld = parameters["max_x_ld"];
+//	min_x_ld = parameters["min_x_ld"];
+//	max_v_ld = parameters["max_v_ld"];
+//	min_v_ld = parameters["min_v_ld"];
+//}
 
 QuantizedStateVector StateQuantizer::quantize_state(
 	ContinuousStateVector state)

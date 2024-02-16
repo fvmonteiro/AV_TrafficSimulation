@@ -40,21 +40,23 @@ void ConnectedAutonomousVehicle
 ::add_nearby_vehicle_from_another(
 	const ConnectedAutonomousVehicle& cav, long nv_id)
 {
+	/* Sanity check */
+	if (cav.get_nearby_vehicle_by_id(nv_id) == nullptr)
+	{
+		std::clog << "[CAV] Trying to 'add from another' but cav "
+			<< cav.get_id() << " does not have a nearby vehicle with id "
+			<< nv_id << "\n";
+		return;
+	}
+
 	const NearbyVehicle* source_nv = 
 		get_nearby_vehicle_by_id(cav.get_id()).get();
-	
-	if (source_nv != nullptr
-		&& cav.get_nearby_vehicle_by_id(nv_id) != nullptr)
+	if (source_nv != nullptr) //the cav is in the list of nearby vehicles
 	{
 		NearbyVehicle new_nv(*cav.get_nearby_vehicle_by_id(nv_id));
 		new_nv.offset_from_another(*source_nv);
 		add_nearby_vehicle(new_nv);
-		//return std::make_shared<NearbyVehicle>(new_nv);
 	}
-	//else
-	//{
-	//	return nullptr;
-	//}
 }
 
 double ConnectedAutonomousVehicle::get_time_headway_to_assisted_vehicle() 

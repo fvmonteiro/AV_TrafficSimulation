@@ -38,13 +38,6 @@ void PlatoonLCStrategyManager::set_maneuver_initial_state(
 	if (strategy_map.find(quantized_state_vector) == strategy_map.end())
 	{
 		throw StateNotFoundException(quantized_state_vector);
-		/* TODO: write the missing quantized initial state to the 
-		* appropriate csv file. Then, do one of the following:
-		1 - stop simulation here (without crashing!)
-		2 - remove vehicles from simulation and let it finish
-		3 - remove lane change intention from vehicles (otherwise
-		they'll write the missing state over and over again) and let them
-		finish the simulation. Is there any way of making them simpler? */
 	}
 	initial_state_per_vehicle[ego_position] = quantized_state_vector;
 }

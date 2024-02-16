@@ -4,6 +4,7 @@
 #include <sstream>
 
 #include "Constants.h"
+#include "EgoVehicle.h"
 #include "NearbyVehicle.h"
 
 NearbyVehicle::NearbyVehicle(long id, RelativeLane relative_lane,

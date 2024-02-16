@@ -294,6 +294,18 @@ std::shared_ptr<NearbyVehicle> EgoVehicle::get_nearby_vehicle_by_id(
 		nearby_vehicles.at(nv_id) : nullptr;
 }
 
+ContinuousStateVector EgoVehicle::get_nearby_vehicle_relative_states(
+	long nv_id) const
+{
+	ContinuousStateVector relative_states;
+	if (is_vehicle_in_sight(nv_id))
+	{
+		relative_states = get_nearby_vehicle_by_id(nv_id)
+			->get_relative_state_vector(get_velocity());
+	}
+	return relative_states;
+}
+
 bool EgoVehicle::is_vehicle_in_sight(long nearby_vehicle_id) const
 {
 	return nearby_vehicles.find(nearby_vehicle_id) != nearby_vehicles.end();
