@@ -397,7 +397,6 @@ void PlatoonVehicle::set_controller(
 double PlatoonVehicle::compute_accepted_lane_change_gap(
 	const NearbyVehicle* nearby_vehicle) const
 {
-	/* TODO [must check if working]: use simple lane keeping reference gaps */
 	double safe_gap;
 	if (nearby_vehicle == nullptr) 
 	{
@@ -407,6 +406,24 @@ double PlatoonVehicle::compute_accepted_lane_change_gap(
 	{
 		safe_gap = platoon_vehicle_controller->get_lateral_controller()
 			.compute_time_headway_gap(get_velocity(), *nearby_vehicle, 0.0);
+		double leader_vel, leader_brake, follower_vel, follower_brake;
+		if (nearby_vehicle->is_ahead())
+		{
+			follower_vel = get_velocity();
+			follower_brake = get_max_brake();
+			leader_vel = nearby_vehicle->compute_velocity(get_velocity());
+			leader_brake = nearby_vehicle->get_max_brake();
+		}
+		else
+		{
+			leader_vel = get_velocity();
+			leader_brake = get_max_brake();
+			follower_vel = nearby_vehicle->compute_velocity(get_velocity());
+			follower_brake = nearby_vehicle->get_max_brake();
+		}
+		double rel_vel_term = std::pow(follower_vel, 2) / 2 / follower_brake
+			- std::pow(leader_vel, 2) / 2 / leader_brake;
+		safe_gap += std::max(0., rel_vel_term);
 	}
 	return safe_gap;
 }

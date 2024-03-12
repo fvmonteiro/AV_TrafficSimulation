@@ -3,6 +3,7 @@
 #include <map>
 #include <numeric>
 
+
 #include "Platoon.h"
 #include "PlatoonLaneChangeApproach.h"
 #include "PlatoonVehicle.h"
@@ -36,7 +37,8 @@ long PlatoonLaneChangeApproach::get_desired_destination_lane_leader(
 		virtual_leader_id = 
 			front_most_veh->get_suitable_destination_lane_leader_id();
 		platoon_destination_lane_leader_id = virtual_leader_id;
-		if (!ego_vehicle->is_vehicle_in_sight(virtual_leader_id))
+		if (!ego_vehicle->is_vehicle_in_sight(virtual_leader_id)
+			&& virtual_leader_id > 0)
 		{
 			ego_vehicle->add_nearby_vehicle_from_another(*front_most_veh, 
 				virtual_leader_id);
@@ -60,7 +62,8 @@ long PlatoonLaneChangeApproach::get_desired_destination_lane_leader(
 			const PlatoonVehicle* coop_veh =
 				platoon->get_a_vehicle_by_position(coop_pos);
 			virtual_leader_id = coop_veh->get_leader_id();
-			if (!ego_vehicle->is_vehicle_in_sight(virtual_leader_id))
+			if (!ego_vehicle->is_vehicle_in_sight(virtual_leader_id)
+				&& virtual_leader_id > 0)
 			{
 				ego_vehicle->add_nearby_vehicle_from_another(*coop_veh,
 					virtual_leader_id);
@@ -397,6 +400,7 @@ void GraphApproach::set_maneuver_initial_state_for_all_vehicles()
 
 	/* Now we check which platoon vehicles can move and set possible
 	destination lane leaders */
+	bool all_states_found = true;
 	for (std::pair<int, const PlatoonVehicle*> pos_and_veh 
 		: platoon->get_vehicles_by_position())
 	{
@@ -439,13 +443,21 @@ void GraphApproach::set_maneuver_initial_state_for_all_vehicles()
 			}
 			catch (const StateNotFoundException& e)
 			{
-				if (verbose) std::clog << "\tState not found.\n";
+				all_states_found = false;
+				std::clog << "\tState " << vector_to_string(e.state_vector)
+					<< "not found.\n";
 				save_not_found_state_to_file(e.state_vector,
 					lo_states.get_vel(), ld_states.get_vel());
-				throw;
 			}
 			system_state_matrix.pop_back();
 		}
+	}
+
+	/* Not sure this design is good. The goal is to save all exception found
+	during the loop and only throw again once the loop is done. */
+	if (!all_states_found)
+	{
+		throw StateNotFoundException();
 	}
 }
 
@@ -525,7 +537,7 @@ void GraphApproach::save_not_found_state_to_file(
 		{"orig", free_flow_speed_orig}
 	};
 
-	std::string file_name = "unsolved_x0_" 
+	std::string file_name = "vissim_x0_" 
 		+ std::to_string(platoon->get_size()) + "_vehicles.csv";
 	std::string folder = "C:\\Users\\fvall\\Documents\\Research"
 		"\\data\\vehicle_state_graphs\\";

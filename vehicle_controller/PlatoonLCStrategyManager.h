@@ -18,6 +18,9 @@ public:
     StateNotFoundException(std::vector<int>& state_vector) throw()
         : std::out_of_range("Initial state not found in strategy map"),
         state_vector(state_vector) {};
+    StateNotFoundException() throw()
+        : std::out_of_range("Initial state not found in strategy map")
+    {};
 
     std::vector<int> state_vector;
 };

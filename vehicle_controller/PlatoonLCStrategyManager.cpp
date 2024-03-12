@@ -18,7 +18,7 @@ void PlatoonLCStrategyManager::initialize(int n_platoon)
 	
 	this->n_platoon = n_platoon;
 	load_a_strategy_map(n_platoon, cost_name);
-	load_quantizer_data(n_platoon);
+	//load_quantizer_data(n_platoon);
 
 	if (verbose) std::clog << " done.\n";
 }
@@ -76,23 +76,26 @@ void PlatoonLCStrategyManager::load_a_strategy_map(
 	std::string file_name = "min_" + cost_name + "_strategies_for_"
 		+ std::to_string(n_platoon) + "_vehicles.json";
 	std::ifstream new_file(STRATEGY_MAPS_FOLDER + file_name);
-	json json_data = json::parse(new_file);
-
-	OuterMap a_strategy_map;
-	for (auto& datum : json_data)
+	if (new_file)
 	{
-		OuterKey root_node = datum["root"];
-		InnerKey first_mover_set(datum["first_mover_set"].begin(),
-			datum["first_mover_set"].end());
-		PlatoonLaneChangeOrder plcs = PlatoonLaneChangeOrder(
-			datum["lc_order"], datum["coop_order"], datum[cost_name]);
-		if (a_strategy_map.find(root_node) == a_strategy_map.end())
+		json json_data = json::parse(new_file);
+
+		OuterMap a_strategy_map;
+		for (auto& datum : json_data)
 		{
-			a_strategy_map[root_node] = {};
+			OuterKey root_node = datum["root"];
+			InnerKey first_mover_set(datum["first_mover_set"].begin(),
+				datum["first_mover_set"].end());
+			PlatoonLaneChangeOrder plcs = PlatoonLaneChangeOrder(
+				datum["lc_order"], datum["coop_order"], datum[cost_name]);
+			if (a_strategy_map.find(root_node) == a_strategy_map.end())
+			{
+				a_strategy_map[root_node] = {};
+			}
+			a_strategy_map[root_node][first_mover_set] = plcs;
 		}
-		a_strategy_map[root_node][first_mover_set] = plcs;
+		strategy_map = a_strategy_map;
 	}
-	strategy_map = a_strategy_map;
 	//strategy_map_per_size[n_platoon] = a_strategy_map;
 }
 

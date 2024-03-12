@@ -815,9 +815,8 @@ DRIVERMODEL_API  int  DriverModelExecuteCommand (long number)
         return 1;
     case DRIVER_COMMAND_CREATE_DRIVER :
     {
-        bool verbose = false;
-        if (logged_vehicles_ids.find(current_vehicle_id)
-            != logged_vehicles_ids.end()) verbose = true;
+        bool verbose = logged_vehicles_ids.find(current_vehicle_id)
+            != logged_vehicles_ids.end();
         vehicles[current_vehicle_id] = std::move(
             EgoVehicleFactory::create_ego_vehicle(current_vehicle_id,
                 current_vehicle_type, current_desired_velocity,

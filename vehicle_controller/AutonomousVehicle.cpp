@@ -407,7 +407,6 @@ bool AutonomousVehicle::implement_check_lane_change_gaps()
 	where the dest lane follower has completely stopped to give room
 	to the lane changing vehicle */
 	gap_to_fd = compute_gap_to_a_follower(destination_lane_follower.get());
-	if (verbose) std::clog << "computing safe gap to fd...\n";
 	safe_gap_to_fd = compute_accepted_lane_change_gap(
 		destination_lane_follower.get());
 	lane_change_gaps_safety.dest_lane_follower_gap = 

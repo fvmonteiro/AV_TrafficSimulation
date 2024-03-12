@@ -477,6 +477,7 @@ long Platoon::define_desired_destination_lane_leader_id(long ego_id) const
 
 void Platoon::share_vehicle_info_with_platoon_leader() const
 {
+	if (verbose) std::clog << "[Platooon] sharing info with leader\n";
 	PlatoonVehicle* platoon_leader = vehicles_by_position.at(0);
 	for (int i = 1; i < get_size() - 1; i++)
 	{
