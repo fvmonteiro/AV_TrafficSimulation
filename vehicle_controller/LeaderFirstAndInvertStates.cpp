@@ -60,7 +60,7 @@ void LeaderFirstAndInvertLookingForSafeGapState
 	if ((preceding_vehicle_id == 0 // this is the platoon leader
 		|| has_finished_overtaking)
 		&&
-		platoon_vehicle->check_lane_change_gaps())
+		platoon_vehicle->are_surrounding_gaps_safe_for_lane_change())
 	{
 		platoon_vehicle->set_state(
 			std::make_unique<LeaderFirstAndInvertLaneChangingState>());

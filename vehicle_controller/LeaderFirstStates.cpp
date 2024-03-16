@@ -90,7 +90,7 @@ void LeaderFirstLookingForSafeGapState
 	if ((platoon_vehicle->is_platoon_leader()
 		|| /*(*leader_state >= LeaderFirstLaneChangingState()
 			&&*/ will_merge_behind_the_leader)
-		&& platoon_vehicle->check_lane_change_gaps())
+		&& platoon_vehicle->are_surrounding_gaps_safe_for_lane_change())
 	{
 		platoon_vehicle->set_state(
 			std::make_unique<LeaderFirstLaneChangingState>());

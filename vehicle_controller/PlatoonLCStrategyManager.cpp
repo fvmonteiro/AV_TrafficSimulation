@@ -48,6 +48,22 @@ void PlatoonLCStrategyManager::set_empty_maneuver_initial_state(
 	initial_state_per_vehicle[ego_position] = empty_state;
 }
 
+PlatoonLaneChangeOrder PlatoonLCStrategyManager::answer_query(
+	const Query& query) const
+{
+	try
+	{
+		return strategy_map.at(query.first).at(query.second);
+	}
+	catch (const std::out_of_range&)
+	{
+		std::clog << "\tQuery: [" << vector_to_string(query.first)
+			<< ", " << set_to_string(query.second) << "] not found. \n";
+		save_query_to_file(query);
+		throw;
+	}
+}
+
 PlatoonLaneChangeOrder PlatoonLCStrategyManager
 ::find_minimum_cost_order_given_first_mover(
 	std::set<int>& first_mover_positions) const
@@ -114,24 +130,37 @@ std::unordered_map<std::string, double> PlatoonLCStrategyManager
 	return params;
 }
 
-template<typename T>
-std::vector<T> PlatoonLCStrategyManager::flatten_state_matrix(
-	std::vector<StateVector<T>>& state_matrix)
+void PlatoonLCStrategyManager::save_query_to_file(Query query) const
 {
-	std::vector<T> system_state_vector;
-	//int n_vehs = static_cast<int>(state_matrix.size());
-	//int n_states = state_matrix.front().get().size();
-	//system_state_vector.reserve(n_states * n_vehs);
-	for (StateVector<T>& v : state_matrix)
+	std::clog << "[GraphApproach] Saving query to file\n";
+	// TODO: hard coded values below. Prone to mistakes
+	int platoon_size = static_cast<int>(query.first.size()) / 4 - 2;
+	std::string file_name = "vissim_queries_"
+		+ std::to_string(platoon_size) + "_vehicles.csv";
+	std::string folder = "C:\\Users\\fvall\\Documents\\Research"
+		"\\data\\vehicle_state_graphs\\";
+	std::string file_path = folder + file_name;
+
+	if (!std::ifstream(file_path.c_str()).good())
 	{
-		for (auto i : v.get())
-		{
-			system_state_vector.push_back(i);
-		}
-		//system_state_vector.insert(system_state_vector.end(),
-		//	v.get().begin(), v.get().end());
+		std::ofstream outfile{ file_path };
+		std::string header;
+		outfile << "qx, first_movers_set\n";
 	}
-	return system_state_vector;
+
+	std::vector<int> qx = query.first;
+	std::set<int> first_mover_set = query.second;
+	std::string info;
+	info += "\"";
+	for (int i : qx) info += std::to_string(i) + ", ";
+	info.erase(info.size() - 1); // remove last comma
+	info += "\", \"";
+	for (int i : first_mover_set) info += std::to_string(i) + ", ";
+	info.erase(info.size() - 1); // remove last comma
+	info += "\"";
+
+	std::ofstream outfile{ file_path, std::ios::app };
+	outfile << info << "\n";
 }
 
 std::ostream& operator<<(std::ostream& out,
@@ -160,35 +189,5 @@ std::ostream& operator<<(std::ostream& out,
 			text += inner_item.second.to_string() + "\n";
 		}
 	}
-		
-	//for (const std::pair<int, OuterMap>& outer_item 
-	//	: strategy_manager.strategy_map_per_size)
-	//{
-	//	out << "=== Strategies for N=" << outer_item.first << "===\n";
-	//	for (const std::pair<const OuterKey, InnerMap>& item
-	//		: outer_item.second)
-	//	{
-	//		std::string text = "root: [";
-	//		for (int i : item.first)
-	//		{
-	//			text += std::to_string(i) + ", ";
-	//		}
-	//		text.erase(text.size() - 2);
-	//		text += "]:\n";
-	//		for (const std::pair<InnerKey, PlatoonLaneChangeOrder>
-	//			inner_item : item.second)
-	//		{
-	//			text += "\tfirst mover: [";
-	//			for (int i : inner_item.first)
-	//			{
-	//				text += std::to_string(i) + ", ";
-	//			}
-	//			text.erase(text.size() - 2);
-	//			text += "]: ";
-	//			text += inner_item.second.to_string() + "\n";
-	//		}
-	//		out << text;
-	//	}
-	//}
 	return out;
 }

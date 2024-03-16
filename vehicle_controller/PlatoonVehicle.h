@@ -114,7 +114,8 @@ private:
 	double compute_lane_changing_desired_time_headway(
 		const NearbyVehicle& nearby_vehicle) const override;
 	double compute_accepted_lane_change_gap(
-		const NearbyVehicle* nearby_vehicle) const override;
+		const NearbyVehicle* nearby_vehicle, double lane_change_speed
+	) const override;
 	/* SCENARIO SPECIFIC: the platoon vehicles always start at the in ramp, 
 	and they try to change lanes as soon as they enter the highway */
 	void set_desired_lane_change_direction() override;

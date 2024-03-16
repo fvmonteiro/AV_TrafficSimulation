@@ -1,7 +1,7 @@
 
-#include "PlatoonVehicle.h"
 #include "Platoon.h"
 #include "PlatoonLaneChangeStrategy.h"
+#include "PlatoonVehicle.h"
 #include "PlatoonVehicleState.h"
 
 PlatoonVehicle::PlatoonVehicle(long id, double desired_velocity,
@@ -92,7 +92,7 @@ double PlatoonVehicle::get_desired_velocity_from_platoon() const
 		leader virtual leader when the platoon leader is the first vehicle
 		to change lanes. In this case, we don't need to limit its speed. */
 		return nv != nullptr && nv->get_id() != get_virtual_leader_id() ?
-			nv->compute_velocity(get_velocity()) 
+			compute_nearby_vehicle_velocity(*nv)
 			: get_desired_velocity();
 	}
 	return get_desired_velocity();
@@ -101,9 +101,9 @@ double PlatoonVehicle::get_desired_velocity_from_platoon() const
 bool PlatoonVehicle::can_start_lane_change()
 {
 	if (verbose) std::clog << "Can start lane change?\n";
-	bool is_safe = check_lane_change_gaps();
+	bool is_safe = are_surrounding_gaps_safe_for_lane_change();
 	if (verbose) std::clog << "Gaps are safe? "
-		<< (is_safe ? "yes" : "no") << "\n";
+		<< boolean_to_string(is_safe) << "\n";
 
 	bool is_my_turn;
 	if (is_in_a_platoon())
@@ -116,7 +116,7 @@ bool PlatoonVehicle::can_start_lane_change()
 	}
 
 	if (verbose) std::clog << "Start LC? "
-		<< (is_my_turn ? "yes" : "no") << "\n";
+		<< boolean_to_string(is_my_turn) << "\n";
 
 	return is_safe && is_my_turn;
 }
@@ -128,9 +128,9 @@ bool PlatoonVehicle::is_at_right_lane_change_gap() const
 	bool is_dest_lane_follower_correct;
 	if (is_in_a_platoon())
 	{
+		long coop_id = platoon->get_cooperating_vehicle_id();
 		is_dest_lane_follower_correct =
-			platoon->get_cooperating_vehicle_id()
-			== get_destination_lane_follower_id();
+			coop_id == 0 || coop_id == get_destination_lane_follower_id();
 	}
 	else
 	{
@@ -395,7 +395,7 @@ void PlatoonVehicle::set_controller(
 }
 
 double PlatoonVehicle::compute_accepted_lane_change_gap(
-	const NearbyVehicle* nearby_vehicle) const
+	const NearbyVehicle* nearby_vehicle, double lane_change_speed) const
 {
 	double safe_gap;
 	if (nearby_vehicle == nullptr) 
@@ -405,21 +405,21 @@ double PlatoonVehicle::compute_accepted_lane_change_gap(
 	else
 	{
 		safe_gap = platoon_vehicle_controller->get_lateral_controller()
-			.compute_time_headway_gap(get_velocity(), *nearby_vehicle, 0.0);
+			.compute_time_headway_gap(lane_change_speed, *nearby_vehicle, 0.0);
 		double leader_vel, leader_brake, follower_vel, follower_brake;
 		if (nearby_vehicle->is_ahead())
 		{
-			follower_vel = get_velocity();
+			follower_vel = lane_change_speed;
 			follower_brake = get_max_brake();
-			leader_vel = nearby_vehicle->compute_velocity(get_velocity());
+			leader_vel = compute_nearby_vehicle_velocity(*nearby_vehicle);
 			leader_brake = nearby_vehicle->get_max_brake();
 		}
 		else
 		{
-			leader_vel = get_velocity();
-			leader_brake = get_max_brake();
-			follower_vel = nearby_vehicle->compute_velocity(get_velocity());
+			follower_vel = compute_nearby_vehicle_velocity(*nearby_vehicle);
 			follower_brake = nearby_vehicle->get_max_brake();
+			leader_vel = lane_change_speed;
+			leader_brake = get_max_brake();
 		}
 		double rel_vel_term = std::pow(follower_vel, 2) / 2 / follower_brake
 			- std::pow(leader_vel, 2) / 2 / leader_brake;
@@ -454,7 +454,8 @@ void PlatoonVehicle::implement_analyze_nearby_vehicles()
 	find_cooperation_request_from_platoon();
 
 	std::shared_ptr<NearbyVehicle> desired_leader = 
-		choose_behind_whom_to_move();
+		has_lane_change_intention() ? 
+		choose_behind_whom_to_move() : nullptr;
 	if (desired_leader != nullptr && has_assisted_vehicle())
 	{
 		std::clog << "==== WARNING (unexpected behavior) ===="
@@ -473,7 +474,9 @@ void PlatoonVehicle::implement_analyze_nearby_vehicles()
 	{
 		set_virtual_leader(nullptr);
 	}
-	
+
+	if (has_lane_change_intention()) check_lane_change_gaps();
+
 	if (verbose)
 	{
 		std::clog << "\tleader=" << get_leader_id()

@@ -131,10 +131,16 @@ public:
 private:
 	bool is_data_loaded{ false };
 	PlatoonLCStrategyManager strategy_manager;
+	StateQuantizer state_quantizer{ StateQuantizer() };
 
 	void decide_lane_change_order() override;
+	std::vector<Query> create_all_queries();
 	void set_maneuver_initial_state_for_all_vehicles();
 	PlatoonLaneChangeOrder find_best_order_in_map();
-	void save_not_found_state_to_file(std::vector<int> state_vector,
+	PlatoonLaneChangeOrder get_query_results_from_map(
+		std::vector<Query>& queries);
+	template <typename T>
+	void save_not_found_state_to_file(std::vector<T> state_vector,
 		double free_flow_speed_orig, double free_flow_speed_dest);
+	
 };

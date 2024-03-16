@@ -46,7 +46,7 @@ void LastVehicleFirstIncreasingGapState
 void LastVehicleFirstIncreasingGapState
 ::implement_handle_lane_change_intention()
 {
-	if (platoon_vehicle->check_lane_change_gaps()
+	if (platoon_vehicle->are_surrounding_gaps_safe_for_lane_change()
 		&& (!platoon_vehicle->has_virtual_leader() || 
 			(platoon_vehicle->get_destination_lane_leader_id()
 				== platoon_vehicle->get_virtual_leader_id())))
@@ -83,7 +83,7 @@ void LastVehicleFirstLookingForSafeGapState
 void LastVehicleFirstLookingForSafeGapState
 ::implement_handle_lane_change_intention()
 {
-	if (platoon_vehicle->check_lane_change_gaps()
+	if (platoon_vehicle->are_surrounding_gaps_safe_for_lane_change()
 		&& (!platoon_vehicle->has_virtual_leader() ||
 			(platoon_vehicle->get_destination_lane_leader_id()
 				== platoon_vehicle->get_virtual_leader_id())))

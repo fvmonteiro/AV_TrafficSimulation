@@ -31,7 +31,7 @@ public:
 	/* Returns the number of platoon vehicles */
 	int get_size() const { 
 		return static_cast<int>(vehicles_by_position.size()); };
-	const std::unordered_map<int, PlatoonVehicle*>&
+	const std::vector<PlatoonVehicle*>&
 		get_vehicles_by_position() const { return vehicles_by_position; };
 	void set_verbose(bool verbose) { this->verbose = verbose; };
 	void set_velocity_at_lane_change_start(double velocity) {
@@ -64,7 +64,14 @@ public:
 	const NearbyVehicle* get_destination_lane_leader() const;
 	long get_assisted_vehicle_id(long ego_id) const;
 	long get_cooperating_vehicle_id() const;
+	/* Returns state vectors of all platoon vehicles */
 	std::vector<ContinuousStateVector> get_vehicles_states() const;
+	/* Returns state vectors of the platoon's orig lane leader, 
+	the platoon vehicles, and the dest lane leader of the lane 
+	changing vehicle */
+	std::vector<ContinuousStateVector> 
+		get_traffic_states_around_a_vehicle(int lane_changing_vehicle_pos
+		) const;
 
 	void set_strategy(int strategy_number);
 
@@ -72,6 +79,7 @@ public:
 
 	bool is_empty() const;
 	bool is_vehicle_id_in_platoon(long veh_id) const;
+	/* Adds a vehicle at the end of the platoon */
 	void add_last_vehicle(PlatoonVehicle* new_vehicle);
 	void remove_vehicle_by_id(long veh_id, bool is_out_of_simulation);
 	/* True when all platoon vehicles have lane change intention */
@@ -116,17 +124,13 @@ private:
 	
 	/* TODO [Jan 24, 24] these maps should be vectors */
 	/* Keys are the vehicle position in the platoon */
-	std::unordered_map<int, PlatoonVehicle*>
-		vehicles_by_position;
+	std::vector<PlatoonVehicle*> vehicles_by_position;
 	std::unordered_map<long, int> vehicle_id_to_position;
 	//std::unique_ptr<PlatoonLaneChangeStrategy> lane_change_strategy{ 
 	//	std::make_unique<NoStrategy>() };
 	std::unique_ptr<PlatoonLaneChangeApproach> lane_change_approach{ 
 		nullptr };
 
-	void add_leader(PlatoonVehicle* new_vehicle);
-	void add_vehicle(int idx_in_platoon, PlatoonVehicle* new_vehicle);
-	void remove_vehicle_by_position(int idx_in_platoon, long veh_id,
-		bool is_out_of_simulation);
-	void update_position_maps();
+	void remove_vehicle_by_position(int idx_in_platoon);
+	//void update_position_maps();
 };

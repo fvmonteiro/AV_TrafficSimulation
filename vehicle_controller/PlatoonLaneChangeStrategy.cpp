@@ -27,9 +27,9 @@ std::unique_ptr<VehicleState> PlatoonLaneChangeStrategy
 
 void PlatoonLaneChangeStrategy::reset_state_of_all_vehicles() const
 {
-	for (auto& item : platoon->get_vehicles_by_position())
+	for (auto& vehicle : platoon->get_vehicles_by_position())
 	{
-		item.second->reset_state(implement_get_new_lane_keeping_state());
+		vehicle->reset_state(implement_get_new_lane_keeping_state());
 	}
 }
 

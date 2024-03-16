@@ -11,7 +11,7 @@ Platoon::Platoon(long id, int platoon_lc_strategy, PlatoonVehicle* leader,
 	id {id}, verbose{verbose}
 {
 	set_strategy(platoon_lc_strategy);
-	add_leader(leader);
+	add_last_vehicle(leader);
 	desired_velocity = leader->get_desired_velocity();
 }
 
@@ -51,18 +51,16 @@ long Platoon::get_following_vehicle_id(long veh_id) const
 
 PlatoonVehicle* Platoon::get_a_vehicle_by_position(int veh_pos) const
 {
-	if (vehicles_by_position.find(veh_pos) != vehicles_by_position.end())
+	try
 	{
 		return vehicles_by_position.at(veh_pos);
 	}
-	std::string message = "No veh at pos " + std::to_string(veh_pos)
-		+ ". Available platoon positions are: ";
-	for (const auto& item : vehicles_by_position)
+	catch (std::out_of_range)
 	{
-		message += std::to_string(item.first);
+		std::clog << "[Platoon] Trying to access veh at pos " << veh_pos
+			<< ", but platoon length is " << get_size() << "\n";
+		return nullptr;
 	}
-	std::clog << message << "\n";
-	return nullptr;
 }
 
 const PlatoonVehicle* Platoon::get_vehicle_by_id(long veh_id) const
@@ -128,23 +126,23 @@ long Platoon::get_destination_lane_vehicle_behind_the_leader() const
 	int i = 0;
 	while (dest_lane_follower_id == 0 && i < vehicles_by_position.size())
 	{
-		if (vehicles_by_position.find(i) != vehicles_by_position.end())
+		//if (vehicles_by_position.find(i) != vehicles_by_position.end())
+		//{
+		/* Let k be the destination lane leader of some platoon vehicle.
+		We assume that k exists, is not a platoon vehicle and is behind
+		the platoon leader. If any of those assumptions doesn't hold,
+		we move on to the platoon vehicle's dest lane follower.
+		If the dest lane follower doesn't exist (id=0), the loop
+		continues. */
+		const auto& veh = vehicles_by_position.at(i);
+		dest_lane_follower_id = veh->get_destination_lane_leader_id();
+		if (dest_lane_follower_id == 0
+			|| is_vehicle_id_in_platoon(dest_lane_follower_id)
+			|| dest_lane_follower_id == platoon_leader_dest_lane_leader)
 		{
-			/* Let k be the destination lane leader of some platoon vehicle.
-			We assume that k exists, is not a platoon vehicle and is behind
-			the platoon leader. If any of those assumptions doesn't hold,
-			we move on to the platoon vehicle's dest lane follower.
-			If the dest lane follower doesn't exist (id=0), the loop
-			continues. */
-			const auto& veh = vehicles_by_position.at(i);
-			dest_lane_follower_id = veh->get_destination_lane_leader_id();
-			if (dest_lane_follower_id == 0
-				|| is_vehicle_id_in_platoon(dest_lane_follower_id)
-				|| dest_lane_follower_id == platoon_leader_dest_lane_leader)
-			{
-				dest_lane_follower_id = veh->get_destination_lane_follower_id();
-			}
+			dest_lane_follower_id = veh->get_destination_lane_follower_id();
 		}
+		//}
 		i++;
 	}
 	return dest_lane_follower_id;
@@ -161,11 +159,11 @@ const NearbyVehicle* Platoon::get_destination_lane_leader() const
 		lane_change_approach->get_platoon_destination_lane_leader_id();
 	
 	if (veh_id == 0) return nullptr;
-	for (auto const& item : vehicles_by_position)
+	for (auto const& vehicle : vehicles_by_position)
 	{
-		if (item.second->is_vehicle_in_sight(veh_id))
+		if (vehicle->is_vehicle_in_sight(veh_id))
 		{
-			return item.second->get_nearby_vehicle_by_id(veh_id).get();
+			return vehicle->get_nearby_vehicle_by_id(veh_id).get();
 		}
 	}
 	return nullptr;
@@ -203,8 +201,33 @@ std::vector<ContinuousStateVector> Platoon::get_vehicles_states() const
 {
 	/* By definition, we center around the leader */
 	const PlatoonVehicle* platoon_leader = get_platoon_leader();
-	std::vector<ContinuousStateVector> system_state_matrix{ 
+	std::vector<ContinuousStateVector> state_matrix{ 
 		ContinuousStateVector(0., 0., 0., platoon_leader->get_velocity()) };
+	for (int i = 1; i < get_size(); i++)
+	{
+		state_matrix.push_back(
+			platoon_leader->get_nearby_vehicle_relative_states(
+				vehicles_by_position.at(i)->get_id())
+		);
+	}
+
+	return state_matrix;
+}
+
+std::vector<ContinuousStateVector> Platoon
+::get_traffic_states_around_a_vehicle(int lane_changing_vehicle_pos) const
+{
+	share_vehicle_info_with_platoon_leader();
+	std::vector<ContinuousStateVector> system_state_matrix;
+
+	const PlatoonVehicle* platoon_leader = get_platoon_leader();
+	ContinuousStateVector lo_states =
+		platoon_leader->get_nearby_vehicle_relative_states(
+			platoon_leader->get_leader_id(), platoon_leader->get_lane());
+	system_state_matrix.push_back(lo_states);
+
+	system_state_matrix.push_back(
+		ContinuousStateVector(0., 0., 0., platoon_leader->get_velocity()));
 	for (int i = 1; i < get_size(); i++)
 	{
 		system_state_matrix.push_back(
@@ -213,42 +236,15 @@ std::vector<ContinuousStateVector> Platoon::get_vehicles_states() const
 		);
 	}
 
-	//ContinuousStateVector leader_states(0., 0., 0., 
-	//	platoon_leader->get_velocity());
-	//double leader_x = platoon_leader->get_state_vector().get_x();
-	//double leader_y = platoon_leader->get_state_vector().get_y();
-	//double delta_x{ 0.0 };
-	//double delta_y{ 0.0 };
-	//for (int i = 1; i < vehicles_by_position.size(); i++)
-	//{
-	//	const PlatoonVehicle* veh = vehicles_by_position.at(i);
-	//	/* Relative position values given by VISSIM are more reliable
-	//	than the ones obtained by internal computations. However, during a 
-	//	lane change the vehicle's leader may not be its platoon preceding 
-	//	vehicle. So we address both cases. */
-	//	if (veh->get_leader_id() == vehicles_by_position.at(i - 1)->get_id())
-	//	{
-	//		const NearbyVehicle* leader = veh->get_leader().get();
-	//		delta_y -= leader->get_relative_lateral_position();
-	//		delta_x -= veh->compute_gap_to_a_leader(leader);
-	//	}
-	//	else
-	//	{
-	//		const PlatoonVehicle* leader = vehicles_by_position.at(i - 1);
-	//		delta_y += (veh->get_lateral_position()
-	//				    - leader->get_lateral_position());
-	//		/* Since the platoon vehicles start the simulation at different
-	//		positions, the different in distance travelled does not equal
-	//		the distance between them. */
-	//		delta_x += (veh->get_distance_traveled()
-	//					- leader->get_distance_traveled()
-	//					- veh->get_free_flow_intra_platoon_gap());
-	//	}
-	//	system_state_matrix.push_back(
-	//		ContinuousStateVector(delta_x, delta_y,
-	//			veh->get_orientation_angle(), veh->get_velocity()));
-	//	delta_x += veh->get_length();
-	//}
+	long ld_id = get_a_vehicle_by_position(lane_changing_vehicle_pos)
+		->get_destination_lane_leader_id();
+	ContinuousStateVector ld_states =
+		platoon_leader->get_nearby_vehicle_relative_states(
+			ld_id,
+			platoon_leader->get_desired_lane_change_direction()
+			.to_int()
+		);
+	system_state_matrix.push_back(ld_states);
 
 	return system_state_matrix;
 }
@@ -342,40 +338,44 @@ void Platoon::add_last_vehicle(PlatoonVehicle* new_vehicle)
 {
 	if (verbose)
 	{
-		std::clog << "Platoon " << id << ": adding last veh with id "
+		std::clog << "Platoon " << id << ": adding veh at the end with id "
 			<< new_vehicle->get_id() << std::endl;
 	}
-	//last_veh_idx++;
-	add_vehicle(get_size(), new_vehicle);
+	long veh_id = new_vehicle->get_id();
+	vehicle_id_to_position.insert({ veh_id , 
+		static_cast<int>(vehicles_by_position.size()) });
+	vehicles_by_position.push_back(new_vehicle);
+	new_vehicle->reset_state(
+		std::make_unique<PlatoonVehicleLaneKeepingState>());
 }
 
 void Platoon::remove_vehicle_by_id(long veh_id, bool is_out_of_simulation)
 {
-	if (vehicle_id_to_position.find(veh_id) !=
+	if (vehicle_id_to_position.find(veh_id) ==
 		vehicle_id_to_position.end())
 	{
-		if (verbose)
-		{
-			std::clog << "Platoon " << get_id() << ", removing veh "
-				<< veh_id << ", which is in position "
-				<< vehicle_id_to_position.at(veh_id) << std::endl;
-		}
-		
-		long position_to_remove = vehicle_id_to_position.at(veh_id);
-		remove_vehicle_by_position(position_to_remove, veh_id,
-			is_out_of_simulation);
-
-		if (verbose)
-		{
-			std::clog << "Platoon after removal " << *this << std::endl;
-		}
-	}
-	else
-	{
-		std::clog << "Platoon " << get_id()
+		std::clog << "[Platoon] Platoon id: " << get_id()
 			<< ". Trying to erase veh " << veh_id
 			<< " which is not in this platoon.\n";
+		return;
 	}
+	long position_to_remove = vehicle_id_to_position.at(veh_id);
+	// Double checking:
+	if (vehicles_by_position[position_to_remove]->get_id() != veh_id)
+	{
+		std::clog << "[Platoon] Mismatch between vehicles array "
+			<< "and id_to_pos map " << *this << "\n";
+		return;
+	}
+
+	if (verbose)
+	{
+		std::clog << "Platoon " << get_id() << ", removing veh "
+			<< veh_id << ", which is in position "
+			<< position_to_remove << std::endl;
+	}
+
+	remove_vehicle_by_position(position_to_remove);
 }
 
 bool Platoon::can_vehicle_leave_platoon(long ego_id) const
@@ -400,9 +400,9 @@ bool Platoon::can_vehicle_start_lane_change(long ego_id) const
 	catch (const StateNotFoundException& e)
 	{
 		std::clog << "[Platoon] " << e.what() << "\n";
-		for (std::pair<int, PlatoonVehicle*> pos_veh : vehicles_by_position)
+		for (PlatoonVehicle* vehicle : vehicles_by_position)
 		{
-			pos_veh.second->give_up_lane_change();
+			vehicle->give_up_lane_change();
 		}
 		return false;
 	}
@@ -436,10 +436,10 @@ void Platoon::sort_vehicles_by_distance_traveled()
 	platoon vehicles started at the same place) */
 	std::map<double, PlatoonVehicle*>
 		ordered_vehicles;
-	for (auto& item : vehicles_by_position)
+	for (PlatoonVehicle* vehicle: vehicles_by_position)
 	{
-		ordered_vehicles[item.second->get_distance_traveled()]
-			= item.second;
+		ordered_vehicles[vehicle->get_distance_traveled()]
+			= vehicle;
 	}	
 	/* Traverse in reverse order and fill the class maps */
 	int i = 0;
@@ -477,7 +477,7 @@ long Platoon::define_desired_destination_lane_leader_id(long ego_id) const
 
 void Platoon::share_vehicle_info_with_platoon_leader() const
 {
-	if (verbose) std::clog << "[Platooon] sharing info with leader\n";
+	//if (verbose) std::clog << "[Platooon] sharing info with leader\n";
 	PlatoonVehicle* platoon_leader = vehicles_by_position.at(0);
 	for (int i = 1; i < get_size() - 1; i++)
 	{
@@ -488,149 +488,35 @@ void Platoon::share_vehicle_info_with_platoon_leader() const
 			platoon_leader->add_nearby_vehicle_from_another(*platoon_veh_i,
 				new_nv_id);
 		}
-		
-		///* The platoon leader's immediate follower should already be in 
-		//its nearby vehicles map. The other ones are added in this loop */
-		//NearbyVehicle* source_nv = 
-		//	platoon_leader->get_nearby_vehicle_by_id(
-		//		platoon_veh_i->get_id()).get();
-		///* The platoon vehicle behind platoon vehicle i */
-		//NearbyVehicle* follower_of_platoon_veh_i =
-		//	platoon_veh_i->get_nearby_vehicle_by_id(
-		//		vehicles_by_position.at(i + 1)->get_id()).get();
-		//if (source_nv == nullptr 
-		//	|| follower_of_platoon_veh_i == nullptr)
-		//{
-		//	std::clog << "Error at "
-		//		<< "[Platoon::share_vehicle_info_with_platoon_leader] "
-		//		<< (source_nv == nullptr ?
-		//			"'nv_already_in_set'" : "'follower_of_platoon_veh_i'") 
-		//		<< " not in map.\n";
-		//}
-		//else if (!platoon_leader->is_vehicle_in_sight(
-		//	follower_of_platoon_veh_i->get_id()))
-		//{
-		//	platoon_leader->add_nearby_vehicle_from_another(*platoon_veh_i,
-		//		follower_of_platoon_veh_i->get_id());
-		//	NearbyVehicle new_nv(*follower_of_platoon_veh_i);
-		//	new_nv.offset_from_another(*source_nv);
-		//	platoon_leader->add_nearby_vehicle(new_nv);
-		//}
 	}
 }
 
-void Platoon::add_leader(PlatoonVehicle* new_vehicle)
+void Platoon::remove_vehicle_by_position(int idx_in_platoon)
 {
+	vehicles_by_position.erase(vehicles_by_position.begin() 
+		+ idx_in_platoon);
+	vehicle_id_to_position.clear();
+	for (int i = 0; i < vehicles_by_position.size(); i++)
+	{
+		vehicle_id_to_position[vehicles_by_position[i]->get_id()] = i;
+	}
 	if (verbose)
 	{
-		std::clog << "Platoon " << id << ": adding leader with id "
-			<< new_vehicle->get_id() << std::endl;
+		std::clog << "\tVehicle removed. Platoon now is " 
+			<< *this << std::endl;
 	}
-	add_vehicle(0, new_vehicle);
-}
-
-void Platoon::add_vehicle(int idx_in_platoon,
-	PlatoonVehicle* new_vehicle)
-{
-	long veh_id = new_vehicle->get_id();
-	vehicles_by_position.insert({ idx_in_platoon, new_vehicle });
-	vehicle_id_to_position.insert({ veh_id , idx_in_platoon });
-
-	// Phasing out strategy
-	//if (lane_change_strategy != nullptr)
-	//{
-	//	/* Tricky part of the code - we are forcing the vehicle out 
-	//	of its current state. This might interrupt some maneuver. */
-	//	new_vehicle->reset_state(
-	//		lane_change_strategy->get_new_lane_keeping_state());
-	//}
-
-	new_vehicle->reset_state(
-		std::make_unique<PlatoonVehicleLaneKeepingState>());
-}
-
-void Platoon::remove_vehicle_by_position(int idx_in_platoon, long veh_id,
-	bool is_out_of_simulation)
-{
-	/*try
-	{
-		vehicles_by_position.erase(idx_in_platoon);
-	}
-	catch (const std::out_of_range&)
-	{
-		std::clog << "Vehicle not found in vehicles map\n";
-	}
-
-	if (vehicle_id_to_position.erase(veh_id) == 0)
-		std::clog << "Veh id not found in vehicle_id_to_position\n";*/
-
-	/* In case the removed vehicle was the leader or the last vehicle,
-	we update the respective indices */
-	//while (vehicles_by_position.find(leader_idx)
-	//	== vehicles_by_position.end())
-	//{
-	//	leader_idx--;
-	//	if (leader_idx < last_veh_idx) return; // platoon empty!
-	//}
-	//while (vehicles_by_position.find(last_veh_idx)
-	//	== vehicles_by_position.end())
-	//{
-	//	last_veh_idx++;
-	//	if (last_veh_idx > leader_idx) return; // platoon empty!
-	//}
-	/* "Move" all vehicles ahead one position which overwrites
-	the vehicle being removed */
-
-	for (int i = idx_in_platoon; i < vehicles_by_position.size() - 1; i++)
-	{
-		vehicles_by_position[idx_in_platoon] =
-			vehicles_by_position[idx_in_platoon + 1];
-		vehicle_id_to_position[idx_in_platoon] =
-			vehicle_id_to_position[idx_in_platoon + 1];
-	}
-
-	/* Remove the last vehicle (which has already been copied to the
-	last-1 position) */
-	vehicles_by_position.erase(get_size() - 1);
-	vehicle_id_to_position.erase(get_size() - 1);
-	if (verbose)
-	{
-		std::clog << "\tVehicle removed: " << *this << std::endl;
-	}
-}
-
-void Platoon::update_position_maps()
-{
-
 }
 
 std::ostream& operator<< (std::ostream& out, const Platoon& platoon)
 {
 	out << "Platoon " << platoon.get_id()
-		//<< ", v_r=" << platoon.get_desired_velocity()
-		<< ", # vehs " << platoon.vehicles_by_position.size() 
-		<< ". (pos, veh id) : " ;
-	for (const auto& item : platoon.vehicles_by_position)
+		<< "; # vehs " << platoon.vehicles_by_position.size() 
+		<< "; vehicle array: ( " ;
+	for (const auto& vehicle : platoon.vehicles_by_position)
 	{
-		out << "(" << item.first << ", " << item.second->get_id() << "), ";
+		out << vehicle->get_id() << " ";
 	}
-
-	//for (int i = platoon.leader_idx; i <= platoon.last_veh_idx; i++)
-	//{
-	//	if (platoon.vehicles_by_position.find(i) 
-	//		!= platoon.vehicles_by_position.end())
-	//	{
-	//		out << "(" << i << ", " 
-	//			<< platoon.vehicles_by_position.at(i)->get_id()
-	//			<< "), ";
-	//	}
-	//	else
-	//	{
-	//		out << "( " << i << ", x), ";
-	//	}
-	//}
-	//out << "leader idx: " << platoon.leader_idx
-	//	<< ", last veh idx: " << platoon.last_veh_idx;
-
-	return out; // return std::ostream so we can chain calls to operator<<
+	out << "); position to id map: " 
+		<<	map_to_string(platoon.vehicle_id_to_position);
+	return out;
 }

@@ -90,12 +90,11 @@ void SynchronousLookingForSafeGapState
 	bool can_start_lane_change = true;
 	if (platoon_vehicle->is_platoon_leader())
 	{
-		for (const auto& item 
+		for (const auto& veh
 			: platoon_vehicle->get_platoon()->get_vehicles_by_position())
 		{
-			const auto& veh = item.second;
 			if (*veh->get_state() < SynchronousIncreasingGapState()
-				|| !veh->check_lane_change_gaps())
+				|| !veh->are_surrounding_gaps_safe_for_lane_change())
 			{
 				can_start_lane_change = false;
 				break;

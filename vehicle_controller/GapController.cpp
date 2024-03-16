@@ -107,7 +107,8 @@ double GapController::compute_desired_acceleration(
 	double gap = ego_vehicle.compute_gap_to_a_leader(leader);
 	double gap_reference = compute_desired_gap(ego_velocity);
 	this->gap_error = compute_gap_error(gap, gap_reference);
-	double velocity_reference = leader->compute_velocity(ego_velocity);
+	double velocity_reference = ego_vehicle.compute_nearby_vehicle_velocity(
+		*leader);
 	/* The velocity error is set to zero when we want a "smooth start" */
 	double filtered_velocity_reference = should_perform_smooth_start ?
 		ego_velocity : velocity_filter.apply_filter(velocity_reference);

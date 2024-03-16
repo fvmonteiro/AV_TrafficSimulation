@@ -10,8 +10,10 @@ void AVController::activate_destination_lane_controller(
 	const NearbyVehicle& virtual_leader)
 {
 	//destination_lane_controller->smooth_start_leader_velocity_filter();
-	double leader_velocity = virtual_leader.compute_velocity(
-		autonomous_vehicle->get_velocity());
+	double leader_velocity = 
+		autonomous_vehicle->compute_nearby_vehicle_velocity(virtual_leader);
+		/*virtual_leader.compute_velocity(
+		autonomous_vehicle->get_velocity());*/
 	destination_lane_controller->reset_leader_velocity_filter(leader_velocity);
 
 	/* [Mar 6] Test: setting the initial value equal the current
@@ -177,9 +179,8 @@ bool AVController::get_destination_lane_desired_acceleration(
 double AVController::determine_low_velocity_reference(
 	const NearbyVehicle& nearby_vehicle) const
 {
-	double ego_velocity = autonomous_vehicle->get_velocity();
 	double leader_velocity =
-		nearby_vehicle.compute_velocity(ego_velocity);
+		autonomous_vehicle->compute_nearby_vehicle_velocity(nearby_vehicle);
 	/* The fraction of the leader speed has to vary. Otherwise, vehicles
 	take too long to create safe gaps at low speeds*/
 	double vel_fraction;
@@ -197,7 +198,7 @@ double AVController::determine_low_velocity_reference(
 	}
 	double reference_velocity = std::min(
 		leader_velocity * vel_fraction,
-		ego_velocity);
+		autonomous_vehicle->get_velocity());
 
 	if (verbose)
 	{
@@ -300,8 +301,9 @@ double AVController::implement_get_desired_time_headway_gap(
 		time_headway_gap =
 			destination_lane_controller->get_time_headway_gap(
 				dest_lane_follower_time_headway,
-				nearby_vehicle.compute_velocity(
-					autonomous_vehicle->get_velocity()));
+				autonomous_vehicle->compute_nearby_vehicle_velocity(
+					nearby_vehicle)
+			);
 	}
 
 	return time_headway_gap;

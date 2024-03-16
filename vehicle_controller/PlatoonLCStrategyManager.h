@@ -10,21 +10,6 @@
 #include "StateQuantizer.h"
 #include "StateVector.h"
 
-/* Used to signalize code higher up that the vehicles should give up
-on lane changing during the simulation. */
-class StateNotFoundException : public std::out_of_range 
-{
-public:
-    StateNotFoundException(std::vector<int>& state_vector) throw()
-        : std::out_of_range("Initial state not found in strategy map"),
-        state_vector(state_vector) {};
-    StateNotFoundException() throw()
-        : std::out_of_range("Initial state not found in strategy map")
-    {};
-
-    std::vector<int> state_vector;
-};
-
 /* Hash function taken from:
 https://stackoverflow.com/questions/20511347/a-good-hash-function-for-a-vector/72073933#72073933
 and
@@ -44,13 +29,30 @@ struct container_hash {
     }
 };
 
-using InnerKey = std::set<int>; /* unordered sets could lead to 
+using InnerKey = std::set<int>; /* unordered sets could lead to
  different hash values */
 using OuterKey = std::vector<int>;
+using Query = std::pair<OuterKey, InnerKey>;
 using InnerMap = std::unordered_map<InnerKey,
     PlatoonLaneChangeOrder, container_hash<InnerKey>>;
 using OuterMap = std::unordered_map<OuterKey, InnerMap,
     container_hash<OuterKey>>;
+
+/* Used to signalize code higher up that the vehicles should give up
+on lane changing during the simulation. */
+class StateNotFoundException : public std::out_of_range 
+{
+public:
+    StateNotFoundException(const std::vector<int>& state_vector) throw()
+        : std::out_of_range("Initial state not found in strategy map"),
+        state_vector(state_vector) {};
+    StateNotFoundException() throw()
+        : std::out_of_range("Initial state not found in strategy map")
+    {};
+
+    std::vector<int> state_vector;
+};
+
 
 class PlatoonLCStrategyManager
 {
@@ -63,6 +65,7 @@ public:
     void set_maneuver_initial_state(int ego_position, 
         std::vector<ContinuousStateVector> system_state_matrix);
     void set_empty_maneuver_initial_state(int ego_position);
+    PlatoonLaneChangeOrder answer_query(const Query& query) const;
     PlatoonLaneChangeOrder find_minimum_cost_order_given_first_mover(
         std::set<int>& first_mover_positions) const;
 
@@ -82,10 +85,6 @@ private:
     void load_a_strategy_map(int n_platoon, std::string cost_name);
     std::unordered_map<std::string, double> load_quantizer_data(
         int n_platoon);
-
-    /* Transforms a vector of vectors into a single long vector */
-    template<typename T>
-    std::vector<T> flatten_state_matrix(
-        std::vector<StateVector<T>>& state_matrix);
+    void save_query_to_file(Query query) const;
 };
 

@@ -52,12 +52,16 @@ double ACCVehicleController::get_vissim_desired_acceleration()
 	/* We need to ensure the velocity filter keeps active
 	while VISSIM has control of the car to guarantee a smooth
 	movement when taking back control */
-	if (acc_vehicle->has_leader())
-	{
-		origin_lane_controller->update_leader_velocity_filter(
-			acc_vehicle->get_leader()->compute_velocity(
-				acc_vehicle->get_velocity()));
-	}
+	origin_lane_controller->update_leader_velocity_filter(
+		acc_vehicle->compute_nearby_vehicle_velocity(
+			acc_vehicle->get_leader().get(), acc_vehicle->get_velocity()));
+	// Old [March 13, 24]
+	//if (acc_vehicle->has_leader())
+	//{
+	//	origin_lane_controller->update_leader_velocity_filter(
+	//		acc_vehicle->get_leader()->compute_velocity(
+	//			acc_vehicle->get_velocity()));
+	//}
 
 	active_longitudinal_controller_type = ALCType::vissim;
 	return vissim_controller.compute_desired_acceleration(

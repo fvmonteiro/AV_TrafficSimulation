@@ -211,12 +211,19 @@ public:
 	std::shared_ptr<NearbyVehicle> get_leader() const;
 	/* Returns a nullptr if vehicle not found */
 	std::shared_ptr<NearbyVehicle> get_nearby_vehicle_by_id(long nv_id) const;
-	/* Returns an empty state vector if no leader */
+	/* Returns an empty state vector if nv_id not found */
 	ContinuousStateVector get_nearby_vehicle_relative_states(long nv_id) const;
-	/* Checks if the given id is in the ego vehicle's nearby
-	vehicles map. */
-	bool is_vehicle_in_sight(long nearby_vehicle_id) const;
-
+	/* Returns a state vector at MAX DIST, desired velocity and "expected_lane",
+	if nv_id not found leader */
+	ContinuousStateVector get_nearby_vehicle_relative_states(long nv_id,
+		long expected_lane) const;
+	
+	double compute_nearby_vehicle_velocity(
+		const NearbyVehicle& nearby_vehicle) const;
+	/* Returns the nearby vehicle's velocity if the pointer is not null.
+	Otherwise, returns the default value. */
+	double compute_nearby_vehicle_velocity(
+		const NearbyVehicle* nearby_vehicle, double default_value) const;
 	/* Computes the bumper-to-bumper distance between vehicles.
 	Returns MAX_DISTANCE if nearby_vehicle is empty. */
 	double compute_gap_to_a_leader(const NearbyVehicle& nearby_vehicle) const;
@@ -242,6 +249,9 @@ public:
 	can create a lane change request*/
 	long get_lane_change_request() const;
 
+	/* Checks if the given id is in the ego vehicle's nearby
+	vehicles map. */
+	bool is_vehicle_in_sight(long nearby_vehicle_id) const;
 	bool has_destination_lane_leader() const;
 	bool has_destination_lane_follower() const;
 	bool has_assisted_vehicle() const;
@@ -478,8 +488,11 @@ private:
 		double distance) {};
 	virtual bool implement_has_next_traffic_light() const { return false; };
 	//virtual void compute_lane_change_risks() {};
+	/* Min gap toward a nearby vehicle assuming the ego vehicle will
+	change lanes at lane_change_speed. */
 	virtual double compute_accepted_lane_change_gap(
-		const NearbyVehicle* nearby_vehicle) const = 0;
+		const NearbyVehicle* nearby_vehicle, double lane_change_speed
+	) const = 0;
 	virtual std::shared_ptr<NearbyVehicle>
 		implement_get_destination_lane_leader() const = 0;
 	virtual std::shared_ptr<NearbyVehicle>

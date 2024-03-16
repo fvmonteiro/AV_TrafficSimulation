@@ -306,14 +306,29 @@ ContinuousStateVector EgoVehicle::get_nearby_vehicle_relative_states(
 	return relative_states;
 }
 
-bool EgoVehicle::is_vehicle_in_sight(long nearby_vehicle_id) const
+ContinuousStateVector EgoVehicle::get_nearby_vehicle_relative_states(
+	long nv_id, long expected_lane) const
 {
-	return nearby_vehicles.find(nearby_vehicle_id) != nearby_vehicles.end();
+	if (is_vehicle_in_sight(nv_id))
+	{
+		return get_nearby_vehicle_relative_states(nv_id);
+	}
+	else
+	{
+		double expected_y = expected_lane * LANE_WIDTH;
+		return ContinuousStateVector(
+			MAX_DISTANCE, expected_y, 0., get_desired_velocity());
+	}
 }
 
 double EgoVehicle::get_relative_velocity_to_leader()
 {
 	return has_leader() ? leader->get_relative_velocity() : 0.0;
+}
+
+bool EgoVehicle::is_vehicle_in_sight(long nearby_vehicle_id) const
+{
+	return nearby_vehicles.find(nearby_vehicle_id) != nearby_vehicles.end();
 }
 
 bool EgoVehicle::has_destination_lane_leader() const
@@ -358,6 +373,19 @@ bool EgoVehicle::is_in_a_platoon() const
 long EgoVehicle::get_platoon_id() const
 {
 	return is_in_a_platoon() ? get_platoon()->get_id() : -1;
+}
+
+double EgoVehicle::compute_nearby_vehicle_velocity(
+	const NearbyVehicle& nearby_vehicle) const
+{
+	return nearby_vehicle.compute_velocity(get_velocity());
+}
+
+double EgoVehicle::compute_nearby_vehicle_velocity(
+	const NearbyVehicle* nearby_vehicle, double default_value) const
+{
+	return nearby_vehicle == nullptr ? 
+		default_value : compute_nearby_vehicle_velocity(*nearby_vehicle);
 }
 
 double EgoVehicle::compute_gap_to_a_leader(
@@ -671,7 +699,6 @@ bool EgoVehicle::check_lane_change_gaps()
 void EgoVehicle::prepare_to_start_long_adjustments()
 {
 	set_has_completed_lane_change(false);
-	check_lane_change_gaps();
 	implement_prepare_to_start_long_adjustments();
 }
 
@@ -730,7 +757,8 @@ void EgoVehicle::compute_desired_acceleration(
 double EgoVehicle::get_accepted_lane_change_gap(
 	const NearbyVehicle* nearby_vehicle)
 {
-	return compute_accepted_lane_change_gap(nearby_vehicle);
+	return compute_accepted_lane_change_gap(nearby_vehicle,
+		get_velocity());
 }
 
 double EgoVehicle::get_reference_gap() const
@@ -764,6 +792,7 @@ void EgoVehicle::reset_origin_lane_velocity_controller()
 }
 
 /* Computation of surrogate safety measurements --------------------------- */
+
 double EgoVehicle::compute_safe_gap_to_leader()
 {
 	return has_leader() ?
@@ -782,7 +811,7 @@ double EgoVehicle::compute_risky_gap_to_leader(const NearbyVehicle& a_leader,
 {
 	double v_follower = get_velocity();
 	double brake_follower = get_current_max_brake();
-	double v_leader = a_leader.compute_velocity(v_follower);
+	double v_leader = compute_nearby_vehicle_velocity(a_leader);
 	double brake_leader = a_leader.get_max_brake();
 	auto params = get_current_safe_gap_parameters();
 	return compute_risky_gap(v_follower, v_leader, brake_follower,

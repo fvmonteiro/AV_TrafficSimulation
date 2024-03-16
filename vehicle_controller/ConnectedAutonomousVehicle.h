@@ -95,8 +95,9 @@ private:
 	
 	long implement_get_lane_change_request() const override;
 	double compute_accepted_lane_change_gap(
-		const NearbyVehicle* nearby_vehicle) const override;
-	void update_destination_lane_follower(
+		const NearbyVehicle* nearby_vehicle, double lane_change_speed
+	) const override;
+	void update_destination_lane_follower_in_controller(
 		const NearbyVehicle* old_follower) override;
 
 	/* Id of the vehicle in front of which we want to merge
@@ -106,7 +107,7 @@ private:
 
 	void deal_with_close_and_slow_assited_vehicle();
 	void compute_connected_safe_gap_parameters();
-	void update_assisted_vehicle(
+	void update_assisted_vehicle_in_controller(
 		const NearbyVehicle* old_assisted_vehicle);
 	
 	void set_max_desired_velocity(bool should_increase);

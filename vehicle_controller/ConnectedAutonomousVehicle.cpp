@@ -95,6 +95,7 @@ void ConnectedAutonomousVehicle::implement_analyze_nearby_vehicles()
 
 	std::shared_ptr<NearbyVehicle> vl = choose_behind_whom_to_move();
 	set_virtual_leader(vl);
+	if (has_lane_change_intention()) check_lane_change_gaps();
 }
 
 void ConnectedAutonomousVehicle::find_cooperation_requests()
@@ -126,7 +127,7 @@ void ConnectedAutonomousVehicle::find_cooperation_requests()
 	}
 	set_max_desired_velocity(should_increase_vel);
 	deal_with_close_and_slow_assited_vehicle();
-	update_assisted_vehicle(old_assisted_vehicle.get());
+	update_assisted_vehicle_in_controller(old_assisted_vehicle.get());
 }
 
 std::shared_ptr<NearbyVehicle> ConnectedAutonomousVehicle
@@ -197,14 +198,14 @@ void ConnectedAutonomousVehicle::deal_with_close_and_slow_assited_vehicle()
 	is very slow. The only solution would be for the ego vehicle to
 	go backwards, which would lead to a deadlock situation. */
 	if (has_assisted_vehicle()
-		&& (assisted_vehicle->compute_velocity(get_velocity()) < 1)
-		&& compute_gap_to_a_leader(assisted_vehicle.get()) < 1)
+		&& compute_nearby_vehicle_velocity(*assisted_vehicle) < 1.
+		&& compute_gap_to_a_leader(assisted_vehicle.get()) < 1.)
 	{
 		assisted_vehicle = nullptr;
 	}
 }
 
-void ConnectedAutonomousVehicle::update_destination_lane_follower(
+void ConnectedAutonomousVehicle::update_destination_lane_follower_in_controller(
 	const NearbyVehicle* old_follower)
 {
 	if (has_destination_lane_follower())
@@ -222,7 +223,7 @@ void ConnectedAutonomousVehicle::update_destination_lane_follower(
 	}
 }
 
-void ConnectedAutonomousVehicle::update_assisted_vehicle(
+void ConnectedAutonomousVehicle::update_assisted_vehicle_in_controller(
 	const NearbyVehicle* old_assisted_vehicle)
 {
 	if (has_assisted_vehicle())
@@ -298,7 +299,7 @@ void ConnectedAutonomousVehicle::set_assisted_vehicle_by_id(
 	std::shared_ptr<NearbyVehicle> old_assisted_vehicle = assisted_vehicle;
 	assisted_vehicle = get_nearby_vehicle_by_id(assisted_vehicle_id);
 	//deal_with_close_and_slow_assited_vehicle();
-	update_assisted_vehicle(old_assisted_vehicle.get());
+	update_assisted_vehicle_in_controller(old_assisted_vehicle.get());
 }
 
 double ConnectedAutonomousVehicle::
@@ -324,7 +325,7 @@ compute_vehicle_following_time_headway_with_risk(
 }
 
 double ConnectedAutonomousVehicle::compute_accepted_lane_change_gap(
-	const NearbyVehicle* nearby_vehicle) const
+	const NearbyVehicle* nearby_vehicle, double lane_change_speed) const
 {
 	if (nearby_vehicle == nullptr) return 0.0;
 
@@ -334,7 +335,15 @@ double ConnectedAutonomousVehicle::compute_accepted_lane_change_gap(
 	if (verbose)
 	{
 		std::clog << "\tUsing linear overestimation? "
-			<< use_linear_lane_change_gap << "\n";
+			<< boolean_to_string(use_linear_lane_change_gap) << "\n";
+	}
+
+	if (verbose && lane_change_speed != get_velocity())
+	{
+		// TODO
+		std::clog << "[AutonomousVehicle::compute_accepted_lane_change_gap]\n"
+			"\tTrying to set a lane change speed "
+			"different from the current vehicle speed. Not implemented.\n";
 	}
 
 	if (use_linear_lane_change_gap)

@@ -81,6 +81,7 @@ void AutonomousVehicle::implement_analyze_nearby_vehicles()
 	find_leader();
 	find_destination_lane_vehicles();
 	set_virtual_leader(choose_behind_whom_to_move());
+	if (has_lane_change_intention()) check_lane_change_gaps();
 }
 
 void AutonomousVehicle::find_destination_lane_vehicles()
@@ -114,8 +115,10 @@ void AutonomousVehicle::find_destination_lane_vehicles()
 		}
 	}
 
-	update_destination_lane_follower(old_dest_lane_follower.get());
-	update_destination_lane_leader(old_dest_lane_leader.get());
+	update_destination_lane_follower_in_controller(
+		old_dest_lane_follower.get());
+	update_destination_lane_leader_in_controller(
+		old_dest_lane_leader.get());
 }
 
 std::shared_ptr<NearbyVehicle> AutonomousVehicle::choose_behind_whom_to_move()
@@ -154,11 +157,13 @@ bool AutonomousVehicle::try_to_overtake_destination_lane_leader(
 
 	double ego_velocity = get_velocity();
 	double dest_lane_leader_vel =
-		get_destination_lane_leader()->compute_velocity(ego_velocity);
+		compute_nearby_vehicle_velocity(*get_destination_lane_leader());
+		//get_destination_lane_leader()->compute_velocity(ego_velocity);
 	double origin_lane_desired_velocity =
 		(av_controller->is_in_free_flow_at_origin_lane() || !has_leader()) ?
 		get_desired_velocity()
-		: get_leader()->compute_velocity(ego_velocity);
+		: compute_nearby_vehicle_velocity(*get_leader());
+		//get_leader()->compute_velocity(ego_velocity);
 
 	/* We say the dest lane leader is stuck if it is not moving even
 	though it has no leader. This can happen when vehicles in different
@@ -173,11 +178,12 @@ bool AutonomousVehicle::try_to_overtake_destination_lane_leader(
 	{
 		std::clog << "\tv_o=" << origin_lane_desired_velocity
 			<< ", v_d=" << dest_lane_leader_vel 
-			<< ", is_desired_vel_higher? " << is_desired_vel_higher 
+			<< ", is_desired_vel_higher? " 
+			<< boolean_to_string(is_desired_vel_higher)
 			<< ", dest lane leader has leader? "
-			<< has_destination_lane_leader_leader()
+			<< boolean_to_string(has_destination_lane_leader_leader())
 			<< ", is dest lane leader stuck? " 
-			<< is_dest_lane_leader_stuck <<"\n";
+			<< boolean_to_string(is_dest_lane_leader_stuck) << "\n";
 	}
 
 	/* [Jan 24, 2023] Note: maybe the first condition is redundant. */
@@ -197,11 +203,13 @@ try_to_overtake_destination_lane_leader_based_on_time() const
 
 	double ego_vel = get_velocity();
 	double dest_lane_leader_vel =
-		get_destination_lane_leader()->compute_velocity(ego_vel);
+		compute_nearby_vehicle_velocity(*get_destination_lane_leader());
+		//get_destination_lane_leader()->compute_velocity(ego_vel);
 	double orig_lane_desired_vel =
 		(av_controller->is_in_free_flow_at_origin_lane() || !has_leader()) ?
 		get_desired_velocity()
-		: get_leader()->compute_velocity(ego_vel);
+		: compute_nearby_vehicle_velocity(*get_leader());
+		//get_leader()->compute_velocity(ego_vel);
 
 	double relative_desired_velocity = orig_lane_desired_vel
 		- dest_lane_leader_vel;
@@ -227,7 +235,7 @@ try_to_overtake_destination_lane_leader_based_on_time() const
 	return is_dest_lane_leader_stuck || is_overtaking_time_acceptable;
 }
 
-void AutonomousVehicle::update_destination_lane_follower(
+void AutonomousVehicle::update_destination_lane_follower_in_controller(
 	const NearbyVehicle* old_follower)
 {
 	if (has_destination_lane_follower())
@@ -244,7 +252,7 @@ void AutonomousVehicle::update_destination_lane_follower(
 	}
 }
 
-void AutonomousVehicle::update_destination_lane_leader(
+void AutonomousVehicle::update_destination_lane_leader_in_controller(
 	const NearbyVehicle* old_leader)
 {
 	if (has_destination_lane_leader())
@@ -389,46 +397,30 @@ bool AutonomousVehicle::implement_check_lane_change_gaps()
 
 	gap_to_lo = compute_gap_to_a_leader(get_leader().get()); // possibly MAX_DIST
 	safe_gap_to_lo = compute_accepted_lane_change_gap(
-			get_leader().get()); // possibly 0.0
+			get_leader().get(), get_velocity()); // possibly 0.0
 	lane_change_gaps_safety.orig_lane_leader_gap =
 		gap_to_lo + margin >= safe_gap_to_lo;
-	/*lane_change_gaps_safety.orig_lane_leader_gap = 
-		is_lane_change_gap_safe(get_leader());*/
 
 	gap_to_ld = compute_gap_to_a_leader(destination_lane_leader.get());
 	safe_gap_to_ld = compute_accepted_lane_change_gap(
-		destination_lane_leader.get());
+		destination_lane_leader.get(), get_velocity());
 	lane_change_gaps_safety.dest_lane_leader_gap =
 		gap_to_ld + margin >= safe_gap_to_ld;
-	/*lane_change_gaps_safety.dest_lane_leader_gap =
-		is_lane_change_gap_safe(destination_lane_leader);*/
 	
 	/* Besides the regular safety conditions, we add the case
 	where the dest lane follower has completely stopped to give room
 	to the lane changing vehicle */
 	gap_to_fd = compute_gap_to_a_follower(destination_lane_follower.get());
 	safe_gap_to_fd = compute_accepted_lane_change_gap(
-		destination_lane_follower.get());
+		destination_lane_follower.get(), get_velocity());
 	lane_change_gaps_safety.dest_lane_follower_gap = 
 		(gap_to_fd + margin >= safe_gap_to_fd)
-		|| ((destination_lane_follower->
-			compute_velocity(get_velocity()) <= 1.0)
+		|| ((compute_nearby_vehicle_velocity(*destination_lane_follower) 
+			<= 1.0)
 			&& (destination_lane_follower->get_distance() <= -2.0));
-	/*lane_change_gaps_safety.dest_lane_follower_gap = 
-		is_lane_change_gap_safe(destination_lane_follower)
-		|| ((destination_lane_follower->
-			compute_velocity(get_velocity()) <= 1.0)
-			&& (destination_lane_follower->get_distance() <= -2.0)); */
 
 	lane_change_gaps_safety.no_conflict =
 		!has_lane_change_conflict();
-
-	/* A suitable gap is a gap that the vehicle can reach by decelerating
-    and that is large enough for a lane change. */
-	is_space_suitable_for_lane_change =
-		lane_change_gaps_safety.dest_lane_follower_gap
-		&& (gap_to_ld + gap_to_fd + margin)
-			>= (safe_gap_to_fd + safe_gap_to_ld + get_length());
 
 	if (verbose)
 	{
@@ -439,7 +431,51 @@ bool AutonomousVehicle::implement_check_lane_change_gaps()
 			<< "gap = " << gap_to_ld << ", safe_gap = " << safe_gap_to_ld
 			<< "\n\t- To dest lane follower:"
 			<< "gap = " << gap_to_fd << ", safe_gap = " << safe_gap_to_fd
-			<< "\n";
+			<< "\n\t - Conflict? "
+			<< boolean_to_string(!lane_change_gaps_safety.no_conflict) 
+			<< "\n\t - Can";
+	}
+
+	/* TODO: organize */
+	//if (verbose) std::clog << "Deciding gap suitability\n";
+	is_space_suitable_for_lane_change =
+		lane_change_gaps_safety.is_lane_change_safe();
+	if (!is_space_suitable_for_lane_change)
+	{
+		double dest_lane_leader_vel = compute_nearby_vehicle_velocity(
+			get_destination_lane_leader().get(), INFINITY);
+		double lc_speed = std::min(get_velocity(), dest_lane_leader_vel);
+		double safe_gap_after_decel;
+		safe_gap_after_decel = compute_accepted_lane_change_gap(
+			get_destination_lane_leader().get(), lc_speed);
+		double min_gap_to_decelerate = (
+			(std::pow(get_velocity(), 2) - std::pow(dest_lane_leader_vel, 2))
+			/ 2 / get_comfortable_brake()
+			);
+
+		if (verbose)
+		{
+			std::clog << "Checking gap feasibility"
+				<< "\n\t- Safe to fd? " 
+				<< boolean_to_string(lane_change_gaps_safety.dest_lane_follower_gap)
+				<< "\n\t- gap to ld = " << gap_to_ld 
+				<< ", min_gap_to_decel = " << min_gap_to_decelerate
+				<< "\n\t- total space = " << gap_to_ld + gap_to_fd + margin
+				<< ", needed gap = " 
+				<< safe_gap_to_fd + safe_gap_after_decel + get_length()
+				<< "\n";
+		}
+
+		is_space_suitable_for_lane_change =
+			lane_change_gaps_safety.dest_lane_follower_gap
+			&& gap_to_ld >= min_gap_to_decelerate
+			&& ((gap_to_ld + gap_to_fd + margin)
+				>= (safe_gap_to_fd + safe_gap_after_decel + get_length()));
+	}
+	if (verbose)
+	{
+		std::clog << "\tIs adjacent gap suitable? "
+			<< boolean_to_string(is_space_suitable_for_lane_change) << "\n";
 	}
 
 	return lane_change_gaps_safety.is_lane_change_safe();
@@ -461,7 +497,7 @@ bool AutonomousVehicle::is_lane_change_gap_safe(
 	}
 
 	double accepted_gap = compute_accepted_lane_change_gap(
-		nearby_vehicle);
+		nearby_vehicle, get_velocity());
 
 	return gap + margin >= accepted_gap;
 }
@@ -506,9 +542,17 @@ bool AutonomousVehicle::has_lane_change_conflict() const
 }
 
 double AutonomousVehicle::compute_accepted_lane_change_gap(
-	const NearbyVehicle* nearby_vehicle) const
+	const NearbyVehicle* nearby_vehicle, double lane_change_speed) const
 {
 	if (nearby_vehicle == nullptr) return 0.0;
+
+	if (verbose && lane_change_speed != get_velocity()) 
+	{
+		// TODO
+		std::clog << "[AutonomousVehicle::compute_accepted_lane_change_gap]\n"
+			"\tTrying to set a lane change speed "
+			"different from the current vehicle speed. Not implemented.\n";
+	}
 
 	double accepted_gap;
 	double accepted_risk = 0.0;
@@ -516,7 +560,7 @@ double AutonomousVehicle::compute_accepted_lane_change_gap(
 	if (verbose)
 	{
 		std::clog << "\tUsing linear overestimation? "
-			<< use_linear_lane_change_gap << "\n";
+			<< boolean_to_string(use_linear_lane_change_gap) << "\n";
 	}
 
 	if (use_linear_lane_change_gap)

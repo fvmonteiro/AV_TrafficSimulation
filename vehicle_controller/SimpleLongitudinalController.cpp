@@ -32,7 +32,7 @@ void SimpleLongitudinalController::determine_controller_state(
 		state = State::vehicle_following;
 		message = "In platoon. ";
 	}
-	else if (leader->compute_velocity(ego_vehicle->get_velocity())
+	else if (ego_vehicle->compute_nearby_vehicle_velocity(*leader)
 				> reference_velocity*1.1)
 	{
 		state = State::velocity_control;
@@ -46,9 +46,10 @@ void SimpleLongitudinalController::determine_controller_state(
 	}
 	else
 	{
-		double gap = ego_vehicle->compute_gap_to_a_leader(leader);
+		double gap = ego_vehicle->compute_gap_to_a_leader(*leader);
 		double ego_velocity = ego_vehicle->get_velocity();
-		double leader_velocity = leader->compute_velocity(ego_velocity);
+		double leader_velocity = 
+			ego_vehicle->compute_nearby_vehicle_velocity(*leader);
 		double gap_threshold = gap_controller.compute_time_headway_gap(
 			gap_controller.get_desired_time_headway(),
 			ego_vehicle->get_velocity())

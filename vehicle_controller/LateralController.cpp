@@ -124,7 +124,8 @@ double LateralController::compute_vehicle_following_gap_for_lane_change(
 		follower_lambda_0 = ego_safe_lane_changing_params.first;
 		follower_lambda_1 = ego_safe_lane_changing_params.second;
 		v_follower = ego_velocity;
-		v_leader = nearby_vehicle.compute_velocity(ego_velocity);
+		v_leader = ego_vehicle.compute_nearby_vehicle_velocity(
+			nearby_vehicle);
 		brake_follower = ego_vehicle.get_lane_change_max_brake();
 		brake_leader = nearby_vehicle.get_max_brake();
 	}
@@ -132,8 +133,9 @@ double LateralController::compute_vehicle_following_gap_for_lane_change(
 	{
 		follower_lambda_0 = dest_lane_follower_lambda_0;
 		follower_lambda_1 = dest_lane_follower_lambda_1;
+		v_follower = ego_vehicle.compute_nearby_vehicle_velocity(
+			nearby_vehicle);
 		v_leader = ego_velocity;
-		v_follower = nearby_vehicle.compute_velocity(ego_velocity);
 		brake_follower = nearby_vehicle.get_max_brake();
 		brake_leader = ego_vehicle.get_max_brake();
 		delta_v = -delta_v;

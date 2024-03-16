@@ -7,7 +7,9 @@
 
 #define _USE_MATH_DEFINES
 #include <math.h>
+#include <set>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 typedef unsigned long color_t;
@@ -97,6 +99,24 @@ enum class VehicleType {
 	bus = 300
 };
 
+inline std::string boolean_to_string(bool value)
+{
+	return value ? "yes" : "no";
+};
+
+template <typename T>
+inline std::string set_to_string(std::set<T> s)
+{
+	std::string ret_str = "[";
+	for (T i : s)
+	{
+		ret_str += std::to_string(i) + ", ";
+	}
+	if (ret_str.size() > 1) ret_str.erase(ret_str.size() - 2);
+	ret_str += "]";
+	return ret_str;
+};
+
 template <typename T>
 std::string vector_to_string(std::vector<T> v)
 {
@@ -108,4 +128,19 @@ std::string vector_to_string(std::vector<T> v)
 	if (ret_str.size() > 1) ret_str.erase(ret_str.size() - 2);
 	ret_str += "]";
 	return ret_str;
+};
+
+template <typename KeyType, typename ValueType>
+std::string map_to_string(const std::unordered_map<KeyType, ValueType>& map)
+{
+	std::string out;
+	out += "{";
+	for (const auto& pair : map)
+	{
+		out += std::to_string(pair.first) + ": "
+			+ std::to_string(pair.second) + ", ";
+	}
+	if (map.size() > 0) out.erase(out.size() - 2);
+	out += "}";
+	return out;
 };

@@ -49,3 +49,20 @@ private:
 
 using ContinuousStateVector = StateVector<double>;
 using QuantizedStateVector = StateVector<int>;
+
+/* Transforms a vector of vectors into a single long vector
+	TODO: make static? or move outside class*/
+template<typename T>
+inline std::vector<T> flatten_state_matrix(
+	std::vector<StateVector<T>>& state_matrix)
+{
+	std::vector<T> system_state_vector;
+	//int n_vehs = static_cast<int>(state_matrix.size());
+	//int n_states = state_matrix.front().get().size();
+	//system_state_vector.reserve(n_states * n_vehs);
+	for (StateVector<T>& v : state_matrix)
+	{
+		for (auto i : v.get()) system_state_vector.push_back(i);
+	}
+	return system_state_vector;
+}

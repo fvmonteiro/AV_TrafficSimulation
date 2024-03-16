@@ -144,8 +144,10 @@ private:
 	void implement_analyze_nearby_vehicles() override;
 	bool give_lane_change_control_to_vissim() const override;
 	long implement_get_lane_change_request() const override { return 0; };
+	/* Note: ignores lane_change_speed */
 	double compute_accepted_lane_change_gap(
-		const NearbyVehicle* nearby_vehicle) const override;
+		const NearbyVehicle* nearby_vehicle, double lane_change_speed
+	) const override;
 	std::shared_ptr<NearbyVehicle> implement_get_destination_lane_leader() 
 		const override;
 	std::shared_ptr<NearbyVehicle> implement_get_destination_lane_follower() 
@@ -173,11 +175,11 @@ private:
 	double compute_gap_variation_during_lane_change(
 		const NearbyVehicle& nearby_vehicle) const;
 
-	virtual void update_destination_lane_follower(
+	virtual void update_destination_lane_follower_in_controller(
 		const NearbyVehicle* old_follower);
 	void update_virtual_leader(
 		const NearbyVehicle* old_leader);
-	void update_destination_lane_leader(
+	void update_destination_lane_leader_in_controller(
 		const NearbyVehicle* old_leader);
 	double estimate_nearby_vehicle_time_headway(
 		NearbyVehicle& nearby_vehicle);
