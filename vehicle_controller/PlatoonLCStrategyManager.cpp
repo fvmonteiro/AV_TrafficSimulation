@@ -152,10 +152,10 @@ void PlatoonLCStrategyManager::save_query_to_file(Query query) const
 	std::set<int> first_mover_set = query.second;
 	std::string info;
 	info += "\"";
-	for (int i : qx) info += std::to_string(i) + ", ";
+	for (int i : qx) info += std::to_string(i) + ",";
 	info.erase(info.size() - 1); // remove last comma
 	info += "\", \"";
-	for (int i : first_mover_set) info += std::to_string(i) + ", ";
+	for (int i : first_mover_set) info += std::to_string(i) + ",";
 	info.erase(info.size() - 1); // remove last comma
 	info += "\"";
 
