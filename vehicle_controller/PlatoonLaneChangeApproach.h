@@ -65,12 +65,14 @@ private:
 	virtual void decide_lane_change_order() = 0;
 	virtual bool implement_can_vehicle_leave_platoon(int veh_position) const;
 
-	std::unordered_set<int> get_current_lc_vehicle_positions() const { 
-		return platoon_lane_change_order.lc_order[maneuver_step]; };
-	int get_current_coop_vehicle_position() const { 
-		return platoon_lane_change_order.coop_order[maneuver_step]; };
+	std::unordered_set<int> get_current_lc_vehicle_positions() const;
+	int get_current_coop_vehicle_position() const;
 	
 	bool is_vehicle_turn_to_lane_change(int ego_position) const;
+	/* Checks if all vehicles changing lanes at the current maneuver
+	step have the correct dest lane leader and follower. */
+	bool are_vehicles_at_right_lane_change_gaps(
+		std::unordered_set<int> lane_changing_veh_ids);
 	void check_maneuver_step_done(
 		const std::unordered_set<int>& lane_changing_veh_ids);
 	int get_rearmost_lane_changing_vehicle_position() const;
@@ -135,8 +137,8 @@ private:
 
 	void decide_lane_change_order() override;
 	std::vector<Query> create_all_queries();
-	void set_maneuver_initial_state_for_all_vehicles();
-	PlatoonLaneChangeOrder find_best_order_in_map();
+	//void set_maneuver_initial_state_for_all_vehicles();
+	//PlatoonLaneChangeOrder find_best_order_in_map();
 	PlatoonLaneChangeOrder get_query_results_from_map(
 		std::vector<Query>& queries);
 	template <typename T>

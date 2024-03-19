@@ -16,6 +16,9 @@ PlatoonLaneChangeApproach::PlatoonLaneChangeApproach(int id, std::string name,
 long PlatoonLaneChangeApproach::get_desired_destination_lane_leader(
 	int ego_position) 
 {
+	if (verbose) std::clog << "[PlatoonLaneChangeApproach"
+		<< "::get_desired_destination_lane_leader]\n";
+
 	PlatoonVehicle* ego_vehicle = 
 		platoon->get_a_vehicle_by_position(ego_position);
 
@@ -29,17 +32,28 @@ long PlatoonLaneChangeApproach::get_desired_destination_lane_leader(
 		/* The first vehicles to simultaneously change lanes do so behind the
 		destination lane leader of the front-most vehicle (similar to
 		single vehicle lane change) */
-		int first_lc_pos = *std::max_element(
+		int first_lc_pos = *std::min_element(
 			platoon_lane_change_order.lc_order[0].begin(),
 			platoon_lane_change_order.lc_order[0].end());
 		const PlatoonVehicle* front_most_veh =
 			platoon->get_a_vehicle_by_position(first_lc_pos);
-		virtual_leader_id = 
-			front_most_veh->get_suitable_destination_lane_leader_id();
+		/* [March 18] Testing: why check "suitable"? Once we start
+		the maneuver, we have to assume the dest lane leader of the 
+		front most lc vehicle is the virtual leader.*/
+		/*virtual_leader_id =
+			front_most_veh->get_suitable_destination_lane_leader_id();*/
+		virtual_leader_id =
+			front_most_veh->get_destination_lane_leader_id();
+
+		if (verbose) std::clog << "\tfront most lc pos " << first_lc_pos 
+			<< ", front most veh's dest lane leader " << virtual_leader_id 
+			<< "\n";
+
 		platoon_destination_lane_leader_id = virtual_leader_id;
 		if (!ego_vehicle->is_vehicle_in_sight(virtual_leader_id)
 			&& virtual_leader_id > 0)
 		{
+			ego_vehicle->add_another_as_nearby_vehicle(*front_most_veh);
 			ego_vehicle->add_nearby_vehicle_from_another(*front_most_veh, 
 				virtual_leader_id);
 		}
@@ -49,12 +63,21 @@ long PlatoonLaneChangeApproach::get_desired_destination_lane_leader(
 		int coop_pos = get_current_coop_vehicle_position();
 		if (coop_pos == -1)
 		{
-			const PlatoonVehicle* veh = platoon->get_a_vehicle_by_position(
+			const PlatoonVehicle* last_veh = platoon->get_a_vehicle_by_position(
 				last_dest_lane_vehicle_pos);
-			virtual_leader_id = veh->get_id();
-			if (!ego_vehicle->is_vehicle_in_sight(virtual_leader_id))
+			if (last_veh != nullptr)
 			{
-				ego_vehicle->add_another_as_nearby_vehicle(*veh);
+				virtual_leader_id = last_veh->get_id();
+				if (!ego_vehicle->is_vehicle_in_sight(virtual_leader_id))
+				{
+					ego_vehicle->add_another_as_nearby_vehicle(*last_veh);
+				}
+			}
+			else
+			{
+				std::clog << "[PlatoonLaneChangeApproach"
+					<< "::get_desired_destination_lane_leader] "
+					<< "last_dest_lane_vehicle_pos not set" << "\n";
 			}
 		}
 		else
@@ -62,11 +85,18 @@ long PlatoonLaneChangeApproach::get_desired_destination_lane_leader(
 			const PlatoonVehicle* coop_veh =
 				platoon->get_a_vehicle_by_position(coop_pos);
 			virtual_leader_id = coop_veh->get_leader_id();
+			if (verbose) std::clog << "\tcoop veh pos " << coop_pos
+				<< ", and its leader " << virtual_leader_id << "\n";
 			if (!ego_vehicle->is_vehicle_in_sight(virtual_leader_id)
 				&& virtual_leader_id > 0)
 			{
+				ego_vehicle->add_another_as_nearby_vehicle(*coop_veh);
 				ego_vehicle->add_nearby_vehicle_from_another(*coop_veh,
 					virtual_leader_id);
+				if (verbose) std::clog << "Not found in ego's nv list. "
+					"Added with success? "
+					<< boolean_to_string(ego_vehicle->is_vehicle_in_sight(
+						virtual_leader_id)) << "\n";
 			}
 		}
 	}
@@ -134,36 +164,37 @@ bool PlatoonLaneChangeApproach::can_vehicle_start_lane_change(
 
 	if (verbose)
 	{
-		std::string message = "[PlatoonLaneChangeApproach::"
-			"can_vehicle_start_lane_change] Next to move: ";
-		for (int i : next_to_move) message += std::to_string(i) + ", ";
-		message += "my pos. = " + std::to_string(ego_position)
-			+ "-> is my turn? " + boolean_to_string(is_my_turn);
-		std::clog << message << "\n";
+		std::clog << "[PlatoonLaneChangeApproach::"
+			"can_vehicle_start_lane_change] Next to move: "
+			<< basic_type_container_to_string(next_to_move)
+			<< " my pos. = " << std::to_string(ego_position)
+			<< "-> is my turn? " + boolean_to_string(is_my_turn) << "\n";
 	}
 
 	check_maneuver_step_done(next_to_move);
-
-	if (is_my_turn)
-	{
-		for (int i : next_to_move)
-		{
-			const PlatoonVehicle* vehicle = 
-				platoon->get_a_vehicle_by_position(i);
-			if (!vehicle->is_at_right_lane_change_gap())
-			{
-				if (verbose) std::clog << "\tnot at right lc gap\n";
-				return false;
-			}
-			if (!vehicle->are_surrounding_gaps_safe_for_lane_change())
-			{
-				if (verbose) std::clog << "\tnot safe gap\n";
-				return false;
-			}
-		}
-		return true;
-	}
-	return false;
+	return is_my_turn && are_vehicles_at_right_lane_change_gaps(next_to_move);
+	//if (is_my_turn)
+	//{
+	//	for (int i : next_to_move)
+	//	{
+	//		const PlatoonVehicle* vehicle = 
+	//			platoon->get_a_vehicle_by_position(i);
+	//		if (!vehicle->is_at_right_lane_change_gap())
+	//		{
+	//			if (verbose) std::clog << "\tveh at pos " << i 
+	//				<< " not at right lc gap\n";
+	//			return false;
+	//		}
+	//		if (!vehicle->are_surrounding_gaps_safe_for_lane_change())
+	//		{
+	//			if (verbose) std::clog << "\tveh at pos " << i 
+	//				<< " not safe gap\n";
+	//			return false;
+	//		}
+	//	}
+	//	return true;
+	//}
+	//return false;
 }
 
 bool PlatoonLaneChangeApproach::can_vehicle_leave_platoon(int veh_position) 
@@ -219,12 +250,67 @@ bool PlatoonLaneChangeApproach::implement_can_vehicle_leave_platoon(
 	return false;
 }
 
+std::unordered_set<int> PlatoonLaneChangeApproach
+::get_current_lc_vehicle_positions() const
+{
+	return platoon_lane_change_order.lc_order[maneuver_step];
+}
+
+int PlatoonLaneChangeApproach
+::get_current_coop_vehicle_position() const
+{
+	return platoon_lane_change_order.coop_order[maneuver_step];
+}
+
 bool PlatoonLaneChangeApproach::is_vehicle_turn_to_lane_change(
 	int veh_position) const
 {
 	std::unordered_set<int> current_movers =
 		get_current_lc_vehicle_positions();
 	return current_movers.find(veh_position) != current_movers.end();
+}
+
+bool PlatoonLaneChangeApproach::are_vehicles_at_right_lane_change_gaps(
+	std::unordered_set<int> lane_changing_veh_ids)
+{
+	int front_most_lc_veh_pos = *std::min_element(
+		platoon_lane_change_order.lc_order[0].begin(),
+		platoon_lane_change_order.lc_order[0].end());
+
+	for (int i : lane_changing_veh_ids)
+	{
+		const PlatoonVehicle* vehicle =
+			platoon->get_a_vehicle_by_position(i);
+		long dest_lane_leader_id =
+			vehicle->get_destination_lane_leader_id();
+		/* The front most lane changing vehicle must have virtual 
+		leader equal to dest lane leader. Other vehicles may not
+		"see" any dest lane leader ahead. */
+		bool is_dest_lane_leader_correct =
+			vehicle->get_virtual_leader_id() == dest_lane_leader_id
+			|| (i != front_most_lc_veh_pos && dest_lane_leader_id == 0);
+		long coop_id = get_cooperating_vehicle_id();
+		bool is_dest_lane_follower_correct =
+			coop_id == 0 
+			|| coop_id == vehicle->get_destination_lane_follower_id();
+		if (!(is_dest_lane_leader_correct 
+			&& is_dest_lane_follower_correct))
+		{
+			if (verbose) std::clog << "\tveh at pos " << i
+				<< " not at right lc gap. vl = " 
+				<< vehicle->get_virtual_leader_id()
+				<< ", ld = " << dest_lane_leader_id
+				<< "\n";
+			return false;
+		}
+		if (!vehicle->are_surrounding_gaps_safe_for_lane_change())
+		{
+			if (verbose) std::clog << "\tveh at pos " << i
+				<< " not safe gap\n";
+			return false;
+		}
+	}
+	return true;
 }
 
 void PlatoonLaneChangeApproach::check_maneuver_step_done(
@@ -254,30 +340,41 @@ void PlatoonLaneChangeApproach::check_maneuver_step_done(
 	}
 
 	if (verbose) std::clog << "[PlatoonLaneChangeApproach] is maneuver "
-		"step done? " << boolean_to_string(maneuver_step) << "\n";
+		"step done? " << boolean_to_string(all_are_done) << "\n";
 }
 
 int PlatoonLaneChangeApproach
 ::get_rearmost_lane_changing_vehicle_position() const
 {
-	if (verbose) std::clog << "[[PlatoonLaneChangeApproach]"
+	if (verbose) std::clog << "[PlatoonLaneChangeApproach] "
 		<< "Looking for rearmost lc veh.\n";
-
-	double min_x = INFINITY;
+	/* Before lane changing, the position of the vehicle in the platoon
+	also represents its relative position in the road (i > j -> x_i < x_j) */
 	int rear_most_pos = 0;
-	for (int pos : get_current_lc_vehicle_positions())
+	for (int p : get_current_lc_vehicle_positions())
 	{
-		const PlatoonVehicle* vehicle = 
-			platoon->get_a_vehicle_by_position(pos);
-		if (vehicle->get_distance_traveled() < min_x)
-		{
-			min_x = vehicle->get_distance_traveled();
-			rear_most_pos = pos;
-		}
+		rear_most_pos = std::max(rear_most_pos, p);
 	}
-
-	if (verbose) std::clog << "\tFound at pos. " << rear_most_pos << "\n";
 	return rear_most_pos;
+
+	/* The code below does not work because the platoon vehicles 
+	are created at different positions on the road, so higher distance 
+	travelled does not mean being ahead. */
+	//double min_x = INFINITY;
+	//int rear_most_pos = 0;
+	//for (int pos : get_current_lc_vehicle_positions())
+	//{
+	//	const PlatoonVehicle* vehicle = 
+	//		platoon->get_a_vehicle_by_position(pos);
+	//	if (vehicle->get_distance_traveled() < min_x)
+	//	{
+	//		min_x = vehicle->get_distance_traveled();
+	//		rear_most_pos = pos;
+	//	}
+	//}
+
+	//if (verbose) std::clog << "\tFound at pos. " << rear_most_pos << "\n";
+	//return rear_most_pos;
 }
 
 /* ------------------------------------------------------------------------ */
@@ -391,6 +488,8 @@ std::vector<Query> GraphApproach::create_all_queries()
 	int veh_pos = 0;
 	while (veh_pos < platoon->get_size())
 	{
+		if (verbose) std::clog << "\tveh pos: " << veh_pos << "\n";
+
 		int front_most_lc_veh_pos = veh_pos;
 		const PlatoonVehicle* vehicle = 
 			platoon->get_a_vehicle_by_position(veh_pos);
@@ -409,10 +508,9 @@ std::vector<Query> GraphApproach::create_all_queries()
 		/* If no vehicle so far is safe to start a lane change, we store
 		queries of vehicles with suitable (safe after adjustment)
 		lane change gaps. */
-		if (first_movers.size() == 0 && queries_safe_start.size() == 0
+		if (!are_lc_gaps_safe && queries_safe_start.size() == 0
 			&& vehicle->get_is_space_suitable_for_lane_change())
 		{
-			are_lc_gaps_safe = false;
 			first_movers.insert(veh_pos);
 		}
 
@@ -449,63 +547,63 @@ std::vector<Query> GraphApproach::create_all_queries()
 		queries_safe_start : queries_delayed_start;
 }
 
-void GraphApproach::set_maneuver_initial_state_for_all_vehicles()
-{
-	if (verbose) std::clog << "[GraphApproach] Setting all initial states \n";
-
-	/* Now we check which platoon vehicles can move and set possible
-	destination lane leaders */
-	bool all_states_found = true;
-	const std::vector<PlatoonVehicle*> all_vehicles =
-		platoon->get_vehicles_by_position();
-	for (int veh_pos = 0; veh_pos < all_vehicles.size(); veh_pos++)
-	{
-		const PlatoonVehicle* vehicle = all_vehicles[veh_pos];
-
-		if (vehicle->get_is_space_suitable_for_lane_change())
-		{
-			std::vector<ContinuousStateVector> system_state_matrix =
-				platoon->get_traffic_states_around_a_vehicle(veh_pos);
-			
-			if (verbose)
-			{
-				std::clog << "[GraphApproach] Setting initial state"
-					"for veh at pos " << veh_pos << ":\n";
-				for (const ContinuousStateVector& s : system_state_matrix)
-				{
-					std::clog << "\t\t" << s.to_string() << "\n";
-				}
-			}
-
-			try
-			{
-				strategy_manager.set_maneuver_initial_state(veh_pos,
-					system_state_matrix);
-				if (verbose) std::clog << "\tState found.\n";
-			}
-			catch (const StateNotFoundException& e)
-			{
-				all_states_found = false;
-				//std::vector<double> states_array = 
-				//	flatten_state_matrix(system_state_matrix);
-				std::clog << "\tState " << vector_to_string(e.state_vector)
-					<< " not found.\n";
-				ContinuousStateVector& lo_states = system_state_matrix.front();
-				ContinuousStateVector& ld_states = system_state_matrix.back();
-				save_not_found_state_to_file(e.state_vector,
-					lo_states.get_vel(), ld_states.get_vel());
-			}
-			system_state_matrix.pop_back();
-		}
-	}
-
-	/* Not sure this design is good. The goal is to save all exception found
-	during the loop and only throw again once the loop is done. */
-	if (!all_states_found)
-	{
-		throw StateNotFoundException();
-	}
-}
+//void GraphApproach::set_maneuver_initial_state_for_all_vehicles()
+//{
+//	if (verbose) std::clog << "[GraphApproach] Setting all initial states \n";
+//
+//	/* Now we check which platoon vehicles can move and set possible
+//	destination lane leaders */
+//	bool all_states_found = true;
+//	const std::vector<PlatoonVehicle*> all_vehicles =
+//		platoon->get_vehicles_by_position();
+//	for (int veh_pos = 0; veh_pos < all_vehicles.size(); veh_pos++)
+//	{
+//		const PlatoonVehicle* vehicle = all_vehicles[veh_pos];
+//
+//		if (vehicle->get_is_space_suitable_for_lane_change())
+//		{
+//			std::vector<ContinuousStateVector> system_state_matrix =
+//				platoon->get_traffic_states_around_a_vehicle(veh_pos);
+//			
+//			if (verbose)
+//			{
+//				std::clog << "[GraphApproach] Setting initial state"
+//					"for veh at pos " << veh_pos << ":\n";
+//				for (const ContinuousStateVector& s : system_state_matrix)
+//				{
+//					std::clog << "\t\t" << s.to_string() << "\n";
+//				}
+//			}
+//
+//			try
+//			{
+//				strategy_manager.set_maneuver_initial_state(veh_pos,
+//					system_state_matrix);
+//				if (verbose) std::clog << "\tState found.\n";
+//			}
+//			catch (const StateNotFoundException& e)
+//			{
+//				all_states_found = false;
+//				//std::vector<double> states_array = 
+//				//	flatten_state_matrix(system_state_matrix);
+//				std::clog << "\tState " << vector_to_string(e.state_vector)
+//					<< " not found.\n";
+//				ContinuousStateVector& lo_states = system_state_matrix.front();
+//				ContinuousStateVector& ld_states = system_state_matrix.back();
+//				save_not_found_state_to_file(e.state_vector,
+//					lo_states.get_vel(), ld_states.get_vel());
+//			}
+//			system_state_matrix.pop_back();
+//		}
+//	}
+//
+//	/* Not sure this design is good. The goal is to save all exception found
+//	during the loop and only throw again once the loop is done. */
+//	if (!all_states_found)
+//	{
+//		throw StateNotFoundException();
+//	}
+//}
 
 PlatoonLaneChangeOrder GraphApproach::get_query_results_from_map(
 	std::vector<Query>& queries)
@@ -523,6 +621,7 @@ PlatoonLaneChangeOrder GraphApproach::get_query_results_from_map(
 		try
 		{
 			PlatoonLaneChangeOrder an_order = strategy_manager.answer_query(q);
+			if (verbose) std::clog << "\tQuery found\n";
 			all_orders.push_back(an_order);
 			if (an_order.cost < best_cost)
 			{
@@ -553,67 +652,67 @@ PlatoonLaneChangeOrder GraphApproach::get_query_results_from_map(
 	return best_order;
 }
 
-PlatoonLaneChangeOrder GraphApproach::find_best_order_in_map()
-{
-	if (verbose) std::clog << "[GraphApproach] Looking for best order\n";
-
-	double best_cost{ INFINITY };
-	PlatoonLaneChangeOrder best_order;
-	int n = platoon->get_size();
-
-	/* First, we check if any vehicles are already at safe position to
-	start the maneuver */
-	std::vector<PlatoonLaneChangeOrder> all_orders; // for debugging
-	for (int pos1 = 0; pos1 < n; pos1++)
-	{
-		std::set<int> first_movers;
-		int pos2 = pos1;
-		while (pos2 < n
-			&& (platoon->get_a_vehicle_by_position(pos2)
-				->are_surrounding_gaps_safe_for_lane_change()))
-		{
-			first_movers.insert(pos2);
-			PlatoonLaneChangeOrder an_order =
-				strategy_manager.find_minimum_cost_order_given_first_mover(
-					first_movers);
-			all_orders.push_back(an_order);
-			pos2++;
-			if (an_order.cost < best_cost)
-			{
-				best_cost = an_order.cost;
-				best_order = an_order;
-				if (verbose) std::clog << "\tbest order so far: " 
-					<< best_order.to_string() << "\n";
-			}
-		}
-	}
-
-	/* If there are no vehicles at safe positions, we check if any are
-	close to a suitable gap */
-	if (std::isinf(best_cost))
-	{
-		for (int pos1 = 0; pos1 < n; pos1++)
-		{
-			if (platoon->get_a_vehicle_by_position(pos1)
-				->get_is_space_suitable_for_lane_change())
-			{
-				std::set<int> single_veh_set { pos1 };
-				PlatoonLaneChangeOrder an_order =
-					strategy_manager.find_minimum_cost_order_given_first_mover(
-						single_veh_set );
-				all_orders.push_back(an_order);
-				if (an_order.cost < best_cost)
-				{
-					best_cost = an_order.cost;
-					best_order = an_order;
-					if (verbose) std::clog << "\tbest order so far: " 
-						<< best_order.to_string() << "\n";
-				}
-			}
-		}
-	}
-	return best_order;
-}
+//PlatoonLaneChangeOrder GraphApproach::find_best_order_in_map()
+//{
+//	if (verbose) std::clog << "[GraphApproach] Looking for best order\n";
+//
+//	double best_cost{ INFINITY };
+//	PlatoonLaneChangeOrder best_order;
+//	int n = platoon->get_size();
+//
+//	/* First, we check if any vehicles are already at safe position to
+//	start the maneuver */
+//	std::vector<PlatoonLaneChangeOrder> all_orders; // for debugging
+//	for (int pos1 = 0; pos1 < n; pos1++)
+//	{
+//		std::set<int> first_movers;
+//		int pos2 = pos1;
+//		while (pos2 < n
+//			&& (platoon->get_a_vehicle_by_position(pos2)
+//				->are_surrounding_gaps_safe_for_lane_change()))
+//		{
+//			first_movers.insert(pos2);
+//			PlatoonLaneChangeOrder an_order =
+//				strategy_manager.find_minimum_cost_order_given_first_mover(
+//					first_movers);
+//			all_orders.push_back(an_order);
+//			pos2++;
+//			if (an_order.cost < best_cost)
+//			{
+//				best_cost = an_order.cost;
+//				best_order = an_order;
+//				if (verbose) std::clog << "\tbest order so far: " 
+//					<< best_order.to_string() << "\n";
+//			}
+//		}
+//	}
+//
+//	/* If there are no vehicles at safe positions, we check if any are
+//	close to a suitable gap */
+//	if (std::isinf(best_cost))
+//	{
+//		for (int pos1 = 0; pos1 < n; pos1++)
+//		{
+//			if (platoon->get_a_vehicle_by_position(pos1)
+//				->get_is_space_suitable_for_lane_change())
+//			{
+//				std::set<int> single_veh_set { pos1 };
+//				PlatoonLaneChangeOrder an_order =
+//					strategy_manager.find_minimum_cost_order_given_first_mover(
+//						single_veh_set );
+//				all_orders.push_back(an_order);
+//				if (an_order.cost < best_cost)
+//				{
+//					best_cost = an_order.cost;
+//					best_order = an_order;
+//					if (verbose) std::clog << "\tbest order so far: " 
+//						<< best_order.to_string() << "\n";
+//				}
+//			}
+//		}
+//	}
+//	return best_order;
+//}
 
 template <typename T>
 void GraphApproach::save_not_found_state_to_file(

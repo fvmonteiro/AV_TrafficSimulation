@@ -68,11 +68,11 @@ double LateralController::compute_time_headway_gap(double ego_velocity,
 		time_headway = time_headway_to_destination_lane_follower;
 	}
 
-	if (verbose)
+	/*if (verbose)
 	{
 		std::clog << "h=" << time_headway << ", v=" << follower_velocity
 			<< "\n";
-	}
+	}*/
 
 	/* [Feb 24, 2023] Copied from old method from AutonomousVehicle.
 	Not ready for risk taking yet. */

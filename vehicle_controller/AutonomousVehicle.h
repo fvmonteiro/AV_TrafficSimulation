@@ -31,7 +31,7 @@ public:
 	/* True if the space between dest lane leader and follower
 	is large enough. The vehicle may still need to adjust to
 	safely merge into that space */
-	bool get_is_space_suitable_for_lane_change() const;
+	//bool get_is_space_suitable_for_lane_change() const;
 	LaneChangeGapsSafety get_lane_change_gaps_safety() const;
 
 	double get_dest_follower_time_headway() const override;
@@ -92,7 +92,7 @@ protected:
 	//	const NearbyVehicle& nearby_vehicle, double current_lambda_1) const;
 
 private:
-	bool is_space_suitable_for_lane_change{ false };
+	//bool is_space_suitable_for_lane_change{ false };
 	double min_overtaking_rel_vel{ 10.0	/ 3.6}; // [m/s]
 	double min_overtaking_time{ 10.0 };// s
 	double max_lane_change_waiting_time{ 60.0 }; // [s]
@@ -144,7 +144,7 @@ private:
 	void implement_analyze_nearby_vehicles() override;
 	bool give_lane_change_control_to_vissim() const override;
 	long implement_get_lane_change_request() const override { return 0; };
-	/* Note: ignores lane_change_speed */
+	/* Note: AutonomousVehicle implementation ignores lane_change_speed */
 	double compute_accepted_lane_change_gap(
 		const NearbyVehicle* nearby_vehicle, double lane_change_speed
 	) const override;

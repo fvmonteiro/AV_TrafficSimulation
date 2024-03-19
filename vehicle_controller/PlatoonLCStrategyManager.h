@@ -40,18 +40,19 @@ using OuterMap = std::unordered_map<OuterKey, InnerMap,
 
 /* Used to signalize code higher up that the vehicles should give up
 on lane changing during the simulation. */
-class StateNotFoundException : public std::out_of_range 
-{
-public:
-    StateNotFoundException(const std::vector<int>& state_vector) throw()
-        : std::out_of_range("Initial state not found in strategy map"),
-        state_vector(state_vector) {};
-    StateNotFoundException() throw()
-        : std::out_of_range("Initial state not found in strategy map")
-    {};
-
-    std::vector<int> state_vector;
-};
+/* [March 18] No longer needed */
+//class StateNotFoundException : public std::out_of_range 
+//{
+//public:
+//    StateNotFoundException(const std::vector<int>& state_vector) throw()
+//        : std::out_of_range("Initial state not found in strategy map"),
+//        state_vector(state_vector) {};
+//    StateNotFoundException() throw()
+//        : std::out_of_range("Initial state not found in strategy map")
+//    {};
+//
+//    std::vector<int> state_vector;
+//};
 
 
 class PlatoonLCStrategyManager
@@ -62,8 +63,8 @@ public:
 
     void initialize(int n_platoon);
 
-    void set_maneuver_initial_state(int ego_position, 
-        std::vector<ContinuousStateVector> system_state_matrix);
+    /*void set_maneuver_initial_state(int ego_position, 
+        std::vector<ContinuousStateVector> system_state_matrix);*/
     void set_empty_maneuver_initial_state(int ego_position);
     PlatoonLaneChangeOrder answer_query(const Query& query) const;
     PlatoonLaneChangeOrder find_minimum_cost_order_given_first_mover(

@@ -104,6 +104,19 @@ inline std::string boolean_to_string(bool value)
 	return value ? "yes" : "no";
 };
 
+template<typename Container>
+std::string basic_type_container_to_string(const Container& container)
+{
+	std::string ret_str = "[";
+	for (const auto& i : container)
+	{
+		ret_str += std::to_string(i) + ", ";
+	}
+	if (ret_str.size() > 1) ret_str.erase(ret_str.size() - 2);
+	ret_str += "]";
+	return ret_str;
+}
+
 template <typename T>
 inline std::string set_to_string(std::set<T> s)
 {

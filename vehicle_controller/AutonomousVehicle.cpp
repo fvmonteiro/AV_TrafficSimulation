@@ -31,11 +31,6 @@ bool AutonomousVehicle::are_surrounding_gaps_safe_for_lane_change() const
 	return lane_change_gaps_safety.is_lane_change_safe();
 }
 
-bool AutonomousVehicle::get_is_space_suitable_for_lane_change() const
-{
-	return is_space_suitable_for_lane_change;
-}
-
 LaneChangeGapsSafety AutonomousVehicle::get_lane_change_gaps_safety() const
 {
 	return lane_change_gaps_safety;
@@ -431,51 +426,9 @@ bool AutonomousVehicle::implement_check_lane_change_gaps()
 			<< "gap = " << gap_to_ld << ", safe_gap = " << safe_gap_to_ld
 			<< "\n\t- To dest lane follower:"
 			<< "gap = " << gap_to_fd << ", safe_gap = " << safe_gap_to_fd
-			<< "\n\t - Conflict? "
+			<< "\n\t-Conflict? "
 			<< boolean_to_string(!lane_change_gaps_safety.no_conflict) 
-			<< "\n\t - Can";
-	}
-
-	/* TODO: organize */
-	//if (verbose) std::clog << "Deciding gap suitability\n";
-	is_space_suitable_for_lane_change =
-		lane_change_gaps_safety.is_lane_change_safe();
-	if (!is_space_suitable_for_lane_change)
-	{
-		double dest_lane_leader_vel = compute_nearby_vehicle_velocity(
-			get_destination_lane_leader().get(), INFINITY);
-		double lc_speed = std::min(get_velocity(), dest_lane_leader_vel);
-		double safe_gap_after_decel;
-		safe_gap_after_decel = compute_accepted_lane_change_gap(
-			get_destination_lane_leader().get(), lc_speed);
-		double min_gap_to_decelerate = (
-			(std::pow(get_velocity(), 2) - std::pow(dest_lane_leader_vel, 2))
-			/ 2 / get_comfortable_brake()
-			);
-
-		if (verbose)
-		{
-			std::clog << "Checking gap feasibility"
-				<< "\n\t- Safe to fd? " 
-				<< boolean_to_string(lane_change_gaps_safety.dest_lane_follower_gap)
-				<< "\n\t- gap to ld = " << gap_to_ld 
-				<< ", min_gap_to_decel = " << min_gap_to_decelerate
-				<< "\n\t- total space = " << gap_to_ld + gap_to_fd + margin
-				<< ", needed gap = " 
-				<< safe_gap_to_fd + safe_gap_after_decel + get_length()
-				<< "\n";
-		}
-
-		is_space_suitable_for_lane_change =
-			lane_change_gaps_safety.dest_lane_follower_gap
-			&& gap_to_ld >= min_gap_to_decelerate
-			&& ((gap_to_ld + gap_to_fd + margin)
-				>= (safe_gap_to_fd + safe_gap_after_decel + get_length()));
-	}
-	if (verbose)
-	{
-		std::clog << "\tIs adjacent gap suitable? "
-			<< boolean_to_string(is_space_suitable_for_lane_change) << "\n";
+			<< "\n";
 	}
 
 	return lane_change_gaps_safety.is_lane_change_safe();

@@ -23,24 +23,24 @@ void PlatoonLCStrategyManager::initialize(int n_platoon)
 	if (verbose) std::clog << " done.\n";
 }
 
-void PlatoonLCStrategyManager::set_maneuver_initial_state(
-	int ego_position, std::vector<ContinuousStateVector> system_state_matrix)
-{	
-	std::vector<QuantizedStateVector> quantized_state_matrix = 
-		state_quantizer.quantize_states(system_state_matrix);
-
-	std::vector<int> quantized_state_vector = flatten_state_matrix<int>(
-		quantized_state_matrix);
-
-	if (verbose) std::clog << "\tqx="
-		<< vector_to_string(quantized_state_vector) << "\n";
-
-	if (strategy_map.find(quantized_state_vector) == strategy_map.end())
-	{
-		throw StateNotFoundException(quantized_state_vector);
-	}
-	initial_state_per_vehicle[ego_position] = quantized_state_vector;
-}
+//void PlatoonLCStrategyManager::set_maneuver_initial_state(
+//	int ego_position, std::vector<ContinuousStateVector> system_state_matrix)
+//{	
+//	std::vector<QuantizedStateVector> quantized_state_matrix = 
+//		state_quantizer.quantize_states(system_state_matrix);
+//
+//	std::vector<int> quantized_state_vector = flatten_state_matrix<int>(
+//		quantized_state_matrix);
+//
+//	if (verbose) std::clog << "\tqx="
+//		<< vector_to_string(quantized_state_vector) << "\n";
+//
+//	if (strategy_map.find(quantized_state_vector) == strategy_map.end())
+//	{
+//		throw StateNotFoundException(quantized_state_vector);
+//	}
+//	initial_state_per_vehicle[ego_position] = quantized_state_vector;
+//}
 
 void PlatoonLCStrategyManager::set_empty_maneuver_initial_state(
 	int ego_position)

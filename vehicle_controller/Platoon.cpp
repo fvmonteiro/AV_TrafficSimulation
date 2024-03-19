@@ -110,6 +110,22 @@ const PlatoonVehicle* Platoon::get_last_vehicle() const
 		: vehicles_by_position.at(get_size() - 1);
 }
 
+int Platoon::get_vehicle_position_in_platoon(long veh_id) const
+{
+	try
+	{
+		return vehicle_id_to_position.at(veh_id);
+	}
+	catch (std::out_of_range& e)
+	{
+		// just to make it easier to track the error
+		std::clog << "[Platoon::get_vehicle_position_in_platoon]"
+			<< " veh id " << veh_id << " not in platoon with vehs "
+			<< map_to_string(vehicle_id_to_position) << "\n";
+		throw;
+	}
+}
+
 long Platoon::get_destination_lane_vehicle_behind_the_leader() const
 {
 	/* We're looking for the vehicle at the destination lane that's
@@ -391,25 +407,36 @@ bool Platoon::can_vehicle_start_lane_change(long ego_id) const
 	int veh_position = vehicle_id_to_position.at(ego_id);
 	bool all_vehicles_have_or_had_intention =
 		has_lane_change_intention() || has_lane_change_started();
-	try
-	{
-		return all_vehicles_have_or_had_intention
-			&& lane_change_approach->can_vehicle_start_lane_change(
-				veh_position);
-	}
-	catch (const StateNotFoundException& e)
-	{
-		std::clog << "[Platoon] " << e.what() << "\n";
-		for (PlatoonVehicle* vehicle : vehicles_by_position)
-		{
-			vehicle->give_up_lane_change();
-		}
-		return false;
-	}
+	//try
+	//{
+	return all_vehicles_have_or_had_intention
+		&& lane_change_approach->can_vehicle_start_lane_change(
+			veh_position);
+	//}
+	//catch (const StateNotFoundException& e)
+	//{
+	//	std::clog << "[Platoon] " << e.what() << "\n";
+	//	for (PlatoonVehicle* vehicle : vehicles_by_position)
+	//	{
+	//		vehicle->give_up_lane_change();
+	//	}
+	//	return false;
+	//}
 }
 
-bool Platoon::has_lane_change_intention() const {
+bool Platoon::has_lane_change_intention() const 
+{
 	return lane_change_intention_counter == get_size();
+}
+
+bool Platoon::is_lane_change_done() const 
+{
+	/* TODO: I'd rather code this as a function of maneuver_step 
+	in the platoon approach, but I have to figure out how to increment
+	the maneuver_step counter after the last vehicle starts lane changing
+	*/
+	return has_lane_change_started() 
+		&& lane_change_intention_counter == 0;
 }
 
 void Platoon::receive_lane_change_intention_signal()

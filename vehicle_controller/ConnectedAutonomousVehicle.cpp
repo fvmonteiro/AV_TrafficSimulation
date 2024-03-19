@@ -56,6 +56,8 @@ void ConnectedAutonomousVehicle
 		NearbyVehicle new_nv(*cav.get_nearby_vehicle_by_id(nv_id));
 		new_nv.offset_from_another(*source_nv);
 		add_nearby_vehicle(new_nv);
+		std::clog << "\t\tAdding nv from neighbor to my list\n"
+			<< "\nNew nv: " << new_nv << "\n";
 	}
 }
 

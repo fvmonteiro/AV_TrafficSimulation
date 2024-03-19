@@ -58,12 +58,14 @@ public:
 		long veh_id) const;
 	const PlatoonVehicle* get_platoon_leader() const;
 	const PlatoonVehicle* get_last_vehicle() const;
+	int get_vehicle_position_in_platoon(long veh_id) const;
 	long get_destination_lane_vehicle_behind_the_leader() const;
 	long get_destination_lane_vehicle_behind_last_vehicle() const;
 	/* The vehicle behind which the platoon wants to move */
 	const NearbyVehicle* get_destination_lane_leader() const;
 	long get_assisted_vehicle_id(long ego_id) const;
 	long get_cooperating_vehicle_id() const;
+
 	/* Returns state vectors of all platoon vehicles */
 	std::vector<ContinuousStateVector> get_vehicles_states() const;
 	/* Returns state vectors of the platoon's orig lane leader, 
@@ -84,6 +86,8 @@ public:
 	void remove_vehicle_by_id(long veh_id, bool is_out_of_simulation);
 	/* True when all platoon vehicles have lane change intention */
 	bool has_lane_change_intention() const;
+	/* True if a lane change has started and is now done */
+	bool is_lane_change_done() const;
 	void receive_lane_change_intention_signal();
 	void receive_lane_keeping_signal();
 	/* Returns true if the platoon is stopped right before the mandatory

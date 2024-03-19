@@ -24,24 +24,18 @@ std::string PlatoonLaneChangeOrder::to_string() const
 	std::string text = "lc order : [";
 	for (std::unordered_set<int> veh_set : lc_order)
 	{
-		text += "[";
-		for (int veh_id : veh_set)
-		{
-			text += std::to_string(veh_id) + ", ";
-		}
-		text.erase(text.size() - 2);
-		text += "], ";
+		text += "{";
+		text += basic_type_container_to_string(veh_set);
+		//for (int veh_id : veh_set)
+		//{
+		//	text += std::to_string(veh_id) + ", ";
+		//}
+		//text.erase(text.size() - 2);
+		text += "}, ";
 	}
 	text.erase(text.size() - 2);
 	text += "]; coop order: " + vector_to_string(coop_order) 
 		+ "; cost=" + std::to_string(cost);
-	/*text += "]; coop order: [";
-	for (int veh_id : coop_order)
-	{
-		text += std::to_string(veh_id) + ", ";
-	}
-	text.erase(text.size() - 2);
-	text += "]; cost=" + std::to_string(cost); */
 	return text;
 }
 

@@ -15,6 +15,11 @@ public:
 	/* Value added to the safe headway to determine the reference
 	headway. */
 	double get_time_headway_margin() const { return TIME_HEADWAY_MARGIN; };
+	/* True if the space between dest lane leader and follower
+	is large enough for a lane change after longitudinal adjustments */
+	double get_is_space_suitable_for_lane_change() const {
+		return is_space_suitable_for_lane_change;
+	}
 	/* Chooses between in-platoon or non-platoon time headway */
 	double decide_safe_time_headway(const NearbyVehicle& nearby_vehicle
 	) const;
@@ -30,7 +35,7 @@ public:
 	bool can_start_lane_change();
 	/* True if the dest lane leader and follower correspond to what
 	the lane change strategy expects. */
-	bool is_at_right_lane_change_gap() const;
+	//bool is_at_right_lane_change_gap() const;
 
 	/* Adds a platoon vehicle that's outside the sensory range to the 
 	nearby vehicles list. */
@@ -77,6 +82,7 @@ private:
 	std::shared_ptr<PlatoonVehicleController> platoon_vehicle_controller{ 
 		nullptr };
 	bool has_lane_change_failed{ false };
+	bool is_space_suitable_for_lane_change{ false };
 
 	/* Time the vehicle has been without a platoon.
 	As soon as the vehicle enters simulation, it may create its own platoon */
@@ -132,9 +138,13 @@ private:
 
 	double compute_reference_vehicle_following_gap(
 		const NearbyVehicle* nearby_vehicle) const;
+	/* Checks if the total space on the destination lane is enough
+	to fit the vehicle after longitudinal adjustments */
+	void check_adjacent_space_suitability();
 	// Check if vehicles in our platoon need gap generation
 	void find_cooperation_request_from_platoon();
 	void create_platoon(long platoon_id, int platoon_lc_strategy);
 	void add_myself_to_leader_platoon(
 		std::shared_ptr<Platoon> leader_platoon);
+
 };

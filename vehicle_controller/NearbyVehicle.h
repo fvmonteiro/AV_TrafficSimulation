@@ -31,7 +31,7 @@ public:
 	/* distance of the front end from the middle of the lane [m]
 	(positive = left of the middle, negative = right) */
 	double get_lateral_position() const { return lateral_position; };
-	/* front end to front end, negative = nveh is upstream */
+	/* front end to front end, negative = nveh is upstream (behind) */
 	double get_distance() const { return distance; };
 	/* Relative velocity is: ego speed - other speed [m/s] */
 	double get_relative_velocity() const { 
