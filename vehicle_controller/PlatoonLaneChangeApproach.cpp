@@ -16,7 +16,7 @@ PlatoonLaneChangeApproach::PlatoonLaneChangeApproach(int id, std::string name,
 long PlatoonLaneChangeApproach::get_desired_destination_lane_leader(
 	int ego_position) 
 {
-	if (verbose) std::clog << "[PlatoonLaneChangeApproach"
+	if (verbose) std::cout << "[PlatoonLaneChangeApproach"
 		<< "::get_desired_destination_lane_leader]\n";
 
 	PlatoonVehicle* ego_vehicle = 
@@ -45,7 +45,7 @@ long PlatoonLaneChangeApproach::get_desired_destination_lane_leader(
 		virtual_leader_id =
 			front_most_veh->get_destination_lane_leader_id();
 
-		if (verbose) std::clog << "\tfront most lc pos " << first_lc_pos 
+		if (verbose) std::cout << "\tfront most lc pos " << first_lc_pos 
 			<< ", front most veh's dest lane leader " << virtual_leader_id 
 			<< "\n";
 
@@ -75,7 +75,7 @@ long PlatoonLaneChangeApproach::get_desired_destination_lane_leader(
 			}
 			else
 			{
-				std::clog << "[PlatoonLaneChangeApproach"
+				std::cout << "[PlatoonLaneChangeApproach"
 					<< "::get_desired_destination_lane_leader] "
 					<< "last_dest_lane_vehicle_pos not set" << "\n";
 			}
@@ -85,7 +85,7 @@ long PlatoonLaneChangeApproach::get_desired_destination_lane_leader(
 			const PlatoonVehicle* coop_veh =
 				platoon->get_a_vehicle_by_position(coop_pos);
 			virtual_leader_id = coop_veh->get_leader_id();
-			if (verbose) std::clog << "\tcoop veh pos " << coop_pos
+			if (verbose) std::cout << "\tcoop veh pos " << coop_pos
 				<< ", and its leader " << virtual_leader_id << "\n";
 			if (!ego_vehicle->is_vehicle_in_sight(virtual_leader_id)
 				&& virtual_leader_id > 0)
@@ -93,7 +93,7 @@ long PlatoonLaneChangeApproach::get_desired_destination_lane_leader(
 				ego_vehicle->add_another_as_nearby_vehicle(*coop_veh);
 				ego_vehicle->add_nearby_vehicle_from_another(*coop_veh,
 					virtual_leader_id);
-				if (verbose) std::clog << "Not found in ego's nv list. "
+				if (verbose) std::cout << "Not found in ego's nv list. "
 					"Added with success? "
 					<< boolean_to_string(ego_vehicle->is_vehicle_in_sight(
 						virtual_leader_id)) << "\n";
@@ -119,6 +119,7 @@ const
 	int rear_most_pos = get_rearmost_lane_changing_vehicle_position();
 	const PlatoonVehicle* assisted_vehicle =
 		platoon->get_a_vehicle_by_position(rear_most_pos);
+
 	return assisted_vehicle->has_lane_change_intention() ?
 		assisted_vehicle->get_id() : 0;
 }
@@ -146,7 +147,7 @@ long PlatoonLaneChangeApproach
 bool PlatoonLaneChangeApproach::can_vehicle_start_lane_change(
 	int ego_position)
 {	
-	if (verbose) std::clog << "[PlatoonLaneChangeApproach::"
+	if (verbose) std::cout << "[PlatoonLaneChangeApproach::"
 		"can_vehicle_start_lane_change]\n";
 
 	if (!is_initialized && ego_position == 0) decide_lane_change_order();
@@ -154,7 +155,7 @@ bool PlatoonLaneChangeApproach::can_vehicle_start_lane_change(
 
 	if (maneuver_step >= platoon_lane_change_order.number_of_steps())
 	{
-		std::clog << "[WARNING] maneuver step counter greater than "
+		std::cout << "[WARNING] maneuver step counter greater than "
 			"total maneuver steps\n";
 		return false;
 	}
@@ -164,7 +165,7 @@ bool PlatoonLaneChangeApproach::can_vehicle_start_lane_change(
 
 	if (verbose)
 	{
-		std::clog << "[PlatoonLaneChangeApproach::"
+		std::cout << "[PlatoonLaneChangeApproach::"
 			"can_vehicle_start_lane_change] Next to move: "
 			<< basic_type_container_to_string(next_to_move)
 			<< " my pos. = " << std::to_string(ego_position)
@@ -181,13 +182,13 @@ bool PlatoonLaneChangeApproach::can_vehicle_start_lane_change(
 	//			platoon->get_a_vehicle_by_position(i);
 	//		if (!vehicle->is_at_right_lane_change_gap())
 	//		{
-	//			if (verbose) std::clog << "\tveh at pos " << i 
+	//			if (verbose) std::cout << "\tveh at pos " << i 
 	//				<< " not at right lc gap\n";
 	//			return false;
 	//		}
 	//		if (!vehicle->are_surrounding_gaps_safe_for_lane_change())
 	//		{
-	//			if (verbose) std::clog << "\tveh at pos " << i 
+	//			if (verbose) std::cout << "\tveh at pos " << i 
 	//				<< " not safe gap\n";
 	//			return false;
 	//		}
@@ -223,6 +224,15 @@ long PlatoonLaneChangeApproach::create_platoon_lane_change_request(
 	return 0;
 }
 
+void PlatoonLaneChangeApproach::clear()
+{
+	for (int i = 0; i < platoon_lane_change_order.number_of_steps(); i++)
+	{
+		platoon_lane_change_order.lc_order[i] = { -1 };
+		platoon_lane_change_order.coop_order[i] = -1;
+	}
+}
+
 void PlatoonLaneChangeApproach::set_platoon_lane_change_order(
 	LCOrder lc_order, std::vector<int> coop_order)
 {
@@ -236,7 +246,7 @@ void PlatoonLaneChangeApproach::set_platoon_lane_change_order(
 	maneuver_step = 0;
 	platoon_lane_change_order = plco;
 
-	if (verbose) std::clog << "Order set to: "
+	if (verbose) std::cout << "Order set to: "
 		<< platoon_lane_change_order << "\n";
 
 	last_dest_lane_vehicle_pos =
@@ -296,7 +306,7 @@ bool PlatoonLaneChangeApproach::are_vehicles_at_right_lane_change_gaps(
 		if (!(is_dest_lane_leader_correct 
 			&& is_dest_lane_follower_correct))
 		{
-			if (verbose) std::clog << "\tveh at pos " << i
+			if (verbose) std::cout << "\tveh at pos " << i
 				<< " not at right lc gap. vl = " 
 				<< vehicle->get_virtual_leader_id()
 				<< ", ld = " << dest_lane_leader_id
@@ -305,7 +315,7 @@ bool PlatoonLaneChangeApproach::are_vehicles_at_right_lane_change_gaps(
 		}
 		if (!vehicle->are_surrounding_gaps_safe_for_lane_change())
 		{
-			if (verbose) std::clog << "\tveh at pos " << i
+			if (verbose) std::cout << "\tveh at pos " << i
 				<< " not safe gap\n";
 			return false;
 		}
@@ -339,15 +349,13 @@ void PlatoonLaneChangeApproach::check_maneuver_step_done(
 		maneuver_step++;
 	}
 
-	if (verbose) std::clog << "[PlatoonLaneChangeApproach] is maneuver "
+	if (verbose) std::cout << "[PlatoonLaneChangeApproach] is maneuver "
 		"step done? " << boolean_to_string(all_are_done) << "\n";
 }
 
 int PlatoonLaneChangeApproach
 ::get_rearmost_lane_changing_vehicle_position() const
 {
-	if (verbose) std::clog << "[PlatoonLaneChangeApproach] "
-		<< "Looking for rearmost lc veh.\n";
 	/* Before lane changing, the position of the vehicle in the platoon
 	also represents its relative position in the road (i > j -> x_i < x_j) */
 	int rear_most_pos = 0;
@@ -355,6 +363,8 @@ int PlatoonLaneChangeApproach
 	{
 		rear_most_pos = std::max(rear_most_pos, p);
 	}
+	if (verbose) std::cout << "[PlatoonLaneChangeApproach] "
+		<< "Rear most lc veh. " << rear_most_pos << "\n";
 	return rear_most_pos;
 
 	/* The code below does not work because the platoon vehicles 
@@ -373,7 +383,7 @@ int PlatoonLaneChangeApproach
 	//	}
 	//}
 
-	//if (verbose) std::clog << "\tFound at pos. " << rear_most_pos << "\n";
+	//if (verbose) std::cout << "\tFound at pos. " << rear_most_pos << "\n";
 	//return rear_most_pos;
 }
 
@@ -449,11 +459,9 @@ void LeaderFirstReverseApproach::decide_lane_change_order()
 
 void GraphApproach::decide_lane_change_order()
 {
-	if (verbose) std::clog << "[GraphApproach] decide_lane_change_order\n";
-	// TODO: cost name as simulation parameter
+	if (verbose) std::cout << "[GraphApproach] decide_lane_change_order\n";
 	if (!is_data_loaded)
 	{
-		std::string cost_name = "accel";
 		strategy_manager = PlatoonLCStrategyManager(cost_name, verbose);
 		strategy_manager.initialize(platoon->get_size());
 	}
@@ -463,7 +471,7 @@ void GraphApproach::decide_lane_change_order()
 	{
 		for (const Query& q : queries)
 		{
-			std::clog << "Query: " << "qx=" << vector_to_string(q.first)
+			std::cout << "Query: " << "qx=" << vector_to_string(q.first)
 				<< " , first_movers= " << set_to_string(q.second) << "\n";
 		}
 	}
@@ -479,7 +487,7 @@ void GraphApproach::decide_lane_change_order()
 
 std::vector<Query> GraphApproach::create_all_queries()
 {
-	if (verbose) std::clog << "[GraphApproach] Getting all queries \n";
+	if (verbose) std::cout << "[GraphApproach] Getting all queries \n";
 
 	/* Now we check which platoon vehicles can move and set possible
 	destination lane leaders */
@@ -488,7 +496,7 @@ std::vector<Query> GraphApproach::create_all_queries()
 	int veh_pos = 0;
 	while (veh_pos < platoon->get_size())
 	{
-		if (verbose) std::clog << "\tveh pos: " << veh_pos << "\n";
+		if (verbose) std::cout << "\tveh pos: " << veh_pos << "\n";
 
 		int front_most_lc_veh_pos = veh_pos;
 		const PlatoonVehicle* vehicle = 
@@ -503,7 +511,12 @@ std::vector<Query> GraphApproach::create_all_queries()
 			are_lc_gaps_safe = true;
 			first_movers.insert(veh_pos);
 			veh_pos++;
-			vehicle = platoon->get_a_vehicle_by_position(veh_pos);
+			/* TODO: this loop can be better organized.
+			Use veh_pos and a safety flag. Create vehicle inside the loop */
+			if (veh_pos < platoon->get_size())
+			{
+				vehicle = platoon->get_a_vehicle_by_position(veh_pos);
+			}
 		}
 		/* If no vehicle so far is safe to start a lane change, we store
 		queries of vehicles with suitable (safe after adjustment)
@@ -523,12 +536,12 @@ std::vector<Query> GraphApproach::create_all_queries()
 				state_quantizer.quantize_states(system_state_matrix));
 			if (verbose)
 			{
-				std::clog << "\t[GraphApproach] Pre-query\n\t-state:\n";
+				std::cout << "\t[GraphApproach] Pre-query\n\t-state:\n";
 				for (const ContinuousStateVector& s : system_state_matrix)
 				{
-					std::clog << "\t\t" << s.to_string() << "\n";
+					std::cout << "\t\t" << s.to_string() << "\n";
 				}
-				std::clog << "\t-first_movers: " 
+				std::cout << "\t-first_movers: " 
 					<< set_to_string(first_movers) << "\n";
 			}
 			/* Add query to the proper query vector */
@@ -549,7 +562,7 @@ std::vector<Query> GraphApproach::create_all_queries()
 
 //void GraphApproach::set_maneuver_initial_state_for_all_vehicles()
 //{
-//	if (verbose) std::clog << "[GraphApproach] Setting all initial states \n";
+//	if (verbose) std::cout << "[GraphApproach] Setting all initial states \n";
 //
 //	/* Now we check which platoon vehicles can move and set possible
 //	destination lane leaders */
@@ -567,11 +580,11 @@ std::vector<Query> GraphApproach::create_all_queries()
 //			
 //			if (verbose)
 //			{
-//				std::clog << "[GraphApproach] Setting initial state"
+//				std::cout << "[GraphApproach] Setting initial state"
 //					"for veh at pos " << veh_pos << ":\n";
 //				for (const ContinuousStateVector& s : system_state_matrix)
 //				{
-//					std::clog << "\t\t" << s.to_string() << "\n";
+//					std::cout << "\t\t" << s.to_string() << "\n";
 //				}
 //			}
 //
@@ -579,14 +592,14 @@ std::vector<Query> GraphApproach::create_all_queries()
 //			{
 //				strategy_manager.set_maneuver_initial_state(veh_pos,
 //					system_state_matrix);
-//				if (verbose) std::clog << "\tState found.\n";
+//				if (verbose) std::cout << "\tState found.\n";
 //			}
 //			catch (const StateNotFoundException& e)
 //			{
 //				all_states_found = false;
 //				//std::vector<double> states_array = 
 //				//	flatten_state_matrix(system_state_matrix);
-//				std::clog << "\tState " << vector_to_string(e.state_vector)
+//				std::cout << "\tState " << vector_to_string(e.state_vector)
 //					<< " not found.\n";
 //				ContinuousStateVector& lo_states = system_state_matrix.front();
 //				ContinuousStateVector& ld_states = system_state_matrix.back();
@@ -608,7 +621,7 @@ std::vector<Query> GraphApproach::create_all_queries()
 PlatoonLaneChangeOrder GraphApproach::get_query_results_from_map(
 	std::vector<Query>& queries)
 {
-	if (verbose) std::clog << "[GraphApproach] Getting query results\n";
+	if (verbose) std::cout << "[GraphApproach] Getting query results\n";
 
 	double best_cost{ INFINITY };
 	PlatoonLaneChangeOrder best_order;
@@ -621,13 +634,13 @@ PlatoonLaneChangeOrder GraphApproach::get_query_results_from_map(
 		try
 		{
 			PlatoonLaneChangeOrder an_order = strategy_manager.answer_query(q);
-			if (verbose) std::clog << "\tQuery found\n";
+			if (verbose) std::cout << "\tQuery found\n";
 			all_orders.push_back(an_order);
 			if (an_order.cost < best_cost)
 			{
 				best_cost = an_order.cost;
 				best_order = an_order;
-				if (verbose) std::clog << "\tbest order so far: "
+				if (verbose) std::cout << "\tbest order so far: "
 					<< best_order.to_string() << "\n";
 			}
 		}
@@ -654,7 +667,7 @@ PlatoonLaneChangeOrder GraphApproach::get_query_results_from_map(
 
 //PlatoonLaneChangeOrder GraphApproach::find_best_order_in_map()
 //{
-//	if (verbose) std::clog << "[GraphApproach] Looking for best order\n";
+//	if (verbose) std::cout << "[GraphApproach] Looking for best order\n";
 //
 //	double best_cost{ INFINITY };
 //	PlatoonLaneChangeOrder best_order;
@@ -681,7 +694,7 @@ PlatoonLaneChangeOrder GraphApproach::get_query_results_from_map(
 //			{
 //				best_cost = an_order.cost;
 //				best_order = an_order;
-//				if (verbose) std::clog << "\tbest order so far: " 
+//				if (verbose) std::cout << "\tbest order so far: " 
 //					<< best_order.to_string() << "\n";
 //			}
 //		}
@@ -705,7 +718,7 @@ PlatoonLaneChangeOrder GraphApproach::get_query_results_from_map(
 //				{
 //					best_cost = an_order.cost;
 //					best_order = an_order;
-//					if (verbose) std::clog << "\tbest order so far: " 
+//					if (verbose) std::cout << "\tbest order so far: " 
 //						<< best_order.to_string() << "\n";
 //				}
 //			}
@@ -719,7 +732,7 @@ void GraphApproach::save_not_found_state_to_file(
 	std::vector<T> state_vector, double free_flow_speed_orig, 
 	double free_flow_speed_dest)
 {
-	std::clog << "[GraphApproach] Saving not found state to file\n";
+	std::cout << "[GraphApproach] Saving not found state to file\n";
 
 	std::map<std::string, double> free_flow_speeds{
 		{"dest", free_flow_speed_dest},

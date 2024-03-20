@@ -15,7 +15,7 @@ LateralController::LateralController(bool verbose)
 	: verbose{ verbose } {
 	
 	if (verbose) {
-		std::clog << "Creating lateral controller" << std::endl;
+		std::cout << "Creating lateral controller" << std::endl;
 	}
 	estimate_lane_change_kinematics();
 }
@@ -27,7 +27,7 @@ void LateralController::set_destination_lane_follower_parameters(
 {
 	if (verbose)
 	{
-		std::clog << "\tSetting dest lane foll params. "
+		std::cout << "\tSetting dest lane foll params. "
 			<< "lambda0=" << new_lambda_0
 			<< ", lambda1=" << new_lambda_1 << "\n";
 	}
@@ -40,7 +40,7 @@ void LateralController::set_destination_lane_follower_time_headway(
 {
 	if (verbose)
 	{
-		std::clog << "\tSetting dest lane foll "
+		std::cout << "\tSetting dest lane foll "
 			<< " h=" << new_time_headway << "\n";
 	}
 	time_headway_to_destination_lane_follower = new_time_headway;
@@ -70,7 +70,7 @@ double LateralController::compute_time_headway_gap(double ego_velocity,
 
 	/*if (verbose)
 	{
-		std::clog << "h=" << time_headway << ", v=" << follower_velocity
+		std::cout << "h=" << time_headway << ", v=" << follower_velocity
 			<< "\n";
 	}*/
 
@@ -169,7 +169,7 @@ double LateralController::compute_vehicle_following_gap_for_lane_change(
 
 	if (verbose)
 	{
-		std::clog << "\tVeh following gap computation\n\t"
+		std::cout << "\tVeh following gap computation\n\t"
 			<< "vf=" << v_follower
 			<< ", lambda1=" << follower_lambda_1
 			<< ", df=" << brake_follower
@@ -251,7 +251,7 @@ double LateralController::compute_transient_gap(const EgoVehicle& ego_vehicle,
 	
 	if (verbose)
 	{
-		std::clog << "\tTransient gap computation\n\t"
+		std::cout << "\tTransient gap computation\n\t"
 			<< "t0=" << t_0 << ", tf=" << t_f
 			<< ", t_max=" << t_max
 			<< ", Delta_v=" << relative_velocity
@@ -326,7 +326,7 @@ void LateralController::estimate_lane_change_kinematics()
 {
 	if (verbose)
 	{
-		std::clog << "Creating lateral trajectory\n";
+		std::cout << "Creating lateral trajectory\n";
 	}
 
 	double time = 0.0;

@@ -44,7 +44,7 @@ double VanAremLongitudinalController::implement_compute_desired_acceleration(
 
 	//if (verbose)
 	//{
-	//	std::clog << "a_vel=" << des_accel_vel
+	//	std::cout << "a_vel=" << des_accel_vel
 	//		<< ", a_gap=" << des_accel_gap
 	//		<< ", a=" << des_accel
 	//		<< ", sat(a)" << filtered_accel << std::endl;

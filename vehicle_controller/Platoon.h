@@ -110,12 +110,13 @@ public:
 private:
 	enum Strategy
 	{
-		no_strategy,
+		no_strategy = 0,
 		synchronous_strategy,
 		leader_first_strategy,
 		last_vehicle_first_strategy,
 		leader_first_invert_strategy,
-		graph_strategy,
+		graph_strategy_min_time,
+		graph_strategy_min_accel,
 	};
 
 	long id{ 0 };

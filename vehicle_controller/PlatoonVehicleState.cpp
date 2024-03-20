@@ -12,7 +12,7 @@ void PlatoonVehicleState::set_specific_type_of_vehicle(
 	this->platoon_vehicle = dynamic_cast<PlatoonVehicle*>(ego_vehicle);
 	if (!this->platoon_vehicle)
 	{
-		std::clog << "=== ERROR ===\nFailed to cast ego vehicle to "
+		std::cout << "=== ERROR ===\nFailed to cast ego vehicle to "
 			"platoon vehicle\n ===============";
 	}
 }

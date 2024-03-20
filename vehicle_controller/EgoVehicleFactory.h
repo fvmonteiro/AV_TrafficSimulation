@@ -63,7 +63,7 @@ public:
 		//		creation_time, verbose);
 		//	break;
 		default:
-			std::clog << "Trying to create unknown vehicle type\n"
+			std::cout << "Trying to create unknown vehicle type\n"
 				<< "\ttime=" << creation_time
 				<< "\tid=" << id
 				<< "\ttype" << type

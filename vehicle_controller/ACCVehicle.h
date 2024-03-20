@@ -74,6 +74,11 @@ private:
 	void implement_set_accepted_lane_change_risk_to_follower(
 		double value) override {};
 	void implement_set_use_linear_lane_change_gap(long value) override {};
+	bool implement_analyze_platoons(
+		std::unordered_map<int, std::shared_ptr<Platoon>>& platoons,
+		long new_platoon_id, int platoon_lc_strategy) override {
+		return false;
+	};
 	void implement_prepare_to_start_long_adjustments() override;
 	void implement_prepare_to_restart_lane_keeping(
 		bool was_lane_change_successful) override;

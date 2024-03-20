@@ -7,7 +7,7 @@ AutonomousVehicle::AutonomousVehicle(long id, double desired_velocity,
 		AUTONOMOUS_BRAKE_DELAY, desired_velocity, true, false,
 		simulation_time_step, creation_time, verbose)
 {
-	if (verbose) std::clog << "[AutonomousVehicle] created" <<std::endl;
+	if (verbose) std::cout << "[AutonomousVehicle] created" <<std::endl;
 }
 
 bool AutonomousVehicle::has_destination_lane_leader_leader() const
@@ -171,7 +171,7 @@ bool AutonomousVehicle::try_to_overtake_destination_lane_leader(
 
 	if (verbose)
 	{
-		std::clog << "\tv_o=" << origin_lane_desired_velocity
+		std::cout << "\tv_o=" << origin_lane_desired_velocity
 			<< ", v_d=" << dest_lane_leader_vel 
 			<< ", is_desired_vel_higher? " 
 			<< boolean_to_string(is_desired_vel_higher)
@@ -222,7 +222,7 @@ try_to_overtake_destination_lane_leader_based_on_time() const
 
 	if (verbose)
 	{
-		std::clog << "\tv_o=" << orig_lane_desired_vel
+		std::cout << "\tv_o=" << orig_lane_desired_vel
 			<< ", v_d=" << dest_lane_leader_vel << "\n";
 	}
 
@@ -262,7 +262,7 @@ void AutonomousVehicle::update_destination_lane_leader_in_controller(
 		{
 			if (verbose)
 			{
-				std::clog << "\tUpdating the dest lane leader"
+				std::cout << "\tUpdating the dest lane leader"
 					<< std::endl;
 			}
 			av_controller->update_destination_lane_leader_time_headway(
@@ -277,13 +277,13 @@ void AutonomousVehicle::update_virtual_leader(
 {
 	if (has_virtual_leader())
 	{
-		if (verbose) std::clog << "\tHas a virtual leader\n";
+		if (verbose) std::cout << "\tHas a virtual leader\n";
 
 		double new_leader_max_brake = get_virtual_leader()->get_max_brake();
 		bool is_new_leader_connected = get_virtual_leader()->is_connected();
 		if (old_leader == nullptr)
 		{
-			if (verbose) std::clog << "Activating dest lane ctrl.\n";
+			if (verbose) std::cout << "Activating dest lane ctrl.\n";
 
 			av_controller->activate_destination_lane_controller(
 				*get_virtual_leader());
@@ -293,7 +293,7 @@ void AutonomousVehicle::update_virtual_leader(
 			|| (old_leader->get_type()
 				!= get_virtual_leader()->get_type()))
 		{
-			if (verbose) std::clog << "Updating dest lane ctrl.\n";
+			if (verbose) std::cout << "Updating dest lane ctrl.\n";
 
 			av_controller->update_destination_lane_controller(*get_virtual_leader());
 		}
@@ -339,7 +339,7 @@ double AutonomousVehicle::estimate_nearby_vehicle_time_headway(
 	//	accepted_risk = std::min(max_risk, accepted_lane_change_risk_to_follower);
 	//	if (verbose)
 	//	{
-	//		std::clog << "Estimating follower's headway.\n" <<
+	//		std::cout << "Estimating follower's headway.\n" <<
 	//			"ar = " << accepted_lane_change_risk_to_follower
 	//			<< ", max_risk = " << max_risk << std::endl;
 	//	}
@@ -419,7 +419,7 @@ bool AutonomousVehicle::implement_check_lane_change_gaps()
 
 	if (verbose)
 	{
-		std::clog << "Deciding lane changing safety"
+		std::cout << "Deciding lane changing safety"
 			<< "\n\t- To orig lane leader: "
 			<< "gap = " << gap_to_lo << ", safe_gap = " << safe_gap_to_lo
 			<< "\n\t- To dest lane leader:"
@@ -446,7 +446,7 @@ bool AutonomousVehicle::is_lane_change_gap_safe(
 
 	if (verbose)
 	{
-		std::clog << "\tg=" << gap << "\n";
+		std::cout << "\tg=" << gap << "\n";
 	}
 
 	double accepted_gap = compute_accepted_lane_change_gap(
@@ -502,7 +502,7 @@ double AutonomousVehicle::compute_accepted_lane_change_gap(
 	if (verbose && lane_change_speed != get_velocity()) 
 	{
 		// TODO
-		std::clog << "[AutonomousVehicle::compute_accepted_lane_change_gap]\n"
+		std::cout << "[AutonomousVehicle::compute_accepted_lane_change_gap]\n"
 			"\tTrying to set a lane change speed "
 			"different from the current vehicle speed. Not implemented.\n";
 	}
@@ -512,7 +512,7 @@ double AutonomousVehicle::compute_accepted_lane_change_gap(
 
 	if (verbose)
 	{
-		std::clog << "\tUsing linear overestimation? "
+		std::cout << "\tUsing linear overestimation? "
 			<< boolean_to_string(use_linear_lane_change_gap) << "\n";
 	}
 
@@ -539,7 +539,7 @@ double AutonomousVehicle::compute_time_headway_gap_for_lane_change(
 	data from the virtual leader, so it should not be used to measure 
 	safety towards the destination lane leader (which might be different 
 	from the virtual leader) */
-	if (verbose) std::clog << "[WARNING] USING OUTDATED METHOD\n";
+	if (verbose) std::cout << "[WARNING] USING OUTDATED METHOD\n";
 
 	double accepted_time_headway_gap =
 		av_controller->get_desired_time_headway_gap(nearby_vehicle);
@@ -635,7 +635,7 @@ double AutonomousVehicle::compute_time_headway_gap_for_lane_change(
 //
 //	if (verbose)
 //	{
-//		std::clog << "\tVeh following gap computation\n\t"
+//		std::cout << "\tVeh following gap computation\n\t"
 //			<< "vf=" << v_follower
 //			<< ", lambda1=" << follower_lambda_1
 //			<< ", df=" << brake_follower
@@ -663,7 +663,7 @@ double AutonomousVehicle::compute_time_headway_gap_for_lane_change(
 //
 //	for (std::shared_ptr<NearbyVehicle> nv : relevant_vehicles)
 //	{
-//		if (verbose) std::clog << "is nullptr? " << (nv == nullptr) << std::endl;
+//		if (verbose) std::cout << "is nullptr? " << (nv == nullptr) << std::endl;
 //		if (nv != nullptr)
 //		{
 //			set_gap_variation_during_lane_change(nv->get_id(),
@@ -672,7 +672,7 @@ double AutonomousVehicle::compute_time_headway_gap_for_lane_change(
 //				compute_collision_free_gap_during_lane_change(*nv));
 //			if (verbose)
 //			{
-//				std::clog << "nv id = " << nv->get_id()
+//				std::cout << "nv id = " << nv->get_id()
 //					<< ", nv_vel = " << nv->compute_velocity(get_velocity())
 //					<< "\n\tdelta g = " << get_gap_variation_to(nv)
 //					<< ", glc* = " << get_collision_free_gap_to(nv)
@@ -762,7 +762,7 @@ bool AutonomousVehicle::update_accepted_risk(double time)
 			has_increased = true;
 
 			if (verbose) {
-				std::clog << "\tleader risk updated to "
+				std::cout << "\tleader risk updated to "
 					<< accepted_risk_to_leader
 					<< std::endl;
 			}
@@ -775,7 +775,7 @@ bool AutonomousVehicle::update_accepted_risk(double time)
 			has_increased = true;
 
 			if (verbose) {
-				std::clog << "\tfollower risk updated to "
+				std::cout << "\tfollower risk updated to "
 					<< accepted_risk_to_follower
 					<< std::endl;
 			}
@@ -802,7 +802,7 @@ compute_intermediate_risk_to_leader(double lambda_1,
 
 	if (verbose)
 	{
-		std::clog << "h no lc=" << h_no_lane_change
+		std::cout << "h no lc=" << h_no_lane_change
 			<< ", h with lc=" << h_with_lane_change
 			<< ", mid risk to leader="
 			<< intermediate_risk_to_leader << std::endl;
@@ -816,7 +816,7 @@ void AutonomousVehicle::update_headways_with_risk(const EgoVehicle& ego_vehicle)
 	/* This function has to be substantially changed to work. */
 
 	//if (verbose) {
-	//	std::clog << "Considering to increase risk" << std::endl;
+	//	std::cout << "Considering to increase risk" << std::endl;
 	//}
 
 	///* TODO: include difference to check whether vehicles are connected */
@@ -840,7 +840,7 @@ void AutonomousVehicle::update_headways_with_risk(const EgoVehicle& ego_vehicle)
 
 	//		if (ego_parameters.is_connected
 	//			&& dest_lane_follower->is_connected()) {
-	//			std::clog << "TODO: risk for connected vehicles not "
+	//			std::cout << "TODO: risk for connected vehicles not "
 	//				<< "yet fully coded." << std::endl;
 	//		}
 

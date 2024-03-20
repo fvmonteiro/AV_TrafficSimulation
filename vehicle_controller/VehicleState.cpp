@@ -25,7 +25,7 @@ void VehicleState::handle_lane_keeping_intention()
 	/* Temporaty check to avoid crashes during test phase */
 	if (!is_ego_vehicle_set())
 	{
-		std::clog << "Handle lane keeping. No ego vehicle set\n";
+		std::cout << "Handle lane keeping. No ego vehicle set\n";
 		return;
 	}
 	implement_handle_lane_keeping_intention();
@@ -36,7 +36,7 @@ void VehicleState::handle_lane_change_intention()
 	/* Temporaty check to avoid crashes during test phase */
 	if (!is_ego_vehicle_set())
 	{
-		std::clog << "Handle lane change intention. No ego vehicle set\n";
+		std::cout << "Handle lane change intention. No ego vehicle set\n";
 		return;
 	}
 	implement_handle_lane_change_intention();
@@ -46,7 +46,7 @@ void VehicleState::unexpected_transition_message(
 	VehicleState* vehicle_state, bool has_lane_change_intention)
 {
 	//std::ostringstream oss;
-	std::clog << "[WARNING] unexpected state transition\n\tt="
+	std::cout << "[WARNING] unexpected state transition\n\tt="
 		<< ego_vehicle->get_current_time() << ", veh " << ego_vehicle->get_id()
 		<< " at state " << vehicle_state << " and has "
 		<< (has_lane_change_intention ? "lane change" : "lane keeping")
@@ -74,16 +74,16 @@ bool operator> (const VehicleState& s1, const VehicleState& s2)
 {
 	if (!have_same_strategy(s1, s2))
 	{
-		std::clog << "Comparing states " << s1 << " and " 
+		std::cout << "Comparing states " << s1 << " and " 
 			<< s2 << " (different strategies)\n"
 			<< "Comparison called from veh. ";
 		if (s1.is_ego_vehicle_set())
-			std::clog << s1.get_ego_vehicle()->get_id();
+			std::cout << s1.get_ego_vehicle()->get_id();
 		else if (s2.is_ego_vehicle_set())
-			std::clog << s2.get_ego_vehicle()->get_id();
+			std::cout << s2.get_ego_vehicle()->get_id();
 		else
-			std::clog << "none?";
-		std::clog << "\n";
+			std::cout << "none?";
+		std::cout << "\n";
 	}
 	return s1.get_state_number() > s2.get_state_number();
 }

@@ -15,7 +15,7 @@
 bool PlatoonLaneChangeStrategy::can_vehicle_leave_platoon(
 	const PlatoonVehicle& platoon_vehicle) const
 {
-	//std::clog << "\t[PlatoonStrategy] can vehicle leave platoon method\n";
+	//std::cout << "\t[PlatoonStrategy] can vehicle leave platoon method\n";
 	return implement_can_vehicle_leave_platoon(platoon_vehicle);
 }
 
@@ -36,7 +36,7 @@ void PlatoonLaneChangeStrategy::reset_state_of_all_vehicles() const
 long PlatoonLaneChangeStrategy::create_platoon_lane_change_request(
 	const PlatoonVehicle& platoon_vehicle) const
 {
-	std::clog << "===== WARNING ===== \n"
+	std::cout << "===== WARNING ===== \n"
 		<< "create lane change request "
 		<< "being done by phased out LaneChangeStrategy class.";
 	return implement_create_platoon_lane_change_request(platoon_vehicle);

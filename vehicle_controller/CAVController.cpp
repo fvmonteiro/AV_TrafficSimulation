@@ -18,7 +18,7 @@ void CAVController::update_gap_generation_controller(double ego_velocity,
 
 void CAVController::add_cooperative_lane_change_controller()
 {
-	if (verbose) std::clog << "Creating coop. lane change controller.\n";
+	if (verbose) std::cout << "Creating coop. lane change controller.\n";
 
 	gap_generating_controller = 
 		std::make_shared<VirtualLongitudinalController>(
@@ -45,7 +45,7 @@ bool CAVController::get_cooperative_desired_acceleration(
 	{
 		if (verbose)
 		{
-			std::clog << "Gap generating controller"
+			std::cout << "Gap generating controller"
 				<< std::endl;
 		}
 		const NearbyVehicle* assisted_vehicle =
@@ -74,7 +74,7 @@ bool CAVController::get_cooperative_desired_acceleration(
 
 void CAVController::implement_add_internal_controllers()
 {
-	if (verbose) std::clog << "Creating CAV controlers\n";
+	if (verbose) std::cout << "Creating CAV controlers\n";
 
 	add_origin_lane_controllers();
 	add_lane_change_adjustment_controller();

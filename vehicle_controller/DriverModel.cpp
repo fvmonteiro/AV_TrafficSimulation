@@ -23,7 +23,7 @@
 
 /*==========================================================================*/
 
-std::unordered_set<long> logged_vehicles_ids{ 2 };
+std::unordered_set<long> logged_vehicles_ids{ 0 };
 const int LOGGED_PLATOON_ID{ 0 };
 bool verbose_simulation{ false };
 //const double DEBUGGING_START_TIME{ 249.0 };
@@ -59,7 +59,7 @@ BOOL APIENTRY DllMain (HANDLE  hModule,
           /*simulation_logger.write_to_persistent_log(
               std::to_string(vehicles.size()) + " vehicles in memory "
                 + "(before start)");*/
-          //std::clog << platoon_lc_strategy_manager << std::endl;
+          //std::cout << platoon_lc_strategy_manager << std::endl;
           break;
       case DLL_THREAD_ATTACH:
           break;
@@ -93,25 +93,25 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
 
     //if (verbose_simulation)
     //{
-    //    std::clog << "Setting type " << type << "\n";
+    //    std::cout << "Setting type " << type << "\n";
     //}
 
     switch (type) {
     case DRIVER_DATA_PATH                   :
-        std::clog << "DLL path: "
+        std::cout << "DLL path: "
             << string_value
             << std::endl;
         return 1;
     case DRIVER_DATA_PARAMETERFILE          :
         if (string_value != NULL && string_value[0] != '\0')
-        std::clog << "Parameter file path: "
+        std::cout << "Parameter file path: "
             << string_value << std::endl;
         /* Only the traffic light ACC has a parameter file */
         TrafficLightFileReader::from_file_to_objects(
             std::string(string_value), traffic_lights);
         for (const std::pair<int, TrafficLight>& pair : traffic_lights)
         {
-            std::clog << pair.second << "\n";
+            std::cout << pair.second << "\n";
         }
         return 1;
     case DRIVER_DATA_TIMESTEP               :
@@ -123,13 +123,13 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
     case DRIVER_DATA_TIME                   :
         if (verbose_simulation && (double_value != current_time))
         {
-            std::clog << "t=" << current_time
+            std::cout << "t=" << current_time
                 << ", " << vehicles.size() << " controlled vehicles.\n";
-            /*std::clog << "t=" << current_time
+            /*std::cout << "t=" << current_time
                 << ", " << platoons.size() << " platoons" << std::endl;
             for (auto& it : platoons)
             {
-                std::clog << *it.second << "\n";
+                std::cout << *it.second << "\n";
             }*/
         }
         current_time = double_value;
@@ -215,7 +215,7 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
         }
     case DRIVER_DATA_VEH_ID                 :
         if (verbose_simulation) {
-            std::clog << "t=" << current_time
+            std::cout << "t=" << current_time
                 << ", setting data for veh. " << long_value << std::endl;
         }
 
@@ -551,7 +551,7 @@ DRIVERMODEL_API  int  DriverModelGetValue (long   type,
 
     /*if (CLUELESS_DEBUGGING)
     {
-        std::clog << "Getting type " << type << "\n";
+        std::cout << "Getting type " << type << "\n";
     }*/
 
     switch (type) {
@@ -746,7 +746,7 @@ DRIVERMODEL_API  int  DriverModelGetValue (long   type,
         {
             std::string state_name =
                 vehicles[current_vehicle_id]->get_state()->get_state_name();
-            /*std::clog << "*string_value size " << sizeof * string_value
+            /*std::cout << "*string_value size " << sizeof * string_value
                 << ", string_value size " << sizeof string_value
                 << ", *string_value strlen " << strlen(*string_value)
                 << ", state_name size " << sizeof state_name.c_str()
@@ -816,7 +816,7 @@ DRIVERMODEL_API  int  DriverModelExecuteCommand (long number)
     case DRIVER_COMMAND_CREATE_DRIVER :
     {
         bool verbose = true; /*logged_vehicles_ids.find(current_vehicle_id)
-            != logged_vehicles_ids.end()*/;
+            != logged_vehicles_ids.end();*/
         vehicles[current_vehicle_id] = std::move(
             EgoVehicleFactory::create_ego_vehicle(current_vehicle_id,
                 current_vehicle_type, current_desired_velocity,
@@ -829,7 +829,7 @@ DRIVERMODEL_API  int  DriverModelExecuteCommand (long number)
     case DRIVER_COMMAND_KILL_DRIVER :
         if (verbose_simulation)
         {
-            std::clog << "Erasing veh. " << current_vehicle_id << std::endl;
+            std::cout << "Erasing veh. " << current_vehicle_id << std::endl;
         }
         if (vehicles[current_vehicle_id]->is_in_a_platoon())
         {
@@ -852,20 +852,20 @@ DRIVERMODEL_API  int  DriverModelExecuteCommand (long number)
             || vehicles[current_vehicle_id]->is_verbose();
         if (will_print) 
         {
-            std::clog << "Veh: " << current_vehicle_id
-                << "\nUpdating states\n";
+            std::cout << "----------- Veh: " << current_vehicle_id
+                << " -----------\nUpdating states\n";
         }
         vehicles[current_vehicle_id]->update_state();
 
         if (will_print)
         {
-            std::clog << "Analyzing nearby vehicles" << std::endl;
+            std::cout << "Analyzing nearby vehicles" << std::endl;
         }
         vehicles[current_vehicle_id]->analyze_nearby_vehicles();
 
         if (will_print)
         {
-            std::clog << "Analyzing platoons" << std::endl;
+            std::cout << "Analyzing platoons" << std::endl;
         }
 
         if (vehicles[current_vehicle_id]->analyze_platoons(platoons,
@@ -882,19 +882,19 @@ DRIVERMODEL_API  int  DriverModelExecuteCommand (long number)
 
         if (will_print)
         {
-            std::clog << "Deciding acceleration" << std::endl;
+            std::cout << "Deciding acceleration" << std::endl;
         }
         vehicles[current_vehicle_id]->compute_desired_acceleration(
             traffic_lights);
 
         if (will_print)
         {
-            std::clog << "Command 'Move Driver' done." << std::endl;
+            std::cout << "Command 'Move Driver' done." << std::endl;
         }
 
         if (vehicles[current_vehicle_id]->is_verbose())
         {
-            std::clog << *vehicles[current_vehicle_id] << std::endl;
+            std::cout << *vehicles[current_vehicle_id] << std::endl;
         }
 
         return 1;

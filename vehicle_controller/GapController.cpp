@@ -117,7 +117,7 @@ double GapController::compute_desired_acceleration(
 
 	if (verbose)
 	{
-		std::clog << "\t[Gap controller]\n\t"
+		std::cout << "\t[Gap controller]\n\t"
 			<< "leader id = " << leader->get_id()
 			<< ", h = " << get_current_time_headway()
 			<< ", eg=" << gap - gap_reference
@@ -142,13 +142,13 @@ double GapController::compute_desired_acceleration(
 
 	if (verbose)
 	{
-		std::clog << " => a_d=" << desired_acceleration << std::endl;
+		std::cout << " => a_d=" << desired_acceleration << std::endl;
 	}
 
 	//if (should_perform_smooth_start) // TODO: not being used [Nov 1, 2022]
 	//{
 	//	should_perform_smooth_start = false;
-	//	if (verbose) std::clog << "\t[Gap controller]"
+	//	if (verbose) std::cout << "\t[Gap controller]"
 	//		<< " restarting leader vel filter.\n";
 	//	double current_accel = ego_vehicle.get_acceleration();
 	//	double reset_vel;
@@ -167,7 +167,7 @@ double GapController::compute_desired_acceleration(
 	//		reset_vel = std::max(smooth_vel, velocity_reference);
 	//		if (verbose)
 	//		{
-	//			std::clog << "accel=" << current_accel
+	//			std::cout << "accel=" << current_accel
 	//				<< "des. accel=" << desired_acceleration
 	//				<< std::endl;
 	//		}
@@ -200,7 +200,7 @@ double GapController::compute_connected_input(
 		ego_acceleration, leader_acceleration);
 
 	if (verbose) {
-		std::clog << ", eg_dot=" << gap_error_derivative
+		std::cout << ", eg_dot=" << gap_error_derivative
 			<< ", ea=" << acceleration_error;
 	}
 
@@ -214,7 +214,7 @@ void GapController::reset_time_headway_filter(double time_headway)
 {
 	//if (verbose)
 	//{
-	//	std::clog << "\t[Gap controller] Reset h=" << time_headway << std::endl;
+	//	std::cout << "\t[Gap controller] Reset h=" << time_headway << std::endl;
 	//}
 	time_headway_filter.reset(time_headway);
 }

@@ -16,7 +16,7 @@ VehicleController::VehicleController(const EgoVehicle* ego_vehicle,
 {
 	if (verbose && !long_controllers_verbose)
 	{
-		std::clog << "Attention! Long controllers are not verbose\n";
+		std::cout << "Attention! Long controllers are not verbose\n";
 	}
 }
 
@@ -97,7 +97,7 @@ void VehicleController::set_verbose(bool value)
 {
 	if (value && !verbose)
 	{
-		std::clog << "[ControlManager] set to verbose."
+		std::cout << "[ControlManager] set to verbose."
 			<< " Note that underlying long controllers are NOT verbose\n";
 	}
 	verbose = value;
@@ -143,7 +143,7 @@ void VehicleController::reset_origin_lane_velocity_controller(
 {
 	//if (verbose)
 	//{
-	//	std::clog << "Resetting orig lane ctrl vel ctrl." << std::endl;
+	//	std::cout << "Resetting orig lane ctrl vel ctrl." << std::endl;
 	//}
 	origin_lane_controller->reset_velocity_controller(
 		ego_vehicle->get_velocity());
@@ -154,7 +154,7 @@ double VehicleController::find_comfortable_time_headway(
 {
 	if (verbose)
 	{
-		std::clog << "\tLooking for good h."
+		std::cout << "\tLooking for good h."
 			<< " g=" << ego_vehicle->compute_gap_to_a_leader(a_leader)
 			<< ", d=" << standstill_distance
 			<< ", v=" << ego_vehicle->get_velocity()
@@ -178,9 +178,9 @@ NearbyVehicle VehicleController::create_virtual_stopped_vehicle(
 
 	if (verbose)
 	{
-		std::clog << "\tEOL distance: " << ego_vehicle.get_lane_end_distance()
+		std::cout << "\tEOL distance: " << ego_vehicle.get_lane_end_distance()
 			<< "\n";
-		std::clog << "\tVirtual stopped leader " << virtual_vehicle << "\n";
+		std::cout << "\tVirtual stopped leader " << virtual_vehicle << "\n";
 	}
 
 	return virtual_vehicle;
@@ -189,10 +189,10 @@ NearbyVehicle VehicleController::create_virtual_stopped_vehicle(
 void VehicleController::print_traffic_lights(
 	const std::unordered_map<int, TrafficLight>& traffic_lights) const
 {
-	std::clog << "veh id=" << ego_vehicle->get_id() << std::endl;
-	for (auto& pair : traffic_lights) std::clog << "tf id=" << pair.first <<
+	std::cout << "veh id=" << ego_vehicle->get_id() << std::endl;
+	for (auto& pair : traffic_lights) std::cout << "tf id=" << pair.first <<
 		"(" << pair.second.get_id() << "), ";
-	std::clog << std::endl;
+	std::cout << std::endl;
 }
 
 double VehicleController::choose_minimum_acceleration(
@@ -201,7 +201,7 @@ double VehicleController::choose_minimum_acceleration(
 	double desired_acceleration = INFINITY;
 	for (const auto& it : possible_accelerations)
 	{
-		if (verbose) std::clog << ALC_type_to_string(it.first)
+		if (verbose) std::cout << ALC_type_to_string(it.first)
 			<< ", " << it.second << std::endl;
 
 		if (it.second < desired_acceleration)
@@ -213,7 +213,7 @@ double VehicleController::choose_minimum_acceleration(
 
 	if (verbose) 
 	{
-		std::clog << "Chosen ALC: "
+		std::cout << "Chosen ALC: "
 			<< ALC_type_to_string(active_longitudinal_controller_type)
 			<< ", des accel=" << desired_acceleration << std::endl;
 	}

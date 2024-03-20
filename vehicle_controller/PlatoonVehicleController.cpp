@@ -9,7 +9,7 @@ PlatoonVehicleController::PlatoonVehicleController(
 
 void PlatoonVehicleController::implement_add_internal_controllers()
 {
-	if (verbose) std::clog << "Creating Platoon Vehicle controllers\n";
+	if (verbose) std::cout << "Creating Platoon Vehicle controllers\n";
 	
 	// To decide lane change safety
 	lateral_controller = LateralController(verbose);

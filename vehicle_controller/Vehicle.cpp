@@ -134,7 +134,7 @@ double Vehicle::compute_time_headway_with_risk(
 		time_headway = (a_lambda_1 - risk_term) / follower_max_brake;
 	}
 
-	std::clog << "Computing some h."
+	std::cout << "Computing some h."
 		<< "\n\td_l=" << leader_max_brake << ", d_f=" << follower_max_brake
 		<< "\n\tV_f=" << free_flow_velocity << ", rho=" << rho
 		<< ", lambda1=" << a_lambda_1

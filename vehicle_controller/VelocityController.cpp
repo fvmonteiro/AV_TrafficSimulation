@@ -60,7 +60,7 @@ double VelocityController::compute_acceleration(const EgoVehicle& ego_vehicle,
 		desired_velocity_filter.apply_filter(velocity_reference);
 	if (verbose)
 	{
-		std::clog << "\tv_ref=" << velocity_reference
+		std::cout << "\tv_ref=" << velocity_reference
 			<< ", filtered=" << filtered_velocity_reference
 			<< std::endl;
 	}
@@ -93,7 +93,7 @@ double VelocityController::compute_acceleration_without_filtering(
 
 	if (verbose)
 	{
-		std::clog << "\tv_ref=" << velocity_reference
+		std::cout << "\tv_ref=" << velocity_reference
 			<< ", vel=" << ego_velocity
 			<< ", ev=" << velocity_error
 			<< ", ea=" << acceleration_error

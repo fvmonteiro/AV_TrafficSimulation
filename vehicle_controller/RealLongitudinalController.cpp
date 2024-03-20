@@ -15,7 +15,7 @@ RealLongitudinalController::RealLongitudinalController(
 	bool verbose) 
 	: SwitchedLongitudinalController(ego_vehicle, state_to_color_map, verbose)
 {
-	if (verbose) std::clog << "Created real longitudinal controller\n";
+	if (verbose) std::cout << "Created real longitudinal controller\n";
 }
 
 double RealLongitudinalController::get_max_accepted_brake() const
@@ -32,7 +32,7 @@ void RealLongitudinalController::determine_controller_state(
 		
 		if (verbose)
 		{
-			std::clog << "No leader id. "
+			std::cout << "No leader id. "
 				<< "State: " << state_to_string(state)
 				<< std::endl;
 		}
@@ -66,7 +66,7 @@ void RealLongitudinalController::determine_controller_state(
 
 		if (verbose) 
 		{
-			std::clog << "Gap threshold = "
+			std::cout << "Gap threshold = "
 				<< gap_threshold
 				<< ", gap = " << gap
 				<< " to leader id " << leader->get_id()

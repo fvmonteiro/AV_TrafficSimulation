@@ -40,6 +40,10 @@ public:
 	/* Placeholder. For now always returns 0*/
 	long create_platoon_lane_change_request(int ego_position) const;
 
+	/* Sets internal values such that cooperation and lane changing
+	stops without raising errors. */
+	void clear();
+
 protected:
 	bool verbose{ false };
 	const Platoon* platoon{ nullptr };
@@ -125,12 +129,15 @@ private:
 
 class GraphApproach : public PlatoonLaneChangeApproach
 {
-public:
-	GraphApproach(): GraphApproach(false) {};
-	GraphApproach(bool verbose)
-		: PlatoonLaneChangeApproach(4, "graph", verbose) {};
+protected:
+	GraphApproach(std::string cost_name, bool verbose)
+		: PlatoonLaneChangeApproach(4, "graph_min_" + cost_name, verbose),
+		cost_name(cost_name) 
+	{};
 
 private:
+	std::string cost_name;
+
 	bool is_data_loaded{ false };
 	PlatoonLCStrategyManager strategy_manager;
 	StateQuantizer state_quantizer{ StateQuantizer() };
@@ -144,5 +151,18 @@ private:
 	template <typename T>
 	void save_not_found_state_to_file(std::vector<T> state_vector,
 		double free_flow_speed_orig, double free_flow_speed_dest);
-	
+};
+
+class GraphApproachMinTime : public GraphApproach
+{
+public:
+	GraphApproachMinTime(bool verbose)
+		: GraphApproach("time", verbose) {};
+};
+
+class GraphApproachMinAccel: public GraphApproach
+{
+public:
+	GraphApproachMinAccel(bool verbose)
+		: GraphApproach("accel", verbose) {};
 };

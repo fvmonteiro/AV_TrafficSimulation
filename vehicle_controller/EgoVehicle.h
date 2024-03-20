@@ -343,6 +343,7 @@ public:
 	void reset_origin_lane_velocity_controller();
 
 	/* Methods for logging --------------------------------------------------- */
+
 	bool is_verbose() const { return verbose; };
 
 	/* Print function */
@@ -509,6 +510,9 @@ private:
 	//virtual void implement_prepare_to_start_lane_change() = 0;
 	virtual void implement_prepare_to_restart_lane_keeping(
 		bool was_lane_change_successful) = 0;
+	virtual bool implement_analyze_platoons(
+		std::unordered_map<int, std::shared_ptr<Platoon>>& platoons,
+		long new_platoon_id, int platoon_lc_strategy) = 0;
 	/* Takes the desired acceleration given by the controller and
 	returns the feasible acceleration given the approximated low level
 	dynamics */
@@ -519,11 +523,6 @@ private:
 
 	/* Finds the current leader */
 	virtual void implement_analyze_nearby_vehicles();
-	virtual bool implement_analyze_platoons(
-		std::unordered_map<int, std::shared_ptr<Platoon>>& platoons,
-		long new_platoon_id, int platoon_lc_strategy) {
-		return false;
-	};
 	virtual void set_desired_lane_change_direction();
 
 	virtual double compute_lane_changing_desired_time_headway(

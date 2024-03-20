@@ -7,7 +7,7 @@ ACCVehicle::ACCVehicle(long id, double desired_velocity,
 		AUTONOMOUS_BRAKE_DELAY, false, false,
 		simulation_time_step, creation_time, verbose)
 {
-	if (verbose) std::clog << "[ACCVehicle] created" << std::endl;
+	if (verbose) std::cout << "[ACCVehicle] created" << std::endl;
 }
 
 void ACCVehicle::set_controller(

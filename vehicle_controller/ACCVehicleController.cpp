@@ -14,7 +14,7 @@ void ACCVehicleController::add_vissim_controller()
 
 void ACCVehicleController::add_origin_lane_controllers()
 {
-	if (verbose) std::clog << "Creating origin lane controllers.\n";
+	if (verbose) std::cout << "Creating origin lane controllers.\n";
 
 	origin_lane_controller = std::make_shared<RealLongitudinalController>(
 		acc_vehicle, orig_lane_colors, long_controllers_verbose);
@@ -71,7 +71,7 @@ double ACCVehicleController::get_vissim_desired_acceleration()
 bool ACCVehicleController::get_origin_lane_desired_acceleration(
 	std::unordered_map<ALCType, double>& possible_accelerations)
 {
-	if (verbose) std::clog << "Origin lane controller" << std::endl;
+	if (verbose) std::cout << "Origin lane controller" << std::endl;
 	possible_accelerations[ALCType::origin_lane] =
 		origin_lane_controller->compute_desired_acceleration(
 			acc_vehicle->get_leader().get(), acc_vehicle->get_desired_velocity());
@@ -98,7 +98,7 @@ bool ACCVehicleController::get_end_of_lane_desired_acceleration(
 	{
 		if (verbose)
 		{
-			std::clog << "End of lane controller"
+			std::cout << "End of lane controller"
 				<< std::endl;
 		}
 		/* We simulate a stopped vehicle at the end of
@@ -127,7 +127,7 @@ bool ACCVehicleController::get_end_of_lane_desired_acceleration(
 		{
 			if (verbose)
 			{
-				std::clog << "active EOL controller. Old state is "
+				std::cout << "active EOL controller. Old state is "
 					<< LongitudinalController::state_to_string(old_state)
 					<< std::endl;
 			}
@@ -146,7 +146,7 @@ double ACCVehicleController::get_desired_time_headway_gap_to_leader() const
 
 void ACCVehicleController::implement_add_internal_controllers()
 {
-	if (verbose) std::clog << "Adding ACC vehicle controllers\n";
+	if (verbose) std::cout << "Adding ACC vehicle controllers\n";
 
 	add_vissim_controller();
 	add_origin_lane_controllers();
@@ -182,7 +182,7 @@ void ACCVehicleController::implement_update_origin_lane_controller(
 
 	if (verbose)
 	{
-		std::clog << "Resetting orig lane ctrl (real leader) h_r = "
+		std::cout << "Resetting orig lane ctrl (real leader) h_r = "
 			<< new_h << " and setting desired value to "
 			<< safe_h << std::endl;
 	}

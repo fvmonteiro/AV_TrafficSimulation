@@ -1,5 +1,7 @@
+#include <iostream>
 #include <fstream>
 #include <string>
+#include <sstream>
 #include "json.hpp"
 
 #include "Constants.h"
@@ -14,13 +16,13 @@ PlatoonLCStrategyManager::PlatoonLCStrategyManager(std::string cost_name,
 
 void PlatoonLCStrategyManager::initialize(int n_platoon)
 {
-	if (verbose) std::clog << "[PlatoonLCStrategyManager] initializing...";
+	if (verbose) std::cout << "[PlatoonLCStrategyManager] initializing...";
 	
 	this->n_platoon = n_platoon;
 	load_a_strategy_map(n_platoon, cost_name);
 	//load_quantizer_data(n_platoon);
 
-	if (verbose) std::clog << " done.\n";
+	if (verbose) std::cout << " done.\n";
 }
 
 //void PlatoonLCStrategyManager::set_maneuver_initial_state(
@@ -32,7 +34,7 @@ void PlatoonLCStrategyManager::initialize(int n_platoon)
 //	std::vector<int> quantized_state_vector = flatten_state_matrix<int>(
 //		quantized_state_matrix);
 //
-//	if (verbose) std::clog << "\tqx="
+//	if (verbose) std::cout << "\tqx="
 //		<< vector_to_string(quantized_state_vector) << "\n";
 //
 //	if (strategy_map.find(quantized_state_vector) == strategy_map.end())
@@ -57,8 +59,11 @@ PlatoonLaneChangeOrder PlatoonLCStrategyManager::answer_query(
 	}
 	catch (const std::out_of_range&)
 	{
-		std::clog << "\tQuery: [" << vector_to_string(query.first)
+		std::stringstream message;
+		message << "\tQuery: [" << vector_to_string(query.first)
 			<< ", " << set_to_string(query.second) << "] not found. \n";
+		std::cout << message.str();
+		std::clog << message.str();
 		save_query_to_file(query);
 		throw;
 	}
@@ -77,7 +82,7 @@ PlatoonLaneChangeOrder PlatoonLCStrategyManager
 		}
 		else if (initial_state != initial_state_per_vehicle.at(p))
 		{
-			std::clog << " ==== ERROR: ====\n"
+			std::cout << " ==== ERROR: ====\n"
 				<< "[PlatoonLCStrategyManager] "
 				<< "More than one possible initial state "
 				<< "for a given set of initial movers\n";
@@ -132,7 +137,7 @@ std::unordered_map<std::string, double> PlatoonLCStrategyManager
 
 void PlatoonLCStrategyManager::save_query_to_file(Query query) const
 {
-	std::clog << "[GraphApproach] Saving query to file\n";
+	std::cout << "[GraphApproach] Saving query to file\n";
 	// TODO: hard coded values below. Prone to mistakes
 	int platoon_size = static_cast<int>(query.first.size()) / 4 - 2;
 	std::string file_name = "vissim_queries_"

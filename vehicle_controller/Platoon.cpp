@@ -19,7 +19,7 @@ Platoon::~Platoon()
 {
 	if (verbose)
 	{
-		std::clog << "Inside platoon " << id << " destructor\n"
+		std::cout << "Inside platoon " << id << " destructor\n"
 			<< "Vehs in platoon: " << vehicles_by_position.size()
 			<< std::endl;
 	}
@@ -55,10 +55,13 @@ PlatoonVehicle* Platoon::get_a_vehicle_by_position(int veh_pos) const
 	{
 		return vehicles_by_position.at(veh_pos);
 	}
-	catch (std::out_of_range)
+	catch (std::out_of_range&)
 	{
-		std::clog << "[Platoon] Trying to access veh at pos " << veh_pos
+		std::stringstream message;
+		message << "[Platoon] Trying to access veh at pos " << veh_pos
 			<< ", but platoon length is " << get_size() << "\n";
+		std::cout << message.str();
+		std::clog << message.str();
 		return nullptr;
 	}
 }
@@ -116,12 +119,16 @@ int Platoon::get_vehicle_position_in_platoon(long veh_id) const
 	{
 		return vehicle_id_to_position.at(veh_id);
 	}
-	catch (std::out_of_range& e)
+	catch (std::out_of_range&)
 	{
 		// just to make it easier to track the error
-		std::clog << "[Platoon::get_vehicle_position_in_platoon]"
+		std::stringstream message;
+		message << "[Platoon::get_vehicle_position_in_platoon]"
 			<< " veh id " << veh_id << " not in platoon with vehs "
 			<< map_to_string(vehicle_id_to_position) << "\n";
+		/* To be sure the message is seen in the persistent log file */
+		std::cout << message.str();
+		std::clog << message.str();
 		throw;
 	}
 }
@@ -280,32 +287,31 @@ void Platoon::set_strategy(int strategy_number)
 		lane_change_strategy = std::make_unique<NoStrategy>();
 		break;*/
 	case Platoon::synchronous_strategy:
-		//lane_change_strategy = std::make_unique<SynchronousStrategy>();
 		lane_change_approach =
 			std::make_unique<SynchoronousApproach>(verbose);
 		break;
 	case Platoon::leader_first_strategy:
-		//lane_change_strategy = std::make_unique<LeaderFirstStrategy>();
 		lane_change_approach =
 			std::make_unique<LeaderFirstApproach>(verbose);
 		break;
 	case Platoon::last_vehicle_first_strategy:
-		//lane_change_strategy = std::make_unique<LastVehicleFirstStrategy>();
 		lane_change_approach =
 			std::make_unique<LastVehicleFirstApproach>(verbose);
 		break;
 	case Platoon::leader_first_invert_strategy:
-		//lane_change_strategy =
-		//	std::make_unique<LeaderFirstAndInvertStrategy>();
 		lane_change_approach =
 			std::make_unique<LeaderFirstReverseApproach>(verbose);
 		break;
-	case Platoon::graph_strategy:
+	case Platoon::graph_strategy_min_time:
 		lane_change_approach =
-			std::make_unique<GraphApproach>(verbose);
+			std::make_unique<GraphApproachMinTime>(verbose);
+		break;
+	case Platoon::graph_strategy_min_accel:
+		lane_change_approach =
+			std::make_unique<GraphApproachMinAccel>(verbose);
 		break;
 	default:
-		std::clog << "ERROR: Platoon lane change strategy not coded\n";
+		std::cout << "ERROR: Platoon lane change strategy not coded\n";
 		//lane_change_strategy = std::make_unique<NoStrategy>();
 		lane_change_approach =
 			std::make_unique<SynchoronousApproach>(verbose);
@@ -314,17 +320,17 @@ void Platoon::set_strategy(int strategy_number)
 
 	if (verbose)
 	{
-		/*std::clog << "Platoon " << *this << "\n";
-		std::clog << "LC Strategy change from ";
-		if (old_strategy == nullptr) std::clog << "none";
-		else std::clog << *old_strategy;
-		std::clog << " to " << *lane_change_strategy << std::endl;*/
+		/*std::cout << "Platoon " << *this << "\n";
+		std::cout << "LC Strategy change from ";
+		if (old_strategy == nullptr) std::cout << "none";
+		else std::cout << *old_strategy;
+		std::cout << " to " << *lane_change_strategy << std::endl;*/
 
-		std::clog << "Platoon " << *this << "\n";
-		std::clog << "LC Approach change from ";
-		if (old_approach == nullptr) std::clog << "none";
-		else std::clog << old_approach->get_name();
-		std::clog << " to " << lane_change_approach->get_name() << std::endl;
+		std::cout << "Platoon " << *this << "\n";
+		std::cout << "LC Approach change from ";
+		if (old_approach == nullptr) std::cout << "none";
+		else std::cout << old_approach->get_name();
+		std::cout << " to " << lane_change_approach->get_name() << std::endl;
 	}
 
 	//lane_change_strategy->set_platoon(this);
@@ -354,7 +360,7 @@ void Platoon::add_last_vehicle(PlatoonVehicle* new_vehicle)
 {
 	if (verbose)
 	{
-		std::clog << "Platoon " << id << ": adding veh at the end with id "
+		std::cout << "Platoon " << id << ": adding veh at the end with id "
 			<< new_vehicle->get_id() << std::endl;
 	}
 	long veh_id = new_vehicle->get_id();
@@ -370,28 +376,35 @@ void Platoon::remove_vehicle_by_id(long veh_id, bool is_out_of_simulation)
 	if (vehicle_id_to_position.find(veh_id) ==
 		vehicle_id_to_position.end())
 	{
-		std::clog << "[Platoon] Platoon id: " << get_id()
+		std::stringstream message;
+		message << "[Platoon] Platoon id: " << get_id()
 			<< ". Trying to erase veh " << veh_id
 			<< " which is not in this platoon.\n";
+		std::cout << message.str();
+		std::clog << message.str();
 		return;
 	}
 	long position_to_remove = vehicle_id_to_position.at(veh_id);
 	// Double checking:
 	if (vehicles_by_position[position_to_remove]->get_id() != veh_id)
 	{
-		std::clog << "[Platoon] Mismatch between vehicles array "
+		std::stringstream message;
+		message << "[Platoon] Mismatch between vehicles array "
 			<< "and id_to_pos map " << *this << "\n";
+		std::cout << message.str();
+		std::clog << message.str();
 		return;
 	}
 
 	if (verbose)
 	{
-		std::clog << "Platoon " << get_id() << ", removing veh "
+		std::cout << "Platoon " << get_id() << ", removing veh "
 			<< veh_id << ", which is in position "
 			<< position_to_remove << std::endl;
 	}
 
 	remove_vehicle_by_position(position_to_remove);
+	
 }
 
 bool Platoon::can_vehicle_leave_platoon(long ego_id) const
@@ -402,7 +415,7 @@ bool Platoon::can_vehicle_leave_platoon(long ego_id) const
 
 bool Platoon::can_vehicle_start_lane_change(long ego_id) const
 {
-	if (verbose) std::clog << "[Platoon] can_vehicle_start_lane_change\n";
+	if (verbose) std::cout << "[Platoon] can_vehicle_start_lane_change\n";
 
 	int veh_position = vehicle_id_to_position.at(ego_id);
 	bool all_vehicles_have_or_had_intention =
@@ -415,7 +428,7 @@ bool Platoon::can_vehicle_start_lane_change(long ego_id) const
 	//}
 	//catch (const StateNotFoundException& e)
 	//{
-	//	std::clog << "[Platoon] " << e.what() << "\n";
+	//	std::cout << "[Platoon] " << e.what() << "\n";
 	//	for (PlatoonVehicle* vehicle : vehicles_by_position)
 	//	{
 	//		vehicle->give_up_lane_change();
@@ -442,11 +455,15 @@ bool Platoon::is_lane_change_done() const
 void Platoon::receive_lane_change_intention_signal()
 {
 	lane_change_intention_counter++;
+	if (verbose) std::cout << "[Platoon] lc intention counter "
+		<< lane_change_intention_counter << "\n";
 }
 
 void Platoon::receive_lane_keeping_signal()
 {
 	lane_change_intention_counter--;
+	if (verbose) std::cout << "[Platoon] lc intention counter "
+		<< lane_change_intention_counter << "\n";
 }
 
 bool Platoon::is_stuck() const
@@ -483,7 +500,7 @@ void Platoon::sort_vehicles_by_distance_traveled()
 		vehicle_id_to_position[item.second->get_id()] = last_veh_idx + i;
 		i++;
 	}*/
-	//std::clog << "Platoon vehicles reordered\n";
+	//std::cout << "Platoon vehicles reordered\n";
 }
 
 long Platoon::create_lane_change_request_for_vehicle(
@@ -504,7 +521,7 @@ long Platoon::define_desired_destination_lane_leader_id(long ego_id) const
 
 void Platoon::share_vehicle_info_with_platoon_leader() const
 {
-	//if (verbose) std::clog << "[Platooon] sharing info with leader\n";
+	//if (verbose) std::cout << "[Platooon] sharing info with leader\n";
 	PlatoonVehicle* platoon_leader = vehicles_by_position.at(0);
 	for (int i = 1; i < get_size() - 1; i++)
 	{
@@ -529,8 +546,20 @@ void Platoon::remove_vehicle_by_position(int idx_in_platoon)
 	}
 	if (verbose)
 	{
-		std::clog << "\tVehicle removed. Platoon now is " 
+		std::cout << "\tVehicle removed. Platoon now is " 
 			<< *this << std::endl;
+	}
+
+	/* The lane change strategies get messed up when a vehicle
+	leaves the platoon because they're based on the initial
+	number of vehicles. */
+	for (PlatoonVehicle* vehicle : get_vehicles_by_position())
+	{
+		vehicle->give_up_lane_change();
+	}
+	if (!is_lane_change_done())
+	{
+		lane_change_approach->clear();
 	}
 }
 

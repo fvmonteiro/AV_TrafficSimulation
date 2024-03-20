@@ -8,7 +8,7 @@ SimpleLongitudinalController::SimpleLongitudinalController(
 	bool verbose) 
 	: SwitchedLongitudinalController(ego_vehicle, state_to_color_map, verbose)
 {
-	if (verbose) std::clog << "Created simple long. controller\n";
+	if (verbose) std::cout << "Created simple long. controller\n";
 }
 
 double SimpleLongitudinalController::get_max_accepted_brake() const
@@ -70,7 +70,7 @@ void SimpleLongitudinalController::determine_controller_state(
 		}
 	}
 
-	if (verbose) std::clog << message << "State: " 
+	if (verbose) std::cout << message << "State: " 
 		<< state_to_string(state) << "\n";
 }
 

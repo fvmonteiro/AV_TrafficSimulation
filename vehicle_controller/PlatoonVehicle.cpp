@@ -11,7 +11,7 @@ PlatoonVehicle::PlatoonVehicle(long id, double desired_velocity,
 		desired_velocity, AUTONOMOUS_BRAKE_DELAY, true, true,
 		simulation_time_step, creation_time, verbose)
 {
-	if (verbose) std::clog << "[PlatoonVehicle] constructor done\n";
+	if (verbose) std::cout << "[PlatoonVehicle] constructor done\n";
 }
 
 PlatoonVehicle::PlatoonVehicle(long id, VehicleType type,
@@ -22,22 +22,23 @@ PlatoonVehicle::PlatoonVehicle(long id, VehicleType type,
 		is_lane_change_autonomous, is_connected,
 		simulation_time_step, creation_time, verbose)
 {
-	compute_platoon_safe_gap_parameters();
-	if (verbose)
-	{
-		std::clog << "lambda 1 platoon = " << lambda_1_platoon
-			<< ", lambda 0 platoon = " << lambda_0_platoon
-			<< ", lambda 1 lc platoon = " << lambda_1_lane_change_platoon
-			<< ", lambda 0 lc platoon = " << lambda_0_lane_change_platoon
-			<< std::endl;
-	}
+	if (verbose) std::cout << "(platoon vehicles don't use lambda params)\n";
+	//compute_platoon_safe_gap_parameters();
+	//if (verbose)
+	//{
+	//	std::cout << "lambda 1 platoon = " << lambda_1_platoon
+	//		<< ", lambda 0 platoon = " << lambda_0_platoon
+	//		<< ", lambda 1 lc platoon = " << lambda_1_lane_change_platoon
+	//		<< ", lambda 0 lc platoon = " << lambda_0_lane_change_platoon
+	//		<< std::endl;
+	//}
 };
 
 PlatoonVehicle::~PlatoonVehicle()
 {
 	if (verbose) 
 	{
-		std::clog << "[PlatoonVehicle] Destructor. t=" << get_current_time()
+		std::cout << "[PlatoonVehicle] Destructor. t=" << get_current_time()
 			<< ", veh " << get_id() << std::endl;
 	}
 }
@@ -100,9 +101,9 @@ double PlatoonVehicle::get_desired_velocity_from_platoon() const
 
 bool PlatoonVehicle::can_start_lane_change()
 {
-	if (verbose) std::clog << "Can start lane change?\n";
+	if (verbose) std::cout << "Can start lane change?\n";
 	bool is_safe = are_surrounding_gaps_safe_for_lane_change();
-	if (verbose) std::clog << "Gaps are safe? "
+	if (verbose) std::cout << "Gaps are safe? "
 		<< boolean_to_string(is_safe) << "\n";
 
 	bool is_my_turn;
@@ -115,7 +116,7 @@ bool PlatoonVehicle::can_start_lane_change()
 		is_my_turn = true;
 	}
 
-	if (verbose) std::clog << "Start LC? "
+	if (verbose) std::cout << "Start LC? "
 		<< boolean_to_string(is_my_turn) << "\n";
 
 	return is_safe && is_my_turn;
@@ -165,7 +166,7 @@ void PlatoonVehicle::add_another_as_nearby_vehicle(
 		new_nv.set_type(platoon_vehicle.get_type(), get_type());
 		add_nearby_vehicle(new_nv);
 
-		std::clog << "\t\tAdding another to my nv list "
+		if (verbose) std::cout << "\t\tAdding another to my nv list "
 			<< "pos diff = " << position_diff
 			<< "\nNew nv: " << new_nv << "\n";
 	}
@@ -173,7 +174,7 @@ void PlatoonVehicle::add_another_as_nearby_vehicle(
 
 void PlatoonVehicle::give_up_lane_change()
 {
-	if (verbose) std::clog << "t=" << get_current_time()
+	if (verbose) std::cout << "t=" << get_current_time()
 		<< ", id=" << get_id() << ": giving up lane change\n";
 	has_lane_change_failed = true;
 }
@@ -290,7 +291,7 @@ double PlatoonVehicle::compute_vehicle_following_safe_time_headway(
 	//double rho;
 	//if (nearby_vehicle.get_type() == VehicleType::platoon_car)
 	//{
-	//	if (verbose) std::clog << "Leader identified as platoon veh.\n";
+	//	if (verbose) std::cout << "Leader identified as platoon veh.\n";
 	//	current_lambda_1 = lambda_1_platoon;
 	//	rho = in_platoon_rho;
 	//}
@@ -386,7 +387,7 @@ void PlatoonVehicle::implement_prepare_to_restart_lane_keeping(
 std::shared_ptr<NearbyVehicle> PlatoonVehicle::choose_behind_whom_to_move() 
 const
 {
-	if (verbose) std::clog << "Choosing behind whom to move\n";
+	if (verbose) std::cout << "Choosing behind whom to move\n";
 	if (is_in_a_platoon())
 	{
 		long vl_id = get_platoon()->define_desired_destination_lane_leader_id(
@@ -409,15 +410,13 @@ void PlatoonVehicle::set_controller(
 double PlatoonVehicle::compute_accepted_lane_change_gap(
 	const NearbyVehicle* nearby_vehicle, double lane_change_speed) const
 {
-	double safe_gap;
-	if (nearby_vehicle == nullptr) 
+	
+	if (nearby_vehicle == nullptr) return 0.0;
+	
+	double safe_gap = platoon_vehicle_controller->get_lateral_controller()
+		.compute_time_headway_gap(lane_change_speed, *nearby_vehicle, 0.0);
+	if (!nearby_vehicle->is_on_same_lane())
 	{
-		safe_gap = 0.0;
-	}
-	else
-	{
-		safe_gap = platoon_vehicle_controller->get_lateral_controller()
-			.compute_time_headway_gap(lane_change_speed, *nearby_vehicle, 0.0);
 		double leader_vel, leader_brake, follower_vel, follower_brake;
 		if (nearby_vehicle->is_ahead())
 		{
@@ -437,6 +436,7 @@ double PlatoonVehicle::compute_accepted_lane_change_gap(
 			- std::pow(leader_vel, 2) / 2 / leader_brake;
 		safe_gap += std::max(0., rel_vel_term);
 	}
+	
 	return safe_gap;
 }
 
@@ -470,7 +470,7 @@ void PlatoonVehicle::implement_analyze_nearby_vehicles()
 		choose_behind_whom_to_move() : nullptr;
 	if (desired_leader != nullptr && has_assisted_vehicle())
 	{
-		std::clog << "==== WARNING (unexpected behavior) ===="
+		std::cout << "==== WARNING (unexpected behavior) ===="
 			<<"[PlatoonVehicle] too many possible virtual leaders: "
 			<< "both a desired dest lane leader and an assisted veh.\n";
 	}
@@ -495,11 +495,11 @@ void PlatoonVehicle::implement_analyze_nearby_vehicles()
 
 	if (verbose)
 	{
-		std::clog << "Surrounding vehicles:\n"
+		std::cout << "Surrounding vehicles:\n"
 			<< "\tleader=" << get_leader_id()
 			<< ", dest.lane leader=" << get_destination_lane_leader_id()
 			<< ", dest.lane foll.=" << get_destination_lane_follower_id()
-			<< ", assited veh=" << get_assisted_veh_id()
+			<< ", assisted veh=" << get_assisted_veh_id()
 			<< ", virtual leader=" << get_virtual_leader_id() << "\n";
 	}
 }
@@ -514,7 +514,7 @@ double PlatoonVehicle::compute_reference_vehicle_following_gap(
 
 void PlatoonVehicle::check_adjacent_space_suitability()
 {
-	if (verbose) std::clog << "Checking gap feasibility\n";
+	if (verbose) std::cout << "Checking gap feasibility\n";
 
 	double margin = 0.0;
 	is_space_suitable_for_lane_change =
@@ -546,7 +546,7 @@ void PlatoonVehicle::check_adjacent_space_suitability()
 			&& (existing_free_space + margin >= needed_space);
 		if (verbose)
 		{
-			std::clog << "\t- Safe to fd? "
+			std::cout << "\t- Safe to fd? "
 				<< boolean_to_string(lane_change_gaps_safety.dest_lane_follower_gap)
 				<< "\n\t- gap to ld = " << gap_to_ld
 				<< ", min_gap_to_decel = " << min_gap_to_decelerate
@@ -557,7 +557,7 @@ void PlatoonVehicle::check_adjacent_space_suitability()
 	}
 	if (verbose)
 	{
-		std::clog << "\tIs adjacent gap suitable? "
+		std::cout << "\tIs adjacent gap suitable? "
 			<< boolean_to_string(is_space_suitable_for_lane_change) << "\n";
 	}
 }
@@ -568,6 +568,12 @@ void PlatoonVehicle::find_cooperation_request_from_platoon()
 	{
 		long assisted_vehicle_id =
 			get_platoon()->get_assisted_vehicle_id(get_id());
+		if (assisted_vehicle_id > 0 
+			&& !is_vehicle_in_sight(assisted_vehicle_id))
+		{
+			add_another_as_nearby_vehicle(
+				*platoon->get_vehicle_by_id(assisted_vehicle_id));
+		}
 		set_assisted_vehicle_by_id(assisted_vehicle_id);
 	}
 }
@@ -622,12 +628,12 @@ bool PlatoonVehicle::implement_analyze_platoons(
 		* necessary.
 		*/
 
-		/*if (verbose) std::clog << "\t[PlatoonVehicle] May leave platoon\n";*/
+		/*if (verbose) std::cout << "\t[PlatoonVehicle] May leave platoon\n";*/
 		//if (platoon->can_vehicle_leave_platoon(*this))
 		//{
 		//	if (verbose)
 		//	{
-		//		std::clog << "\tt=" << get_current_time() 
+		//		std::cout << "\tt=" << get_current_time() 
 		//			<< " id=" << get_id() 
 		//			<< ": leaving platoon " << platoon->get_id() << "\n";
 		//	}
@@ -666,14 +672,14 @@ void PlatoonVehicle::create_platoon(long platoon_id,
 {
 	if (verbose)
 	{
-		std::clog << "Veh id " << get_id()
+		std::cout << "Veh id " << get_id()
 			<< ". Creating platoon id " << platoon_id << std::endl;
 	}
 
 	platoon = std::make_shared<Platoon>(platoon_id, 
 		platoon_lc_strategy, this, verbose);
 
-	if (verbose) std::clog << "platoon created\n";
+	if (verbose) std::cout << "platoon created\n";
 }
 
 void PlatoonVehicle::add_myself_to_leader_platoon(

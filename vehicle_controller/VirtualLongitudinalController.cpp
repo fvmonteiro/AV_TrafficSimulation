@@ -19,7 +19,7 @@ VirtualLongitudinalController::VirtualLongitudinalController(
 	bool verbose) :
 	SwitchedLongitudinalController(ego_vehicle, state_to_color_map, verbose) 
 {
-	if (verbose) std::clog << "Created virtual longitudinal controller\n";
+	if (verbose) std::cout << "Created virtual longitudinal controller\n";
 }
 
 double VirtualLongitudinalController::get_max_accepted_brake() const
@@ -33,7 +33,7 @@ void VirtualLongitudinalController::determine_controller_state(
 	if (leader == nullptr) 
 	{ // no vehicle ahead
 		/*If there's no leader this controller should not be active */
-		if (verbose) std::clog << "\tno leader" << std::endl;
+		if (verbose) std::cout << "\tno leader" << std::endl;
 		state = State::uninitialized;
 	}
 	else 
@@ -60,7 +60,7 @@ void VirtualLongitudinalController::determine_controller_state(
 		}
 
 		if (verbose) {
-			std::clog << "Gap threshold = " << gap_threshold
+			std::cout << "Gap threshold = " << gap_threshold
 				<< ", gap = " << gap
 				<< " to leader id " << leader->get_id()
 				<< ". State: " << state_to_string(state) << std::endl;

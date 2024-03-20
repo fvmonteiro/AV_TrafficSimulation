@@ -46,7 +46,7 @@ void AVController::update_destination_lane_follower_time_headway(
 		dest_lane_follower);
 	lateral_controller.set_destination_lane_follower_time_headway(h_f);
 
-	if (verbose) std::clog << "\tUpdated fd's h to " << h_f << "\n";
+	if (verbose) std::cout << "\tUpdated fd's h to " << h_f << "\n";
 }
 
 void AVController::update_destination_lane_leader_time_headway(
@@ -54,7 +54,7 @@ void AVController::update_destination_lane_leader_time_headway(
 {
 	if (verbose)
 	{
-		std::clog << "Setting dest lane leader h_r = "
+		std::cout << "Setting dest lane leader h_r = "
 			<< time_headway << std::endl;
 	}
 	lateral_controller.set_time_headway_to_destination_lane_leader(
@@ -71,7 +71,7 @@ double AVController::compute_accepted_lane_change_gap(
 
 	if (verbose)
 	{
-		std::clog << "\tnv id " << nearby_vehicle.get_id()
+		std::cout << "\tnv id " << nearby_vehicle.get_id()
 			<< ": delta g_lc = " << gap_variation
 			<< ", g_vf = " << veh_following_gap
 			<< "; g_lc = " << veh_following_gap + gap_variation << std::endl;
@@ -95,7 +95,7 @@ double AVController::compute_accepted_lane_change_gap_exact(
 
 	if (verbose)
 	{
-		std::clog << "\tnv id " << nearby_vehicle.get_id()
+		std::cout << "\tnv id " << nearby_vehicle.get_id()
 			<< ": delta g_lc = " << gap_variation
 			<< ", g_vf = " << veh_following_gap
 			<< "; g_lc = " << veh_following_gap + gap_variation << std::endl;
@@ -120,7 +120,7 @@ bool AVController::is_in_free_flow_at_origin_lane() const
 
 void AVController::add_lane_change_adjustment_controller()
 {
-	if (verbose) std::clog << "Creating lane change adjustment controller\n";
+	if (verbose) std::cout << "Creating lane change adjustment controller\n";
 
 	destination_lane_controller = 
 		std::make_shared<VirtualLongitudinalController>(
@@ -147,14 +147,14 @@ bool AVController::get_destination_lane_desired_acceleration(
 		autonomous_vehicle->get_virtual_leader().get();
 	if (virtual_leader != nullptr)
 	{
-		if (verbose) std::clog << "Dest. lane controller\n";
+		if (verbose) std::cout << "Dest. lane controller\n";
 
 		/*std::shared_ptr<const NearbyVehicle> virtual_leader =
 			autonomous_vehicle.get_virtual_leader();*/
 		double reference_velocity = determine_low_velocity_reference(
 			*virtual_leader);
 
-		if (verbose) std::clog << "low ref vel=" << reference_velocity 
+		if (verbose) std::cout << "low ref vel=" << reference_velocity 
 			<< std::endl;
 
 		/* If the ego vehicle is braking hard due to conditions on
@@ -202,7 +202,7 @@ double AVController::determine_low_velocity_reference(
 
 	if (verbose)
 	{
-		std::clog << "\tDetermining vel ref. v_l=" << leader_velocity
+		std::cout << "\tDetermining vel ref. v_l=" << leader_velocity
 			<< ", v_ref=" << reference_velocity << std::endl;
 	}
 
@@ -211,7 +211,7 @@ double AVController::determine_low_velocity_reference(
 
 void AVController::implement_add_internal_controllers()
 {
-	if (verbose) std::clog << "Creating AV controllers\n";
+	if (verbose) std::cout << "Creating AV controllers\n";
 
 	add_vissim_controller();
 	add_origin_lane_controllers();
@@ -264,7 +264,7 @@ void AVController::implement_update_origin_lane_controller(
 
 	if (verbose)
 	{
-		std::clog << "Resetting orig lane ctrl (real leader) h_r = "
+		std::cout << "Resetting orig lane ctrl (real leader) h_r = "
 			<< new_h << " and setting desired value to "
 			<< safe_h << std::endl;
 	}
@@ -332,7 +332,7 @@ void AVController::implement_update_destination_lane_controller(
 
 	if (verbose)
 	{
-		std::clog << "Resetting dest lane ctrl (virtual leader) h_r = "
+		std::cout << "Resetting dest lane ctrl (virtual leader) h_r = "
 			<< new_h << " and setting desired value to " << safe_h
 			<< std::endl;
 	}

@@ -8,7 +8,7 @@ ConnectedAutonomousVehicle::ConnectedAutonomousVehicle(
 		desired_velocity, AUTONOMOUS_BRAKE_DELAY, true, true,
 		simulation_time_step, creation_time, verbose)
 {
-	if (verbose) std::clog << "[ConnectedAutonomousVehicle] created\n";
+	if (verbose) std::cout << "[ConnectedAutonomousVehicle] created\n";
 }
 
 ConnectedAutonomousVehicle::ConnectedAutonomousVehicle(
@@ -23,7 +23,7 @@ ConnectedAutonomousVehicle::ConnectedAutonomousVehicle(
 	compute_connected_safe_gap_parameters();
 	if (verbose)
 	{
-		std::clog << "lambda 1 connected = " << lambda_1_connected
+		std::cout << "lambda 1 connected = " << lambda_1_connected
 			<< ", lambda 0 connected = " << lambda_0_connected
 			<< ", lambda 1 lc connected = " << lambda_1_lane_change_connected
 			<< ", lambda 0 lc connected = " << lambda_0_lane_change_connected
@@ -43,9 +43,9 @@ void ConnectedAutonomousVehicle
 	/* Sanity check */
 	if (cav.get_nearby_vehicle_by_id(nv_id) == nullptr)
 	{
-		std::clog << "[CAV] Trying to 'add from another' but cav "
-			<< cav.get_id() << " does not have a nearby vehicle with id "
-			<< nv_id << "\n";
+		std::clog << "[CAV::add_nearby_vehicle_from_another] "
+			<< "The neighboring cav " << cav.get_id() 
+			<< " does not have a nearby vehicle with id " << nv_id << "\n";
 		return;
 	}
 
@@ -56,8 +56,8 @@ void ConnectedAutonomousVehicle
 		NearbyVehicle new_nv(*cav.get_nearby_vehicle_by_id(nv_id));
 		new_nv.offset_from_another(*source_nv);
 		add_nearby_vehicle(new_nv);
-		std::clog << "\t\tAdding nv from neighbor to my list\n"
-			<< "\nNew nv: " << new_nv << "\n";
+		if (verbose) std::cout << "\t\tAdding nv from neighbor to my list\n"
+			<< "New nv: " << new_nv << "\n";
 	}
 }
 
@@ -235,7 +235,7 @@ void ConnectedAutonomousVehicle::update_assisted_vehicle_in_controller(
 		{
 			if (verbose)
 			{
-				std::clog << "Computing h to assisted veh...\n";
+				std::cout << "Computing h to assisted veh...\n";
 			}
 			double h_to_assisted_vehicle =
 				compute_vehicle_following_safe_time_headway(
@@ -336,14 +336,14 @@ double ConnectedAutonomousVehicle::compute_accepted_lane_change_gap(
 
 	if (verbose)
 	{
-		std::clog << "\tUsing linear overestimation? "
+		std::cout << "\tUsing linear overestimation? "
 			<< boolean_to_string(use_linear_lane_change_gap) << "\n";
 	}
 
 	if (verbose && lane_change_speed != get_velocity())
 	{
 		// TODO
-		std::clog << "[AutonomousVehicle::compute_accepted_lane_change_gap]\n"
+		std::cout << "[AutonomousVehicle::compute_accepted_lane_change_gap]\n"
 			"\tTrying to set a lane change speed "
 			"different from the current vehicle speed. Not implemented.\n";
 	}
@@ -390,19 +390,7 @@ double ConnectedAutonomousVehicle::compute_lane_changing_desired_time_headway(
 void ConnectedAutonomousVehicle::implement_create_controller()
 {
 	set_controller(std::make_shared<CAVController>(this, is_verbose()));
-	//this->controller_exclusive = CAVController(this, is_verbose());
-	//controller_exclusive.add_internal_controllers();
-	//this->set_controller(&controller_exclusive);
 }
-
-//double ConnectedAutonomousVehicle::implement_compute_desired_acceleration(
-//	const std::unordered_map<int, TrafficLight>& traffic_lights)
-//{
-//	if (verbose) std::clog << "[CAV] get_desired_acceleration" << std::endl;
-//	double a_desired_acceleration =
-//		cav_controller->get_desired_acceleration();
-//	return apply_low_level_dynamics(a_desired_acceleration);
-//}
 
 void ConnectedAutonomousVehicle::compute_connected_safe_gap_parameters()
 {

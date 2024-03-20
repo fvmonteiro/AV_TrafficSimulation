@@ -18,7 +18,7 @@ public:
 	/* Sets the default output of clog command to a log file. */
 	void create_log_file();
 
-	void write_to_persistent_log(std::string& message);
+	//void write_to_persistent_log(std::string& message);
 	
 	/* Sets the output of cerr to a specific "error_log" file to make it 
 	separate from the log used for behavior checking, and writes the error 
@@ -36,9 +36,10 @@ public:
 private:
 	/* file to store (detailed) results of a single simulation */
 	FILE* log_file{ nullptr };
-	/* file to store information accross several simulations. This is
-	used to debug possible memory issues over several runs. */
-	std::ofstream persistent_log; 
+	/* file to store information accross several simulations and 
+	errors. */
+	FILE* persistent_log_file{ nullptr };
+	//std::ofstream persistent_log; 
 	const char* log_file_name{ "dll_log.txt" };
 	const char* persistent_log_file_name{ "dll_persistent_log.txt" };
 	const char* error_log_file_name{ "error_log.txt" }; // not being used
