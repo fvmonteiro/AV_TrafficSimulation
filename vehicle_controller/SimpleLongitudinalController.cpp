@@ -35,8 +35,11 @@ void SimpleLongitudinalController::determine_controller_state(
 	else if (ego_vehicle->compute_nearby_vehicle_velocity(*leader)
 				> reference_velocity*1.1)
 	{
+		double v_leader = 
+			ego_vehicle->compute_nearby_vehicle_velocity(*leader);
 		state = State::velocity_control;
-		message = "v_leader > v_ff. ";
+		message = "v_leader (" + std::to_string(v_leader) 
+			+ ") > v_ff (" + std::to_string(1.1*reference_velocity) + ").";
 	}
 	else if (state == State::vehicle_following
 		&& leader->get_id() == previous_leader_id)

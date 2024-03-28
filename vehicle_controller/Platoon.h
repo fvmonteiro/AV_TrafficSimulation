@@ -85,7 +85,9 @@ public:
 	void add_last_vehicle(PlatoonVehicle* new_vehicle);
 	void remove_vehicle_by_id(long veh_id, bool is_out_of_simulation);
 	/* True when all platoon vehicles have lane change intention */
-	bool has_lane_change_intention() const;
+	bool all_have_lane_change_intention() const;
+	/* True if at least one vehicle have lane change intention */
+	bool any_has_lane_change_intention() const;
 	/* True if a lane change has started and is now done */
 	bool is_lane_change_done() const;
 	void receive_lane_change_intention_signal();

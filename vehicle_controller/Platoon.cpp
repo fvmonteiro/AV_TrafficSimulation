@@ -419,7 +419,7 @@ bool Platoon::can_vehicle_start_lane_change(long ego_id) const
 
 	int veh_position = vehicle_id_to_position.at(ego_id);
 	bool all_vehicles_have_or_had_intention =
-		has_lane_change_intention() || has_lane_change_started();
+		all_have_lane_change_intention() || has_lane_change_started();
 	//try
 	//{
 	return all_vehicles_have_or_had_intention
@@ -437,9 +437,14 @@ bool Platoon::can_vehicle_start_lane_change(long ego_id) const
 	//}
 }
 
-bool Platoon::has_lane_change_intention() const 
+bool Platoon::all_have_lane_change_intention() const 
 {
 	return lane_change_intention_counter == get_size();
+}
+
+bool Platoon::any_has_lane_change_intention() const
+{
+	return lane_change_intention_counter > 0;
 }
 
 bool Platoon::is_lane_change_done() const 

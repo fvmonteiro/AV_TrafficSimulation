@@ -85,10 +85,23 @@ double PlatoonVehicle::get_desired_velocity_from_platoon() const
 	speed. */
 	if (is_in_a_platoon() && is_platoon_leader()
 		&& has_lane_change_intention() 
-		&& get_platoon()->has_lane_change_intention())
+		&& get_platoon()->any_has_lane_change_intention())
 	{
 		const NearbyVehicle* nv =
 			get_platoon()->get_destination_lane_leader();
+		
+		if (verbose)
+		{
+			bool nv_exists = nv != nullptr;
+			std::cout << "[PlatoonVehicle] getting v_ref for platoon leader."
+				<< " Is there a virtual leader? "
+				<< boolean_to_string(nv_exists) << " ";
+			if (nv_exists) std::cout << ", nv id=" << nv->get_id()
+				<< ", my virtual leader=" << get_virtual_leader_id()
+				<< ", v_ref=" << compute_nearby_vehicle_velocity(*nv) << "\n";
+			else std::cout << "\n";
+		}
+
 		/* The the platoon's dest lane leader only equals the platoon's 
 		leader virtual leader when the platoon leader is the first vehicle
 		to change lanes. In this case, we don't need to limit its speed. */

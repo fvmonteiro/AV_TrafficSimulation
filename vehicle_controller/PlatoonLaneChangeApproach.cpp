@@ -37,13 +37,13 @@ long PlatoonLaneChangeApproach::get_desired_destination_lane_leader(
 			platoon_lane_change_order.lc_order[0].end());
 		const PlatoonVehicle* front_most_veh =
 			platoon->get_a_vehicle_by_position(first_lc_pos);
-		/* [March 18] Testing: why check "suitable"? Once we start
-		the maneuver, we have to assume the dest lane leader of the 
-		front most lc vehicle is the virtual leader.*/
+		/* We check for "suitable" because we don't want the fixed-order 
+		approaches to 'look' for gaps. Either the current gap is suitable 
+		and the vehicle can adjust or the platoon is stuck. */
+		virtual_leader_id = 
+			front_most_veh->get_suitable_destination_lane_leader_id();
 		/*virtual_leader_id =
-			front_most_veh->get_suitable_destination_lane_leader_id();*/
-		virtual_leader_id =
-			front_most_veh->get_destination_lane_leader_id();
+			front_most_veh->get_destination_lane_leader_id();*/
 
 		if (verbose) std::cout << "\tfront most lc pos " << first_lc_pos 
 			<< ", front most veh's dest lane leader " << virtual_leader_id 
@@ -174,28 +174,6 @@ bool PlatoonLaneChangeApproach::can_vehicle_start_lane_change(
 
 	check_maneuver_step_done(next_to_move);
 	return is_my_turn && are_vehicles_at_right_lane_change_gaps(next_to_move);
-	//if (is_my_turn)
-	//{
-	//	for (int i : next_to_move)
-	//	{
-	//		const PlatoonVehicle* vehicle = 
-	//			platoon->get_a_vehicle_by_position(i);
-	//		if (!vehicle->is_at_right_lane_change_gap())
-	//		{
-	//			if (verbose) std::cout << "\tveh at pos " << i 
-	//				<< " not at right lc gap\n";
-	//			return false;
-	//		}
-	//		if (!vehicle->are_surrounding_gaps_safe_for_lane_change())
-	//		{
-	//			if (verbose) std::cout << "\tveh at pos " << i 
-	//				<< " not safe gap\n";
-	//			return false;
-	//		}
-	//	}
-	//	return true;
-	//}
-	//return false;
 }
 
 bool PlatoonLaneChangeApproach::can_vehicle_leave_platoon(int veh_position) 
@@ -313,7 +291,11 @@ bool PlatoonLaneChangeApproach::are_vehicles_at_right_lane_change_gaps(
 				<< "\n";
 			return false;
 		}
-		if (!vehicle->are_surrounding_gaps_safe_for_lane_change())
+		if (!vehicle->are_surrounding_gaps_safe_for_lane_change()
+			&& !vehicle->is_lane_changing())
+			/* Due to delta_t difference in starting time, 
+			one of the vehicles in the list might have started a 
+			lane change and be flagged as no longer safe */
 		{
 			if (verbose) std::cout << "\tveh at pos " << i
 				<< " not safe gap\n";
@@ -366,25 +348,6 @@ int PlatoonLaneChangeApproach
 	if (verbose) std::cout << "[PlatoonLaneChangeApproach] "
 		<< "Rear most lc veh. " << rear_most_pos << "\n";
 	return rear_most_pos;
-
-	/* The code below does not work because the platoon vehicles 
-	are created at different positions on the road, so higher distance 
-	travelled does not mean being ahead. */
-	//double min_x = INFINITY;
-	//int rear_most_pos = 0;
-	//for (int pos : get_current_lc_vehicle_positions())
-	//{
-	//	const PlatoonVehicle* vehicle = 
-	//		platoon->get_a_vehicle_by_position(pos);
-	//	if (vehicle->get_distance_traveled() < min_x)
-	//	{
-	//		min_x = vehicle->get_distance_traveled();
-	//		rear_most_pos = pos;
-	//	}
-	//}
-
-	//if (verbose) std::cout << "\tFound at pos. " << rear_most_pos << "\n";
-	//return rear_most_pos;
 }
 
 /* ------------------------------------------------------------------------ */
@@ -393,8 +356,6 @@ int PlatoonLaneChangeApproach
 
 void SynchoronousApproach::decide_lane_change_order()
 {
-	/*std::vector<int> l1(platoon->get_size());
-	std::iota(l1.begin(), l1.end(), 0);*/
 	std::unordered_set<int> lc_set_1;
 	std::vector<int> coop_order{ {-1} };
 	for (int i = 0; i < platoon->get_size(); i++)
