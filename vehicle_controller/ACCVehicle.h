@@ -76,7 +76,8 @@ private:
 	void implement_set_use_linear_lane_change_gap(long value) override {};
 	bool implement_analyze_platoons(
 		std::unordered_map<int, std::shared_ptr<Platoon>>& platoons,
-		long new_platoon_id, int platoon_lc_strategy) override {
+		long new_platoon_id, int platoon_lc_strategy, 
+		double max_computation_time) override {
 		return false;
 	};
 	void implement_prepare_to_start_long_adjustments() override;

@@ -201,10 +201,10 @@ public:
 	/* Returns true if a new platoon was created. */
 	bool analyze_platoons(
 		std::unordered_map<int, std::shared_ptr<Platoon>>& platoons,
-		long new_platoon_id, int platoon_lc_strategy)
+		long new_platoon_id, int platoon_lc_strategy, float max_computation_time)
 	{
 		return implement_analyze_platoons(platoons, new_platoon_id,
-			platoon_lc_strategy);
+			platoon_lc_strategy, max_computation_time);
 	};
 	bool has_leader() const;
 	/* Returns a nullptr if there is no leader */
@@ -512,7 +512,8 @@ private:
 		bool was_lane_change_successful) = 0;
 	virtual bool implement_analyze_platoons(
 		std::unordered_map<int, std::shared_ptr<Platoon>>& platoons,
-		long new_platoon_id, int platoon_lc_strategy) = 0;
+		long new_platoon_id, int platoon_lc_strategy, 
+		double max_computation_time) = 0;
 	/* Takes the desired acceleration given by the controller and
 	returns the feasible acceleration given the approximated low level
 	dynamics */

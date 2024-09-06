@@ -59,7 +59,8 @@ class PlatoonLCStrategyManager
 {
 public:
     PlatoonLCStrategyManager() = default;
-    PlatoonLCStrategyManager(std::string cost_name, bool verbose);
+    PlatoonLCStrategyManager(std::string cost_name, 
+        double max_computation_time, bool verbose);
 
     void initialize(int n_platoon);
 
@@ -77,6 +78,7 @@ private:
     std::string cost_name;
     bool verbose{ false };
     int n_platoon{ 0 };
+    double max_computation_time{ 0. };
     //std::unordered_map<int, OuterMap> strategy_map_per_size{};
     OuterMap strategy_map{};
     StateQuantizer state_quantizer{ StateQuantizer() };

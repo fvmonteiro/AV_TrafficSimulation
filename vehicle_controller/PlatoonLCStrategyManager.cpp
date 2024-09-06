@@ -10,13 +10,18 @@
 using json = nlohmann::json;
 
 PlatoonLCStrategyManager::PlatoonLCStrategyManager(std::string cost_name,
-	bool verbose) 
-	: cost_name(cost_name), verbose(verbose)
-{}
+	double max_computation_time, bool verbose)
+	: cost_name(cost_name), max_computation_time(max_computation_time),
+	verbose(verbose)
+{
+	if (verbose) std::cout << "[PlatoonLCStrategyManager] constructor"
+		<< std::endl;
+}
 
 void PlatoonLCStrategyManager::initialize(int n_platoon)
 {
-	if (verbose) std::cout << "[PlatoonLCStrategyManager] initializing...";
+	if (verbose) std::cout << "[PlatoonLCStrategyManager] initializing..."
+		<< std::endl;
 	
 	this->n_platoon = n_platoon;
 	load_a_strategy_map(n_platoon, cost_name);
@@ -94,9 +99,12 @@ PlatoonLaneChangeOrder PlatoonLCStrategyManager
 void PlatoonLCStrategyManager::load_a_strategy_map(
 	int n_platoon, std::string cost_name)
 {
+	if (verbose) std::cout << "Inside loading strategies" << std::endl;
+
+	std::string folder = STRATEGY_MAPS_FOLDER + "epsilon_40\\";
 	std::string file_name = "min_" + cost_name + "_strategies_for_"
 		+ std::to_string(n_platoon) + "_vehicles.json";
-	std::ifstream new_file(STRATEGY_MAPS_FOLDER + file_name);
+	std::ifstream new_file(folder + file_name);
 	if (new_file)
 	{
 		json json_data = json::parse(new_file);
@@ -107,8 +115,34 @@ void PlatoonLCStrategyManager::load_a_strategy_map(
 			OuterKey root_node = datum["root"];
 			InnerKey first_mover_set(datum["first_mover_set"].begin(),
 				datum["first_mover_set"].end());
+			std::vector<double> comp_times = datum["time"];
+			std::vector<std::vector<std::vector<int>>> all_lc_orders = 
+				datum["lc_order"];
+			std::vector<std::vector<int>> all_coop_orders = 
+				datum["coop_order"];
+			std::vector<float> all_costs = datum["cost"];
+
+			if (verbose) std::cout << "All comp times"
+				<< vector_to_string(comp_times) << "\n";
+			;
+			double adjusted_max_time = max_computation_time + comp_times[0];
+			int i = 0;
+			
+			while ((i < comp_times.size())
+				&& (adjusted_max_time >= comp_times[i]))
+			{
+				i += 1;
+			}
+
+			if (verbose) std::cout << "About to get strategies (i=" 
+				<< i << ")" << std::endl;
+
 			PlatoonLaneChangeOrder plcs = PlatoonLaneChangeOrder(
-				datum["lc_order"], datum["coop_order"], datum[cost_name]);
+				all_lc_orders[i - 1], all_coop_orders[i - 1], 
+				all_costs[i - 1]);
+
+			if (verbose) std::cout << "It worked :)\n";
+
 			if (a_strategy_map.find(root_node) == a_strategy_map.end())
 			{
 				a_strategy_map[root_node] = {};
@@ -117,7 +151,13 @@ void PlatoonLCStrategyManager::load_a_strategy_map(
 		}
 		strategy_map = a_strategy_map;
 	}
-	//strategy_map_per_size[n_platoon] = a_strategy_map;
+	else
+	{
+		std::cout << "[PlatoonLCStrategyManager::load_a_strategy_map] "
+			<< "ERROR: file " << folder + file_name << " not found" 
+			<< std::endl;
+		throw std::runtime_error("Could not open file");
+	}
 }
 
 std::unordered_map<std::string, double> PlatoonLCStrategyManager

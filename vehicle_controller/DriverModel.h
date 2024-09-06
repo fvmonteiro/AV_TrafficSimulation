@@ -40,6 +40,7 @@ enum class UDA {
     use_linear_lane_change_gap,
     platoon_id,
     platoon_strategy,
+    max_computation_time,
     /* Logging options */
     verbose_simulation = 98,
     logged_vehicle_id = 99,

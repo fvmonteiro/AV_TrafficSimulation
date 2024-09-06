@@ -7,10 +7,10 @@
 #include "PlatoonVehicleState.h"
 
 Platoon::Platoon(long id, int platoon_lc_strategy, PlatoonVehicle* leader,
-	bool verbose):
+	double max_computation_time, bool verbose):
 	id {id}, verbose{verbose}
 {
-	set_strategy(platoon_lc_strategy);
+	set_strategy(platoon_lc_strategy, max_computation_time);
 	add_last_vehicle(leader);
 	desired_velocity = leader->get_desired_velocity();
 }
@@ -59,7 +59,7 @@ PlatoonVehicle* Platoon::get_a_vehicle_by_position(int veh_pos) const
 	{
 		std::stringstream message;
 		message << "[Platoon] Trying to access veh at pos " << veh_pos
-			<< ", but platoon length is " << get_size() << "\n";
+			<< ", but platoon length is " << get_size() << std::endl;
 		std::cout << message.str();
 		std::clog << message.str();
 		return nullptr;
@@ -125,7 +125,7 @@ int Platoon::get_vehicle_position_in_platoon(long veh_id) const
 		std::stringstream message;
 		message << "[Platoon::get_vehicle_position_in_platoon]"
 			<< " veh id " << veh_id << " not in platoon with vehs "
-			<< map_to_string(vehicle_id_to_position) << "\n";
+			<< map_to_string(vehicle_id_to_position) << std::endl;
 		/* To be sure the message is seen in the persistent log file */
 		std::cout << message.str();
 		std::clog << message.str();
@@ -272,7 +272,7 @@ std::vector<ContinuousStateVector> Platoon
 	return system_state_matrix;
 }
 
-void Platoon::set_strategy(int strategy_number)
+void Platoon::set_strategy(int strategy_number, double max_computation_time)
 {
 	/* TODO [Jan 24, 24] we're phasing out the current strategy
 	class in favor of the approach class */
@@ -311,22 +311,24 @@ void Platoon::set_strategy(int strategy_number)
 			std::make_unique<GraphApproachMinAccel>(verbose);
 		break;
 	default:
-		std::cout << "ERROR: Platoon lane change strategy not coded\n";
+		std::cout << "ERROR: Platoon lane change strategy not coded"
+			<< std::endl;
 		//lane_change_strategy = std::make_unique<NoStrategy>();
 		lane_change_approach =
 			std::make_unique<SynchoronousApproach>(verbose);
 		break;
 	}
+	lane_change_approach->set_max_computation_time(max_computation_time);
 
 	if (verbose)
 	{
-		/*std::cout << "Platoon " << *this << "\n";
+		/*std::cout << "Platoon " << *this << std::endl;
 		std::cout << "LC Strategy change from ";
 		if (old_strategy == nullptr) std::cout << "none";
 		else std::cout << *old_strategy;
 		std::cout << " to " << *lane_change_strategy << std::endl;*/
 
-		std::cout << "Platoon " << *this << "\n";
+		std::cout << "Platoon " << *this << std::endl;
 		std::cout << "LC Approach change from ";
 		if (old_approach == nullptr) std::cout << "none";
 		else std::cout << old_approach->get_name();
@@ -390,7 +392,7 @@ void Platoon::remove_vehicle_by_id(long veh_id, bool is_out_of_simulation)
 	{
 		std::stringstream message;
 		message << "[Platoon] Mismatch between vehicles array "
-			<< "and id_to_pos map " << *this << "\n";
+			<< "and id_to_pos map " << *this << std::endl;
 		std::cout << message.str();
 		std::clog << message.str();
 		return;
@@ -415,7 +417,8 @@ bool Platoon::can_vehicle_leave_platoon(long ego_id) const
 
 bool Platoon::can_vehicle_start_lane_change(long ego_id) const
 {
-	if (verbose) std::cout << "[Platoon] can_vehicle_start_lane_change\n";
+	if (verbose) std::cout << "[Platoon] can_vehicle_start_lane_change" 
+		<< std::endl;
 
 	int veh_position = vehicle_id_to_position.at(ego_id);
 	bool all_vehicles_have_or_had_intention =
@@ -428,7 +431,7 @@ bool Platoon::can_vehicle_start_lane_change(long ego_id) const
 	//}
 	//catch (const StateNotFoundException& e)
 	//{
-	//	std::cout << "[Platoon] " << e.what() << "\n";
+	//	std::cout << "[Platoon] " << e.what() << std::endl;
 	//	for (PlatoonVehicle* vehicle : vehicles_by_position)
 	//	{
 	//		vehicle->give_up_lane_change();
@@ -461,14 +464,14 @@ void Platoon::receive_lane_change_intention_signal()
 {
 	lane_change_intention_counter++;
 	if (verbose) std::cout << "[Platoon] lc intention counter "
-		<< lane_change_intention_counter << "\n";
+		<< lane_change_intention_counter << std::endl;
 }
 
 void Platoon::receive_lane_keeping_signal()
 {
 	lane_change_intention_counter--;
 	if (verbose) std::cout << "[Platoon] lc intention counter "
-		<< lane_change_intention_counter << "\n";
+		<< lane_change_intention_counter << std::endl;
 }
 
 bool Platoon::is_stuck() const

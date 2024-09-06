@@ -593,7 +593,8 @@ void PlatoonVehicle::find_cooperation_request_from_platoon()
 
 bool PlatoonVehicle::implement_analyze_platoons(
 	std::unordered_map<int, std::shared_ptr<Platoon>>& platoons,
-	long new_platoon_id, int platoon_lc_strategy)
+	long new_platoon_id, int platoon_lc_strategy, 
+	double max_computation_time)
 {
 	bool new_platoon_created = false;
 	bool am_in_a_platoon = is_in_a_platoon();
@@ -605,7 +606,8 @@ bool PlatoonVehicle::implement_analyze_platoons(
 	if (!am_in_a_platoon && !may_join_leader_platoon)
 	{
 		// Create platoon
-		create_platoon(new_platoon_id, platoon_lc_strategy);
+		create_platoon(new_platoon_id, platoon_lc_strategy,
+			max_computation_time);
 		new_platoon_created = true;
 	}
 	else if (!am_in_a_platoon && may_join_leader_platoon)
@@ -681,7 +683,7 @@ void PlatoonVehicle::pass_this_to_state()
 }
 
 void PlatoonVehicle::create_platoon(long platoon_id, 
-	int platoon_lc_strategy)
+	int platoon_lc_strategy, double max_computation_time)
 {
 	if (verbose)
 	{
@@ -690,7 +692,7 @@ void PlatoonVehicle::create_platoon(long platoon_id,
 	}
 
 	platoon = std::make_shared<Platoon>(platoon_id, 
-		platoon_lc_strategy, this, verbose);
+		platoon_lc_strategy, this, max_computation_time, verbose);
 
 	if (verbose) std::cout << "platoon created\n";
 }

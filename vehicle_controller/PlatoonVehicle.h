@@ -114,7 +114,8 @@ private:
 	/* Returns true if the vehicle creates a platoon for itself. */
 	bool implement_analyze_platoons(
 		std::unordered_map<int, std::shared_ptr<Platoon>>& platoons,
-		long new_platoon_id, int platoon_lc_strategy) override;
+		long new_platoon_id, int platoon_lc_strategy, double max_computation_time
+	) override;
 	double compute_vehicle_following_safe_time_headway(
 		const NearbyVehicle& nearby_vehicle) const override;
 	double compute_lane_changing_desired_time_headway(
@@ -143,7 +144,8 @@ private:
 	void check_adjacent_space_suitability();
 	// Check if vehicles in our platoon need gap generation
 	void find_cooperation_request_from_platoon();
-	void create_platoon(long platoon_id, int platoon_lc_strategy);
+	void create_platoon(long platoon_id, int platoon_lc_strategy,
+		double max_computation_time);
 	void add_myself_to_leader_platoon(
 		std::shared_ptr<Platoon> leader_platoon);
 

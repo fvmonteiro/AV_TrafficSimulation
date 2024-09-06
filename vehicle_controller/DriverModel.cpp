@@ -23,7 +23,7 @@
 
 /*==========================================================================*/
 
-std::unordered_set<long> logged_vehicles_ids{ 0 };
+std::unordered_set<long> logged_vehicles_ids{ };
 const int LOGGED_PLATOON_ID{ 0 };
 bool verbose_simulation{ false };
 //const double DEBUGGING_START_TIME{ 249.0 };
@@ -40,8 +40,7 @@ double current_desired_velocity{ 0 };
 long current_nearby_vehicle_id{ 0 };
 long platoon_id{ 1 };
 int platoon_lc_strategy{ 0 };
-//PlatoonLCStrategyManager platoon_lc_strategy_manager {
-//    PlatoonLCStrategyManager("time", true) };
+double max_computation_time{ 1.e5 }; // inf in practice
 
 /*==========================================================================*/
 
@@ -93,7 +92,7 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
 
     //if (verbose_simulation)
     //{
-    //    std::cout << "Setting type " << type << "\n";
+    //    std::cout << "Setting type " << type << std::endl;
     //}
 
     switch (type) {
@@ -123,7 +122,7 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
     case DRIVER_DATA_TIME                   :
         if (verbose_simulation && (double_value != current_time))
         {
-            std::cout << "t=" << current_time
+            std::cout << "t=" << double_value
                 << ", " << vehicles.size() << " controlled vehicles.\n";
             /*std::cout << "t=" << current_time
                 << ", " << platoons.size() << " platoons" << std::endl;
@@ -151,6 +150,7 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
             case UDA::use_linear_lane_change_gap:
             case UDA::platoon_id:
             case UDA::platoon_strategy:
+            case UDA::max_computation_time:
                 return 1;
             case UDA::verbose_simulation:
                 return 1;
@@ -354,6 +354,9 @@ DRIVERMODEL_API  int  DriverModelSetValue (long   type,
         case UDA::platoon_strategy:
             platoon_lc_strategy = long_value;
             break;
+        case UDA::max_computation_time:
+            max_computation_time = double_value;
+            break;
         case UDA::verbose_simulation:
             verbose_simulation = long_value > 0;
             break;
@@ -549,16 +552,21 @@ DRIVERMODEL_API  int  DriverModelGetValue (long   type,
     /* Note that we can check the order in which each case is accessed at the
     API documentation. */
 
-    /*if (CLUELESS_DEBUGGING)
-    {
-        std::cout << "Getting type " << type << "\n";
-    }*/
+    //if (verbose_simulation)
+    //{
+    //    std::cout << "Getting type " << type << "\n";
+    //}
 
     switch (type) {
     case DRIVER_DATA_STATUS :
         *long_value = 0;
         return 1;
     case DRIVER_DATA_VEH_TURNING_INDICATOR :
+        /*if (verbose_simulation) {
+            std::cout << "t=" << current_time
+                << ", getting data for veh. " << current_vehicle_id 
+                << std::endl;
+        }*/
         *long_value = vehicles[current_vehicle_id]->get_turning_indicator();
         return 1;
     case DRIVER_DATA_VEH_DESIRED_VELOCITY   :
@@ -810,6 +818,11 @@ DRIVERMODEL_API  int  DriverModelExecuteCommand (long number)
     /* Executes the command <number> if that is available in the driver */
     /* module. Return value is 1 on success, otherwise 0.               */
 
+    if (verbose_simulation)
+    {
+        std::cout << "Executing command " << number << "\n";
+    }
+
     switch (number) {
     case DRIVER_COMMAND_INIT :
         return 1;
@@ -869,7 +882,7 @@ DRIVERMODEL_API  int  DriverModelExecuteCommand (long number)
         }
 
         if (vehicles[current_vehicle_id]->analyze_platoons(platoons,
-            platoon_id, platoon_lc_strategy))
+            platoon_id, platoon_lc_strategy, max_computation_time))
         {
             platoons[platoon_id] =
                 vehicles[current_vehicle_id]->share_platoon();

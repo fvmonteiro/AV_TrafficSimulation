@@ -34,6 +34,11 @@ public:
 	is trying to move. */
 	long get_platoon_destination_lane_leader_id() const;
 
+	void set_max_computation_time(double max_computation_time)
+	{
+		implement_set_max_computation_time(max_computation_time);
+	};
+
 	bool can_vehicle_start_lane_change(int ego_position);
 	/* Placeholder. For now always returns false */
 	bool can_vehicle_leave_platoon(int ego_position) const;
@@ -66,8 +71,10 @@ private:
 	is trying to move. */
 	long platoon_destination_lane_leader_id{ 0 };
 
+
 	virtual void decide_lane_change_order() = 0;
 	virtual bool implement_can_vehicle_leave_platoon(int veh_position) const;
+	virtual void implement_set_max_computation_time(double max_computation_time);
 
 	std::unordered_set<int> get_current_lc_vehicle_positions() const;
 	int get_current_coop_vehicle_position() const;
@@ -139,10 +146,12 @@ private:
 	std::string cost_name;
 
 	bool is_data_loaded{ false };
+	double max_computation_time{ 1.e5 };
 	PlatoonLCStrategyManager strategy_manager;
 	StateQuantizer state_quantizer{ StateQuantizer() };
 
 	void decide_lane_change_order() override;
+	void implement_set_max_computation_time(double max_computation_time) override;
 	std::vector<Query> create_all_queries();
 	//void set_maneuver_initial_state_for_all_vehicles();
 	//PlatoonLaneChangeOrder find_best_order_in_map();

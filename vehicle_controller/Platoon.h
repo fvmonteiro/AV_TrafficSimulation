@@ -15,11 +15,8 @@ class Platoon
 public:
 
 	Platoon() = default;
-	/*Platoon(long id) : id{ id } {};*/
-	Platoon(long id, int platoon_lc_strategy, PlatoonVehicle* leader) :
-		Platoon(id, platoon_lc_strategy, leader, false) {};
 	Platoon(long id, int platoon_lc_strategy, PlatoonVehicle* leader,
-		bool verbose);
+		double max_computation_time, bool verbose);
 	~Platoon();
 
 	/* Simple getters and setters */
@@ -75,7 +72,7 @@ public:
 		get_traffic_states_around_a_vehicle(int lane_changing_vehicle_pos
 		) const;
 
-	void set_strategy(int strategy_number);
+	void set_strategy(int strategy_number, double max_computation_time);
 
 	/* Remaining public methods */
 
