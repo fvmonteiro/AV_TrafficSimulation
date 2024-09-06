@@ -40,6 +40,7 @@ enum class UDA {
     use_linear_lane_change_gap,
     platoon_id,
     platoon_strategy,
+    max_computation_time,
     /* Logging options */
     verbose_simulation = 98,
     logged_vehicle_id = 99,
@@ -49,6 +50,7 @@ enum class UDA {
     gap_to_leader,
     reference_gap,
     relative_velocity_to_leader,
+    safe_gap_to_leader,
     /* Debugging: dest lane leader */
     dest_leader_id = 110,
     gap_to_dest_lane_leader,

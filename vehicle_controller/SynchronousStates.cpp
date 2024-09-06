@@ -1,3 +1,5 @@
+/* ============================ DEPRACATED ================================ */
+
 #include "SynchronousStates.h"
 #include "Platoon.h"
 #include "PlatoonVehicle.h"
@@ -13,7 +15,7 @@ void SynchronousLaneKeepingState
 	if (leader_state == nullptr // platoon leader
 		|| *leader_state > SynchronousIncreasingGapState())
 	{
-		platoon_vehicle->update_origin_lane_controller();
+		platoon_vehicle->update_time_headway_to_leader();
 		platoon_vehicle->set_state(
 			std::make_unique<SynchronousIncreasingGapState>());
 	}
@@ -31,7 +33,7 @@ void SynchronousIncreasingGapState
 		->get_platoon_leader()->has_lane_change_intention())
 	{
 		platoon_vehicle->reset_lane_change_waiting_time();
-		platoon_vehicle->update_origin_lane_controller();
+		platoon_vehicle->update_time_headway_to_leader();
 		platoon_vehicle->reset_origin_lane_velocity_controller();
 		platoon_vehicle->set_state(
 			std::make_unique<SynchronousLaneKeepingState>());
@@ -41,12 +43,16 @@ void SynchronousIncreasingGapState
 void SynchronousIncreasingGapState
 ::implement_handle_lane_change_intention()
 {
+	bool verbose = platoon_vehicle->is_verbose()
+		&& platoon_vehicle->get_platoon_id() == 2;
+
 	if (platoon_vehicle->has_finished_increasing_gap())
 	{
 		platoon_vehicle->set_state(
 			std::make_unique<SynchronousLookingForSafeGapState>());
 	}
 	else if (platoon_vehicle->is_last_platoon_vehicle()
+		&& !platoon_vehicle->is_platoon_leader()
 		&& (*platoon_vehicle->get_preceding_vehicle_state()
 			== SynchronousLaneChangingState()))
 	{
@@ -69,7 +75,7 @@ void SynchronousLookingForSafeGapState
 		->get_platoon_leader()->has_lane_change_intention())
 	{
 		platoon_vehicle->reset_lane_change_waiting_time();
-		platoon_vehicle->update_origin_lane_controller();
+		platoon_vehicle->update_time_headway_to_leader();
 		platoon_vehicle->reset_origin_lane_velocity_controller();
 		platoon_vehicle->set_state(
 			std::make_unique<SynchronousLaneKeepingState>());
@@ -84,12 +90,11 @@ void SynchronousLookingForSafeGapState
 	bool can_start_lane_change = true;
 	if (platoon_vehicle->is_platoon_leader())
 	{
-		for (const auto& item 
+		for (const auto& veh
 			: platoon_vehicle->get_platoon()->get_vehicles_by_position())
 		{
-			const auto& veh = item.second;
 			if (*veh->get_state() < SynchronousIncreasingGapState()
-				|| !veh->check_lane_change_gaps())
+				|| !veh->are_surrounding_gaps_safe_for_lane_change())
 			{
 				can_start_lane_change = false;
 				break;
@@ -100,14 +105,15 @@ void SynchronousLookingForSafeGapState
 	{
 		const VehicleState& platoon_leader_state =
 			*platoon_vehicle->get_platoon()->get_platoon_leader()->get_state();
-		can_start_lane_change = platoon_leader_state == SynchronousLaneChangingState();
+		can_start_lane_change = 
+			platoon_leader_state == SynchronousLaneChangingState();
 	}
 
 	if (can_start_lane_change)
 	{
 		if (platoon_vehicle->is_platoon_leader())
 		{
-			platoon_vehicle->get_platoon()->set_velocity_at_lane_change_start(
+			platoon_vehicle->share_platoon()->set_velocity_at_lane_change_start(
 				platoon_vehicle->get_velocity()
 			);
 		}
@@ -169,7 +175,7 @@ void SynchronousWaitingOthersState
 			platoon_vehicle->set_desired_velocity(
 				platoon_vehicle->get_platoon()->get_desired_velocity());
 		}
-		platoon_vehicle->update_origin_lane_controller();
+		platoon_vehicle->update_time_headway_to_leader();
 		change_state = true;
 	}
 	else if (platoon_vehicle->is_platoon_leader())

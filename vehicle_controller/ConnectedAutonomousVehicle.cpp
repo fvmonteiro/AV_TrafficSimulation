@@ -1,20 +1,33 @@
 #include "ConnectedAutonomousVehicle.h"
 
 ConnectedAutonomousVehicle::ConnectedAutonomousVehicle(
-	long id, VehicleType type, double desired_velocity,
+	long id, double desired_velocity,
 	double simulation_time_step, double creation_time,
-	bool verbose) :
-	AutonomousVehicle(id, type, desired_velocity,
-		true, simulation_time_step, creation_time, verbose)
+	bool verbose) 
+	: ConnectedAutonomousVehicle(id, VehicleType::connected_car,
+		desired_velocity, AUTONOMOUS_BRAKE_DELAY, true, true,
+		simulation_time_step, creation_time, verbose)
 {
-	original_desired_velocity = get_desired_velocity();
+	if (verbose) std::cout << "[ConnectedAutonomousVehicle] created\n";
+}
+
+ConnectedAutonomousVehicle::ConnectedAutonomousVehicle(
+	long id, VehicleType type,
+	double desired_velocity, double brake_delay,
+	bool is_lane_change_autonomous, bool is_connected,
+	double simulation_time_step, double creation_time, bool verbose)
+	: AutonomousVehicle(id, type, desired_velocity, brake_delay,
+		is_lane_change_autonomous, is_connected,
+		simulation_time_step, creation_time, verbose) 
+{
 	compute_connected_safe_gap_parameters();
-	controller.add_cooperative_lane_change_controller(*this);
 	if (verbose)
 	{
-		std::clog << "lambda1_connected = " << lambda_1_connected
-			<< ", lambda1_lc_platoon = " << lambda_1_lane_change_connected
-			<< "\n[ConnectedAutonomousVehicle] constructor done" << std::endl;
+		std::cout << "lambda 1 connected = " << lambda_1_connected
+			<< ", lambda 0 connected = " << lambda_0_connected
+			<< ", lambda 1 lc connected = " << lambda_1_lane_change_connected
+			<< ", lambda 0 lc connected = " << lambda_0_lane_change_connected
+			<< std::endl;
 	}
 }
 
@@ -23,43 +36,52 @@ bool ConnectedAutonomousVehicle::is_cooperating_to_generate_gap() const {
 	/* Function seems unnecessary, but we might perform other checks here */
 }
 
+void ConnectedAutonomousVehicle
+::add_nearby_vehicle_from_another(
+	const ConnectedAutonomousVehicle& cav, long nv_id)
+{
+	/* Sanity check */
+	if (cav.get_nearby_vehicle_by_id(nv_id) == nullptr)
+	{
+		std::clog << "[CAV::add_nearby_vehicle_from_another] "
+			<< "The neighboring cav " << cav.get_id() 
+			<< " does not have a nearby vehicle with id " << nv_id << "\n";
+		return;
+	}
+
+	const NearbyVehicle* source_nv = 
+		get_nearby_vehicle_by_id(cav.get_id()).get();
+	if (source_nv != nullptr) //the cav is in the list of nearby vehicles
+	{
+		NearbyVehicle new_nv(*cav.get_nearby_vehicle_by_id(nv_id));
+		new_nv.offset_from_another(*source_nv);
+		add_nearby_vehicle(new_nv);
+		if (verbose) std::cout << "\t\tAdding nv from neighbor to my list\n"
+			<< "New nv: " << new_nv << "\n";
+	}
+}
+
+double ConnectedAutonomousVehicle::get_time_headway_to_assisted_vehicle() 
+const
+{
+	if (has_assisted_vehicle())
+	{
+		/* Only true when both ego and nearby vehicles are connected */
+		return cav_controller->get_gap_generation_lane_controller().
+			get_desired_time_headway();
+	}
+	/* We return a high value when there's no assisted vehicle because,
+	when a vehicle first requests assistance, it takes one simulation
+	iteration for the headway to be computed and transferred to the
+	assisted vehicle. */
+	return 3.0;
+}
+
 std::shared_ptr<NearbyVehicle> ConnectedAutonomousVehicle::
 implement_get_assisted_vehicle() const
 {
 	return assisted_vehicle;
 }
-
-//bool ConnectedAutonomousVehicle::implement_check_lane_change_gaps()
-//{
-//	//if (verbose) std::clog << "Deciding lane change" << std::endl;
-//	
-//	/* We don't move between platoon vehicles 
-//	[Feb 9, 2023] No longer needed after creation of CAV no LC class*/
-//	//if (has_destination_lane_leader()
-//	//	&& get_destination_lane_leader()->get_type() == VehicleType::platoon_car
-//	//	&& has_destination_lane_follower()
-//	//	&& get_destination_lane_follower()->get_type() == VehicleType::platoon_car)
-//	//{
-//	//	return false;
-//	//}
-//
-//	lane_change_gaps_safety.orig_lane_leader_gap =
-//		is_lane_change_gap_safe(get_leader());
-//	lane_change_gaps_safety.dest_lane_leader_gap =
-//		is_lane_change_gap_safe(get_destination_lane_leader());
-//	/* Besides the regular safety conditions, we add the case
-//	where the dest lane follower has completely stopped to give room
-//	to the lane changing vehicle */
-//	lane_change_gaps_safety.dest_lane_follower_gap =
-//		is_lane_change_gap_safe(get_destination_lane_follower())
-//		|| ((get_destination_lane_follower()->
-//			compute_velocity(get_velocity()) <= 1.0)
-//			&& (get_destination_lane_follower()->get_distance() <= -2.0));
-//	lane_change_gaps_safety.no_conflict =
-//		!has_lane_change_conflict();
-//
-//	return lane_change_gaps_safety.is_lane_change_safe();
-//}
 
 long ConnectedAutonomousVehicle::implement_get_lane_change_request() const
 {
@@ -72,18 +94,22 @@ void ConnectedAutonomousVehicle::implement_analyze_nearby_vehicles()
 	find_destination_lane_vehicles();
 	find_cooperation_requests();
 	create_lane_change_request();
+
+	std::shared_ptr<NearbyVehicle> vl = choose_behind_whom_to_move();
+	set_virtual_leader(vl);
+	if (has_lane_change_intention()) check_lane_change_gaps();
 }
 
 void ConnectedAutonomousVehicle::find_cooperation_requests()
 {
-	set_desired_velocity(original_desired_velocity);
+	//set_desired_velocity(original_desired_velocity);
+	bool should_increase_vel = false;
 
-	std::shared_ptr<NearbyVehicle> old_assisted_vehicle =
-		std::move(assisted_vehicle);
-
+	std::shared_ptr<NearbyVehicle> old_assisted_vehicle = assisted_vehicle;
+	assisted_vehicle = nullptr;
 	for (auto const& id_veh_pair : get_nearby_vehicles())
 	{
-		auto const& nearby_vehicle = id_veh_pair.second;
+		std::shared_ptr<NearbyVehicle> nearby_vehicle = id_veh_pair.second;
 		// Wants to merge in front of me?
 		if (nearby_vehicle->get_lane_change_request_veh_id() == get_id())
 		{
@@ -97,27 +123,34 @@ void ConnectedAutonomousVehicle::find_cooperation_requests()
 		// Wants to merge behind me?
 		else if (nearby_vehicle->get_destination_lane_leader_id() == get_id())
 		{
-			set_desired_velocity(MAX_VELOCITY);
+			//set_desired_velocity(MAX_VELOCITY);
+			should_increase_vel = true;
 		}
 	}
+	set_max_desired_velocity(should_increase_vel);
 	deal_with_close_and_slow_assited_vehicle();
-	update_assisted_vehicle(old_assisted_vehicle);
+	update_assisted_vehicle_in_controller(old_assisted_vehicle.get());
 }
 
 std::shared_ptr<NearbyVehicle> ConnectedAutonomousVehicle
-::define_virtual_leader() const
+::choose_behind_whom_to_move() const
 {
 	/* By default, we try to merge behind the current destination
 	lane leader. */
 	std::shared_ptr<NearbyVehicle> nv = get_modifiable_dest_lane_leader();
 
-	if (try_to_overtake_destination_lane_leader())
+	/* The choice of min overtaking rel vel ensures that we only overtake
+	if the veh is in free-flow mode and the dest lane leader is almost
+	stopped. */
+	double min_vel = 1.5; // = 5.4 km/h
+	double min_overtaking_rel_vel = get_desired_velocity() - min_vel;
+	if (try_to_overtake_destination_lane_leader(min_overtaking_rel_vel))
 	{
 		nv = nullptr;
 	}
 	else if (was_my_cooperation_request_accepted())
 	{
-		/* We must avoid trying to merge behind a vehicle that is 
+		/* We don't merge behind a vehicle that is 
 		braking to make space for us. */
 		int cooperating_vehicle_relative_position =
 			get_nearby_vehicle_by_id(lane_change_request)
@@ -136,7 +169,9 @@ std::shared_ptr<NearbyVehicle> ConnectedAutonomousVehicle
 
 void ConnectedAutonomousVehicle::create_lane_change_request()
 {
-	if (get_preferred_relative_lane() != RelativeLane::same)
+	// Only requests help for mandatory maneuvers
+	//if (get_preferred_relative_lane() != RelativeLane::same)
+	if (has_lane_change_intention())
 		lane_change_request = get_destination_lane_follower_id();
 	else
 		lane_change_request = 0;
@@ -147,8 +182,8 @@ bool ConnectedAutonomousVehicle::was_my_cooperation_request_accepted() const
 	return false;
 	if (lane_change_request != 0)
 	{
-		std::shared_ptr<NearbyVehicle> cooperating_vehicle =
-			get_nearby_vehicle_by_id(lane_change_request);
+		const NearbyVehicle* cooperating_vehicle =
+			get_nearby_vehicle_by_id(lane_change_request).get();
 		if (cooperating_vehicle != nullptr
 			&& cooperating_vehicle->get_assisted_vehicle_id() == get_id())
 		{
@@ -165,58 +200,74 @@ void ConnectedAutonomousVehicle::deal_with_close_and_slow_assited_vehicle()
 	is very slow. The only solution would be for the ego vehicle to
 	go backwards, which would lead to a deadlock situation. */
 	if (has_assisted_vehicle()
-		&& (assisted_vehicle->compute_velocity(get_velocity()) < 1)
-		&& compute_gap_to_a_leader(assisted_vehicle) < 1)
+		&& compute_nearby_vehicle_velocity(*assisted_vehicle) < 1.
+		&& compute_gap_to_a_leader(assisted_vehicle.get()) < 1.)
 	{
 		assisted_vehicle = nullptr;
 	}
 }
 
-void ConnectedAutonomousVehicle::update_destination_lane_follower(
-	const std::shared_ptr<NearbyVehicle>& old_follower)
+void ConnectedAutonomousVehicle::update_destination_lane_follower_in_controller(
+	const NearbyVehicle* old_follower)
 {
 	if (has_destination_lane_follower())
 	{
-		std::shared_ptr<NearbyVehicle>& dest_lane_follower =
-			get_modifiable_dest_lane_follower();
-		controller.update_destination_lane_follower_time_headway(
-			dest_lane_follower->get_h_to_incoming_vehicle());
-
-		/* We need to compute fd's lambda1 here cause it's used later in
-		computing gaps that accept risks. */
+		NearbyVehicle* dest_lane_follower =
+			get_modifiable_dest_lane_follower().get();
+		cav_controller->update_destination_lane_follower_time_headway(
+			*dest_lane_follower);
 		if ((old_follower == nullptr )
 			|| (old_follower->get_id() != dest_lane_follower->get_id()))
 		{
-			dest_lane_follower->compute_safe_gap_parameters();
-			dest_lane_follower_lambda_0 =
-				get_destination_lane_follower()->get_lambda_0();
-			dest_lane_follower_lambda_1 =
-				get_destination_lane_follower()->get_lambda_1();
+			cav_controller->update_destination_lane_follower_parameters(
+				*dest_lane_follower);
 		}
 	}
 }
 
-void ConnectedAutonomousVehicle::update_assisted_vehicle(
-	const std::shared_ptr<NearbyVehicle>& old_assisted_vehicle)
+void ConnectedAutonomousVehicle::update_assisted_vehicle_in_controller(
+	const NearbyVehicle* old_assisted_vehicle)
 {
 	if (has_assisted_vehicle())
 	{
 		if ((old_assisted_vehicle == nullptr)
 			|| (old_assisted_vehicle->get_id() != assisted_vehicle->get_id()))
 		{
-			double h_to_assisted_vehicle = std::max(0.0,
-				compute_vehicle_following_time_headway(
-					*assisted_vehicle, 0
-					/* assisted_vehicle->get_max_lane_change_risk_to_follower()*/
-				));
-			controller.update_gap_generation_controller(
+			if (verbose)
+			{
+				std::cout << "Computing h to assisted veh...\n";
+			}
+			double h_to_assisted_vehicle =
+				compute_vehicle_following_safe_time_headway(
+					*assisted_vehicle);
+			//double h_to_assisted_vehicle = std::max(0.0,
+			//	compute_vehicle_following_time_headway_with_risk(
+			//		*assisted_vehicle, 0
+			//		/* assisted_vehicle->get_max_lane_change_risk_to_follower()*/
+			//	));
+			cav_controller->update_gap_generation_controller(
 				get_velocity(), h_to_assisted_vehicle);
 		}
 	}
 }
 
-double ConnectedAutonomousVehicle::get_lambda_1(
-	bool is_leader_connected) const
+void ConnectedAutonomousVehicle::set_max_desired_velocity(
+	bool should_increase)
+{
+	bool is_at_max = get_desired_velocity() == MAX_VELOCITY;
+	if (should_increase && !is_at_max)
+	{
+		original_desired_velocity = get_desired_velocity();
+		set_desired_velocity(MAX_VELOCITY);
+	}
+	else if (!should_increase && is_at_max)
+	{
+		set_desired_velocity(original_desired_velocity);
+	}
+}
+
+double ConnectedAutonomousVehicle::get_lambda_1(bool is_leader_connected
+) const
 {
 	return is_leader_connected ?
 		lambda_1_connected : Vehicle::get_lambda_1();
@@ -225,37 +276,33 @@ double ConnectedAutonomousVehicle::get_lambda_1(
 double ConnectedAutonomousVehicle::get_lambda_1_lane_change(
 	bool is_leader_connected) const
 {
+	return get_lane_changing_safe_gap_parameters(is_leader_connected).second;
+}
+
+std::pair<double, double> ConnectedAutonomousVehicle
+::get_lane_changing_safe_gap_parameters(bool is_leader_connected) const
+{
 	return is_leader_connected ?
-		lambda_1_lane_change_connected
-		: AutonomousVehicle::get_lambda_1_lane_change();
+		std::make_pair(lambda_0_lane_change_connected,
+			lambda_1_lane_change_connected)
+		: EgoVehicle::get_lane_changing_safe_gap_parameters();
+}
+
+void ConnectedAutonomousVehicle::set_controller(
+	std::shared_ptr<CAVController> a_controller)
+{
+	this->cav_controller = a_controller;
+	AutonomousVehicle::set_controller(a_controller);
 }
 
 void ConnectedAutonomousVehicle::set_assisted_vehicle_by_id(
 	long assisted_vehicle_id)
 {
-	std::shared_ptr<NearbyVehicle> old_assisted_vehicle =
-		std::move(assisted_vehicle);
+	std::shared_ptr<NearbyVehicle> old_assisted_vehicle = assisted_vehicle;
 	assisted_vehicle = get_nearby_vehicle_by_id(assisted_vehicle_id);
 	//deal_with_close_and_slow_assited_vehicle();
-	update_assisted_vehicle(old_assisted_vehicle);
+	update_assisted_vehicle_in_controller(old_assisted_vehicle.get());
 }
-
-//double ConnectedAutonomousVehicle::compute_current_desired_time_headway(
-//	const NearbyVehicle& nearby_vehicle)
-//{
-//	/*double current_lambda_1 = get_lambda_1(leader.is_connected());
-//	double risk = 0;*/
-//	if (has_lane_change_intention())
-//	{
-//		return compute_lane_changing_desired_time_headway(nearby_vehicle);
-//		/*current_lambda_1 = get_lambda_1_lane_change(leader.is_connected());
-//		risk = get_accepted_risk_to_leaders();*/
-//	}
-//	return compute_vehicle_following_desired_time_headway(nearby_vehicle);
-//	/*return compute_time_headway_with_risk(get_desired_velocity(),
-//		get_current_max_brake(), leader.get_max_brake(),
-//		current_lambda_1, get_rho(), risk);*/
-//}
 
 double ConnectedAutonomousVehicle::
 compute_vehicle_following_safe_time_headway(
@@ -265,11 +312,11 @@ compute_vehicle_following_safe_time_headway(
 	return compute_time_headway_with_risk(get_desired_velocity(),
 		get_max_brake(), nearby_vehicle.get_max_brake(),
 		current_lambda_1, get_rho(), 0);*/
-	return compute_vehicle_following_time_headway(nearby_vehicle, 0);
+	return compute_vehicle_following_time_headway_with_risk(nearby_vehicle, 0);
 }
 
 double ConnectedAutonomousVehicle::
-compute_vehicle_following_time_headway(
+compute_vehicle_following_time_headway_with_risk(
 	const NearbyVehicle& nearby_vehicle,
 	double nv_max_lane_change_risk) const
 {
@@ -277,6 +324,44 @@ compute_vehicle_following_time_headway(
 	return compute_time_headway_with_risk(get_desired_velocity(),
 		get_max_brake(), nearby_vehicle.get_max_brake(),
 		current_lambda_1, get_rho(), nv_max_lane_change_risk);
+}
+
+double ConnectedAutonomousVehicle::compute_accepted_lane_change_gap(
+	const NearbyVehicle* nearby_vehicle, double lane_change_speed) const
+{
+	if (nearby_vehicle == nullptr) return 0.0;
+
+	double accepted_gap;
+	double accepted_risk = 0.0;
+
+	if (verbose)
+	{
+		std::cout << "\tUsing linear overestimation? "
+			<< boolean_to_string(use_linear_lane_change_gap) << "\n";
+	}
+
+	if (verbose && lane_change_speed != get_velocity())
+	{
+		// TODO
+		std::cout << "[AutonomousVehicle::compute_accepted_lane_change_gap]\n"
+			"\tTrying to set a lane change speed "
+			"different from the current vehicle speed. Not implemented.\n";
+	}
+
+	if (use_linear_lane_change_gap)
+	{
+		accepted_gap = cav_controller->compute_accepted_lane_change_gap(
+			*nearby_vehicle, accepted_risk);
+	}
+	else
+	{
+		accepted_gap = cav_controller->compute_accepted_lane_change_gap_exact(
+			*nearby_vehicle, get_lane_changing_safe_gap_parameters(
+				nearby_vehicle->is_connected()), 
+			accepted_risk);
+	}
+
+	return std::max(accepted_gap, 1.0);
 }
 
 double ConnectedAutonomousVehicle::compute_lane_changing_desired_time_headway(
@@ -302,23 +387,9 @@ double ConnectedAutonomousVehicle::compute_lane_changing_desired_time_headway(
 	}*/
 }
 
-double ConnectedAutonomousVehicle::
-compute_vehicle_following_gap_for_lane_change(
-	const NearbyVehicle& nearby_vehicle) const
+void ConnectedAutonomousVehicle::implement_create_controller()
 {
-	double current_lambda_1 =
-		get_lambda_1_lane_change(nearby_vehicle.is_connected());
-	return AutonomousVehicle::compute_vehicle_following_gap_for_lane_change(
-		nearby_vehicle, current_lambda_1);
-}
-
-double ConnectedAutonomousVehicle::implement_compute_desired_acceleration(
-	const std::unordered_map<int, TrafficLight>& traffic_lights)
-{
-	if (verbose) std::clog << "[CAV] get_desired_acceleration" << std::endl;
-	double a_desired_acceleration =
-		controller.get_desired_acceleration(*this);
-	return consider_vehicle_dynamics(a_desired_acceleration);
+	set_controller(std::make_shared<CAVController>(this, is_verbose()));
 }
 
 void ConnectedAutonomousVehicle::compute_connected_safe_gap_parameters()
@@ -329,6 +400,9 @@ void ConnectedAutonomousVehicle::compute_connected_safe_gap_parameters()
 	lambda_1_connected =
 		compute_lambda_1(max_jerk, comfortable_acceleration,
 			max_brake, CONNECTED_BRAKE_DELAY);
+	lambda_0_lane_change_connected =
+		compute_lambda_0(max_jerk, comfortable_acceleration,
+			get_lane_change_max_brake(), CONNECTED_BRAKE_DELAY);
 	lambda_1_lane_change_connected =
 		compute_lambda_1(max_jerk, comfortable_acceleration,
 			get_lane_change_max_brake(), CONNECTED_BRAKE_DELAY);

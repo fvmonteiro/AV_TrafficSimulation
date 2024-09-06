@@ -576,3 +576,4 @@ pip-selfcheck.json
 
 # File-based project format:
 *.iws
+/VISSIM_networks/platoon_discretionary_lane_change/platoon_discretionary_lane_change.results

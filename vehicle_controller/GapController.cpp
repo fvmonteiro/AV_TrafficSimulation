@@ -44,8 +44,6 @@ double GapController::get_current_time_headway() const
 double GapController::compute_time_headway_gap(double time_headway,
 	double velocity) const
 {
-	/* TODO: for now we assumed the standstill distance (d) is the same for
-	all cases. */
 	return time_headway * velocity + standstill_distance;
 }
 
@@ -98,8 +96,7 @@ double GapController::compute_acceleration_error(
 }
 
 double GapController::compute_desired_acceleration(
-	const EgoVehicle& ego_vehicle,
-	std::shared_ptr<const NearbyVehicle> leader)
+	const EgoVehicle& ego_vehicle, const NearbyVehicle* leader)
 {
 	if (leader == nullptr)
 	{
@@ -110,7 +107,8 @@ double GapController::compute_desired_acceleration(
 	double gap = ego_vehicle.compute_gap_to_a_leader(leader);
 	double gap_reference = compute_desired_gap(ego_velocity);
 	this->gap_error = compute_gap_error(gap, gap_reference);
-	double velocity_reference = leader->compute_velocity(ego_velocity);
+	double velocity_reference = ego_vehicle.compute_nearby_vehicle_velocity(
+		*leader);
 	/* The velocity error is set to zero when we want a "smooth start" */
 	double filtered_velocity_reference = should_perform_smooth_start ?
 		ego_velocity : velocity_filter.apply_filter(velocity_reference);
@@ -119,7 +117,7 @@ double GapController::compute_desired_acceleration(
 
 	if (verbose)
 	{
-		std::clog << "\t[Gap controller]\n\t"
+		std::cout << "\t[Gap controller]\n\t"
 			<< "leader id = " << leader->get_id()
 			<< ", h = " << get_current_time_headway()
 			<< ", eg=" << gap - gap_reference
@@ -144,13 +142,13 @@ double GapController::compute_desired_acceleration(
 
 	if (verbose)
 	{
-		std::clog << " => a_d=" << desired_acceleration << std::endl;
+		std::cout << " => a_d=" << desired_acceleration << std::endl;
 	}
 
 	//if (should_perform_smooth_start) // TODO: not being used [Nov 1, 2022]
 	//{
 	//	should_perform_smooth_start = false;
-	//	if (verbose) std::clog << "\t[Gap controller]"
+	//	if (verbose) std::cout << "\t[Gap controller]"
 	//		<< " restarting leader vel filter.\n";
 	//	double current_accel = ego_vehicle.get_acceleration();
 	//	double reset_vel;
@@ -169,7 +167,7 @@ double GapController::compute_desired_acceleration(
 	//		reset_vel = std::max(smooth_vel, velocity_reference);
 	//		if (verbose)
 	//		{
-	//			std::clog << "accel=" << current_accel
+	//			std::cout << "accel=" << current_accel
 	//				<< "des. accel=" << desired_acceleration
 	//				<< std::endl;
 	//		}
@@ -202,7 +200,7 @@ double GapController::compute_connected_input(
 		ego_acceleration, leader_acceleration);
 
 	if (verbose) {
-		std::clog << ", eg_dot=" << gap_error_derivative
+		std::cout << ", eg_dot=" << gap_error_derivative
 			<< ", ea=" << acceleration_error;
 	}
 
@@ -216,7 +214,7 @@ void GapController::reset_time_headway_filter(double time_headway)
 {
 	//if (verbose)
 	//{
-	//	std::clog << "\t[Gap controller] Reset h=" << time_headway << std::endl;
+	//	std::cout << "\t[Gap controller] Reset h=" << time_headway << std::endl;
 	//}
 	time_headway_filter.reset(time_headway);
 }

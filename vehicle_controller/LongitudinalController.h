@@ -38,27 +38,25 @@ public:
 	color_t get_state_color() const;
 
 	double get_gap_error() const;
-	double compute_desired_acceleration(const EgoVehicle& ego_vehicle,
-		std::shared_ptr<const NearbyVehicle> leader,
+	double compute_desired_acceleration(const NearbyVehicle* leader,
 		double velocity_reference);
 
 	/* Printing ----------------------------------------------------------- */
 	static std::string state_to_string(State state);
 
 protected:
-	LongitudinalController(std::unordered_map<State, color_t>
-		state_to_color_map, bool verbose);
-	VelocityController velocity_controller;
-	GapController gap_controller;
+	const EgoVehicle* ego_vehicle{ nullptr };
 	State state{ State::uninitialized }; // event driven logic variable
 	bool verbose{ false };
+
+	LongitudinalController(const EgoVehicle* ego_vehicle,
+		std::unordered_map<State, color_t> state_to_color_map, 
+		bool verbose);
 
 private:
 	virtual double implement_get_gap_error() const = 0;
 	virtual double implement_compute_desired_acceleration(
-		const EgoVehicle& ego_vehicle,
-		std::shared_ptr<const NearbyVehicle> leader,
-		double velocity_reference) = 0;
+		const NearbyVehicle* leader, double velocity_reference) = 0;
 	std::unordered_map<State, color_t> state_to_color_map;
 	static const std::unordered_map<State, std::string> state_to_string_map;
 };

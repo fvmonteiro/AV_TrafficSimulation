@@ -70,7 +70,7 @@ public:
 	double get_desired_gap(double ego_velocity) const;
 
 	double compute_desired_acceleration(const EgoVehicle& ego_vehicle, 
-		std::shared_ptr<const NearbyVehicle> leader);
+		const NearbyVehicle* leader);
 
 	void reset_time_headway_filter(double time_headway);
 	void reset_velocity_filter(double ego_velocity);
@@ -81,8 +81,8 @@ private:
 	VariationLimitedFilter time_headway_filter;
 	double gap_error{ 0.0 };
 	/* Desired gap parameters */
-	double desired_time_headway{ 1.0 };
-	double time_headway{ 1.0 }; /* time headway [s] */
+	double desired_time_headway{ 0.0 }; // [s]
+	double time_headway{ 0.0 }; /* time headway [s] */
 	double standstill_distance{ 1.0 }; /* standstill distance [m] */
 
 	/* Vehicle following gains */
@@ -90,9 +90,9 @@ private:
 	ConnectedGains connected_gains;
 
 	/* Other controller parameters */
-	double max_gap_error{ 30.0 }; // maximum positive gap error in meters
+	double max_gap_error{ 30.0 }; // maximum positive gap error [m]
 	double max_gap_error_connected{ 20.0 }; /* maximum positive gap 
-											error in meters */
+											error [m] */
 	bool is_connected{ false };
 	/* A smooth start means this controller will set the value of the
 	leader velocity filter such that the current step's desired acceleration

@@ -1,3 +1,5 @@
+/* ============================ DEPRACATED ================================ */
+
 #include "Platoon.h"
 #include "PlatoonLaneChangeStrategy.h"
 #include "PlatoonVehicle.h"
@@ -13,7 +15,7 @@
 bool PlatoonLaneChangeStrategy::can_vehicle_leave_platoon(
 	const PlatoonVehicle& platoon_vehicle) const
 {
-	//std::clog << "\t[PlatoonStrategy] can vehicle leave platoon method\n";
+	//std::cout << "\t[PlatoonStrategy] can vehicle leave platoon method\n";
 	return implement_can_vehicle_leave_platoon(platoon_vehicle);
 }
 
@@ -25,20 +27,23 @@ std::unique_ptr<VehicleState> PlatoonLaneChangeStrategy
 
 void PlatoonLaneChangeStrategy::reset_state_of_all_vehicles() const
 {
-	for (auto& item : platoon->get_vehicles_by_position())
+	for (auto& vehicle : platoon->get_vehicles_by_position())
 	{
-		item.second->reset_state(implement_get_new_lane_keeping_state());
+		vehicle->reset_state(implement_get_new_lane_keeping_state());
 	}
 }
 
 long PlatoonLaneChangeStrategy::create_platoon_lane_change_request(
 	const PlatoonVehicle& platoon_vehicle) const
 {
+	std::cout << "===== WARNING ===== \n"
+		<< "create lane change request "
+		<< "being done by phased out LaneChangeStrategy class.";
 	return implement_create_platoon_lane_change_request(platoon_vehicle);
 }
 
 std::shared_ptr<NearbyVehicle> PlatoonLaneChangeStrategy
-::define_virtual_leader(const PlatoonVehicle& platoon_vehicle) const
+::define_virtual_leader(PlatoonVehicle& platoon_vehicle) const
 {
 	return implement_define_virtual_leader(platoon_vehicle);
 }
@@ -65,7 +70,7 @@ long NoStrategy::implement_create_platoon_lane_change_request(
 }
 
 std::shared_ptr<NearbyVehicle> NoStrategy
-::implement_define_virtual_leader(const PlatoonVehicle& platoon_vehicle) const
+::implement_define_virtual_leader(PlatoonVehicle & platoon_vehicle) const
 {
 	return platoon_vehicle.define_virtual_leader_when_alone();
 }
@@ -82,6 +87,8 @@ bool SynchronousStrategy::implement_can_vehicle_leave_platoon(
 		&& *platoon_vehicle.get_state() != SynchronousLaneChangingState()
 		&& (platoon_vehicle.get_preceding_vehicle_id() 
 			!= platoon_vehicle.get_leader_id());
+
+	/* Jan 2024: very similar to the same function in leader first strat */
 }
 
 std::unique_ptr<VehicleState> SynchronousStrategy
@@ -105,7 +112,7 @@ long SynchronousStrategy::implement_create_platoon_lane_change_request(
 }
 
 std::shared_ptr<NearbyVehicle> SynchronousStrategy
-::implement_define_virtual_leader(const PlatoonVehicle& platoon_vehicle) const
+::implement_define_virtual_leader(PlatoonVehicle & platoon_vehicle) const
 {
 	return platoon_vehicle.is_platoon_leader() ?
 		platoon_vehicle.define_virtual_leader_when_alone() : nullptr;
@@ -170,22 +177,15 @@ long LeaderFirstStrategy::implement_create_platoon_lane_change_request(
 }
 
 std::shared_ptr<NearbyVehicle> LeaderFirstStrategy
-::implement_define_virtual_leader(const PlatoonVehicle& platoon_vehicle) const
+::implement_define_virtual_leader(PlatoonVehicle & platoon_vehicle) const
 {
 	if (platoon_vehicle.is_platoon_leader())
 	{
 		return platoon_vehicle.define_virtual_leader_when_alone();
 	}
-	const VehicleState& veh_state = *platoon_vehicle.get_state();
-	bool is_trying_to_change_lanes = 
-		veh_state > LeaderFirstLaneKeepingState();
-	bool is_done_lane_changing =
-		veh_state > LeaderFirstLaneChangingState();
-	bool leader_is_done_lane_changing =
-		*platoon_vehicle.get_preceding_vehicle_state()
-		> LeaderFirstLaneChangingState();
-	if ((is_trying_to_change_lanes && !is_done_lane_changing)
-		&& leader_is_done_lane_changing)
+	if (!platoon_vehicle.has_leader()
+		|| (platoon_vehicle.get_leader_id()
+			!= platoon_vehicle.get_preceding_vehicle_id()))
 	{
 		return platoon_vehicle.get_nearby_vehicle_by_id(
 			platoon_vehicle.get_preceding_vehicle_id());
@@ -194,6 +194,24 @@ std::shared_ptr<NearbyVehicle> LeaderFirstStrategy
 	{
 		return nullptr;
 	}
+	/*const VehicleState& veh_state = *platoon_vehicle.get_state();
+	bool is_trying_to_change_lanes = 
+		veh_state > LeaderFirstLaneKeepingState();
+	bool is_done_lane_changing =
+		veh_state > LeaderFirstLaneChangingState();
+	bool has_leader_started_lane_change =
+		*platoon_vehicle.get_preceding_vehicle_state()
+		>= LeaderFirstLaneChangingState();
+	if ((is_trying_to_change_lanes && !is_done_lane_changing)
+		&& has_leader_started_lane_change)
+	{
+		return platoon_vehicle.get_nearby_vehicle_by_id(
+			platoon_vehicle.get_preceding_vehicle_id());
+	}
+	else
+	{
+		return nullptr;
+	}*/
 }
 
 /* ------------------------------------------------------------------------ */
@@ -208,8 +226,9 @@ bool LastVehicleFirstStrategy::implement_can_vehicle_leave_platoon(
 
 	long precending_platoon_veh_id =
 		platoon_vehicle.get_preceding_vehicle_id();
-	const auto& preceding_platoon_veh =
-		platoon_vehicle.get_nearby_vehicle_by_id(precending_platoon_veh_id);
+	const NearbyVehicle* preceding_platoon_veh =
+		platoon_vehicle.get_nearby_vehicle_by_id(precending_platoon_veh_id
+		).get();
 	return !platoon_vehicle.is_platoon_leader()
 		&& *platoon_vehicle.get_state() != LastVehicleFirstLaneChangingState()
 		&& precending_platoon_veh_id != platoon_vehicle.get_leader_id()
@@ -248,14 +267,14 @@ long LastVehicleFirstStrategy::implement_create_platoon_lane_change_request(
 }
 
 std::shared_ptr<NearbyVehicle> LastVehicleFirstStrategy
-::implement_define_virtual_leader(const PlatoonVehicle& platoon_vehicle) const
+::implement_define_virtual_leader(PlatoonVehicle & platoon_vehicle) const
 {
-	//std::shared_ptr<NearbyVehicle> virtual_leader = nullptr;
 	if (platoon_vehicle.is_last_platoon_vehicle())
 	{
 		return platoon_vehicle.define_virtual_leader_when_alone();
 	}
 
+	long virtual_leader_id = 0;
 	bool is_done_lane_changing =
 		*platoon_vehicle.get_state() > LastVehicleFirstLaneChangingState();
 	bool follower_is_done_lane_changing = 
@@ -266,22 +285,25 @@ std::shared_ptr<NearbyVehicle> LastVehicleFirstStrategy
 	{
 		/* Once the follower has changed lanes, we try to merge between
 		the follower and its real leader. */
-		long virtual_leader_id = 
+		long follower_real_leader_id = 
 			platoon_vehicle.get_following_vehicle_in_platoon()
 			->get_leader_id();
-		return platoon_vehicle.get_nearby_vehicle_by_id(virtual_leader_id);
+		/* We must take into account the few moments where we are "half"
+		in the destination lane */
+		virtual_leader_id =
+			follower_real_leader_id == platoon_vehicle.get_id() ?
+			platoon_vehicle.get_destination_lane_leader_id()
+			: follower_real_leader_id;
 	}
-	else if (platoon_vehicle.is_platoon_leader())
+	else if (platoon_vehicle.is_platoon_leader()
+		&& (*platoon->get_last_vehicle()->get_state()
+			> LastVehicleFirstLaneKeepingState()))
 	{
 		/* We want to prevent the platoon from "running away" */
-		long dest_lane_leader_id =
-			platoon_vehicle.get_destination_lane_leader_id();
-		return platoon_vehicle.get_nearby_vehicle_by_id(dest_lane_leader_id);
+		//virtual_leader_id = 0;
+		virtual_leader_id = platoon_vehicle.get_destination_lane_leader_id();
 	}
-	else
-	{
-		return nullptr;
-	}
+	return platoon_vehicle.get_nearby_vehicle_by_id(virtual_leader_id);
 }
 
 /* ------------------------------------------------------------------------ */
@@ -313,7 +335,8 @@ std::unique_ptr<VehicleState> LeaderFirstAndInvertStrategy
 }
 
 long LeaderFirstAndInvertStrategy
-::implement_create_platoon_lane_change_request(const PlatoonVehicle& platoon_vehicle) const
+::implement_create_platoon_lane_change_request(
+	const PlatoonVehicle& platoon_vehicle) const
 {
 	long desired_future_follower_id = 0;
 	long veh_id = platoon_vehicle.get_id();
@@ -332,29 +355,49 @@ long LeaderFirstAndInvertStrategy
 }
 
 std::shared_ptr<NearbyVehicle> LeaderFirstAndInvertStrategy
-::implement_define_virtual_leader(const PlatoonVehicle& platoon_vehicle) const
+::implement_define_virtual_leader(PlatoonVehicle & platoon_vehicle) const
 {
 	if (platoon_vehicle.is_platoon_leader())
 	{
 		return platoon_vehicle.define_virtual_leader_when_alone();
 	}
 
-	const VehicleState& leader_state =
+	/*const VehicleState& leader_state =
 		*platoon_vehicle.get_preceding_vehicle_state();
 	bool leader_is_done_lane_changing = leader_state
-		> LeaderFirstAndInvertLaneChangingState();
-	if (leader_is_done_lane_changing)
+		> LeaderFirstAndInvertLaneChangingState();*/
+	
+	/* As soon as the platoon preceding vehicle is no longer
+	our real leader, we start to overtaking it. The goal is to
+	merge merge between the preceding vehicle and its real leader. */
+	const auto& preceding_vehicle =
+		*platoon_vehicle.get_preceding_vehicle_in_platoon();
+	std::shared_ptr<NearbyVehicle> virtual_leader{ nullptr };
+	if (!platoon_vehicle.has_leader()
+		|| (platoon_vehicle.get_leader_id()
+			!= preceding_vehicle.get_id()))
 	{
-		/* Once the preceding vehicle has changed lanes, we try to overtake 
-		the preceding vehicle, and merge between the preceding vehicle 
-		and its real leader. */
-		long virtual_leader_id =
-			platoon_vehicle.get_preceding_vehicle_in_platoon()
-			->get_leader_id();
-		return platoon_vehicle.get_nearby_vehicle_by_id(virtual_leader_id);
+		long preceding_veh_leader_id = preceding_vehicle.get_leader_id();
+		if (preceding_veh_leader_id == platoon_vehicle.get_id())
+		{
+			// We already overtook the preceding vehicle
+			virtual_leader = platoon_vehicle.get_nearby_vehicle_by_id(
+				platoon_vehicle.get_destination_lane_leader_id());
+		}
+		else
+		{
+			virtual_leader = platoon_vehicle.get_nearby_vehicle_by_id(
+				preceding_veh_leader_id);
+			if (virtual_leader == nullptr)
+			{
+				/* We didn't find the preceding vehicle's leader in the
+				platoon vehicle's nearby vehicle list */
+				platoon_vehicle.add_nearby_vehicle_from_another(
+						preceding_vehicle, preceding_veh_leader_id);
+				virtual_leader = platoon_vehicle.get_nearby_vehicle_by_id(
+					preceding_veh_leader_id);
+			}
+		}
 	}
-	else
-	{
-		return nullptr;
-	}
+	return virtual_leader;
 }

@@ -12,6 +12,8 @@
 
 #include "Vehicle.h"
 
+class EgoVehicle;
+
 class NearbyVehicle : public Vehicle{
 public:
 	using Vehicle::compute_safe_gap_parameters;
@@ -29,6 +31,7 @@ public:
 	/* distance of the front end from the middle of the lane [m]
 	(positive = left of the middle, negative = right) */
 	double get_lateral_position() const { return lateral_position; };
+	/* front end to front end, negative = nveh is upstream (behind) */
 	double get_distance() const { return distance; };
 	/* Relative velocity is: ego speed - other speed [m/s] */
 	double get_relative_velocity() const { 
@@ -86,6 +89,17 @@ public:
 	void set_destination_lane_follower_id(long veh_id);
 	void set_assisted_vehicle_id(long veh_id);
 
+	/* Offsets the nearby vehicle's relative terms (lane, position,
+	distance, velocity) based on another nearby vehicle. */
+	void offset_from_another(const NearbyVehicle& other_vehicle);
+
+	double get_relative_lateral_position() const;
+	/* State vector with relative distances to ego vehicle and absolute
+	orientation angle and velocity. */
+	ContinuousStateVector get_relative_state_vector(
+		double ego_velocity) const;
+	ContinuousStateVector get_absolute_state_vector(
+		ContinuousStateVector ego_states) const;
 	bool is_connected() const;
 	double compute_velocity(double ego_velocity) const;
 	bool is_on_same_lane() const;
@@ -100,8 +114,8 @@ public:
 	void read_lane_change_request(long lane_change_request);
 	bool is_in_a_platoon() const;
 
-	double estimate_desired_time_headway(double free_flow_velocity,
-		double leader_max_brake, double rho, double risk);
+	double estimate_desired_time_headway(double leader_max_brake, 
+		double risk) const;
 	double estimate_max_accepted_risk_to_incoming_vehicle(
 		double free_flow_velocity, double leader_max_brake, double rho);
 

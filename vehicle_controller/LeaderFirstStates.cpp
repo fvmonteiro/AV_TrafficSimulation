@@ -1,3 +1,5 @@
+/* ============================ DEPRACATED ================================ */
+
 /* "Leader First" States -------------------------------------------------- */
 #include "LeaderFirstStates.h"
 #include "Platoon.h"
@@ -15,12 +17,12 @@ void LeaderFirstLaneKeepingState
 	to their leaders. Is it once the leader is done increasing gap, or
 	once it has started/finished its own lane change? */
 
-	const VehicleState* leader_state = platoon_vehicle
-		->get_preceding_vehicle_state();
+	const VehicleState* leader_state = 
+		platoon_vehicle->get_preceding_vehicle_state();
 	if (leader_state == nullptr // this is the platoon leader
 		|| *leader_state > LeaderFirstIncreasingGapState())
 	{
-		platoon_vehicle->update_origin_lane_controller();
+		platoon_vehicle->update_time_headway_to_leader();
 		platoon_vehicle->set_state(
 			std::make_unique<LeaderFirstIncreasingGapState>());
 	}
@@ -38,7 +40,7 @@ void LeaderFirstIncreasingGapState
 		->get_platoon_leader()->has_lane_change_intention())
 	{
 		platoon_vehicle->reset_lane_change_waiting_time();
-		platoon_vehicle->update_origin_lane_controller();
+		platoon_vehicle->update_time_headway_to_leader();
 		platoon_vehicle->reset_origin_lane_velocity_controller();
 		platoon_vehicle->set_state(
 			std::make_unique<LeaderFirstLaneKeepingState>());
@@ -67,7 +69,7 @@ void LeaderFirstLookingForSafeGapState
 		->get_platoon_leader()->has_lane_change_intention())
 	{
 		platoon_vehicle->reset_lane_change_waiting_time();
-		platoon_vehicle->update_origin_lane_controller();
+		platoon_vehicle->update_time_headway_to_leader();
 		platoon_vehicle->reset_origin_lane_velocity_controller();
 		platoon_vehicle->set_state(
 			std::make_unique<LeaderFirstLaneKeepingState>());
@@ -88,7 +90,7 @@ void LeaderFirstLookingForSafeGapState
 	if ((platoon_vehicle->is_platoon_leader()
 		|| /*(*leader_state >= LeaderFirstLaneChangingState()
 			&&*/ will_merge_behind_the_leader)
-		&& platoon_vehicle->check_lane_change_gaps())
+		&& platoon_vehicle->are_surrounding_gaps_safe_for_lane_change())
 	{
 		platoon_vehicle->set_state(
 			std::make_unique<LeaderFirstLaneChangingState>());
@@ -105,7 +107,7 @@ void LeaderFirstLaneChangingState
 	{
 		platoon_vehicle->set_lane_change_direction(RelativeLane::same);
 		platoon_vehicle->reset_lane_change_waiting_time();
-		platoon_vehicle->update_origin_lane_controller();
+		platoon_vehicle->update_time_headway_to_leader();
 		platoon_vehicle->reset_origin_lane_velocity_controller();
 		platoon_vehicle->set_state(
 			std::make_unique<LeaderFirstClosingGapState>());
@@ -143,7 +145,7 @@ void LeaderFirstClosingGapState
 			double platoon_desired_vel =
 				platoon_vehicle->get_platoon()->get_desired_velocity();
 			if (are_other_platoon_gaps_closed(platoon_vehicle->get_id(),
-				std::make_unique<LeaderFirstLaneKeepingState>()))
+				LeaderFirstLaneKeepingState().get_state_number()))
 			{
 				platoon_vehicle->set_desired_velocity(platoon_desired_vel);
 				change_state = true;

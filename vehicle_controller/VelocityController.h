@@ -39,6 +39,8 @@ public:
 		double velocity_reference);
 	double compute_acceleration(const EgoVehicle& ego_vehicle,
 		double velocity_reference);
+	double compute_acceleration_without_filtering(
+		const EgoVehicle& ego_vehicle, double velocity_reference);
 
 private:
 	VariationLimitedFilter desired_velocity_filter;

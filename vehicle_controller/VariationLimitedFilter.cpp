@@ -27,7 +27,7 @@ VariationLimitedFilter::VariationLimitedFilter(double gain,
 	verbose{ verbose } {
 
 	if (verbose) {
-		std::clog << "Creating velocity filter with "
+		std::cout << "Creating velocity filter with "
 			<< "max acceleration = " << max_variation
 			<< "; min acceleration = " << -std::abs(min_variation)
 			<< "; time step = " << time_step
@@ -48,7 +48,7 @@ VariationLimitedFilter::VariationLimitedFilter(double gain,
 
 void VariationLimitedFilter::reset(double initial_value) {
 	/*if (verbose) {
-		std::clog << "------- Filter reset. Init value = "
+		std::cout << "------- Filter reset. Init value = "
 			<< initial_value << " -------" << std::endl;
 	}*/
 	if (!is_initialized) 
@@ -94,7 +94,7 @@ double VariationLimitedFilter::apply_filter(double new_value) {
 	double filtered_value = current_value + filtered_variation;
 
 	/*if (verbose) {
-		std::clog << "[f] previous value = " << previous_value
+		std::cout << "[f] previous value = " << previous_value
 			<< "; variation = " << variation << "; gain  = " << gain 
 			<< "; time_step = " << time_step << "; alpha = " 
 			<< alpha << "; saturated variation = " << filtered_variation 

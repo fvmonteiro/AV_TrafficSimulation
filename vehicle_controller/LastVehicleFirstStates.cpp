@@ -1,3 +1,5 @@
+/* ============================ DEPRACATED ================================ */
+
 #include "LastVehicleFirstStates.h"
 #include "Platoon.h"
 #include "PlatoonVehicle.h"
@@ -15,7 +17,7 @@ void LastVehicleFirstLaneKeepingState
 	if (follower_state == nullptr // this is the last platoon vehicle
 		|| *follower_state > LastVehicleFirstLaneChangingState())
 	{
-		platoon_vehicle->update_origin_lane_controller();
+		platoon_vehicle->update_time_headway_to_leader();
 		platoon_vehicle->set_state(
 			std::make_unique<
 			LastVehicleFirstIncreasingGapState>());
@@ -34,7 +36,7 @@ void LastVehicleFirstIncreasingGapState
 		->get_last_vehicle()->has_lane_change_intention())
 	{
 		platoon_vehicle->reset_lane_change_waiting_time();
-		platoon_vehicle->update_origin_lane_controller();
+		platoon_vehicle->update_time_headway_to_leader();
 		platoon_vehicle->reset_origin_lane_velocity_controller();
 		platoon_vehicle->set_state(
 			std::make_unique<LastVehicleFirstLaneKeepingState>());
@@ -44,7 +46,7 @@ void LastVehicleFirstIncreasingGapState
 void LastVehicleFirstIncreasingGapState
 ::implement_handle_lane_change_intention()
 {
-	if (platoon_vehicle->check_lane_change_gaps()
+	if (platoon_vehicle->are_surrounding_gaps_safe_for_lane_change()
 		&& (!platoon_vehicle->has_virtual_leader() || 
 			(platoon_vehicle->get_destination_lane_leader_id()
 				== platoon_vehicle->get_virtual_leader_id())))
@@ -71,7 +73,7 @@ void LastVehicleFirstLookingForSafeGapState
 		->get_last_vehicle()->has_lane_change_intention())
 	{
 		platoon_vehicle->reset_lane_change_waiting_time();
-		platoon_vehicle->update_origin_lane_controller();
+		platoon_vehicle->update_time_headway_to_leader();
 		platoon_vehicle->reset_origin_lane_velocity_controller();
 		platoon_vehicle->set_state(
 			std::make_unique<LastVehicleFirstLaneKeepingState>());
@@ -81,7 +83,7 @@ void LastVehicleFirstLookingForSafeGapState
 void LastVehicleFirstLookingForSafeGapState
 ::implement_handle_lane_change_intention()
 {
-	if (platoon_vehicle->check_lane_change_gaps()
+	if (platoon_vehicle->are_surrounding_gaps_safe_for_lane_change()
 		&& (!platoon_vehicle->has_virtual_leader() ||
 			(platoon_vehicle->get_destination_lane_leader_id()
 				== platoon_vehicle->get_virtual_leader_id())))
@@ -91,7 +93,7 @@ void LastVehicleFirstLookingForSafeGapState
 	}
 }
 
-/* ------------------------------------------------------------------------ */
+/*==========================================================================*/
 
 void LastVehicleFirstLaneChangingState
 ::implement_handle_lane_keeping_intention()
@@ -101,7 +103,7 @@ void LastVehicleFirstLaneChangingState
 	{
 		platoon_vehicle->set_lane_change_direction(RelativeLane::same);
 		platoon_vehicle->reset_lane_change_waiting_time();
-		platoon_vehicle->update_origin_lane_controller();
+		platoon_vehicle->update_time_headway_to_leader();
 		platoon_vehicle->reset_origin_lane_velocity_controller();
 		platoon_vehicle->set_state(
 			std::make_unique<LastVehicleFirstCreatingGapState>());
@@ -159,7 +161,7 @@ implement_handle_lane_keeping_intention()
 		double platoon_desired_vel =
 			platoon_vehicle->get_platoon()->get_desired_velocity();
 		if (are_other_platoon_gaps_closed(platoon_vehicle->get_id(),
-			std::make_unique<LastVehicleFirstLaneKeepingState>()))
+			LastVehicleFirstLaneKeepingState().get_state_number()))
 		{
 			platoon_vehicle->set_desired_velocity(platoon_desired_vel);
 			change_state = true;

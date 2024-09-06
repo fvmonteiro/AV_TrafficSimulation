@@ -1,234 +1,291 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="ControlManager.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="DriverModel.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="EgoVehicle.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="LateralController.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="LongitudinalController.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="NearbyVehicle.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="SimulationLogger.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Vehicle.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="RealLongitudinalController.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="VirtualLongitudinalController.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="VariationLimitedFilter.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="TrafficLight.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="RelativeLane.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="TrafficLightFileReader.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="LongitudinalControllerWithTrafficLights.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="ACCVehicle.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="ConnectedAutonomousVehicle.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="PlatoonVehicle.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="AutonomousVehicle.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="SwitchedLongitudinalController.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="VelocityController.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="GapController.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Platoon.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="TrafficLightALCVehicle.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="VissimLongitudinalController.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="InPlatoonLongitudinalController.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="LaneChangeGapsSafety.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="VehicleState.cpp">
       <Filter>StateMachines</Filter>
     </ClCompile>
+    <ClCompile Include="PlatoonLaneChangeOrder.cpp">
+      <Filter>Platoons</Filter>
+    </ClCompile>
+    <ClCompile Include="PlatoonLCStrategyManager.cpp">
+      <Filter>Platoons</Filter>
+    </ClCompile>
+    <ClCompile Include="Platoon.cpp">
+      <Filter>Platoons</Filter>
+    </ClCompile>
+    <ClCompile Include="ACCVehicle.cpp">
+      <Filter>Vehicles</Filter>
+    </ClCompile>
+    <ClCompile Include="AutonomousVehicle.cpp">
+      <Filter>Vehicles</Filter>
+    </ClCompile>
+    <ClCompile Include="ConnectedAutonomousVehicle.cpp">
+      <Filter>Vehicles</Filter>
+    </ClCompile>
+    <ClCompile Include="EgoVehicle.cpp">
+      <Filter>Vehicles</Filter>
+    </ClCompile>
+    <ClCompile Include="NearbyVehicle.cpp">
+      <Filter>Vehicles</Filter>
+    </ClCompile>
+    <ClCompile Include="NoLaneChangeCAV.cpp">
+      <Filter>Vehicles</Filter>
+    </ClCompile>
+    <ClCompile Include="Vehicle.cpp">
+      <Filter>Vehicles</Filter>
+    </ClCompile>
+    <ClCompile Include="PlatoonVehicle.cpp">
+      <Filter>Vehicles</Filter>
+    </ClCompile>
+    <ClCompile Include="GapController.cpp">
+      <Filter>Controllers</Filter>
+    </ClCompile>
+    <ClCompile Include="LateralController.cpp">
+      <Filter>Controllers</Filter>
+    </ClCompile>
+    <ClCompile Include="LongitudinalController.cpp">
+      <Filter>Controllers</Filter>
+    </ClCompile>
+    <ClCompile Include="RealLongitudinalController.cpp">
+      <Filter>Controllers</Filter>
+    </ClCompile>
+    <ClCompile Include="SwitchedLongitudinalController.cpp">
+      <Filter>Controllers</Filter>
+    </ClCompile>
+    <ClCompile Include="VanAremLongitudinalController.cpp">
+      <Filter>Controllers</Filter>
+    </ClCompile>
+    <ClCompile Include="VelocityController.cpp">
+      <Filter>Controllers</Filter>
+    </ClCompile>
+    <ClCompile Include="VirtualLongitudinalController.cpp">
+      <Filter>Controllers</Filter>
+    </ClCompile>
+    <ClCompile Include="VissimLongitudinalController.cpp">
+      <Filter>Controllers</Filter>
+    </ClCompile>
+    <ClCompile Include="VariationLimitedFilter.cpp">
+      <Filter>Main and Support</Filter>
+    </ClCompile>
+    <ClCompile Include="TrafficLight.cpp">
+      <Filter>Main and Support</Filter>
+    </ClCompile>
+    <ClCompile Include="TrafficLightFileReader.cpp">
+      <Filter>Main and Support</Filter>
+    </ClCompile>
+    <ClCompile Include="DriverModel.cpp">
+      <Filter>Main and Support</Filter>
+    </ClCompile>
+    <ClCompile Include="LaneChangeGapsSafety.cpp">
+      <Filter>Main and Support</Filter>
+    </ClCompile>
+    <ClCompile Include="RelativeLane.cpp">
+      <Filter>Main and Support</Filter>
+    </ClCompile>
+    <ClCompile Include="SimulationLogger.cpp">
+      <Filter>Main and Support</Filter>
+    </ClCompile>
+    <ClCompile Include="PlatoonLaneChangeApproach.cpp">
+      <Filter>Platoons</Filter>
+    </ClCompile>
+    <ClCompile Include="VehicleController.cpp">
+      <Filter>Controllers</Filter>
+    </ClCompile>
+    <ClCompile Include="ACCVehicleController.cpp">
+      <Filter>Controllers</Filter>
+    </ClCompile>
+    <ClCompile Include="CAVController.cpp">
+      <Filter>Controllers</Filter>
+    </ClCompile>
+    <ClCompile Include="PlatoonVehicleController.cpp">
+      <Filter>Controllers</Filter>
+    </ClCompile>
+    <ClCompile Include="AVController.cpp">
+      <Filter>Controllers</Filter>
+    </ClCompile>
+    <ClCompile Include="SimpleLongitudinalController.cpp">
+      <Filter>Controllers</Filter>
+    </ClCompile>
+    <ClCompile Include="LastVehicleFirstStates.cpp">
+      <Filter>Deprecated</Filter>
+    </ClCompile>
+    <ClCompile Include="LeaderFirstAndInvertStates.cpp">
+      <Filter>Deprecated</Filter>
+    </ClCompile>
+    <ClCompile Include="LeaderFirstStates.cpp">
+      <Filter>Deprecated</Filter>
+    </ClCompile>
     <ClCompile Include="SynchronousStates.cpp">
-      <Filter>StateMachines</Filter>
+      <Filter>Deprecated</Filter>
+    </ClCompile>
+    <ClCompile Include="PlatoonLaneChangeStrategy.cpp">
+      <Filter>Deprecated</Filter>
+    </ClCompile>
+    <ClCompile Include="StateQuantizer.cpp">
+      <Filter>Main and Support</Filter>
+    </ClCompile>
+    <ClCompile Include="StateVector.cpp">
+      <Filter>Main and Support</Filter>
     </ClCompile>
     <ClCompile Include="PlatoonVehicleState.cpp">
       <Filter>StateMachines</Filter>
     </ClCompile>
-    <ClCompile Include="PlatoonLaneChangeStrategy.cpp">
-      <Filter>StateMachines</Filter>
-    </ClCompile>
-    <ClCompile Include="LeaderFirstStates.cpp">
-      <Filter>StateMachines</Filter>
-    </ClCompile>
-    <ClCompile Include="LastVehicleFirstStates.cpp">
-      <Filter>StateMachines</Filter>
-    </ClCompile>
-    <ClCompile Include="LeaderFirstAndInvertStates.cpp">
-      <Filter>StateMachines</Filter>
-    </ClCompile>
-    <ClCompile Include="NoLaneChangeCAV.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="ControlManager.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="DriverModel.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="EgoVehicle.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="LateralController.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="LongitudinalController.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="NearbyVehicle.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="SimulationLogger.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Vehicle.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Constants.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="VirtualLongitudinalController.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="RealLongitudinalController.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="RelativeLane.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="VariationLimitedFilter.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="TrafficLight.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="TrafficLightFileReader.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="LongitudinalControllerWithTrafficLights.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="EgoVehicleFactory.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="ACCVehicle.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="ConnectedAutonomousVehicle.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="PlatoonVehicle.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="AutonomousVehicle.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="SwitchedLongitudinalController.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="VelocityController.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="GapController.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Platoon.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="TrafficLightALCVehicle.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="VissimLongitudinalController.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="InPlatoonLongitudinalController.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="NoLaneChangeCAV.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="LaneChangeGapsSafety.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="VehicleState.h">
-      <Filter>StateMachines</Filter>
-    </ClInclude>
-    <ClInclude Include="SynchronousStates.h">
       <Filter>StateMachines</Filter>
     </ClInclude>
     <ClInclude Include="PlatoonVehicleState.h">
       <Filter>StateMachines</Filter>
     </ClInclude>
-    <ClInclude Include="PlatoonLaneChangeStrategy.h">
-      <Filter>StateMachines</Filter>
+    <ClInclude Include="PlatoonLaneChangeOrder.h">
+      <Filter>Platoons</Filter>
     </ClInclude>
-    <ClInclude Include="LeaderFirstStates.h">
-      <Filter>StateMachines</Filter>
+    <ClInclude Include="PlatoonLCStrategyManager.h">
+      <Filter>Platoons</Filter>
     </ClInclude>
-    <ClInclude Include="LeaderFirstAndInvertStates.h">
-      <Filter>StateMachines</Filter>
+    <ClInclude Include="Platoon.h">
+      <Filter>Platoons</Filter>
+    </ClInclude>
+    <ClInclude Include="ACCVehicle.h">
+      <Filter>Vehicles</Filter>
+    </ClInclude>
+    <ClInclude Include="AutonomousVehicle.h">
+      <Filter>Vehicles</Filter>
+    </ClInclude>
+    <ClInclude Include="ConnectedAutonomousVehicle.h">
+      <Filter>Vehicles</Filter>
+    </ClInclude>
+    <ClInclude Include="EgoVehicle.h">
+      <Filter>Vehicles</Filter>
+    </ClInclude>
+    <ClInclude Include="EgoVehicleFactory.h">
+      <Filter>Vehicles</Filter>
+    </ClInclude>
+    <ClInclude Include="NearbyVehicle.h">
+      <Filter>Vehicles</Filter>
+    </ClInclude>
+    <ClInclude Include="NoLaneChangeCAV.h">
+      <Filter>Vehicles</Filter>
+    </ClInclude>
+    <ClInclude Include="Vehicle.h">
+      <Filter>Vehicles</Filter>
+    </ClInclude>
+    <ClInclude Include="GapController.h">
+      <Filter>Controllers</Filter>
+    </ClInclude>
+    <ClInclude Include="LateralController.h">
+      <Filter>Controllers</Filter>
+    </ClInclude>
+    <ClInclude Include="LongitudinalController.h">
+      <Filter>Controllers</Filter>
+    </ClInclude>
+    <ClInclude Include="RealLongitudinalController.h">
+      <Filter>Controllers</Filter>
+    </ClInclude>
+    <ClInclude Include="SwitchedLongitudinalController.h">
+      <Filter>Controllers</Filter>
+    </ClInclude>
+    <ClInclude Include="VanAremLongitudinalController.h">
+      <Filter>Controllers</Filter>
+    </ClInclude>
+    <ClInclude Include="VelocityController.h">
+      <Filter>Controllers</Filter>
+    </ClInclude>
+    <ClInclude Include="VirtualLongitudinalController.h">
+      <Filter>Controllers</Filter>
+    </ClInclude>
+    <ClInclude Include="VissimLongitudinalController.h">
+      <Filter>Controllers</Filter>
+    </ClInclude>
+    <ClInclude Include="PlatoonVehicle.h">
+      <Filter>Vehicles</Filter>
+    </ClInclude>
+    <ClInclude Include="Constants.h">
+      <Filter>Main and Support</Filter>
+    </ClInclude>
+    <ClInclude Include="DriverModel.h">
+      <Filter>Main and Support</Filter>
+    </ClInclude>
+    <ClInclude Include="LaneChangeGapsSafety.h">
+      <Filter>Main and Support</Filter>
+    </ClInclude>
+    <ClInclude Include="RelativeLane.h">
+      <Filter>Main and Support</Filter>
+    </ClInclude>
+    <ClInclude Include="SimulationLogger.h">
+      <Filter>Main and Support</Filter>
+    </ClInclude>
+    <ClInclude Include="TrafficLight.h">
+      <Filter>Main and Support</Filter>
+    </ClInclude>
+    <ClInclude Include="TrafficLightFileReader.h">
+      <Filter>Main and Support</Filter>
+    </ClInclude>
+    <ClInclude Include="VariationLimitedFilter.h">
+      <Filter>Main and Support</Filter>
+    </ClInclude>
+    <ClInclude Include="PlatoonLaneChangeApproach.h">
+      <Filter>Platoons</Filter>
+    </ClInclude>
+    <ClInclude Include="StateVector.h">
+      <Filter>Main and Support</Filter>
+    </ClInclude>
+    <ClInclude Include="VehicleController.h">
+      <Filter>Controllers</Filter>
+    </ClInclude>
+    <ClInclude Include="ACCVehicleController.h">
+      <Filter>Controllers</Filter>
+    </ClInclude>
+    <ClInclude Include="AVController.h">
+      <Filter>Controllers</Filter>
+    </ClInclude>
+    <ClInclude Include="CAVController.h">
+      <Filter>Controllers</Filter>
+    </ClInclude>
+    <ClInclude Include="PlatoonVehicleController.h">
+      <Filter>Controllers</Filter>
+    </ClInclude>
+    <ClInclude Include="SimpleLongitudinalController.h">
+      <Filter>Controllers</Filter>
     </ClInclude>
     <ClInclude Include="LastVehicleFirstStates.h">
-      <Filter>StateMachines</Filter>
+      <Filter>Deprecated</Filter>
+    </ClInclude>
+    <ClInclude Include="LeaderFirstAndInvertStates.h">
+      <Filter>Deprecated</Filter>
+    </ClInclude>
+    <ClInclude Include="LeaderFirstStates.h">
+      <Filter>Deprecated</Filter>
+    </ClInclude>
+    <ClInclude Include="SynchronousStates.h">
+      <Filter>Deprecated</Filter>
+    </ClInclude>
+    <ClInclude Include="PlatoonLaneChangeStrategy.h">
+      <Filter>Deprecated</Filter>
+    </ClInclude>
+    <ClInclude Include="StateQuantizer.h">
+      <Filter>Main and Support</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <Filter Include="Header Files">
-      <UniqueIdentifier>{d52b57e8-60a7-45f2-9236-04fdef4a1538}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files">
-      <UniqueIdentifier>{26718a99-b736-4bc6-a73a-bc5f180869a2}</UniqueIdentifier>
-    </Filter>
     <Filter Include="StateMachines">
       <UniqueIdentifier>{832747f0-8314-4dc8-8583-49e2215bfc0f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Platoons">
+      <UniqueIdentifier>{d5a68358-bc9b-4cb4-93c8-d587e7b854f5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Vehicles">
+      <UniqueIdentifier>{4b167513-7972-4342-9281-5ff6a600b926}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Controllers">
+      <UniqueIdentifier>{85c72972-e01d-4e46-baf2-1ee7123202a4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Main and Support">
+      <UniqueIdentifier>{43712dbc-76ef-46d9-8cf8-80aa8fa2ce8e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Deprecated">
+      <UniqueIdentifier>{2ed1fa81-d6ad-4974-863e-e2310627b322}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

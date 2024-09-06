@@ -2,8 +2,9 @@
 #include "VissimLongitudinalController.h"
 
 VissimLongitudinalController::VissimLongitudinalController(
+	const EgoVehicle* ego_vehicle,
 	std::unordered_map<State, color_t> state_to_color_map)
-	: LongitudinalController(state_to_color_map, false) {}
+	: LongitudinalController(ego_vehicle, state_to_color_map, false) {}
 
 double VissimLongitudinalController::implement_get_gap_error() const
 {
@@ -11,9 +12,7 @@ double VissimLongitudinalController::implement_get_gap_error() const
 }
 
 double VissimLongitudinalController::implement_compute_desired_acceleration(
-	const EgoVehicle& ego_vehicle,
-	std::shared_ptr<const NearbyVehicle> leader,
-	double velocity_reference)
+	const NearbyVehicle* leader, double velocity_reference)
 {
-	return ego_vehicle.get_vissim_acceleration();
+	return ego_vehicle->get_vissim_acceleration();
 }

@@ -1,23 +1,23 @@
 #pragma once
 
-#include "EgoVehicle.h"
+#include "ACCVehicle.h"
+#include "AVController.h"
 #include "LaneChangeGapsSafety.h"
 
 /* Vehicle with autonomous longitudinal control during lane keeping and
 during adjustments for lane changing. The lane change intention still
 comes from VISSIM, but the vehicle decides when it is safe enough to start */
-class AutonomousVehicle : public EgoVehicle
+class AutonomousVehicle : public ACCVehicle
 {
 public:
+
 	AutonomousVehicle(long id, double desired_velocity,
 		double simulation_time_step, double creation_time,
-		bool verbose = false) : AutonomousVehicle(id,
-			VehicleType::autonomous_car, desired_velocity, false,
-			simulation_time_step, creation_time, verbose) {} ;
+		bool verbose);
 	
 	/* Vehicle behind which we want to merge (not necessarily the same as
 	the destination lane leader) */
-	std::shared_ptr<const NearbyVehicle> get_virtual_leader() const {
+	const std::shared_ptr<NearbyVehicle> get_virtual_leader() const {
 		return virtual_leader;
 	}
 
@@ -25,24 +25,36 @@ public:
 	long get_destination_lane_leader_leader_id() const;
 	bool has_virtual_leader() const;
 	//bool merge_behind_virtual_leader() const;
-	bool are_all_lane_change_gaps_safe() const;
+	/* True if the three relevant surrounding gaps are 
+	safe for lane change */
+	bool are_surrounding_gaps_safe_for_lane_change() const;
+	/* True if the space between dest lane leader and follower
+	is large enough. The vehicle may still need to adjust to
+	safely merge into that space */
+	//bool get_is_space_suitable_for_lane_change() const;
 	LaneChangeGapsSafety get_lane_change_gaps_safety() const;
+
+	double get_dest_follower_time_headway() const override;
+	double compute_transient_gap(const NearbyVehicle* nearby_vehicle);
 
 protected:
 	LaneChangeGapsSafety lane_change_gaps_safety;
-	/* Necessary when computing lane change gaps with risk */
-	double dest_lane_follower_lambda_0{ 0.0 };
-	/* Necessary when computing lane change gaps with risk */
-	double dest_lane_follower_lambda_1{ 0.0 };
+	
+	/* Defines if the lane change acceptance decision is based on the
+	exact risk computation or on the risk estimation based on the time
+	headway */
+	bool use_linear_lane_change_gap{ false };
 
+	/* Pass-to-base constructor */
 	AutonomousVehicle(long id, VehicleType type, double desired_velocity,
-		bool is_connected, double simulation_time_step, double creation_time,
-		bool verbose = false);
+		double brake_delay, bool is_lane_change_autonomous,
+		bool is_connected, double simulation_time_step,
+		double creation_time, bool verbose)
+		: ACCVehicle(id, type, desired_velocity, brake_delay,
+			is_lane_change_autonomous, is_connected,
+			simulation_time_step, creation_time, verbose) {};
 
-	// [Jan 24, 23] Make private?
-	bool implement_check_lane_change_gaps() override;
-
-	double get_lambda_1_lane_change() const { return lambda_1_lane_change; };
+	//double get_lambda_1_lane_change() const { return lambda_1_lane_change; };
 	double get_accepted_risk_to_leaders() const {
 		return accepted_lane_change_risk_to_leaders;
 	};
@@ -62,34 +74,30 @@ protected:
 		return destination_lane_leader_leader;
 	};
 
-
+	void set_controller(std::shared_ptr<AVController> a_controller);
 	void find_destination_lane_vehicles();
 	bool try_to_overtake_destination_lane_leader() const;
-	bool try_to_overtake_destination_lane_leader(double min_rel_vel) const;
-	/*[Feb 7, 2023] The four methods below can probably become private */
+	bool try_to_overtake_destination_lane_leader(
+		double min_rel_vel) const;
+	bool try_to_overtake_destination_lane_leader_based_on_time() const;
+	
 	void set_virtual_leader(
 		std::shared_ptr<NearbyVehicle> new_virtual_leader);
-	/*void set_destination_lane_follower_by_id(
-		long new_follower_id);*/
-	bool is_destination_lane_follower(
-		const NearbyVehicle& nearby_vehicle);
-	bool is_destination_lane_leader(const NearbyVehicle& nearby_vehicle);
-	bool is_leader_of_destination_lane_leader(
-		const NearbyVehicle& nearby_vehicle);
+	/* Returns a nullptr if no virtual leader */
+	virtual std::shared_ptr<NearbyVehicle> choose_behind_whom_to_move() const;
 
-	/* ----------------------------------------------------- */
-	
-	bool is_lane_change_gap_safe(
-		std::shared_ptr<const NearbyVehicle> nearby_vehicle) const;
-	bool has_lane_change_conflict() const;
 	/* Non-linear gap based on ego and nearby vehicles states
 	and parameters */
-	double compute_vehicle_following_gap_for_lane_change(
-		const NearbyVehicle& nearby_vehicle, double current_lambda_1) const;
+	//double compute_vehicle_following_gap_for_lane_change(
+	//	const NearbyVehicle& nearby_vehicle, double current_lambda_1) const;
 
 private:
-	double min_overtaking_rel_vel{ 10.0 / 3.6 };
+	//bool is_space_suitable_for_lane_change{ false };
+	double min_overtaking_rel_vel{ 10.0	/ 3.6}; // [m/s]
+	double min_overtaking_time{ 10.0 };// s
 	double max_lane_change_waiting_time{ 60.0 }; // [s]
+	//AVController controller_exclusive;
+	std::shared_ptr<AVController> av_controller{ nullptr };
 
 	/* Relevant members for lane changing ------------------------------------ */
 
@@ -103,16 +111,13 @@ private:
 	the destination lane leader) */
 	std::shared_ptr<NearbyVehicle> virtual_leader{ nullptr };
 	/* Emergency braking parameter during lane change */
-	double lambda_1_lane_change{ 0.0 }; // [m/s]
+	//double lambda_1_lane_change{ 0.0 }; // [m/s]
 
 	/* Risk related variables --------------------------------------------- */
 	/*The risk is an estimation of the relative velocity at collision
 	time under worst case scenario. */
 
-	/* Defines if the lane change acceptance decision is based on the
-	exact risk computation or on the risk estimation based on the time
-	headway */
-	bool use_linear_lane_change_gap{ false };
+	
 	/* Stores the time when the vehicle started trying to
 	change lanes */
 	//double lane_change_timer_start{ 0.0 }; // [s]
@@ -127,46 +132,55 @@ private:
 	//double intermediate_risk_to_leader{ 0.0 }; // [m/s]
 	//double max_risk_to_follower{ 0.0 }; // [m/s]
 
-
+	void implement_create_controller() override;
 	/* Finds the current leader and, if the vehicle has lane change
 	intention, the destination lane leader and follower */
 	//void find_relevant_nearby_vehicles() override;
-	double implement_compute_desired_acceleration(
-		const std::unordered_map<int, TrafficLight>& traffic_lights) override;
+	/*double implement_compute_desired_acceleration(
+		const std::unordered_map<int, TrafficLight>& traffic_lights
+		) override;*/
 	/* Finds the current leader and, if the vehicle has lane change
 	intention, the destination lane leader and follower */
 	void implement_analyze_nearby_vehicles() override;
 	bool give_lane_change_control_to_vissim() const override;
 	long implement_get_lane_change_request() const override { return 0; };
+	/* Note: AutonomousVehicle implementation ignores lane_change_speed */
 	double compute_accepted_lane_change_gap(
-		std::shared_ptr<const NearbyVehicle> nearby_vehicle) const override;
-	std::shared_ptr<NearbyVehicle>
-		implement_get_destination_lane_leader() const override;
-	std::shared_ptr<NearbyVehicle>
-		implement_get_destination_lane_follower() const override;
+		const NearbyVehicle* nearby_vehicle, double lane_change_speed
+	) const override;
+	std::shared_ptr<NearbyVehicle> implement_get_destination_lane_leader() 
+		const override;
+	std::shared_ptr<NearbyVehicle> implement_get_destination_lane_follower() 
+		const override;
 	std::shared_ptr<NearbyVehicle> implement_get_assisted_vehicle()
 		const override { return nullptr; };
 	long implement_get_virtual_leader_id() const override;
 	double compute_lane_changing_desired_time_headway(
 		const NearbyVehicle& nearby_vehicle) const override;
+	bool implement_check_lane_change_gaps() override;
+
+	bool is_lane_change_gap_safe(
+		const NearbyVehicle* nearby_vehicle) const;
+	bool has_lane_change_conflict() const;
 
 	/* Time-headway based gap (hv + d) minus a term based on
-	accepted risk */
+	accepted risk NO LONGER IN USE [Feb 24, 2023]*/
 	double compute_time_headway_gap_for_lane_change(
 		const NearbyVehicle& nearby_vehicle) const;
-	void compute_lane_change_gap_parameters();
+	//void compute_lane_change_gap_parameters();
 	/* Non-linear gap based on ego and nearby vehicles states
 	and parameters */
-	virtual double compute_vehicle_following_gap_for_lane_change(
-		const NearbyVehicle& nearby_vehicle) const;
+	//virtual double compute_vehicle_following_gap_for_lane_change(
+	//	const NearbyVehicle& nearby_vehicle) const;
 	double compute_gap_variation_during_lane_change(
 		const NearbyVehicle& nearby_vehicle) const;
 
-	/* Returns a nullptr if no virtual leader */
-	virtual std::shared_ptr<NearbyVehicle> define_virtual_leader() const;
-	void update_virtual_leader(std::shared_ptr<const NearbyVehicle> old_leader);
-	virtual void update_destination_lane_follower(
-		const std::shared_ptr<NearbyVehicle>& old_follower);
+	virtual void update_destination_lane_follower_in_controller(
+		const NearbyVehicle* old_follower);
+	void update_virtual_leader(
+		const NearbyVehicle* old_leader);
+	void update_destination_lane_leader_in_controller(
+		const NearbyVehicle* old_leader);
 	double estimate_nearby_vehicle_time_headway(
 		NearbyVehicle& nearby_vehicle);
 

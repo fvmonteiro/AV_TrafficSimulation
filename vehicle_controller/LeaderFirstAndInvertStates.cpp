@@ -1,3 +1,5 @@
+/* ============================ DEPRACATED ================================ */
+
 /* Leader First and Invert States ----------------------------------------- */
 
 #include "LeaderFirstAndInvertStates.h"
@@ -19,7 +21,7 @@ void LeaderFirstAndInvertLaneKeepingState
 	if (leader_state == nullptr // this is the platoon leader
 		|| *leader_state > LeaderFirstAndInvertLaneChangingState())
 	{
-		platoon_vehicle->update_origin_lane_controller();
+		platoon_vehicle->update_time_headway_to_leader();
 		platoon_vehicle->set_state(
 			std::make_unique<
 			LeaderFirstAndInvertLookingForSafeGapState>());
@@ -38,7 +40,7 @@ void LeaderFirstAndInvertLookingForSafeGapState
 		->get_platoon_leader()->has_lane_change_intention())
 	{
 		platoon_vehicle->reset_lane_change_waiting_time();
-		platoon_vehicle->update_origin_lane_controller();
+		platoon_vehicle->update_time_headway_to_leader();
 		platoon_vehicle->reset_origin_lane_velocity_controller();
 		platoon_vehicle->set_state(
 			std::make_unique<LeaderFirstAndInvertLaneKeepingState>());
@@ -58,7 +60,7 @@ void LeaderFirstAndInvertLookingForSafeGapState
 	if ((preceding_vehicle_id == 0 // this is the platoon leader
 		|| has_finished_overtaking)
 		&&
-		platoon_vehicle->check_lane_change_gaps())
+		platoon_vehicle->are_surrounding_gaps_safe_for_lane_change())
 	{
 		platoon_vehicle->set_state(
 			std::make_unique<LeaderFirstAndInvertLaneChangingState>());
@@ -75,7 +77,7 @@ void LeaderFirstAndInvertLaneChangingState
 	{
 		platoon_vehicle->set_lane_change_direction(RelativeLane::same);
 		platoon_vehicle->reset_lane_change_waiting_time();
-		platoon_vehicle->update_origin_lane_controller();
+		platoon_vehicle->update_time_headway_to_leader();
 		platoon_vehicle->reset_origin_lane_velocity_controller();
 		platoon_vehicle->set_state(
 			std::make_unique<LeaderFirstAndInvertCreatingGapState>());
@@ -135,10 +137,10 @@ implement_handle_lane_keeping_intention()
 		double platoon_desired_vel =
 			platoon_vehicle->get_platoon()->get_desired_velocity();
 		if (are_other_platoon_gaps_closed(platoon_vehicle->get_id(),
-			std::make_unique<LeaderFirstAndInvertLaneKeepingState>()))
+			LeaderFirstAndInvertLaneKeepingState().get_state_number()))
 		{
 			platoon_vehicle->set_desired_velocity(platoon_desired_vel);
-			platoon_vehicle->get_platoon()->reorder_vehicles();
+			platoon_vehicle->share_platoon()->sort_vehicles_by_distance_traveled();
 			change_state = true;
 		}
 		else

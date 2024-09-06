@@ -5,6 +5,13 @@
 
 #pragma once
 
+#define _USE_MATH_DEFINES
+#include <math.h>
+#include <set>
+#include <string>
+#include <unordered_map>
+#include <vector>
+
 typedef unsigned long color_t;
 /* Based on the _WINGDI_ RGB definition and some tests on VISSIM */
 //#define ARGB(a,r,g,b)   ((COLORREF)((((BYTE)(b) | ((WORD)((BYTE)(g)) << 8)) | (((DWORD)(BYTE)(r)) << 16))|((BYTE)(a) << 24)))
@@ -18,7 +25,7 @@ const color_t BLUE = ARGB(255, 0, 0, 255);
 const color_t YELLOW = ARGB(255, 255, 255, 0);
 const color_t MAGENTA = ARGB(255, 255, 0, 255);
 const color_t CYAN = ARGB(255, 0, 255, 255);
-const color_t GRAY = ARGB(255, 128, 128, 128);
+const color_t GRAY = ARGB(255, 128, 128, 128);  // SAME COLOR AS THE ROAD
 
 const color_t DARK_RED = ARGB(255, 128, 0, 0);
 const color_t DARK_GREEN = ARGB(255, 0, 128, 0);
@@ -39,14 +46,27 @@ const double CAR_MAX_BRAKE{ 6.0 }; // absolute value [m/s^2]
 const double TRUCK_MAX_BRAKE{ 5.5 }; // absolute value  [m/s^2]
 const double ACTUATOR_CONSTANT{ 0.5 }; // [s].
 const double COMFORTABLE_ACCELERATION{ 2.0 }; // [m/s^2]
-const double COMFORTABLE_BRAKE{ 2.5 }; // absolute value [m/s^2]
+const double COMFORTABLE_BRAKE{ 2.0 }; // absolute value [m/s^2]
 const double CAR_MAX_JERK{ 50.0 }; // [m/s^3]
 const double TRUCK_MAX_JERK{ 30.0 }; // [m/s^3]
 const double CONNECTED_BRAKE_DELAY{ 0.1 }; // [s]
 const double AUTONOMOUS_BRAKE_DELAY{ 0.2 }; // [s]
 const double HUMAN_BRAKE_DELAY{ 0.75 }; // [s]
+const double LANE_WIDTH{ 3.6 }; // [m]
 
+const double PI{ M_PI };  // because I never remember how to find PI
+
+/* Parameters used in discretionary platoon lane change scenarios */
+
+const double SAFE_TIME_HEADWAY{ 2.0 }; // [s]
+const double CONNECTED_SAFE_TIME_HEADWAY{ 1.0 }; // [s]
 const long MAIN_LINK_NUMBER{ 3 };
+
+
+const std::string STRATEGY_MAPS_FOLDER{ "C:\\Users\\fvall\\Documents"
+	"\\Research\\data\\strategy_maps\\" };
+const std::string QUANTIZATION_PARAMS_FOLDER{ "C:\\Users\\fvall\\Documents"
+	"\\Research\\data\\quantization_parameters\\" };
 
 /* Categories set by VISSIM */
 enum class VehicleCategory {
@@ -74,6 +94,66 @@ enum class VehicleType {
 	traffic_light_alc_car = 130,
 	traffic_light_calc_car = 135,
 	platoon_car = 140,
+	virdi_car = 150,
 	truck = 200,
 	bus = 300
+};
+
+inline std::string boolean_to_string(bool value)
+{
+	return value ? "yes" : "no";
+};
+
+template<typename Container>
+std::string basic_type_container_to_string(const Container& container)
+{
+	std::string ret_str = "[";
+	for (const auto& i : container)
+	{
+		ret_str += std::to_string(i) + ", ";
+	}
+	if (ret_str.size() > 1) ret_str.erase(ret_str.size() - 2);
+	ret_str += "]";
+	return ret_str;
+}
+
+template <typename T>
+inline std::string set_to_string(std::set<T> s)
+{
+	std::string ret_str = "[";
+	for (T i : s)
+	{
+		ret_str += std::to_string(i) + ", ";
+	}
+	if (ret_str.size() > 1) ret_str.erase(ret_str.size() - 2);
+	ret_str += "]";
+	return ret_str;
+};
+
+template <typename T>
+std::string vector_to_string(std::vector<T> v)
+{
+	std::string ret_str = "[";
+	for (T i : v)
+	{
+		ret_str += std::to_string(i) + ", ";
+	}
+	if (ret_str.size() > 1) ret_str.erase(ret_str.size() - 2);
+	ret_str += "]";
+	return ret_str;
+};
+
+template <typename KeyType, typename ValueType>
+std::string map_to_string(const std::unordered_map<KeyType, ValueType>& map)
+{
+	std::string out;
+	out += "{";
+	for (const auto& pair : map)
+	{
+		out += std::to_string(pair.first) + ": "
+			+ std::to_string(pair.second) + ", ";
+	}
+	if (map.size() > 0) out.erase(out.size() - 2);
+	out += "}";
+	return out;
 };

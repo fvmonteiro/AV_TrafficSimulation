@@ -5,9 +5,7 @@
 /*  Version of 2021-xx-xx                             Fernando V. Monteiro  */
 /*==========================================================================*/
 
-#define _USE_MATH_DEFINES
-#include <math.h>
-
+#include "Constants.h"
 #include "LateralController.h"
 #include "LongitudinalController.h"
 #include "NearbyVehicle.h"
@@ -17,12 +15,175 @@ LateralController::LateralController(bool verbose)
 	: verbose{ verbose } {
 	
 	if (verbose) {
-		std::clog << "Creating lateral controller" << std::endl;
+		std::cout << "Creating lateral controller" << std::endl;
 	}
 	estimate_lane_change_kinematics();
 }
 
 LateralController::LateralController() : LateralController(false) {}
+
+void LateralController::set_destination_lane_follower_parameters(
+	double new_lambda_0, double new_lambda_1)
+{
+	if (verbose)
+	{
+		std::cout << "\tSetting dest lane foll params. "
+			<< "lambda0=" << new_lambda_0
+			<< ", lambda1=" << new_lambda_1 << "\n";
+	}
+	dest_lane_follower_lambda_0 = new_lambda_0;
+	dest_lane_follower_lambda_1 = new_lambda_1;
+}
+
+void LateralController::set_destination_lane_follower_time_headway(
+	double new_time_headway)
+{
+	if (verbose)
+	{
+		std::cout << "\tSetting dest lane foll "
+			<< " h=" << new_time_headway << "\n";
+	}
+	time_headway_to_destination_lane_follower = new_time_headway;
+}
+
+double LateralController::compute_time_headway_gap(double ego_velocity,
+	const NearbyVehicle& nearby_vehicle, double accepted_risk) const
+{
+	double time_headway, follower_velocity;
+	if (nearby_vehicle.is_ahead())
+	{
+		follower_velocity = ego_velocity;
+		if (nearby_vehicle.get_relative_lane() == RelativeLane::same)
+		{
+			time_headway = time_headway_to_leader;
+		}
+		else
+		{
+			time_headway = time_headway_to_destination_lane_leader;
+		}
+	}
+	else
+	{
+		follower_velocity = nearby_vehicle.compute_velocity(ego_velocity);
+		time_headway = time_headway_to_destination_lane_follower;
+	}
+
+	/*if (verbose)
+	{
+		std::cout << "h=" << time_headway << ", v=" << follower_velocity
+			<< "\n";
+	}*/
+
+	/* [Feb 24, 2023] Copied from old method from AutonomousVehicle.
+	Not ready for risk taking yet. */
+	//double accepted_risk = nearby_vehicle.is_ahead() ?
+	//	accepted_lane_change_risk_to_leaders :
+	//	accepted_lane_change_risk_to_follower;
+
+	//if (accepted_risk > 0)
+	//{
+	//	double leader_max_brake, follower_max_brake, follower_lambda_1;
+	//	if (nearby_vehicle.is_ahead())
+	//	{
+	//		leader_max_brake = nearby_vehicle.get_max_brake();
+	//		follower_max_brake = get_lane_change_max_brake();
+	//		follower_lambda_1 = get_lambda_1_lane_change();
+	//	}
+	//	else
+	//	{
+	//		leader_max_brake = get_max_brake();
+	//		follower_max_brake = nearby_vehicle.get_max_brake();
+	//		follower_lambda_1 = nearby_vehicle.get_lambda_1();
+	//	}
+	//	double rho = get_rho();
+	//	double vf = get_desired_velocity();
+	//	double gamma = leader_max_brake / follower_max_brake;
+	//	double Gamma = (1 - rho) * vf / (vf + follower_lambda_1);
+
+	//	double denominator = gamma >= Gamma ? 1 : (1 - gamma);
+	//	denominator *= 2 * follower_max_brake;
+	//	double risk_term = std::pow(accepted_risk, 2) / denominator;
+	//	accepted_time_headway_gap -= risk_term;
+	//}
+
+	return time_headway * follower_velocity + standstill_distance;
+}
+
+double LateralController::compute_vehicle_following_gap_for_lane_change(
+	const EgoVehicle& ego_vehicle, const NearbyVehicle& nearby_vehicle, 
+	std::pair<double, double> ego_safe_lane_changing_params, 
+	double accepted_risk) const
+{
+	double follower_lambda_0, follower_lambda_1;
+	double v_follower, v_leader;
+	double brake_follower, brake_leader;
+	double ego_velocity = ego_vehicle.get_velocity();
+	double delta_v = nearby_vehicle.get_relative_velocity();
+	if (nearby_vehicle.is_ahead())
+	{
+		follower_lambda_0 = ego_safe_lane_changing_params.first;
+		follower_lambda_1 = ego_safe_lane_changing_params.second;
+		v_follower = ego_velocity;
+		v_leader = ego_vehicle.compute_nearby_vehicle_velocity(
+			nearby_vehicle);
+		brake_follower = ego_vehicle.get_lane_change_max_brake();
+		brake_leader = nearby_vehicle.get_max_brake();
+	}
+	else
+	{
+		follower_lambda_0 = dest_lane_follower_lambda_0;
+		follower_lambda_1 = dest_lane_follower_lambda_1;
+		v_follower = ego_vehicle.compute_nearby_vehicle_velocity(
+			nearby_vehicle);
+		v_leader = ego_velocity;
+		brake_follower = nearby_vehicle.get_max_brake();
+		brake_leader = ego_vehicle.get_max_brake();
+		delta_v = -delta_v;
+	}
+
+	double accepted_risk_2 = std::pow(accepted_risk, 2);
+	double stop_time_follower = (v_follower + follower_lambda_1)
+		/ brake_follower;
+	double stop_time_leader = v_leader / brake_leader;
+
+	double accepted_gap;
+	if (stop_time_follower >= stop_time_leader)
+	{
+		accepted_gap =
+			(std::pow(v_follower + follower_lambda_1, 2)
+				- accepted_risk_2) / 2 / brake_follower
+			- std::pow(v_leader, 2) / 2 / brake_leader
+			+ follower_lambda_0;
+	}
+	else if (brake_follower > brake_leader)
+	{
+		accepted_gap =
+			(std::pow(delta_v + follower_lambda_1, 2)
+				- accepted_risk_2) / 2 / (brake_follower - brake_leader)
+			+ follower_lambda_0;
+	}
+	else
+	{
+		accepted_gap = 0.0;
+	}
+
+	if (verbose)
+	{
+		std::cout << "\tVeh following gap computation\n\t"
+			<< "vf=" << v_follower
+			<< ", lambda1=" << follower_lambda_1
+			<< ", df=" << brake_follower
+			<< ", vl=" << v_leader
+			<< ", dl=" << brake_leader
+			<< ", lambda 0=" << follower_lambda_0
+			<< "\n\tt_f=" << stop_time_follower
+			<< ", t_l=" << stop_time_leader
+			<< ", g_vf=" << accepted_gap
+			<< std::endl;
+	}
+
+	return std::max(0.0, accepted_gap);
+}
 
 double LateralController::compute_transient_gap(const EgoVehicle& ego_vehicle,
 	const NearbyVehicle& other_vehicle, bool will_accelerate) const 
@@ -88,6 +249,16 @@ double LateralController::compute_transient_gap(const EgoVehicle& ego_vehicle,
 	transient_gap = relative_velocity * t_max
 		+ longitudinal_acceleration / 2 * t_max * t_max;
 	
+	if (verbose)
+	{
+		std::cout << "\tTransient gap computation\n\t"
+			<< "t0=" << t_0 << ", tf=" << t_f
+			<< ", t_max=" << t_max
+			<< ", Delta_v=" << relative_velocity
+			<< ", delta g_lc=" << transient_gap
+			<< std::endl;
+	}
+
 	return transient_gap;
 }
 
@@ -138,7 +309,7 @@ double LateralController::compute_lateral_collision_time(
 		else // compute left coordinate
 		{ 
 			y_ego += width / 2 * cos_theta;
-			if (y_ego >= lane_width - other_width / 2)
+			if (y_ego >= LANE_WIDTH - other_width / 2)
 			{
 				collision_time_found = true;
 			}
@@ -153,6 +324,11 @@ double LateralController::compute_lateral_collision_time(
 
 void LateralController::estimate_lane_change_kinematics() 
 {
+	if (verbose)
+	{
+		std::cout << "Creating lateral trajectory\n";
+	}
+
 	double time = 0.0;
 	lane_change_lateral_acceleration.push_back(0.0);
 	lane_change_lateral_velocity.push_back(0.0);
@@ -162,16 +338,16 @@ void LateralController::estimate_lane_change_kinematics()
 	while (time < lane_change_duration) 
 	{
 		lane_change_lateral_acceleration.push_back(
-			2 * M_PI * lane_width / (lane_change_duration*lane_change_duration)
-			* std::sin(2*M_PI*time/lane_change_duration)
+			2 * PI * LANE_WIDTH / (lane_change_duration*lane_change_duration)
+			* std::sin(2*PI*time/lane_change_duration)
 		);
 		lane_change_lateral_velocity.push_back(
-			lane_change_lateral_velocity.front() 
-			+ lane_change_lateral_acceleration.front() * sampling_time
+			lane_change_lateral_velocity.back() 
+			+ lane_change_lateral_acceleration.back() * sampling_time
 		);
 		lane_change_lateral_position.push_back(
-			lane_change_lateral_position.front() 
-			+ lane_change_lateral_velocity.front() * sampling_time
+			lane_change_lateral_position.back() 
+			+ lane_change_lateral_velocity.back() * sampling_time
 		);
 		time += sampling_time;
 	}
